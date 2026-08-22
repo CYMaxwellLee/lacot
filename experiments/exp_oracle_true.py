@@ -115,8 +115,14 @@ train_mods = [model.cond_enc, model.cond_head, model.flow, model.refine, model.a
 opt2 = torch.optim.Adam([p for m in train_mods for p in m.parameters()], lr=5e-4)
 gcbc_enc = nn.Sequential(nn.Linear(2, 512), nn.GELU(), nn.LayerNorm(512),
                          nn.Linear(512, 512), nn.GELU(), nn.LayerNorm(512)).to(device)
-gcbc_head = nn.Sequential(nn.Linear(1024, 512), nn.GELU(), nn.LayerNorm(512),
-                          nn.Linear(512, CHUNK * ADIM)).to(device)
+# ⚠️ 2026-08-23：容量要跟 LaCoT 的 head 對齊，否則 baseline 不公平。
+# 舊版只有 1 個 hidden layer 而 ContinuousActionHead 有 3 層 —— 於是 GCBC 拿 0.59
+# 而同容量的 null-u（head(cond,0)）拿 0.85，差距其實是容量不是方法。
+gcbc_head = nn.Sequential(
+    nn.Linear(1024, 512), nn.GELU(), nn.LayerNorm(512),
+    nn.Linear(512, 512), nn.GELU(), nn.LayerNorm(512),
+    nn.Linear(512, 512), nn.GELU(), nn.LayerNorm(512),
+    nn.Linear(512, CHUNK * ADIM)).to(device)
 opt_g = torch.optim.Adam(list(gcbc_enc.parameters()) + list(gcbc_head.parameters()), lr=5e-4)
 ZERO = torch.zeros(B, K, D_MODEL, device=device)
 print(f"stage 2: LaCoT (head={model.head_kind}) ＋ GCBC ...", flush=True)
