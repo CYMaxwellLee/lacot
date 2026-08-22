@@ -204,11 +204,18 @@ class ContinuousActionHead(nn.Module):
     credit for landing in a neighbouring bin, which is exactly the signal a
     continuous control task needs. Bin count matters a little (32 beats 256
     consistently) but is not the main term. See docs/FINDINGS-2026-08-23.md.
+
+    ⚠️ 2026-08-23: 這個 head 必須同時吃 `cond` 與 `u`，⛔ 不能只吃 `u`。
+    08-22 的實驗腳本就是這樣寫的（`sota_mlp(COND + DIM, ...)`，forward 吃 `(cond, u)`），
+    而本體的 `LaCoTActor` 只餵 `u` —— 這個落差讓 K=4 的 ORACLE 從 08-22 的 100%
+    掉到 12%。理由：`u` 是【未來軌跡】的壓縮表徵，而動作要回答的是「從【現在這個位置】
+    往哪走」。K 小的時候 `u` 裡的位置資訊被壓掉了，head 沒有 `cond` 就推不出來。
+    ⇒ `cond`（精確的 s,g）與 `u`（規劃）是互補的，兩個都要。
     """
 
     def __init__(
         self,
-        d_model: int,
+        d_model: int,          # = cond_dim + k*d_model（兩者 concat 後的寬度）
         action_dim: int,
         chunk_len: int,
         hidden: int = 512,

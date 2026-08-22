@@ -252,10 +252,13 @@ class LaCoTActorState(nn.Module):
         self.refine = RefineOperator(cond_dim, k, d_model, refine_hidden)
         # ⛔ 預設走連續 head：離散 head 在 pointmaze 上實測比「猜資料平均」還差，
         # 就算把容量補到一樣也是（見 ContinuousActionHead 的 docstring）。
+        # ⚠️ head 吃 [cond, u] 兩者 —— cond 給精確的 (s,g)、u 給規劃。
+        # 只餵 u 會讓 K 小的時候位置資訊被壓掉，實測 ORACLE 從 100% 掉到 12%。
+        head_in = cond_dim + k * d_model
         self.action_head = (
-            ContinuousActionHead(k * d_model, action_dim, chunk_len)
+            ContinuousActionHead(head_in, action_dim, chunk_len)
             if head == "continuous"
-            else DiscretizedActionHead(k * d_model, action_dim, chunk_len, num_bins)
+            else DiscretizedActionHead(head_in, action_dim, chunk_len, num_bins)
         )
         self.head_kind = head
 
@@ -290,7 +293,7 @@ class LaCoTActorState(nn.Module):
             u = self.sample_u(cond, temperature)
         for _ in range(rounds):
             u = self.refine(cond, u)
-        out = self.action_head(u.reshape(u.shape[0], -1))
+        out = self.action_head(torch.cat([cond, u.reshape(u.shape[0], -1)], dim=-1))
         if self.head_kind == "continuous":
             return out.clamp(-1.0, 1.0)
         return self.action_head.decode_bins(out.argmax(-1))
@@ -331,8 +334,9 @@ class LaCoTActorState(nn.Module):
         """
         b = cond.shape[0]
         l_nf = self.flow.nll(u_target, cond) / (self.k * self.d_model)   # 見上：量級正規化
+        cat = lambda uu: torch.cat([cond, uu.reshape(b, -1)], dim=-1)   # head 吃 [cond, u]
         l_act_anchor = self.action_head.nll(
-            self.action_head(u_target.reshape(b, -1)), actions).mean()
+            self.action_head(cat(u_target)), actions).mean()
 
         u0 = self.flow.sample(b, cond).detach()
         us = self.refine_rounds(cond, u0, rounds)
@@ -341,7 +345,7 @@ class LaCoTActorState(nn.Module):
         for r in range(rounds):
             l_cons = l_cons + (us[r] - us[r + 1].detach()).pow(2).mean()
             l_act_refine = l_act_refine + self.action_head.nll(
-                self.action_head(us[r + 1].reshape(b, -1)), actions).mean()
+                self.action_head(cat(us[r + 1])), actions).mean()
         l_cons = l_cons / rounds
         l_act_refine = l_act_refine / rounds
 
