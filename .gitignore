@@ -1,0 +1,14 @@
+# 環境與快取（每台自己建，⛔ 不進 repo）
+.venv/
+__pycache__/
+*.pyc
+
+# 實驗產物（留在 compute node 的 /archive，⛔ 不進 repo）
+outputs/
+runs/
+wandb/
+*.log
+
+# checkpoint：只放行已經證明有用的 value（2.1M），其餘一律擋
+checkpoints/*
+!checkpoints/scratch_value.pt
