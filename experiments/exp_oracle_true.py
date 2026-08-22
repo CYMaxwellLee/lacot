@@ -132,10 +132,25 @@ for stp in range(STEPS2):
     l_gcbc = (pred - act).pow(2).mean()
     opt_g.zero_grad(set_to_none=True); l_gcbc.backward(); opt_g.step()
     if (stp + 1) % 1000 == 0:
-        print(f"  step {stp+1}  nf {parts['l_nf']:.1f} anchor {parts['l_act_anchor']:.4f} "
+        print(f"  step {stp+1}  nf {parts['l_nf']:.4f} anchor {parts['l_act_anchor']:.4f} "
               f"refine {parts['l_act_refine']:.4f} cons {parts['l_cons']:.4f} null {l_null.item():.4f} "
               f"gcbc {l_gcbc.item():.4f}", flush=True)
 model.eval()
+
+# ---- 訓練健康度：head 有沒有真的學到東西？ ----
+# 基準 = action 的邊際熵（「什麼都不學、只按整體分布猜」的 cross-entropy）
+_idx = np.clip(np.floor((ACT + 1.0) / (2.0 / 256)), 0, 255).astype(int)
+_p = np.bincount(_idx.reshape(-1), minlength=256).astype(np.float64); _p /= _p.sum()
+MARGINAL_H = float(-(_p[_p > 0] * np.log(_p[_p > 0])).sum())
+_anchor, _null = parts["l_act_anchor"], l_null.item()
+print(f"\n=== 訓練健康度 ===", flush=True)
+print(f"  action 邊際熵（什麼都不學的基準）  {MARGINAL_H:.4f}", flush=True)
+print(f"  l_act_anchor（吃真 e_target）      {_anchor:.4f}  "
+      f"{'✅ 比基準好' if _anchor < MARGINAL_H else '🚨 比【什麼都不學】還差 — rollout 會無意義'}", flush=True)
+print(f"  l_null（沒有 u）                   {_null:.4f}", flush=True)
+print(f"  anchor 相對 null 的增益            {_null - _anchor:+.4f}  <- e_target 到底帶來多少資訊", flush=True)
+if _anchor >= MARGINAL_H:
+    print("  ⛔ head 沒學起來，下面的 success rate 不用讀。", flush=True)
 
 # ---- eval：官方標準 ----
 os.environ.setdefault("OGBENCH_DATA_DIR", OGB_DATA)

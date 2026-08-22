@@ -37,7 +37,7 @@ import torch
 from torch import nn
 
 from lacot.e_target import PerceiverPooler
-from lacot.heads import DiscretizedActionHead
+from lacot.heads import ContinuousActionHead, DiscretizedActionHead
 from lacot.nf_head import Flow
 
 
@@ -130,7 +130,11 @@ class LaCoTActor(nn.Module):
         for a fixed batch instead of re-encoding every step.
         """
         b = cond.shape[0]
-        l_nf = self.flow.nll(u_target, cond)          # density directly on e_target
+        # ⚠️ 2026-08-23: flow.nll 是【整條 u】的 nats，量級 ~ k*d_model 倍於逐元素 loss。
+        # 未正規化時實測 l_nf ≈ -1479 而 l_act_anchor ≈ 5.0 —— action head 的梯度被
+        # 完全淹沒（訓練 2000 步後 anchor 4.98 仍【差於】action 的邊際熵 4.7736，
+        # 也就是比「什麼都不學」還糟）。除以維度讓三個 loss 回到同一個量級。
+        l_nf = self.flow.nll(u_target, cond) / (self.k * self.d_model)
         l_act_anchor = self.action_head.nll(          # decode action from the clean target-u (Q3-A)
             self.action_head(u_target.reshape(b, -1)), actions).mean()
 
@@ -230,7 +234,8 @@ class LaCoTActorState(nn.Module):
         enc_hidden: int = 512,
         enc_out: int = 512,
         cond_dim: int = 256,
-        num_bins: int = 256,
+        head: str = "continuous",   # "continuous" (實測較優) | "discretized"
+        num_bins: int = 32,         # 只在 head="discretized" 時用；32 實測優於 256
         n_flow_blocks: int = 4,
         refine_hidden: int = 256,
     ):
@@ -245,7 +250,14 @@ class LaCoTActorState(nn.Module):
         # the real LaCoT pieces
         self.flow = Flow(token_dim=d_model, seq_len=k, n_blocks=n_flow_blocks, cond_dim=cond_dim)
         self.refine = RefineOperator(cond_dim, k, d_model, refine_hidden)
-        self.action_head = DiscretizedActionHead(k * d_model, action_dim, chunk_len, num_bins)
+        # ⛔ 預設走連續 head：離散 head 在 pointmaze 上實測比「猜資料平均」還差，
+        # 就算把容量補到一樣也是（見 ContinuousActionHead 的 docstring）。
+        self.action_head = (
+            ContinuousActionHead(k * d_model, action_dim, chunk_len)
+            if head == "continuous"
+            else DiscretizedActionHead(k * d_model, action_dim, chunk_len, num_bins)
+        )
+        self.head_kind = head
 
     # -- front end ---------------------------------------------------------
     def e_target(self, traj: torch.Tensor, key_padding_mask: torch.Tensor | None = None) -> torch.Tensor:
@@ -278,8 +290,10 @@ class LaCoTActorState(nn.Module):
             u = self.sample_u(cond, temperature)
         for _ in range(rounds):
             u = self.refine(cond, u)
-        logits = self.action_head(u.reshape(u.shape[0], -1))
-        return self.action_head.decode_bins(logits.argmax(-1))
+        out = self.action_head(u.reshape(u.shape[0], -1))
+        if self.head_kind == "continuous":
+            return out.clamp(-1.0, 1.0)
+        return self.action_head.decode_bins(out.argmax(-1))
 
     @torch.no_grad()
     def sample_u(self, cond: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
@@ -316,7 +330,7 @@ class LaCoTActorState(nn.Module):
         which are identical objects in both.
         """
         b = cond.shape[0]
-        l_nf = self.flow.nll(u_target, cond)
+        l_nf = self.flow.nll(u_target, cond) / (self.k * self.d_model)   # 見上：量級正規化
         l_act_anchor = self.action_head.nll(
             self.action_head(u_target.reshape(b, -1)), actions).mean()
 

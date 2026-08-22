@@ -31,6 +31,11 @@ DECODE_MODES = {"greedy": None, "t0.5": 0.5, "t1.0": 1.0}
 class DiscretizedActionHead(nn.Module):
     """Predicts an action chunk as independent per-dimension, per-step bins.
 
+    ⛔ NOT for continuous control — use `ContinuousActionHead` instead. Measured
+    2026-08-23 on pointmaze: every binned variant scores WORSE than predicting the
+    dataset mean, even with capacity matched to the MLP head. Kept for discrete or
+    genuinely multi-modal action spaces. See that class's docstring for the numbers.
+
     Each of the `action_dim` action dimensions, at each of the `chunk_len`
     steps in a chunk, gets its own categorical distribution over `num_bins`
     bins spaced uniformly across [-1, 1] (dataset actions are assumed to
@@ -177,3 +182,73 @@ class ValueHead(nn.Module):
     def forward(self, h: torch.Tensor) -> torch.Tensor:
         """h: (..., d_model) -> value: (..., 1)."""
         return self.proj(h)
+
+
+class ContinuousActionHead(nn.Module):
+    """Predicts an action chunk directly as continuous values (MLP + MSE).
+
+    This is the head the state track actually uses. `DiscretizedActionHead` was
+    tried first and measured — on `pointmaze-medium-navigate`, decoding to
+    continuous actions and comparing on the same metric (MSE after decode):
+
+        head                          MSE @5k steps
+        ------------------------------------------
+        this one (MLP + MSE)               0.375
+        Discretized  32 bins + same MLP    0.845
+        Discretized 256 bins + same MLP    0.903
+        Discretized 256 bins, proj only    1.286
+        "predict the dataset mean"         0.494   <- baseline
+
+    Every discretized variant lands ABOVE the do-nothing baseline even with the
+    capacity matched, so the loss is the binning itself: cross-entropy gives no
+    credit for landing in a neighbouring bin, which is exactly the signal a
+    continuous control task needs. Bin count matters a little (32 beats 256
+    consistently) but is not the main term. See docs/FINDINGS-2026-08-23.md.
+    """
+
+    def __init__(
+        self,
+        d_model: int,
+        action_dim: int,
+        chunk_len: int,
+        hidden: int = 512,
+        n_layers: int = 3,
+    ):
+        super().__init__()
+        self.action_dim = action_dim
+        self.chunk_len = chunk_len
+        layers: list[nn.Module] = []
+        prev = d_model
+        for _ in range(n_layers):
+            lin = nn.Linear(prev, hidden)
+            nn.init.xavier_uniform_(lin.weight)
+            nn.init.zeros_(lin.bias)
+            layers += [lin, nn.GELU(), nn.LayerNorm(hidden)]
+            prev = hidden
+        out = nn.Linear(prev, chunk_len * action_dim)
+        nn.init.xavier_uniform_(out.weight)
+        nn.init.zeros_(out.bias)
+        self.net = nn.Sequential(*layers, out)
+
+    def forward(self, h: torch.Tensor) -> torch.Tensor:
+        """h: (B, d_model) -> action chunk (B, chunk_len, action_dim)."""
+        return self.net(h).reshape(-1, self.chunk_len, self.action_dim)
+
+    def nll(self, pred: torch.Tensor, target_actions: torch.Tensor) -> torch.Tensor:
+        """Per-example squared error, averaged over chunk step and action dim.
+
+        Named `nll` so it is drop-in compatible with `DiscretizedActionHead.nll`
+        (a Gaussian with fixed variance has exactly this as its negative
+        log-likelihood, up to a constant).
+        """
+        return (pred - target_actions).pow(2).mean(dim=(1, 2))
+
+    def loss(
+        self, pred: torch.Tensor, target_actions: torch.Tensor, weight: torch.Tensor
+    ) -> torch.Tensor:
+        return (weight * self.nll(pred, target_actions)).mean()
+
+    @torch.no_grad()
+    def act(self, h: torch.Tensor) -> torch.Tensor:
+        """Inference: clamp to the environment's action range."""
+        return self.forward(h).clamp(-1.0, 1.0)
