@@ -78,7 +78,9 @@ def make_batch(rng, b=B):
     return T_(traj), torch.from_numpy(mask).to(device), T_(s), T_(g), T_(act)
 
 
-torch.manual_seed(0); rng = np.random.default_rng(0)
+SEED = int(os.environ.get("LACOT_SEED", 0))
+torch.manual_seed(SEED); rng = np.random.default_rng(SEED)
+print(f"seed {SEED}", flush=True)
 model = LaCoTActorState(state_dim=2, d_model=D_MODEL, k=K, action_dim=ADIM,
                         chunk_len=CHUNK, cond_dim=COND).to(device)
 
@@ -207,7 +209,7 @@ def rollout(kind, R, tag, open_loop=False):
     succ = ep = 0
     for task in range(1, N_TASKS + 1):
         for sd_ in range(EPISODES):
-            obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
+            obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})  # ⛔ 故意跟 SEED 無關：所有 seed 跑【同一組 100 集】，比較才公平
             goal = info["goal"]; success = False; steps = 0
             torch.manual_seed(7 * task + sd_)
             frozen_u = None                      # open-loop：只算一次
@@ -255,6 +257,14 @@ res["lacot_r3_open"] = rollout("lacot", 3, "LaCoT R=3 open   (想一次、照著
 res["gcbc"] = rollout("gcbc", 0, "GCBC floor (無 u)")
 res["null"] = rollout("null", 0, "null-u floor (head(0))")
 
+import json as _json
+_out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                    f"results_oracle_K{K}_seed{SEED}_{model.head_kind}.json")
+with open(_out, "w") as _f:
+    _json.dump({"K": K, "dim": K * D_MODEL, "seed": SEED, "head": model.head_kind,
+                "steps1": STEPS1, "steps2": STEPS2, "match_acc": MATCH_ACC,
+                "maxh": MAXH, "episodes": N_TASKS * EPISODES, **res}, _f, indent=1)
+print(f"\n結果寫入 {_out}", flush=True)
 print("\n" + "=" * 66)
 print(f"K={K} (dim {K*D_MODEL})  |  e_target match-acc {MATCH_ACC:.3f}  |  真 DiscretizedActionHead")
 print("-" * 66)
