@@ -36,6 +36,7 @@ from __future__ import annotations
 import torch
 from torch import nn
 
+from lacot.e_target import PerceiverPooler
 from lacot.heads import DiscretizedActionHead
 from lacot.nf_head import Flow
 
@@ -179,3 +180,161 @@ class LaCoTActor(nn.Module):
         u0 = self.flow.sample(b, cond)
         us = self.refine_rounds(cond, u0, rounds)
         return self.action_head.decode(self.action_head(us[-1].reshape(b, -1)), mode=mode)
+
+
+# ---------------------------------------------------------------------------
+# State-based front-end (2026-08-23)
+# ---------------------------------------------------------------------------
+# `LaCoTActor` above takes image frames ([B,3,H,W]) — that is why the 08-22
+# experiment scripts wrote their own MLP head instead of using it, and why every
+# number from that day was measured on a *stand-in* head (continuous MSE) rather
+# than LaCoT's real DiscretizedActionHead (classification over bins).
+#
+# This variant keeps every real LaCoT component — Flow, RefineOperator,
+# DiscretizedActionHead — and only swaps the frozen image front-end for a
+# low-dimensional state encoder, so the state track can be measured on the
+# actual model instead of a replica.
+
+
+def _mlp(i: int, h: int, o: int, n: int = 2) -> nn.Module:
+    layers: list[nn.Module] = []
+    p = i
+    for _ in range(n):
+        lin = nn.Linear(p, h)
+        nn.init.xavier_uniform_(lin.weight)
+        nn.init.zeros_(lin.bias)
+        layers += [lin, nn.GELU(), nn.LayerNorm(h)]
+        p = h
+    lin = nn.Linear(p, o)
+    nn.init.xavier_uniform_(lin.weight)
+    nn.init.zeros_(lin.bias)
+    return nn.Sequential(*layers, lin)
+
+
+class LaCoTActorState(nn.Module):
+    """LaCoT over low-dimensional states (e.g. pointmaze xy).
+
+    Same three losses and the same real components as `LaCoTActor`; only the
+    front-end differs. The trajectory encoder + pooler (which produce e_target)
+    are trained separately by a contrastive stage and then FROZEN, matching the
+    "generator is pretrained and frozen" contract of the image version.
+    """
+
+    def __init__(
+        self,
+        state_dim: int,
+        d_model: int,
+        k: int,
+        action_dim: int,
+        chunk_len: int,
+        enc_hidden: int = 512,
+        enc_out: int = 512,
+        cond_dim: int = 256,
+        num_bins: int = 256,
+        n_flow_blocks: int = 4,
+        refine_hidden: int = 256,
+    ):
+        super().__init__()
+        self.k, self.d_model, self.cond_dim = k, d_model, cond_dim
+        # frozen-after-stage-1 front end (produces e_target)
+        self.traj_enc = _mlp(state_dim, enc_hidden, enc_out)
+        self.e_pooler = PerceiverPooler(enc_out, d_model, k, 2, 4)
+        # (s,g) conditioning
+        self.cond_enc = _mlp(state_dim, enc_hidden, enc_out)
+        self.cond_head = _mlp(2 * enc_out, enc_hidden, cond_dim)
+        # the real LaCoT pieces
+        self.flow = Flow(token_dim=d_model, seq_len=k, n_blocks=n_flow_blocks, cond_dim=cond_dim)
+        self.refine = RefineOperator(cond_dim, k, d_model, refine_hidden)
+        self.action_head = DiscretizedActionHead(k * d_model, action_dim, chunk_len, num_bins)
+
+    # -- front end ---------------------------------------------------------
+    def e_target(self, traj: torch.Tensor, key_padding_mask: torch.Tensor | None = None) -> torch.Tensor:
+        """traj [B,T,state_dim] -> e_target [B,K,d_model]."""
+        b, t, _ = traj.shape
+        feats = self.traj_enc(traj.reshape(b * t, -1)).reshape(b, t, -1)
+        return self.e_pooler(feats, key_padding_mask=key_padding_mask)
+
+    def encode_cond(self, s: torch.Tensor, g: torch.Tensor) -> torch.Tensor:
+        """s,g [B,state_dim] -> cond [B,cond_dim]."""
+        return self.cond_head(torch.cat([self.cond_enc(s), self.cond_enc(g)], dim=-1))
+
+    def freeze_front_end(self) -> None:
+        """Freeze the e_target producer — the image version's generator is frozen too."""
+        for m in (self.traj_enc, self.e_pooler):
+            m.eval()
+            for p in m.parameters():
+                p.requires_grad_(False)
+
+    # -- inference ---------------------------------------------------------
+    @torch.no_grad()
+    def act(self, cond: torch.Tensor, rounds: int = 0, u: torch.Tensor | None = None,
+            temperature: float = 1.0) -> torch.Tensor:
+        """cond [B,cond_dim] -> action chunk [B,chunk_len,action_dim] in [-1,1].
+
+        `u=None` draws from the flow (at `temperature`); pass `u` to inject a
+        specific latent (e.g. the oracle e_target).
+        """
+        if u is None:
+            u = self.sample_u(cond, temperature)
+        for _ in range(rounds):
+            u = self.refine(cond, u)
+        logits = self.action_head(u.reshape(u.shape[0], -1))
+        return self.action_head.decode_bins(logits.argmax(-1))
+
+    @torch.no_grad()
+    def sample_u(self, cond: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
+        """Draw u ~ p(.|cond); `temperature` scales the base Gaussian (0 = the mode)."""
+        z = torch.randn(cond.shape[0], self.k, self.d_model, device=cond.device) * temperature
+        u = z
+        for i in reversed(range(len(self.flow.blocks))):
+            if i < len(self.flow.blocks) - 1:
+                u = self.flow.perm.inverse(u)
+            u = self.flow.blocks[i].inverse(u, cond)
+        return u
+
+    # -- training ----------------------------------------------------------
+    def refine_rounds(self, cond: torch.Tensor, u0: torch.Tensor, rounds: int) -> list[torch.Tensor]:
+        us = [u0]
+        u = u0
+        for _ in range(rounds):
+            u = self.refine(cond, u)
+            us.append(u)
+        return us
+
+    def losses_given(
+        self,
+        cond: torch.Tensor,
+        u_target: torch.Tensor,
+        actions: torch.Tensor,
+        rounds: int = 3,
+        lam_cons: float = 0.5,
+    ) -> tuple[torch.Tensor, dict[str, float]]:
+        """The same three losses as `LaCoTActor.losses_given`, on the state front-end.
+
+        Kept as its own copy rather than inherited because the two classes build
+        different front-ends; the loss bodies touch only flow / refine / action_head,
+        which are identical objects in both.
+        """
+        b = cond.shape[0]
+        l_nf = self.flow.nll(u_target, cond)
+        l_act_anchor = self.action_head.nll(
+            self.action_head(u_target.reshape(b, -1)), actions).mean()
+
+        u0 = self.flow.sample(b, cond).detach()
+        us = self.refine_rounds(cond, u0, rounds)
+        l_cons = u_target.new_zeros(())
+        l_act_refine = u_target.new_zeros(())
+        for r in range(rounds):
+            l_cons = l_cons + (us[r] - us[r + 1].detach()).pow(2).mean()
+            l_act_refine = l_act_refine + self.action_head.nll(
+                self.action_head(us[r + 1].reshape(b, -1)), actions).mean()
+        l_cons = l_cons / rounds
+        l_act_refine = l_act_refine / rounds
+
+        total = l_nf + l_act_anchor + l_act_refine + lam_cons * l_cons
+        return total, {
+            "l_nf": l_nf.item(),
+            "l_act_anchor": l_act_anchor.item(),
+            "l_act_refine": l_act_refine.item(),
+            "l_cons": l_cons.item(),
+        }

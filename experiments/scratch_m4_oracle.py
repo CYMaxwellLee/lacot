@@ -132,8 +132,10 @@ for m in f_mods + [gcbc_enc, gcbc_head]:
 
 os.environ.setdefault("OGBENCH_DATA_DIR", OGB_DATA)
 env, _, _ = ogbench.make_env_and_datasets(ENV_NAME)
-MAXH = min(int(env.spec.max_episode_steps or 1000), 500)
-N_TASKS = len(env.unwrapped.task_infos); SEEDS = 6
+# ⛔ 官方標準（impls/utils/evaluation.py + main.py）：跑滿 env 自己的 horizon，
+# 每個 task 20 集。舊版自己砍成 500/6 集 = 難度自訂、數字不能跟官方並排。
+MAXH = int(os.environ.get("LACOT_EVAL_MAXH", env.spec.max_episode_steps or 1000))
+N_TASKS = len(env.unwrapped.task_infos); SEEDS = int(os.environ.get("LACOT_EVAL_EPISODES", 20))  # 官方 eval_episodes=20
 GAIN = 5.0
 
 def expert_positions(obs, goal, horizon=150):

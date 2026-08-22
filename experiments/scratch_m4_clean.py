@@ -135,8 +135,8 @@ for m in f_mods + [gcbc_enc, gcbc_head]:
 
 os.environ.setdefault("OGBENCH_DATA_DIR", OGB_DATA)
 env, _, _ = ogbench.make_env_and_datasets(ENV_NAME)
-MAXH = min(int(env.spec.max_episode_steps or 1000), 500)
-N_TASKS = len(env.unwrapped.task_infos); SEEDS = 6; GAIN = 5.0
+MAXH = int(os.environ.get("LACOT_EVAL_MAXH", env.spec.max_episode_steps or 1000))  # 官方標準，不自訂難度
+N_TASKS = len(env.unwrapped.task_infos); SEEDS = int(os.environ.get("LACOT_EVAL_EPISODES", 20)); GAIN = 5.0  # 官方 eval_episodes=20
 
 def expert_positions(obs, goal, horizon=150):
     xy = np.asarray(obs, np.float64); gg = np.asarray(goal, np.float64); poss = [xy.copy()]

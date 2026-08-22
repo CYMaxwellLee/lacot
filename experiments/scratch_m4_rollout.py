@@ -137,8 +137,8 @@ def policy_chunk(obs, goal, R, use_u):
 
 os.environ.setdefault("OGBENCH_DATA_DIR", OGB_DATA)
 env, _, _ = ogbench.make_env_and_datasets(ENV_NAME)
-MAXH = min(int(env.spec.max_episode_steps or 1000), 500)
-N_TASKS = len(env.unwrapped.task_infos); SEEDS = 6  # episodes = N_TASKS * SEEDS per variant
+MAXH = int(os.environ.get("LACOT_EVAL_MAXH", env.spec.max_episode_steps or 1000))  # 官方標準，不自訂難度
+N_TASKS = len(env.unwrapped.task_infos); SEEDS = int(os.environ.get("LACOT_EVAL_EPISODES", 20))  # 官方 eval_episodes=20  # episodes = N_TASKS * SEEDS per variant
 
 def rollout(R, use_u, tag):
     succ, ep = 0, 0
