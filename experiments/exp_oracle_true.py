@@ -116,7 +116,7 @@ gcbc_head = nn.Sequential(nn.Linear(1024, 512), nn.GELU(), nn.LayerNorm(512),
                           nn.Linear(512, CHUNK * ADIM)).to(device)
 opt_g = torch.optim.Adam(list(gcbc_enc.parameters()) + list(gcbc_head.parameters()), lr=5e-4)
 ZERO = torch.zeros(B, K, D_MODEL, device=device)
-print("stage 2: LaCoT (真 DiscretizedActionHead) ＋ GCBC ...", flush=True)
+print(f"stage 2: LaCoT (head={model.head_kind}) ＋ GCBC ...", flush=True)
 for stp in range(STEPS2):
     traj, mask, s, g, act = make_batch(rng)
     with torch.no_grad():
@@ -138,13 +138,21 @@ for stp in range(STEPS2):
 model.eval()
 
 # ---- 訓練健康度：head 有沒有真的學到東西？ ----
-# 基準 = action 的邊際熵（「什麼都不學、只按整體分布猜」的 cross-entropy）
-_idx = np.clip(np.floor((ACT + 1.0) / (2.0 / 256)), 0, 255).astype(int)
-_p = np.bincount(_idx.reshape(-1), minlength=256).astype(np.float64); _p /= _p.sum()
-MARGINAL_H = float(-(_p[_p > 0] * np.log(_p[_p > 0])).sum())
+# ⛔ 基準必須跟 head 的 loss 【同單位】，否則這個檢查是壞的：
+#    連續 head 的 nll 是 MSE     -> 基準 = 用資料集平均去猜的 MSE
+#    離散 head 的 nll 是 nats    -> 基準 = action 的邊際熵
+#    （第一版拿邊際熵 4.77 去比 MSE 0.33 就說「✅ 比基準好」—— 那個比較沒有意義。）
+if model.head_kind == "continuous":
+    MARGINAL_H = float(((ACT - ACT.mean(0)) ** 2).mean())
+    _unit = "MSE"
+else:
+    _idx = np.clip(np.floor((ACT + 1.0) / (2.0 / 256)), 0, 255).astype(int)
+    _p = np.bincount(_idx.reshape(-1), minlength=256).astype(np.float64); _p /= _p.sum()
+    MARGINAL_H = float(-(_p[_p > 0] * np.log(_p[_p > 0])).sum())
+    _unit = "nats"
 _anchor, _null = parts["l_act_anchor"], l_null.item()
 print(f"\n=== 訓練健康度 ===", flush=True)
-print(f"  action 邊際熵（什麼都不學的基準）  {MARGINAL_H:.4f}", flush=True)
+print(f"  基準（什麼都不學，單位={_unit}）      {MARGINAL_H:.4f}", flush=True)
 print(f"  l_act_anchor（吃真 e_target）      {_anchor:.4f}  "
       f"{'✅ 比基準好' if _anchor < MARGINAL_H else '🚨 比【什麼都不學】還差 — rollout 會無意義'}", flush=True)
 print(f"  l_null（沒有 u）                   {_null:.4f}", flush=True)
