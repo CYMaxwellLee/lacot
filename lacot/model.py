@@ -130,6 +130,10 @@ class LaCoTActor(nn.Module):
         for a fixed batch instead of re-encoding every step.
         """
         b = cond.shape[0]
+        # ⚠️⚠️ 2026-08-23 未修：這個（影像版）的 action_head 仍然【只吃 u】。
+        # state 版已改成吃 [cond, u]，理由見 ContinuousActionHead 的 docstring
+        # （u 是未來軌跡的壓縮表徵，動作要回答「從現在這個位置往哪走」）。
+        # 影像版還沒在真資料上跑過，改動前先確認 cond_dim = 2*encoder_out 的寬度。
         # ⚠️ 2026-08-23: flow.nll 是【整條 u】的 nats，量級 ~ k*d_model 倍於逐元素 loss。
         # 未正規化時實測 l_nf ≈ -1479 而 l_act_anchor ≈ 5.0 —— action head 的梯度被
         # 完全淹沒（訓練 2000 步後 anchor 4.98 仍【差於】action 的邊際熵 4.7736，

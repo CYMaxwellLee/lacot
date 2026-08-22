@@ -1,8 +1,9 @@
 """ORACLE 重做 — 這次用【真的 LaCoT】＋【官方 eval 標準】＋【closed / open loop 兩種】。
 
 為什麼要重做（主人 2026-08-23 要「Oracle 版本要確定是對的」）:
-  ① 08-22 的 oracle 用的是腳本自己寫的 ActionMLP + MSE，⛔ 不是 LaCoT 的
-     DiscretizedActionHead（分類）。那天的 100% 是【替身】的 100%。
+  ① 〔初版寫錯〕曾寫「08-22 用 ActionMLP 是替身、那天的 100% 不算數」——【錯的】。
+     [主人] 那是 08-22 發現離散 head 不行之後刻意改的，實測見 ContinuousActionHead
+     的 docstring。本體反而是脫節的那一方，已把 MLP head 寫進本體。
   ② eval 自己把 horizon 砍成 500、每 task 只跑 6 集；官方是 1000 / 20 集。
   ③ oracle 每 4 步就重問一次 env 內建 BFS = closed-loop。那測的是反應式導航，
      不是「想一條路再照著走」。
@@ -126,7 +127,9 @@ for stp in range(STEPS2):
     cond = model.encode_cond(s, g)
     total, parts = model.losses_given(cond, et, act, rounds=3, lam_cons=0.5)
     # null-u 地板：頭在沒有 u 的時候能做多好（跟舊版一致，用真 head 的 nll）
-    l_null = model.action_head.nll(model.action_head(ZERO.reshape(B, -1)), act).mean()
+    # ⚠️ head 吃 [cond, u]，null 這一格也要餵 cond（只餵 ZERO 會維度不合）
+    l_null = model.action_head.nll(
+        model.action_head(torch.cat([cond, ZERO.reshape(B, -1)], dim=-1)), act).mean()
     (total + l_null).backward()
     torch.nn.utils.clip_grad_norm_([p for m in train_mods for p in m.parameters()], 1.0)
     opt2.step(); opt2.zero_grad(set_to_none=True)
@@ -266,7 +269,7 @@ with open(_out, "w") as _f:
                 "maxh": MAXH, "episodes": N_TASKS * EPISODES, **res}, _f, indent=1)
 print(f"\n結果寫入 {_out}", flush=True)
 print("\n" + "=" * 66)
-print(f"K={K} (dim {K*D_MODEL})  |  e_target match-acc {MATCH_ACC:.3f}  |  真 DiscretizedActionHead")
+print(f"K={K} (dim {K*D_MODEL})  |  e_target match-acc {MATCH_ACC:.3f}  |  head={model.head_kind}")
 print("-" * 66)
 gap = res["oracle_closed"] - res["oracle_open"]
 print(f"ORACLE closed {res['oracle_closed']:.3f}  vs  open {res['oracle_open']:.3f}   差距 {gap:+.3f}")
