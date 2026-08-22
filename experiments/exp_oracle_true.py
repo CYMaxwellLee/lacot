@@ -126,7 +126,13 @@ for stp in range(STEPS2):
         et = model.e_target(traj, mask)
     cond = model.encode_cond(s, g)
     total, parts = model.losses_given(cond, et, act, rounds=3, lam_cons=0.5)
-    # null-u 地板：頭在沒有 u 的時候能做多好（跟舊版一致，用真 head 的 nll）
+    # null-u 地板：頭在沒有 u 的時候能做多好。
+    # ⚠️ 2026-08-23 head 改吃 [cond, u] 之後，這一格的【意義變了】：
+    #    head(cond, 0) 就是「從 (s,g) 直接預測 action」= 一個 GCBC。
+    #    實測 null 0.2336 vs gcbc 0.2356 —— 幾乎一模一樣，證實了這件事。
+    #    ⇒ 它不再是「什麼都不學」的地板，而是【BC baseline】。
+    #    ⇒ 這其實更有用：anchor/refine 減掉 null，直接就是「u 帶來多少 GCBC 以外的價值」。
+    #    ⛔ 別再把它讀成「floor=0」那種地板。
     # ⚠️ head 吃 [cond, u]，null 這一格也要餵 cond（只餵 ZERO 會維度不合）
     l_null = model.action_head.nll(
         model.action_head(torch.cat([cond, ZERO.reshape(B, -1)], dim=-1)), act).mean()
