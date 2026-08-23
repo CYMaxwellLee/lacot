@@ -1,0 +1,16 @@
+{
+ "tag": "tok +wide",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.26658695936203003,
+ "cond_only": 0.2790212035179138,
+ "gain": 0.04456379658288401,
+ "base": 0.4944152235984802,
+ "params": 6444552,
+ "macc": 0.859375,
+ "switches": {
+  "wide": 512
+ }
+}

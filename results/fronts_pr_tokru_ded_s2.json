@@ -1,0 +1,16 @@
+{
+ "tag": "token r0u / \u5c08\u7528",
+ "mode": "proto",
+ "arch": "token",
+ "protocol": "ded",
+ "switches": {
+  "deep_readout": true,
+  "u_proj": true
+ },
+ "anchor": 0.25618910789489746,
+ "cond_only": 0.262840211391449,
+ "gain": 0.025304741087146643,
+ "base": 0.4944152235984802,
+ "params": 1914120,
+ "macc": 0.90625
+}

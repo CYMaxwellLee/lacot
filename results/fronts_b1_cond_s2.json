@@ -1,0 +1,15 @@
+{
+ "tag": "B1 \u8b80 cond \u9846\uff08\u73fe\u6cc1\uff09",
+ "mode": "proto",
+ "arch": "token",
+ "protocol": "ded",
+ "switches": {
+  "readout_mode": "cond"
+ },
+ "anchor": 0.2512347400188446,
+ "cond_only": 0.2657257914543152,
+ "gain": 0.05453385369994068,
+ "base": 0.4944152235984802,
+ "params": 1649416,
+ "macc": 0.90625
+}

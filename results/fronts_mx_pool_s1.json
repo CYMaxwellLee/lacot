@@ -1,0 +1,15 @@
+{
+ "tag": "mixer \u4e94\u9846\u5e73\u5747",
+ "mode": "proto",
+ "arch": "mixer",
+ "protocol": "ded",
+ "switches": {
+  "readout_mode": "pool"
+ },
+ "anchor": 0.26409780979156494,
+ "cond_only": 0.2635818123817444,
+ "gain": -0.001957636625827819,
+ "base": 0.4944152235984802,
+ "params": 1123530,
+ "macc": 0.953125
+}

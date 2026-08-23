@@ -259,3 +259,237 @@ class ContinuousActionHead(nn.Module):
     def act(self, h: torch.Tensor) -> torch.Tensor:
         """Inference: clamp to the environment's action range."""
         return self.forward(h).clamp(-1.0, 1.0)
+
+
+class TokenActionHead(nn.Module):
+    """Action head that keeps `u`'s token structure instead of flattening it.
+
+    ⚠️ Why this exists (measured 2026-08-23). The previous head did
+
+        head(cat([cond, u.flatten()]))        # 256 + 4*256 -> one 1280-vector
+
+    which destroys structure twice over: `u` is K learned latent tokens (each a
+    different facet of the trajectory, produced by PerceiverPooler), and flatten
+    turns them into 1024 anonymous numbers; then `cat` mixes them with `cond` in
+    the very first Linear, after which nothing can tell the two apart.
+
+    The tell was that scaling the MLP did not help at all — feeding it the TRUE
+    e_target beat cond-only by roughly the same margin no matter the size:
+
+        head 3 layers x 512   (1.2M params)   gain +12.2%
+        head 4 layers x 1024  (4.5M params)   gain +11.9%
+        head 5 layers x 2048  (19.4M params)  gain +10.7%
+
+    Capacity was never the bottleneck; the information was already scrambled at
+    the door. Chain-of-Goals (arXiv 2602.03389) keeps state / goal / each latent
+    subgoal / action as separate tokens and lets them talk via mixing layers —
+    79% vs GCBC's 1% on pointmaze-giant.
+
+    Here `cond` becomes one token and each of the K latents stays its own token;
+    self-attention lets them exchange what they need while keeping their identity.
+
+    ⚠️ 第一版輸給 concat（增益 4.0~8.4% vs concat 的 12.2%），但那個比較不算數：
+    它同時背著三個【不公平】而不是設計上的差異。所以下面每一項都做成開關，
+    可以一項一項加上去看各自貢獻（主人 2026-08-23：「我想看 ablation，
+    不要只單純全部加」）：
+
+      deep_readout  讀出用 3 層 MLP —— 第一版只有 Linear(256->8)，
+                    而 concat 版輸出前有 3 層。讀出容量差太多。
+      wide          內部寬度 —— 第一版 d_model 只有 256（跟著 u 的 token 寬度走），
+                    concat 版內部是 512~2048。
+      u_proj        給 u 一個投影層 —— 第一版 cond 有 cond_proj，u 卻是直接加
+                    embedding 就進去。⚠️ 這個特別諷刺：這個 head 本來就是為了修
+                    「cond 被服侍、u 是生的」而做的，結果在新 head 裡又犯一次。
+                    關掉時走【零填補】而不是投影 —— 見 __init__ 裡的註解，
+                    為的是讓 wide 跟 u_proj 兩個開關真的獨立。
+      readout_mode  從哪讀出動作：
+                    "cond"  只讀 cond token（第一版，照抄 BERT 的 [CLS] 習慣，
+                            ⚠️ 沒有任何理由）——  u 的資訊得先被 attention 搬到
+                            cond token 上才影響得了動作，中間多一道關卡
+                    "pool"  平均全部 token
+                    "query" 專用的 action query token
+    """
+
+    def __init__(
+        self,
+        cond_dim: int,
+        d_model: int,
+        k: int,
+        action_dim: int,
+        chunk_len: int,
+        n_layers: int = 2,
+        n_heads: int = 4,
+        deep_readout: bool = False,
+        wide: int = 0,
+        u_proj: bool = False,
+        readout_mode: str = "cond",
+    ):
+        super().__init__()
+        self.k, self.action_dim, self.chunk_len = k, action_dim, chunk_len
+        self.readout_mode = readout_mode
+        w = wide or d_model
+        self.d_model = w
+        self.cond_proj = nn.Linear(cond_dim, w)
+        # ⚠️ wide 跟 u_proj 會黏在一起：w != d_model 時 u 的維度對不上，
+        #    「一定要有個東西」把它抬上去 —— 那樣 A2 一開就自動帶著 A3，
+        #    ablation 就分不出是誰的功勞。所以 u_proj=False 時用【零填補】
+        #    （不含參數、不學習）當對照，兩個開關才真的獨立。
+        self.u_in = d_model
+        self.u_proj = nn.Linear(d_model, w) if u_proj else None
+        if self.u_proj is None and w < d_model:
+            raise ValueError(f"wide={w} 比 u 的維度 {d_model} 還小，零填補抬不上去")
+        self.type_emb = nn.Parameter(torch.zeros(2, w))
+        self.pos_emb = nn.Parameter(torch.zeros(k, w))
+        nn.init.trunc_normal_(self.type_emb, std=0.02)
+        nn.init.trunc_normal_(self.pos_emb, std=0.02)
+        self.query = nn.Parameter(torch.zeros(1, 1, w)) if readout_mode == "query" else None
+        if self.query is not None:
+            nn.init.trunc_normal_(self.query, std=0.02)
+        layer = nn.TransformerEncoderLayer(
+            d_model=w, nhead=n_heads, dim_feedforward=4 * w,
+            batch_first=True, norm_first=True, dropout=0.0,
+        )
+        self.mixer = nn.TransformerEncoder(layer, num_layers=n_layers)
+        self.out_norm = nn.LayerNorm(w)
+        if deep_readout:
+            L, p = [], w
+            for _ in range(3):
+                lin = nn.Linear(p, w); nn.init.xavier_uniform_(lin.weight); nn.init.zeros_(lin.bias)
+                L += [lin, nn.GELU(), nn.LayerNorm(w)]
+                p = w
+            out = nn.Linear(p, chunk_len * action_dim)
+            nn.init.xavier_uniform_(out.weight); nn.init.zeros_(out.bias)
+            self.readout = nn.Sequential(*L, out)
+        else:
+            self.readout = nn.Linear(w, chunk_len * action_dim)
+            nn.init.xavier_uniform_(self.readout.weight)
+            nn.init.zeros_(self.readout.bias)
+
+    def forward(self, cond: torch.Tensor, u: torch.Tensor) -> torch.Tensor:
+        """cond (B, cond_dim), u (B, K, d_model_in) -> action chunk (B, chunk_len, action_dim)."""
+        b = cond.shape[0]
+        c = self.cond_proj(cond).unsqueeze(1) + self.type_emb[0]
+        if self.u_proj is not None:
+            z = self.u_proj(u)
+        elif self.d_model > self.u_in:
+            z = F.pad(u, (0, self.d_model - self.u_in))     # 零填補，不含參數
+        else:
+            z = u
+        z = z + self.type_emb[1] + self.pos_emb
+        toks = [c, z]
+        if self.query is not None:
+            toks = [self.query.expand(b, -1, -1)] + toks
+        h = self.mixer(torch.cat(toks, dim=1))
+        if self.readout_mode == "pool":
+            pooled = h.mean(dim=1)
+        elif self.readout_mode == "query":
+            pooled = h[:, 0]                      # 專用 query token
+        else:
+            pooled = h[:, 0]                      # cond token
+        return self.readout(self.out_norm(pooled)).reshape(b, self.chunk_len, self.action_dim)
+
+    def nll(self, pred: torch.Tensor, target_actions: torch.Tensor) -> torch.Tensor:
+        """Same signature as the other heads so callers stay interchangeable."""
+        return (pred - target_actions).pow(2).mean(dim=(1, 2))
+
+    @torch.no_grad()
+    def act(self, cond: torch.Tensor, u: torch.Tensor) -> torch.Tensor:
+        return self.forward(cond, u).clamp(-1.0, 1.0)
+
+class MixerActionHead(nn.Module):
+    """跟 TokenActionHead 同介面，但跨 token 的混合改用 MLP-Mixer 而不是 self-attention。
+
+    為什麼要這個（2026-08-23 實測出來的動機）：
+      concat MLP 的增益 +8.0%，token/self-attention 只有 +4.6%，四組對照同向。
+      拆下來的原因是 attention 的跨 token 混合是【加權平均】—— softmax 權重非負、
+      和為一 ⇒ 做不出減法；而 concat MLP 的第一層是全部維度的自由線性組合。
+      再加上 attention 的投影權重對每顆 token 共用，token 只有 4 顆時沒東西好 generalize。
+
+    Mixer 剛好卡在中間：跨 token 的混合是一層【普通線性層】（自由加減，不受
+    加權平均限制），但仍保留「每顆 token 是獨立單位」的結構、不像 concat 那樣攤平。
+    Chain-of-Goals（arXiv 2602.03389）用的就是 Mixer 不是 attention。
+
+    ⚠️ Mixer 的 token-mixing 層綁死 token 數（線性層的輸入維度就是 N），
+       所以 ⛔ 不能像 attention 那樣吃變長序列。這裡 N = 1 + K 固定，沒問題。
+    """
+
+    def __init__(
+        self,
+        cond_dim: int,
+        d_model: int,
+        k: int,
+        action_dim: int,
+        chunk_len: int,
+        n_layers: int = 2,
+        tok_hidden: int = 0,
+        deep_readout: bool = False,
+        wide: int = 0,
+        u_proj: bool = False,
+        readout_mode: str = "pool",
+    ):
+        super().__init__()
+        self.k, self.action_dim, self.chunk_len = k, action_dim, chunk_len
+        self.readout_mode = readout_mode
+        w = wide or d_model
+        self.d_model, self.u_in = w, d_model
+        n_tok = 1 + k + (1 if readout_mode == "query" else 0)
+        th = tok_hidden or 4 * n_tok
+        self.cond_proj = nn.Linear(cond_dim, w)
+        self.u_proj = nn.Linear(d_model, w) if u_proj else None
+        if self.u_proj is None and w < d_model:
+            raise ValueError(f"wide={w} 比 u 的維度 {d_model} 還小，零填補抬不上去")
+        self.type_emb = nn.Parameter(torch.zeros(2, w))
+        self.pos_emb = nn.Parameter(torch.zeros(k, w))
+        nn.init.trunc_normal_(self.type_emb, std=0.02)
+        nn.init.trunc_normal_(self.pos_emb, std=0.02)
+        self.query = nn.Parameter(torch.zeros(1, 1, w)) if readout_mode == "query" else None
+        if self.query is not None:
+            nn.init.trunc_normal_(self.query, std=0.02)
+
+        self.norm_t = nn.ModuleList(nn.LayerNorm(w) for _ in range(n_layers))
+        self.norm_c = nn.ModuleList(nn.LayerNorm(w) for _ in range(n_layers))
+        self.mix_t = nn.ModuleList(
+            nn.Sequential(nn.Linear(n_tok, th), nn.GELU(), nn.Linear(th, n_tok))
+            for _ in range(n_layers)
+        )
+        self.mix_c = nn.ModuleList(
+            nn.Sequential(nn.Linear(w, 4 * w), nn.GELU(), nn.Linear(4 * w, w))
+            for _ in range(n_layers)
+        )
+        self.out_norm = nn.LayerNorm(w)
+        if deep_readout:
+            L = []
+            for _ in range(3):
+                lin = nn.Linear(w, w); nn.init.xavier_uniform_(lin.weight); nn.init.zeros_(lin.bias)
+                L += [lin, nn.GELU(), nn.LayerNorm(w)]
+            out = nn.Linear(w, chunk_len * action_dim)
+            nn.init.xavier_uniform_(out.weight); nn.init.zeros_(out.bias)
+            self.readout = nn.Sequential(*L, out)
+        else:
+            self.readout = nn.Linear(w, chunk_len * action_dim)
+            nn.init.xavier_uniform_(self.readout.weight)
+            nn.init.zeros_(self.readout.bias)
+
+    def forward(self, cond: torch.Tensor, u: torch.Tensor) -> torch.Tensor:
+        b = cond.shape[0]
+        c = self.cond_proj(cond).unsqueeze(1) + self.type_emb[0]
+        if self.u_proj is not None:
+            z = self.u_proj(u)
+        elif self.d_model > self.u_in:
+            z = F.pad(u, (0, self.d_model - self.u_in))
+        else:
+            z = u
+        z = z + self.type_emb[1] + self.pos_emb
+        toks = [c, z]
+        if self.query is not None:
+            toks = [self.query.expand(b, -1, -1)] + toks
+        h = torch.cat(toks, dim=1)                                   # (B, N, w)
+        for nt, nc, mt, mc in zip(self.norm_t, self.norm_c, self.mix_t, self.mix_c):
+            h = h + mt(nt(h).transpose(1, 2)).transpose(1, 2)        # 跨 token（自由線性）
+            h = h + mc(nc(h))                                        # 跨 channel
+        pooled = h.mean(dim=1) if self.readout_mode == "pool" else h[:, 0]
+        return self.readout(self.out_norm(pooled)).reshape(b, self.chunk_len, self.action_dim)
+
+    def nll(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """跟其他 head 同簽名，讓呼叫端可以互換。"""
+        return (pred - target).pow(2).mean(dim=(-1, -2))

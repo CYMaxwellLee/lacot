@@ -1,0 +1,18 @@
+{
+ "tag": "tok \u4e09\u500b\u5168\u958b",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.26737913489341736,
+ "cond_only": 0.27098649740219116,
+ "gain": 0.013311964040111701,
+ "base": 0.4944152235984802,
+ "params": 7367176,
+ "macc": 0.953125,
+ "switches": {
+  "deep_readout": true,
+  "wide": 512,
+  "u_proj": true
+ }
+}

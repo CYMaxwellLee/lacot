@@ -1,0 +1,13 @@
+{
+ "tag": "token\u57fa\u6e96 / \u5c08\u7528",
+ "mode": "proto",
+ "arch": "token",
+ "protocol": "ded",
+ "switches": {},
+ "anchor": 0.2632977068424225,
+ "cond_only": 0.27105098962783813,
+ "gain": 0.028604517533992957,
+ "base": 0.4944152235984802,
+ "params": 1649416,
+ "macc": 0.953125
+}

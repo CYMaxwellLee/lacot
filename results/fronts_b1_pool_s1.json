@@ -1,0 +1,15 @@
+{
+ "tag": "B1 \u4e94\u9846\u5e73\u5747",
+ "mode": "proto",
+ "arch": "token",
+ "protocol": "ded",
+ "switches": {
+  "readout_mode": "pool"
+ },
+ "anchor": 0.26382094621658325,
+ "cond_only": 0.2689082622528076,
+ "gain": 0.018918407317071062,
+ "base": 0.4944152235984802,
+ "params": 1649416,
+ "macc": 0.953125
+}

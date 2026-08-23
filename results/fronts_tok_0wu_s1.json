@@ -1,0 +1,17 @@
+{
+ "tag": "tok +wide+uproj",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.27206146717071533,
+ "cond_only": 0.2720468044281006,
+ "gain": -5.3897867484886675e-05,
+ "base": 0.4944152235984802,
+ "params": 6576136,
+ "macc": 0.953125,
+ "switches": {
+  "wide": 512,
+  "u_proj": true
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "tag": "tok +readout+uproj",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.2616126537322998,
+ "cond_only": 0.2677060663700104,
+ "gain": 0.022761578474238098,
+ "base": 0.4944152235984802,
+ "params": 1914120,
+ "macc": 0.953125,
+ "switches": {
+  "deep_readout": true,
+  "u_proj": true
+ }
+}

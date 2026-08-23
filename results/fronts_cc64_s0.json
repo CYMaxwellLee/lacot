@@ -1,0 +1,15 @@
+{
+ "tag": "concat cond 64",
+ "mode": "proto",
+ "arch": "concat",
+ "protocol": "ded",
+ "switches": {},
+ "cond_dim": 64,
+ "cond_params": 92096,
+ "anchor": 0.23802749812602997,
+ "cond_only": 0.26814520359039307,
+ "gain": 0.11231864326154273,
+ "base": 0.4944152235984802,
+ "params": 1090056,
+ "macc": 0.859375
+}

@@ -1,0 +1,13 @@
+{
+ "tag": "cond 4\uff08\u5e7e\u4e4e\u539f\u59cb\uff09",
+ "mode": "head",
+ "hidden": 4,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.24717949330806732,
+ "cond_only": 0.2769336998462677,
+ "gain": 0.1074416243119477,
+ "base": 0.4944152235984802,
+ "params": 5732,
+ "macc": 0.859375
+}

@@ -1,0 +1,13 @@
+{
+ "tag": "token head 1\u5c64",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 1,
+ "isolate": true,
+ "anchor": 0.255212664604187,
+ "cond_only": 0.26597660779953003,
+ "gain": 0.04046951077538341,
+ "base": 0.4944152235984802,
+ "params": 859656,
+ "macc": 0.859375
+}

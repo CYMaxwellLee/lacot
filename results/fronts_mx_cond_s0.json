@@ -1,0 +1,15 @@
+{
+ "tag": "mixer \u8b80 cond \u9846",
+ "mode": "proto",
+ "arch": "mixer",
+ "protocol": "ded",
+ "switches": {
+  "readout_mode": "cond"
+ },
+ "anchor": 0.25149181485176086,
+ "cond_only": 0.2630997896194458,
+ "gain": 0.044120045798877294,
+ "base": 0.4944152235984802,
+ "params": 1123530,
+ "macc": 0.859375
+}

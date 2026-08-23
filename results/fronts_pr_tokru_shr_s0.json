@@ -1,0 +1,16 @@
+{
+ "tag": "token r0u / \u5171\u7528",
+ "mode": "proto",
+ "arch": "token",
+ "protocol": "shared",
+ "switches": {
+  "deep_readout": true,
+  "u_proj": true
+ },
+ "anchor": 0.24392500519752502,
+ "cond_only": 0.26392146944999695,
+ "gain": 0.07576672066180845,
+ "base": 0.4944152235984802,
+ "params": 1914120,
+ "macc": 0.859375
+}

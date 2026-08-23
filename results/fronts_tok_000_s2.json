@@ -1,0 +1,14 @@
+{
+ "tag": "tok \u57fa\u6e96(\u4e09\u500b\u90fd\u95dc)",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.2569679021835327,
+ "cond_only": 0.2643281817436218,
+ "gain": 0.027845232057881808,
+ "base": 0.4944152235984802,
+ "params": 1649416,
+ "macc": 0.90625,
+ "switches": {}
+}

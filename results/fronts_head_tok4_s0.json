@@ -1,0 +1,13 @@
+{
+ "tag": "token head 4\u5c64",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 4,
+ "isolate": true,
+ "anchor": 0.2442430704832077,
+ "cond_only": 0.2666955888271332,
+ "gain": 0.08418781293933875,
+ "base": 0.4944152235984802,
+ "params": 3228936,
+ "macc": 0.859375
+}

@@ -12,3 +12,8 @@ wandb/
 # checkpoint：只放行已經證明有用的 value（2.1M），其餘一律擋
 checkpoints/*
 !checkpoints/scratch_value.pt
+
+# rollout / probe 的產物：JSON 很小又是結論本身，留著進 repo；
+# checkpoint 是 GB 級的中間物，⛔ 不進 repo（要重現用 slurm/ 底下的腳本重跑）
+results/*.pt
+slurm_outputs/

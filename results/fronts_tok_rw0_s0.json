@@ -1,0 +1,17 @@
+{
+ "tag": "tok +readout+wide",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.2661001682281494,
+ "cond_only": 0.2817993760108948,
+ "gain": 0.05571058390895234,
+ "base": 0.4944152235984802,
+ "params": 7235592,
+ "macc": 0.859375,
+ "switches": {
+  "deep_readout": true,
+  "wide": 512
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 4,
+ "cond": 256,
+ "chunk": 2,
+ "steps2": 2000,
+ "episodes": 100,
+ "maxh": 1000,
+ "rates": {
+  "null_u": 0.23,
+  "R3": 0.55
+ }
+}

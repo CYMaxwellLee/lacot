@@ -1,0 +1,13 @@
+{
+ "tag": "cond 256\uff08\u73fe\u6cc1\uff09",
+ "mode": "head",
+ "hidden": 256,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.2482590526342392,
+ "cond_only": 0.26413553953170776,
+ "gain": 0.060107348392481996,
+ "base": 0.4944152235984802,
+ "params": 1449728,
+ "macc": 0.859375
+}

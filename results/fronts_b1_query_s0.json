@@ -1,0 +1,15 @@
+{
+ "tag": "B1 \u5c08\u7528 query token",
+ "mode": "proto",
+ "arch": "token",
+ "protocol": "ded",
+ "switches": {
+  "readout_mode": "query"
+ },
+ "anchor": 0.2528679668903351,
+ "cond_only": 0.2646978497505188,
+ "gain": 0.0446920247797008,
+ "base": 0.4944152235984802,
+ "params": 1649672,
+ "macc": 0.8125
+}

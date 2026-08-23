@@ -1,0 +1,13 @@
+{
+ "ckpt": "ckpt_medium-navigate_self_K4_c256_ch4_st12000_s1.pt",
+ "env": "pointmaze-medium-navigate-v0",
+ "R": 3,
+ "rates": {
+  "bc": 1.0,
+  "real": 0.9,
+  "shuffle": 1.0,
+  "matched": 0.9,
+  "gauss": 0.2,
+  "zero": 0.1
+ }
+}

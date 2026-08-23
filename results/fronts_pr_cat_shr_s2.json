@@ -1,0 +1,13 @@
+{
+ "tag": "concat / \u5171\u7528",
+ "mode": "proto",
+ "arch": "concat",
+ "protocol": "shared",
+ "switches": {},
+ "anchor": 0.24474987387657166,
+ "cond_only": 0.2609402537345886,
+ "gain": 0.062046309936085065,
+ "base": 0.4944152235984802,
+ "params": 1188360,
+ "macc": 0.90625
+}

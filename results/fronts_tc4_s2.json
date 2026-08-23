@@ -1,0 +1,15 @@
+{
+ "tag": "token cond 4",
+ "mode": "proto",
+ "arch": "token",
+ "protocol": "ded",
+ "switches": {},
+ "cond_dim": 4,
+ "cond_params": 5732,
+ "anchor": 0.2619418799877167,
+ "cond_only": 0.27875831723213196,
+ "gain": 0.06032622599888793,
+ "base": 0.4944152235984802,
+ "params": 1584904,
+ "macc": 0.90625
+}

@@ -1,0 +1,13 @@
+{
+ "tag": "concat / \u5c08\u7528",
+ "mode": "proto",
+ "arch": "concat",
+ "protocol": "ded",
+ "switches": {},
+ "anchor": 0.2567216157913208,
+ "cond_only": 0.27061933279037476,
+ "gain": 0.05135522601343234,
+ "base": 0.4944152235984802,
+ "params": 1188360,
+ "macc": 0.953125
+}

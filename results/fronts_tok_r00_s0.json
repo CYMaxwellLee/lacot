@@ -1,0 +1,16 @@
+{
+ "tag": "tok +readout",
+ "mode": "head",
+ "hidden": 0,
+ "layers": 2,
+ "isolate": true,
+ "anchor": 0.25242161750793457,
+ "cond_only": 0.2693384289741516,
+ "gain": 0.06280875525504959,
+ "base": 0.4944152235984802,
+ "params": 1848328,
+ "macc": 0.8125,
+ "switches": {
+  "deep_readout": true
+ }
+}

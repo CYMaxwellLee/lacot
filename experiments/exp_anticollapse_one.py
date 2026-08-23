@@ -38,7 +38,7 @@ STEPS2 = int(os.environ.get("LACOT_STEPS2", 3000))
 PROBE_STEPS = int(os.environ.get("LACOT_PROBE_STEPS", 1200))
 ROUNDS = 3
 DIM = K * D_MODEL
-EMA_M = 0.99
+EMA_M = float(os.environ.get("LACOT_EMA_M", 0.99))
 VAR_GAMMA = 1.0
 
 d = np.load(f"{OGB_DATA}/{ENV}.npz")
@@ -128,9 +128,74 @@ def barlow(a, b):
     return (on + 0.005 * off) / a.shape[1]
 
 
-def cons_loss(kind, us, refine_ema, cond, predictor=None):
+class SIGReg(nn.Module):
+    """Sketch Isotropic Gaussian Regularizer（arXiv:2511.08544，LeWM 用的）。
+
+    逐字對照 Rei 的 porting/test_drifting_lewm.py（該檔註明是
+    stable_worldmodel/wm/loss.py::SIGReg 的 verbatim copy）。
+    做法：把表徵隨機投影到 num_proj 個一維方向，檢定每個方向上的分布
+    像不像標準高斯（比較特徵函數的實部 cos 與虛部 sin，用高斯窗加權積分）。
+    塌掉的東西不可能是高斯 => 擋得住。
+    ⚠️ 已知限制（LeWM Appendix H 自承）：只約束【每個時間點各自】的分布，
+       時間維度無約束，會 temporal collapse。
+    """
+
+    def __init__(self, knots=17, num_proj=256):
+        super().__init__()
+        self.num_proj = num_proj
+        t = torch.linspace(0, 3, knots)
+        dt = 3 / (knots - 1)
+        w = torch.full((knots,), 2 * dt)
+        w[[0, -1]] = dt
+        win = torch.exp(-t.square() / 2.0)
+        self.register_buffer("t", t)
+        self.register_buffer("phi", win)
+        self.register_buffer("weights", w * win)
+
+    def forward(self, proj):
+        A = torch.randn(proj.size(-1), self.num_proj, device=proj.device)
+        A = A.div_(A.norm(p=2, dim=0))
+        x_t = (proj @ A).unsqueeze(-1) * self.t
+        err = (x_t.cos().mean(-3) - self.phi).square() + x_t.sin().mean(-3).square()
+        return ((err @ self.weights) * proj.size(-2)).mean()
+
+
+def cons_loss(kind, us, refine_ema, cond, predictor=None, sigreg=None):
     """各種 consistency 的差別只在這裡。"""
     L = us[0].new_zeros(())
+    # ── 有 _ema 後綴的：目標換成 EMA 的輸出（主人 08-23：「其他方法也都可以有 EMA」）
+    use_ema = kind.endswith("_ema")
+    base = kind[:-4] if use_ema else kind
+
+    def target(r):
+        """要拿什麼當比較對象 —— 這一格就是 EMA 與否的唯一差別。"""
+        if use_ema:
+            with torch.no_grad():
+                return refine_ema(cond, us[r])
+        return us[r].detach()
+
+    if base == "sigreg":
+        for r in range(1, ROUNDS + 1):
+            L = L + sigreg(flat(us[r]).unsqueeze(0))
+        if use_ema:                      # ＋ 跟 EMA 對齊
+            for r in range(ROUNDS):
+                L = L + (us[r + 1] - target(r)).pow(2).mean()
+        return L / ROUNDS
+    if base == "barlow":
+        for r in range(ROUNDS):
+            L = L + barlow(flat(us[r + 1]), flat(target(r)))
+        return L / ROUNDS
+    if base == "center" and use_ema:
+        for r in range(ROUNDS):
+            a = us[r + 1] - us[r + 1].mean(0, keepdim=True)
+            t = target(r); b = (t - t.mean(0, keepdim=True))
+            L = L + (a - b).pow(2).mean()
+        return L / ROUNDS
+    if base == "var" and use_ema:
+        for r in range(ROUNDS):
+            L = L + (us[r + 1] - target(r)).pow(2).mean()
+            L = L + F.relu(VAR_GAMMA - flat(us[r + 1]).std(dim=0)).mean()
+        return L / ROUNDS
     if kind == "barlow":
         for r in range(ROUNDS):
             L = L + barlow(flat(us[r + 1]), flat(us[r]).detach())
@@ -192,9 +257,17 @@ def run(kind, lam, tag):
     model.freeze_front_end()
     macc = (lg.argmax(1) == lab).float().mean().item()
 
-    needs_ema = kind in ("ema", "ema_var", "byol")
+    needs_ema = kind in ("ema", "ema_var", "byol") or kind.endswith("_ema")
     refine_ema = copy.deepcopy(model.refine) if needs_ema else None
-    predictor = mlp(DIM, 1024, DIM, n=2).to(device) if kind == "byol" else None
+    # ⚠️ predictor 要【刻意弱】——BYOL 的防塌靠「online 得保留真資訊才預測得準」，
+    #    predictor 一旦強到什麼都能擬合，online 丟光資訊輸出常數也照樣被預測出來，
+    #    約束就失效了。實測：hidden=1024 的 byol(0.4706) 比【沒有 predictor】的
+    #    ema(0.1060) 還糟 —— 等於把煞車拆了。
+    #    我們這個問題很小：u 名目 1024 維，但真 e_target 有效維只有 47、
+    #    軌跡真實資訊量只有 32（16 點 × 2 維）。所以往小的搜。
+    PRED_H = int(os.environ.get("LACOT_PRED_HIDDEN", 64))
+    predictor = mlp(DIM, PRED_H, DIM, n=int(os.environ.get("LACOT_PRED_LAYERS", 1))).to(device) if kind == "byol" else None
+    sigreg = SIGReg().to(device) if "sigreg" in kind else None
     if refine_ema is not None:
         for p in refine_ema.parameters():
             p.requires_grad_(False)
@@ -218,7 +291,7 @@ def run(kind, lam, tag):
             u = model.refine(cond, u); us.append(u)
         l_refine = sum(model.action_head.nll(model.action_head(cat(us[r + 1])), act).mean()
                        for r in range(ROUNDS)) / ROUNDS
-        l_cons = cons_loss(kind, us, refine_ema, cond, predictor)
+        l_cons = cons_loss(kind, us, refine_ema, cond, predictor, sigreg)
         l_null = model.action_head.nll(model.action_head(torch.cat([cond, flat(ZERO)], -1)), act).mean()
         (l_nf + l_anchor + l_refine + lam * l_cons + l_null).backward()
         torch.nn.utils.clip_grad_norm_([p for m in mods for p in m.parameters()], 1.0)
@@ -266,24 +339,46 @@ def run(kind, lam, tag):
     return row
 
 
-print(f"\n訓練設定：stage1 {STEPS1} / stage2 {STEPS2} 步；塌度越低越好（真 e_target ≈ 0.025）", flush=True)
-print("=" * 96)
-rows = []
-print("A. self（現在這個）— 掃權重", flush=True)
-for lam in (0.0, 0.5, 2.0, 8.0):
-    rows.append(run("self", lam, f"self λ={lam}"))
-print("\nB/C/D. 換 loss 形式（權重固定 0.5，跟現況可比）", flush=True)
-for kind, tag in (("ema", "ema 半套"), ("center", "center (DINO)"), ("var", "var (VICReg)"),
-                  ("byol", "byol ＋predictor"), ("barlow", "barlow twins"), ("ema_var", "ema ＋ var")):
-    rows.append(run(kind, 0.5, tag))
 
-print("\n" + "=" * 96)
-print(f"{'變體':<22} {'塌度':>8} {'有效維':>7} {'路徑資訊':>10} {'贏內插?':>8} {'cos(真et)':>10}")
-print("-" * 96)
-et_ref = rows[0]["collapse_et"]
-for r in rows:
-    win = "✔" if r["info"] < r["info_interp"] * 0.95 else "✘"
-    print(f"{r['tag']:<22} {r['collapse']:>8.4f} {r['edim']:>7} {r['info']:>10.4f} {win:>8} {r['cos_et']:>+10.3f}")
-print("-" * 96)
-print(f"{'（參考）真 e_target':<22} {et_ref:>8.4f} {rows[0]['edim_et']:>7} {rows[0]['info_interp']:>10.4f}  <- 內插基準")
-print("\n讀法：塌度要往 0.025 靠、且路徑資訊要贏過內插。兩個都過才值得跑 rollout。")
+
+# ────────────────────────────────────────────────────────────
+# 單變體模式：由 slurm job array 每格跑一個，結果寫 JSON，最後彙整
+# ────────────────────────────────────────────────────────────
+import json
+
+# 參數搜尋（主人 2026-08-23 裁示：predictor 往小搜、EMA momentum 一起掃）
+VARIANTS = {
+    # predictor 大小（byol）—— 往小的方向，對照真 e_target 的有效維 47
+    "byol_h32":    ("byol", 0.5, dict(LACOT_PRED_HIDDEN="32")),
+    "byol_h64":    ("byol", 0.5, dict(LACOT_PRED_HIDDEN="64")),
+    "byol_h128":   ("byol", 0.5, dict(LACOT_PRED_HIDDEN="128")),
+    "byol_h256":   ("byol", 0.5, dict(LACOT_PRED_HIDDEN="256")),
+    "byol_h1024":  ("byol", 0.5, dict(LACOT_PRED_HIDDEN="1024")),   # 舊值，當對照
+    # EMA momentum
+    "ema_m99":     ("ema",        0.5, dict(LACOT_EMA_M="0.99")),
+    "ema_m996":    ("ema",        0.5, dict(LACOT_EMA_M="0.996")),
+    "ema_m999":    ("ema",        0.5, dict(LACOT_EMA_M="0.999")),
+    "cema_m99":    ("center_ema", 0.5, dict(LACOT_EMA_M="0.99")),
+    "cema_m996":   ("center_ema", 0.5, dict(LACOT_EMA_M="0.996")),
+    "cema_m999":   ("center_ema", 0.5, dict(LACOT_EMA_M="0.999")),
+}
+
+name = os.environ.get("VARIANT")
+if name is None or name not in VARIANTS:
+    print(f"用法：VARIANT=<name> python exp_anticollapse_one.py")
+    print(f"可選：{', '.join(VARIANTS)}")
+    sys.exit(2)
+
+kind, lam, extra = VARIANTS[name]
+for k, v in extra.items():          # 該格自己的超參數
+    os.environ[k] = v
+EMA_M = float(os.environ.get("LACOT_EMA_M", 0.99))
+print(f"\n=== 變體 {name}（kind={kind} λ={lam} {extra}）===", flush=True)
+row = run(kind, lam, name)
+row.update(extra)
+out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                   "results", f"anticollapse_{name}.json")
+os.makedirs(os.path.dirname(out), exist_ok=True)
+with open(out, "w") as f:
+    json.dump(row, f, indent=1)
+print(f"寫入 {out}", flush=True)
