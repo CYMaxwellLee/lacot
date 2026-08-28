@@ -43,6 +43,9 @@ SEED = int(os.environ.get("LACOT_SEED", 0))
 B = int(os.environ.get("LACOT_PROBE_B", 8 if SMOKE else 64))
 STEPS = int(os.environ.get("LACOT_PROBE_STEPS", 5 if SMOKE else 100))
 NOISE = float(os.environ.get("LACOT_PROBE_NOISE", 2.0))
+# ⭐ 分布外跨度模式（Q2 軸）：(s,g) 仍在同一條軌跡上（⇒ u_true anchor 造得出來），
+#    但跨度強制 ≥ MINSPAN 步 —— 訓練抽樣的跨度 p99 只有 33 步，MINSPAN=100 就是分布外。
+MINSPAN = int(os.environ.get("LACOT_PROBE_MINSPAN", 0))
 ETAS = [float(x) for x in os.environ.get("LACOT_PROBE_ETAS", "0.05,0.1,0.5").split(",")]
 LAMS = [float(x) for x in os.environ.get("LACOT_PROBE_LAMS", "0.1,0.3,1.0").split(",")]
 torch.manual_seed(SEED)
@@ -139,13 +142,19 @@ def probe_batch(rng, B):
     rows, goals = [], []
     while len(rows) < B:
         r = int(rng.integers(0, N)); te = int(traj_end[r])
-        if te - r < 8:               # 太短的段沒有「路線」可言，跳過
+        if te - r < max(8, MINSPAN):     # 太短的段沒有「路線」可言（MINSPAN 模式：跨度不夠就換）
             continue
-        _d = rng.random()
-        gr = int(round(min(r + 1, te) * _d + te * (1 - _d)))
-        gr = max(gr, min(r + 8, te))
+        if MINSPAN > 0:
+            gr = int(rng.integers(r + MINSPAN, te + 1))   # 分布外：跨度 ≥ MINSPAN 步
+        else:
+            _d = rng.random()
+            gr = int(round(min(r + 1, te) * _d + te * (1 - _d)))
+            gr = max(gr, min(r + 8, te))
         rows.append(r); goals.append(gr)
     rows, goals = np.array(rows), np.array(goals)
+    _sp = goals - rows
+    print(f"  抽到的跨度：p50 {int(np.median(_sp))} p90 {int(np.percentile(_sp, 90))} 步"
+          f"（訓練分布 p99 ≈ 33 步{'，MINSPAN 模式＝分布外' if MINSPAN else ''}）", flush=True)
     f = np.linspace(rows[:, None].astype(np.float64), goals[:, None].astype(np.float64),
                     T_CAP, axis=1).reshape(B, T_CAP)
     lo_i = np.floor(f).astype(np.int64)
@@ -267,14 +276,15 @@ print(f"η=0 對照不過門檻（探針有效）：{'✓' if probe_valid else '
 print(f"壞 u 全 pass 的 (η,λ)：{len(full)} 組 ⇒ 推薦 {recommend}", flush=True)
 print(f"{verdict['diseaseA']}   {verdict['diseaseB_hint']}", flush=True)
 
-tag = (f"{ENV_NAME}_st{STEPS}_B{B}_n{NOISE}_s{SEED}"
+tag = (f"{ENV_NAME}_st{STEPS}_B{B}_n{NOISE}"
+       + (f"_span{MINSPAN}" if MINSPAN else "") + f"_s{SEED}"
        + ("" if SMOKE else "_" + os.path.basename(_lp).removeprefix("ckpt_").removesuffix(".pt")))
 out = os.path.join(ROOT, "results", f"refineprobe_{tag}.json")
 if SMOKE:
     import tempfile
     out = os.path.join(tempfile.gettempdir(), f"refineprobe_{tag}.json")  # ⛔ smoke 不碰 results/
 json.dump(dict(meta=dict(env=ENV_NAME, steps=STEPS, B=B, noise=NOISE, seed=SEED,
-                         etas=ETAS, lams=LAMS, smoke=SMOKE,
+                         minspan=MINSPAN, etas=ETAS, lams=LAMS, smoke=SMOKE,
                          ckpt=None if SMOKE else os.path.basename(_lp), cfg=dict(cfg)),
                anchor=ANCH, logp_floor=LOGP_FLOOR, arms=ARMS, verdict=verdict),
           open(out, "w"), indent=1, default=float)
