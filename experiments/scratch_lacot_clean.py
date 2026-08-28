@@ -1,12 +1,12 @@
 """step a1: CLEAN the hindsight data (filter wandering sub-goal-crossing paths),
 retrain, and see if the rollout ORACLE improves a lot + the OOD gap shrinks.
 Wander filter: keep (s,g) only if recorded path length / straight-line < WANDER_MAX.
-Reports: rollout success (oracle/gcbc/null/M4) AND open-loop OOD gap (dataset vs expert et).
+Reports: rollout success (oracle/gcbc/null/LaCoT) AND open-loop OOD gap (dataset vs expert et).
 """
 import os, sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
 from lacot.model import RefineOperator
@@ -193,7 +193,7 @@ print(f"\n==== CLEAN (wander<{WANDER_MAX}) SUCCESS RATE  {N_TASKS}x{SEEDS} eps =
 rollout("oracle", 0, "ORACLE head(cond, expert e_target)")
 rollout("gcbc", 0, "GCBC floor")
 rollout("null", 0, "null-u floor")
-rollout("m4", 3, "M4 refine R=3")
+rollout("lacot", 3, "LaCoT refine R=3")
 
 # open-loop OOD gap after cleaning
 md, me, mn = [], [], []

@@ -1,0 +1,28 @@
+{
+ "env": "pointmaze-large-stitch-v0",
+ "seed": 0,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps1": 50,
+ "steps2": 100,
+ "episodes": 5,
+ "maxh": 200,
+ "match_acc": 0.578125,
+ "offline": {
+  "A_data": 0.5582087635993958,
+  "B_data": 0.48583821952342987,
+  "C": 0.49273815751075745,
+  "A_oracle": 0.560454934835434,
+  "B_oracle": 0.4885701537132263
+ },
+ "rates": {
+  "C_bc_floor": 0.0,
+  "A_etarget_only": 0.0,
+  "B_cond_etarget": 0.0
+ },
+ "tcap": 256,
+ "oracle_horizon": 800,
+ "oracle_trunc_rate": 0.0,
+ "goal_sampling": "uniform-official"
+}

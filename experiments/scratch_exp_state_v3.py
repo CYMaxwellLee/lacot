@@ -1,4 +1,4 @@
-"""M4 state e_target, v2: NO pooling of the K slots -- compare the full [K,d] vectors
+"""LaCoT state e_target, v2: NO pooling of the K slots -- compare the full [K,d] vectors
 DIRECTLY (flatten K*d, normalize, dot). Mirrors how u ([K,d]) aligns to e_target ([K,d]).
 query (s,g)->K slots ; e_target trajectory->K slots ; InfoNCE over the full structure.
 """
@@ -8,7 +8,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 
 # 資料位置：預設走官方 OGBENCH_DATA_DIR，沒設才用本機 archive

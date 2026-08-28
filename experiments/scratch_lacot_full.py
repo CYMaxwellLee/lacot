@@ -1,4 +1,4 @@
-"""M4 full loop on STATE: e_target (contrastive, frozen) -> flow -> refine -> action head.
+"""LaCoT full loop on STATE: e_target (contrastive, frozen) -> flow -> refine -> action head.
 Three losses (l_nf + l_act_anchor + l_act_refine + lam*l_cons), like LaCoTActor.losses_given.
 Checks: action error from the TRUE e_target (ceiling) vs from the REFINED sampled u (inference);
 u convergence (l_cons); TEST-TIME SCALING = action error vs number of refine rounds.
@@ -7,7 +7,7 @@ import os
 import sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
 from lacot.model import RefineOperator
@@ -119,7 +119,7 @@ with torch.no_grad():
     err_anchor = act_err(ahead(et.reshape(B, -1)), act)                       # ceiling: from true e_target
     acc_anchor = ahead.accuracy(ahead(et.reshape(B, -1)), act).mean().item()
     # test-time scaling: action error vs refine rounds (inference path: sample u0 -> refine)
-    print("\n==== M4 FULL RESULTS ====", flush=True)
+    print("\n==== LaCoT FULL RESULTS ====", flush=True)
     print(f"ANCHOR (action from TRUE e_target): MSE {err_anchor:.4f}  bin-acc {acc_anchor:.3f}   (ceiling)", flush=True)
     base = ((act.mean(0, keepdim=True) - act).pow(2).mean().item())
     print(f"baseline (predict-mean-action) MSE {base:.4f}", flush=True)

@@ -31,7 +31,7 @@ def rollout(policy, tag):
             obs, info = env.reset(seed=1000 * task + sd, options={"task_id": task, "render_goal": False})
             goal = info["goal"]; success = False; steps = 0
             while steps < MAXH and not success:
-                for _ in range(CHUNK):  # same receding-horizon chunk cadence as our M4 eval
+                for _ in range(CHUNK):  # same receding-horizon chunk cadence as our LaCoT eval
                     a = policy(obs, goal)
                     obs, rew, term, trunc, info = env.step(a)
                     steps += 1

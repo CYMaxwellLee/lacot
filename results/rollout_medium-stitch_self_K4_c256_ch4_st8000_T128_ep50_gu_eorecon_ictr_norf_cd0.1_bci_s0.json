@@ -1,0 +1,198 @@
+{
+ "env": "pointmaze-medium-stitch-v0",
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 8000,
+ "tcap": 128,
+ "tcap_requested": 128,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 250,
+ "maxh": 1000,
+ "rates": {
+  "bc": 0.6,
+  "null_u": 0.048,
+  "shuf": 0.072,
+  "R0": 0.44,
+  "R1": 0.456,
+  "R3": 0.456,
+  "R5": 0.468,
+  "R8": 0.48,
+  "R8_reversed": 0.328
+ },
+ "dev_eval": {
+  "n_tasks": 300,
+  "passed": true,
+  "gates": {
+   "sensitivity": true,
+   "specificity": true
+  },
+  "random": {
+   "n": 300,
+   "success": 0.0,
+   "se": 0.0,
+   "steps_med": 1000.0,
+   "best_dist_med": 11.75923241990569,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 4.0,
+     "best_dist_med": 7.718074000698181
+    },
+    "1": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 6.0,
+     "best_dist_med": 11.980094550446378
+    },
+    "2": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 8.0,
+     "best_dist_med": 16.149613377058053
+    }
+   }
+  },
+  "bc": {
+   "n": 300,
+   "success": 0.8233333333333334,
+   "se": 0.022056142680706676,
+   "steps_med": 123.5,
+   "best_dist_med": 0.9647067367757227,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.93,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9435307111621734
+    },
+    "1": {
+     "n": 100,
+     "success": 0.87,
+     "bfs_med": 6.0,
+     "best_dist_med": 0.9607889315357403
+    },
+    "2": {
+     "n": 100,
+     "success": 0.67,
+     "bfs_med": 8.0,
+     "best_dist_med": 0.98284576625632
+    }
+   }
+  },
+  "bc_rerun": {
+   "n": 300,
+   "success": 0.8233333333333334,
+   "se": 0.022056142680706676,
+   "steps_med": 123.5,
+   "best_dist_med": 0.9647067367757227,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.93,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9435307111621734
+    },
+    "1": {
+     "n": 100,
+     "success": 0.87,
+     "bfs_med": 6.0,
+     "best_dist_med": 0.9607889315357403
+    },
+    "2": {
+     "n": 100,
+     "success": 0.67,
+     "bfs_med": 8.0,
+     "best_dist_med": 0.98284576625632
+    }
+   }
+  },
+  "null_u": {
+   "n": 300,
+   "success": 0.4633333333333333,
+   "se": 0.028837890554337213,
+   "steps_med": 1000.0,
+   "best_dist_med": 1.1332231177480852,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.7,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9734662119495514
+    },
+    "1": {
+     "n": 100,
+     "success": 0.49,
+     "bfs_med": 6.0,
+     "best_dist_med": 1.034124963883046
+    },
+    "2": {
+     "n": 100,
+     "success": 0.2,
+     "bfs_med": 8.0,
+     "best_dist_med": 2.450926366934293
+    }
+   }
+  },
+  "m4_r1": {
+   "n": 300,
+   "success": 0.7833333333333333,
+   "se": 0.023825046699671875,
+   "steps_med": 160.5,
+   "best_dist_med": 0.978001640024584,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.95,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9587092689919195
+    },
+    "1": {
+     "n": 100,
+     "success": 0.8,
+     "bfs_med": 6.0,
+     "best_dist_med": 0.9766142030901424
+    },
+    "2": {
+     "n": 100,
+     "success": 0.6,
+     "bfs_med": 8.0,
+     "best_dist_med": 0.9938677607184809
+    }
+   }
+  },
+  "notes": [
+   "[\u9748\u654f\u5ea6] random \u2212 bc = -0.823 CI [-0.863,-0.777] p=0.0000  \u2713 \u5c3a\u770b\u5f97\u898b\u5df2\u77e5\u7684\u5927\u5dee",
+   "[\u7279\u7570\u5ea6] \u540c\u4e00\u9846\u6a21\u578b\u91cd\u8dd1 = +0.000 CI [+0.000,+0.000]  \u2713 \u6c92\u6709\u5047\u8a0a\u865f",
+   "[\u53c3\u8003] bc \u2212 m4 = +0.040 CI [+0.003,+0.080] p=0.0576  \u5206\u4e0d\u958b   \u26d4 \u4e0d\u9032 gate",
+   "[\u53c3\u8003] null_u \u2212 m4 = -0.320 CI [-0.373,-0.263] p=0.0000  \u5206\u5f97\u958b   \u26d4 \u4e0d\u9032 gate",
+   "[\u53c3\u8003] bc \u2212 null_u = +0.360 CI [+0.303,+0.413] p=0.0000  \u5206\u5f97\u958b   \u26d4 \u4e0d\u9032 gate"
+  ]
+ },
+ "prereq_d0": {
+  "action_mse": {
+   "flow": 0.39359729886054995,
+   "oracle": 0.3642033010721207,
+   "zero": 0.44743769317865373
+  },
+  "oracle_gain_frac": 0.07468038493537389
+ },
+ "prereq_d4": {
+  "within_med": 14.928625106811523,
+  "across_med": 45.94249725341797,
+  "ratio": 0.3249415247165495,
+  "action_std": 0.06524370808620006,
+  "n_samples": 16
+ },
+ "x_refine_direction": {
+  "forward": 0.48,
+  "reversed": 0.328,
+  "gap": 0.15199999999999997,
+  "R": 8
+ }
+}

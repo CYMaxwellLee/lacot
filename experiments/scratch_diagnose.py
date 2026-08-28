@@ -9,7 +9,7 @@ Lean: trains only the e_target encoder + cond + head (no flow/refine), open-loop
 import os, sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 import ogbench
 

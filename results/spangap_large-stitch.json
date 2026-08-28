@@ -1,0 +1,38 @@
+{
+ "env": "pointmaze-large-stitch-v0",
+ "n": 50000,
+ "step_gap": {
+  "p50": 39.0,
+  "p90": 119.0,
+  "p99": 172.0,
+  "p100": 198.0
+ },
+ "train_path_len": {
+  "p50": 7.5,
+  "p90": 22.8046875,
+  "p99": 33.18773437500005,
+  "p100": 39.671875
+ },
+ "train_len_p99": 33.18773437500005,
+ "cell_w": 4.0,
+ "dev": {
+  "t0": {
+   "n": 100,
+   "bfs_med": 5.0,
+   "len_med": 20.0,
+   "frac_beyond_train_p99": 0.0
+  },
+  "t1": {
+   "n": 100,
+   "bfs_med": 8.0,
+   "len_med": 32.0,
+   "frac_beyond_train_p99": 0.32
+  },
+  "t2": {
+   "n": 100,
+   "bfs_med": 12.0,
+   "len_med": 48.0,
+   "frac_beyond_train_p99": 1.0
+  }
+ }
+}

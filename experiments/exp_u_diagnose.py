@@ -1,4 +1,4 @@
-"""U-DIAGNOSIS (per 主人: why is our u not trained well?). Clean PyTorch, ported M4
+"""U-DIAGNOSIS (per 主人: why is our u not trained well?). Clean PyTorch, ported LaCoT
 model (m4model/, no wpm), official raw .npz. oracle=100% proves head+true-et works,
 so the ONLY gap is flow-sampled u != true e_target. Pinpoint WHICH failure:
   (1) flow distribution bad  -> true_et has bad NLL / conditioning doesn't work
@@ -11,7 +11,7 @@ import os
 import sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.nf_head import Flow
 from lacot.e_target import PerceiverPooler
 from lacot.model import RefineOperator

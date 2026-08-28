@@ -1,4 +1,4 @@
-"""e_target generator (target side) for M4 -- built block by block.
+"""e_target generator (target side) for LaCoT -- built block by block.
 
 Block 1 (this file, for now): `PerceiverPooler` -- pool a variable-length
 sequence of per-frame features [B, T, d_in] into a FIXED-size latent
@@ -116,13 +116,27 @@ class PerceiverPooler(nn.Module):
         self,
         frame_feats: torch.Tensor,
         key_padding_mask: torch.Tensor | None = None,
+        queries: torch.Tensor | None = None,
     ) -> torch.Tensor:
         # frame_feats [B, T, d_in]; key_padding_mask [B, T] (True == PAD) -> e_target [B, K, d_model].
+        #
+        # `queries` [B, K, d_model] (optional, 2026-08-26): per-sample queries instead of the
+        # learned ones. Lets the caller condition *what the pooler looks for* on something else
+        # -- e.g. the (s, g) pair -- so the latent no longer has to spend capacity re-encoding it.
+        # Omitting it keeps the previous behaviour exactly.
         B, T, _ = frame_feats.shape
         if T > self.max_len:
             raise ValueError(f"sequence length {T} exceeds max_len {self.max_len}")
         ctx = self.in_proj(frame_feats) + self.pos_emb[:T].unsqueeze(0)
-        q = self.queries.unsqueeze(0).expand(B, -1, -1)
+        if queries is None:
+            q = self.queries.unsqueeze(0).expand(B, -1, -1)
+        else:
+            if queries.shape != (B, self.k, self.d_model):
+                raise ValueError(
+                    f"queries must be [B={B}, K={self.k}, d_model={self.d_model}], "
+                    f"got {tuple(queries.shape)}"
+                )
+            q = queries
         for layer in self.layers:
             q = q + layer["cross_attn"](
                 layer["q_norm"](q),

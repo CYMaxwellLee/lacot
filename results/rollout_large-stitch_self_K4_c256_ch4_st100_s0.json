@@ -1,0 +1,19 @@
+{
+ "env": "pointmaze-large-stitch-v0",
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 100,
+ "episodes": 5,
+ "maxh": 200,
+ "rates": {
+  "bc": 0.0,
+  "null_u": 0.0,
+  "shuf": 0.0,
+  "R0": 0.0,
+  "R1": 0.0
+ }
+}

@@ -14,7 +14,7 @@ CKPT_DIR = os.environ.get("LACOT_CKPT_DIR",
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "checkpoints"))
 os.makedirs(CKPT_DIR, exist_ok=True)
 OGB_DATA = os.environ.get("OGBENCH_DATA_DIR", "/archive/cymaxwelllee/data/ogbench")
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("device:", device, flush=True)

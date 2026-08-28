@@ -1,0 +1,64 @@
+{
+ "env": "pointmaze-medium-stitch-v0",
+ "mode": "u",
+ "desc": "凍住的舊 u",
+ "seed": 0,
+ "K": 4,
+ "T_CAP": 128,
+ "steps": 3000,
+ "ckpt": "ckpt_medium-stitch_self_K4_c256_ch4_st2000_T128_ep50_gu_s0.pt",
+ "holdout_mod": 20,
+ "n_params": 1614338,
+ "secs": 35.7,
+ "val_rmse": 0.23500320501625538,
+ "val_rmse_sd": 0.030402607017115908,
+ "val_inner_rmse": 0.23384248837828636,
+ "val_inner_rmse_sd": 0.03040961716556121,
+ "shuffled_inner_rmse": 2.0094800740480423,
+ "ctx_usage": 1.775637585669756,
+ "batch_spread": 0.995061568915844,
+ "hist": [
+  {
+   "step": 1,
+   "train_mse": 1.3882638216018677,
+   "val_rmse": 1.3477219343185425,
+   "val_inner_rmse": 1.349239468574524
+  },
+  {
+   "step": 500,
+   "train_mse": 0.02948683127760887,
+   "val_rmse": 0.33390510082244873,
+   "val_inner_rmse": 0.33235037326812744
+  },
+  {
+   "step": 1000,
+   "train_mse": 0.03651680797338486,
+   "val_rmse": 0.2488473504781723,
+   "val_inner_rmse": 0.24774813652038574
+  },
+  {
+   "step": 1500,
+   "train_mse": 0.03246241435408592,
+   "val_rmse": 0.25054800510406494,
+   "val_inner_rmse": 0.2491479068994522
+  },
+  {
+   "step": 2000,
+   "train_mse": 0.017183654010295868,
+   "val_rmse": 0.21740840375423431,
+   "val_inner_rmse": 0.2164764404296875
+  },
+  {
+   "step": 2500,
+   "train_mse": 0.01977480575442314,
+   "val_rmse": 0.22085662186145782,
+   "val_inner_rmse": 0.21979275345802307
+  },
+  {
+   "step": 3000,
+   "train_mse": 0.045064087957143784,
+   "val_rmse": 0.23242811858654022,
+   "val_inner_rmse": 0.23104412853717804
+  }
+ ]
+}

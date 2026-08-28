@@ -1,4 +1,4 @@
-"""m4 獨立性 smoke test — 證明它真的脫離了 wpm/fpo。"""
+"""lacot 獨立性 smoke test — 證明它真的脫離了 wpm/fpo。"""
 import sys, os, importlib, traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 FAIL = []

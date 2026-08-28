@@ -1,0 +1,194 @@
+{
+ "env": "pointmaze-large-stitch-v0",
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 2000,
+ "tcap": 128,
+ "tcap_requested": 128,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 250,
+ "maxh": 1000,
+ "rates": {
+  "bc": 0.136,
+  "null_u": 0.132,
+  "shuf": 0.156,
+  "R1": 0.176,
+  "R1_reversed": 0.0
+ },
+ "dev_eval": {
+  "n_tasks": 300,
+  "passed": true,
+  "gates": {
+   "sensitivity": true,
+   "specificity": true
+  },
+  "random": {
+   "n": 300,
+   "success": 0.0,
+   "se": 0.0,
+   "steps_med": 1000.0,
+   "best_dist_med": 16.507394738111714,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 5.0,
+     "best_dist_med": 10.991452803881293
+    },
+    "1": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 8.0,
+     "best_dist_med": 18.052166464596077
+    },
+    "2": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 12.0,
+     "best_dist_med": 26.189366702541335
+    }
+   }
+  },
+  "bc": {
+   "n": 300,
+   "success": 0.4633333333333333,
+   "se": 0.028837890554337213,
+   "steps_med": 1000.0,
+   "best_dist_med": 6.305060286886996,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.83,
+     "bfs_med": 5.0,
+     "best_dist_med": 0.9752104620622433
+    },
+    "1": {
+     "n": 100,
+     "success": 0.48,
+     "bfs_med": 8.0,
+     "best_dist_med": 6.008586872955463
+    },
+    "2": {
+     "n": 100,
+     "success": 0.08,
+     "bfs_med": 12.0,
+     "best_dist_med": 17.261643165027863
+    }
+   }
+  },
+  "bc_rerun": {
+   "n": 300,
+   "success": 0.4633333333333333,
+   "se": 0.028837890554337213,
+   "steps_med": 1000.0,
+   "best_dist_med": 6.305060286886996,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.83,
+     "bfs_med": 5.0,
+     "best_dist_med": 0.9752104620622433
+    },
+    "1": {
+     "n": 100,
+     "success": 0.48,
+     "bfs_med": 8.0,
+     "best_dist_med": 6.008586872955463
+    },
+    "2": {
+     "n": 100,
+     "success": 0.08,
+     "bfs_med": 12.0,
+     "best_dist_med": 17.261643165027863
+    }
+   }
+  },
+  "null_u": {
+   "n": 300,
+   "success": 0.43333333333333335,
+   "se": 0.028657565120703166,
+   "steps_med": 1000.0,
+   "best_dist_med": 6.6326441041093,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.79,
+     "bfs_med": 5.0,
+     "best_dist_med": 0.955401661828722
+    },
+    "1": {
+     "n": 100,
+     "success": 0.43,
+     "bfs_med": 8.0,
+     "best_dist_med": 6.425684473706996
+    },
+    "2": {
+     "n": 100,
+     "success": 0.08,
+     "bfs_med": 12.0,
+     "best_dist_med": 15.983356628967979
+    }
+   }
+  },
+  "m4_r1": {
+   "n": 300,
+   "success": 0.4533333333333333,
+   "se": 0.028789526978043104,
+   "steps_med": 1000.0,
+   "best_dist_med": 6.211175004736875,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.81,
+     "bfs_med": 5.0,
+     "best_dist_med": 0.9725554536299079
+    },
+    "1": {
+     "n": 100,
+     "success": 0.46,
+     "bfs_med": 8.0,
+     "best_dist_med": 6.211175004736875
+    },
+    "2": {
+     "n": 100,
+     "success": 0.09,
+     "bfs_med": 12.0,
+     "best_dist_med": 15.619202357247389
+    }
+   }
+  },
+  "notes": [
+   "[\u9748\u654f\u5ea6] bc \u2212 random = -0.463 CI [-0.520,-0.407] p=0.0000  \u2713 \u5c3a\u770b\u5f97\u898b\u5df2\u77e5\u7684\u5927\u5dee",
+   "[\u7279\u7570\u5ea6] \u540c\u4e00\u9846\u6a21\u578b\u91cd\u8dd1 = +0.000 CI [+0.000,+0.000]  \u2713 \u6c92\u6709\u5047\u8a0a\u865f",
+   "[\u53c3\u8003] bc vs m4: +0.010 CI [-0.020,+0.040] p=0.6776  \u5206\u4e0d\u958b   \u26d4 \u4e0d\u9032 gate",
+   "[\u53c3\u8003] null_u vs m4: -0.020 CI [-0.050,+0.010] p=0.2632  \u5206\u4e0d\u958b   \u26d4 \u4e0d\u9032 gate",
+   "[\u53c3\u8003] bc vs null_u: +0.030 CI [-0.003,+0.067] p=0.1221  \u5206\u4e0d\u958b   \u26d4 \u4e0d\u9032 gate"
+  ]
+ },
+ "prereq_d0": {
+  "action_mse": {
+   "flow": 0.39070675522089005,
+   "oracle": 0.38349068015813825,
+   "zero": 0.39548940658569337
+  },
+  "oracle_gain_frac": 0.01846928666148122
+ },
+ "prereq_d4": {
+  "within_med": 8.255384743213654,
+  "across_med": 41.37227249145508,
+  "ratio": 0.19953906918984687,
+  "action_std": 0.028657180489972234,
+  "n_samples": 64
+ },
+ "x_refine_direction": {
+  "forward": 0.176,
+  "reversed": 0.0,
+  "gap": 0.176,
+  "R": 1
+ }
+}

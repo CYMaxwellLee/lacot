@@ -1,18 +1,18 @@
-"""M4 ORACLE-future gate (per 主人): feed the head the TRUE e_target (encoded from
+"""LaCoT ORACLE-future gate (per 主人): feed the head the TRUE e_target (encoded from
 the expert's real future trajectory to the goal), bypassing the noisy flow, and roll
 out. This is the CEILING of the head+e_target design.
   * ORACLE      = head(cond, e_target_from_expert_future)   <- upper bound
   * GCBC floor  = standalone (s,g)->action, no u
   * null floor  = head(cond, 0), trained (null-token)
-  * M4 R=3      = head(cond, flow-sampled + refined u)       <- the real inference path
-Reading: oracle high & M4 low  => flow is the bottleneck (train flow/refine).
+  * LaCoT R=3      = head(cond, flow-sampled + refined u)       <- the real inference path
+Reading: oracle high & LaCoT low  => flow is the bottleneck (train flow/refine).
          oracle also low        => head/e_target design itself is limited.
 Includes an expert-path sanity check (does the simulated future reach the goal?).
 """
 import os, sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
 from lacot.model import RefineOperator
@@ -210,6 +210,6 @@ print(f"\n==== SUCCESS RATE + ORACLE  env={ENV_NAME}, {N_TASKS}x{SEEDS} eps, MAX
 rollout("oracle", 0, "ORACLE  head(cond, TRUE e_target)   <-- ceiling")
 rollout("gcbc", 0, "GCBC floor (standalone, no u)")
 rollout("null", 0, "null-u floor (head(cond,0), trained)")
-rollout("m4", 0, "M4 refine R=0 (flow sample)")
-rollout("m4", 3, "M4 refine R=3")
-print("=> oracle high & M4 low => flow is the bottleneck; oracle low => head/e_target design is.", flush=True)
+rollout("lacot", 0, "LaCoT refine R=0 (flow sample)")
+rollout("lacot", 3, "LaCoT refine R=3")
+print("=> oracle high & LaCoT low => flow is the bottleneck; oracle low => head/e_target design is.", flush=True)

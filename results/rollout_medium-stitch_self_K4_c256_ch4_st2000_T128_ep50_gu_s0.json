@@ -1,0 +1,194 @@
+{
+ "env": "pointmaze-medium-stitch-v0",
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 2000,
+ "tcap": 128,
+ "tcap_requested": 128,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 250,
+ "maxh": 1000,
+ "rates": {
+  "bc": 0.476,
+  "null_u": 0.292,
+  "shuf": 0.308,
+  "R1": 0.292,
+  "R1_reversed": 0.488
+ },
+ "dev_eval": {
+  "n_tasks": 300,
+  "passed": true,
+  "gates": {
+   "sensitivity": true,
+   "specificity": true
+  },
+  "random": {
+   "n": 300,
+   "success": 0.0,
+   "se": 0.0,
+   "steps_med": 1000.0,
+   "best_dist_med": 11.75923241990569,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 4.0,
+     "best_dist_med": 7.718074000698181
+    },
+    "1": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 6.0,
+     "best_dist_med": 11.980094550446378
+    },
+    "2": {
+     "n": 100,
+     "success": 0.0,
+     "bfs_med": 8.0,
+     "best_dist_med": 16.149613377058053
+    }
+   }
+  },
+  "bc": {
+   "n": 300,
+   "success": 0.8766666666666667,
+   "se": 0.019016119040222525,
+   "steps_med": 131.0,
+   "best_dist_med": 0.9647288811928956,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.99,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9554049013316644
+    },
+    "1": {
+     "n": 100,
+     "success": 0.91,
+     "bfs_med": 6.0,
+     "best_dist_med": 0.9663741522901792
+    },
+    "2": {
+     "n": 100,
+     "success": 0.73,
+     "bfs_med": 8.0,
+     "best_dist_med": 0.9801727634494526
+    }
+   }
+  },
+  "bc_rerun": {
+   "n": 300,
+   "success": 0.8766666666666667,
+   "se": 0.019016119040222525,
+   "steps_med": 131.0,
+   "best_dist_med": 0.9647288811928956,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.99,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9554049013316644
+    },
+    "1": {
+     "n": 100,
+     "success": 0.91,
+     "bfs_med": 6.0,
+     "best_dist_med": 0.9663741522901792
+    },
+    "2": {
+     "n": 100,
+     "success": 0.73,
+     "bfs_med": 8.0,
+     "best_dist_med": 0.9801727634494526
+    }
+   }
+  },
+  "null_u": {
+   "n": 300,
+   "success": 0.8666666666666667,
+   "se": 0.019658927487319615,
+   "steps_med": 113.0,
+   "best_dist_med": 0.9507547266752849,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 0.99,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9386120189972182
+    },
+    "1": {
+     "n": 100,
+     "success": 0.88,
+     "bfs_med": 6.0,
+     "best_dist_med": 0.9454875741686981
+    },
+    "2": {
+     "n": 100,
+     "success": 0.73,
+     "bfs_med": 8.0,
+     "best_dist_med": 0.9640503365259403
+    }
+   }
+  },
+  "m4_r1": {
+   "n": 300,
+   "success": 0.87,
+   "se": 0.019448929779430472,
+   "steps_med": 127.5,
+   "best_dist_med": 0.9638151010827312,
+   "per_tier": {
+    "0": {
+     "n": 100,
+     "success": 1.0,
+     "bfs_med": 4.0,
+     "best_dist_med": 0.9520745905970773
+    },
+    "1": {
+     "n": 100,
+     "success": 0.9,
+     "bfs_med": 6.0,
+     "best_dist_med": 0.9462660649399299
+    },
+    "2": {
+     "n": 100,
+     "success": 0.71,
+     "bfs_med": 8.0,
+     "best_dist_med": 0.9869801173649075
+    }
+   }
+  },
+  "notes": [
+   "[\u9748\u654f\u5ea6] bc \u2212 random = -0.877 CI [-0.910,-0.837] p=0.0000  \u2713 \u5c3a\u770b\u5f97\u898b\u5df2\u77e5\u7684\u5927\u5dee",
+   "[\u7279\u7570\u5ea6] \u540c\u4e00\u9846\u6a21\u578b\u91cd\u8dd1 = +0.000 CI [+0.000,+0.000]  \u2713 \u6c92\u6709\u5047\u8a0a\u865f",
+   "[\u53c3\u8003] bc vs m4: +0.007 CI [-0.013,+0.030] p=0.7539  \u5206\u4e0d\u958b   \u26d4 \u4e0d\u9032 gate",
+   "[\u53c3\u8003] null_u vs m4: -0.003 CI [-0.027,+0.020] p=1.0000  \u5206\u4e0d\u958b   \u26d4 \u4e0d\u9032 gate",
+   "[\u53c3\u8003] bc vs null_u: +0.010 CI [-0.017,+0.037] p=0.6291  \u5206\u4e0d\u958b   \u26d4 \u4e0d\u9032 gate"
+  ]
+ },
+ "prereq_d0": {
+  "action_mse": {
+   "flow": 0.37517145425081255,
+   "oracle": 0.37229238748550414,
+   "zero": 0.3891686946153641
+  },
+  "oracle_gain_frac": 0.007674002733117529
+ },
+ "prereq_d4": {
+  "within_med": 3.826081745326519,
+  "across_med": 43.961246490478516,
+  "ratio": 0.08703305867715108,
+  "action_std": 0.013330397530808114,
+  "n_samples": 64
+ },
+ "x_refine_direction": {
+  "forward": 0.292,
+  "reversed": 0.488,
+  "gap": -0.196,
+  "R": 1
+ }
+}

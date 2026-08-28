@@ -1,0 +1,65 @@
+{
+  "env": "pointmaze-medium-stitch-v0",
+  "pairs": 300000,
+  "seed": 0,
+  "minlen": 20,
+  "n_traj": 5000,
+  "bins": {
+    "0.25": {
+      "n_groups": 65163,
+      "n_multi": 24515,
+      "n_cross_traj": 23164,
+      "pairs_in_cross_groups": 256449,
+      "coverage": 0.8548,
+      "median_distinct_traj": 3.0,
+      "median_dup_frac": 0.0,
+      "median_len_std_dedup": 28.0,
+      "median_len_std_raw": 28.871362204709975,
+      "median_len_maxmin_dedup": 1.9042553191489362,
+      "median_sg_spread": 0.09611845016479492,
+      "global_len_std": 42.62801013279831
+    },
+    "0.5": {
+      "n_groups": 23898,
+      "n_multi": 9405,
+      "n_cross_traj": 9010,
+      "pairs_in_cross_groups": 284592,
+      "coverage": 0.9486,
+      "median_distinct_traj": 4.0,
+      "median_dup_frac": 0.15384615384615385,
+      "median_len_std_dedup": 29.53222700761073,
+      "median_len_std_raw": 31.0,
+      "median_len_maxmin_dedup": 1.9893617021276595,
+      "median_sg_spread": 0.21237850189208984,
+      "global_len_std": 42.62801013279831
+    },
+    "1.0": {
+      "n_groups": 9463,
+      "n_multi": 6256,
+      "n_cross_traj": 6111,
+      "pairs_in_cross_groups": 296446,
+      "coverage": 0.9882,
+      "median_distinct_traj": 4.0,
+      "median_dup_frac": 0.0,
+      "median_len_std_dedup": 5.0990195135927845,
+      "median_len_std_raw": 5.2493385826745405,
+      "median_len_maxmin_dedup": 1.3823529411764706,
+      "median_sg_spread": 0.44036865234375,
+      "global_len_std": 42.62801013279831
+    },
+    "2.0": {
+      "n_groups": 1967,
+      "n_multi": 1664,
+      "n_cross_traj": 1626,
+      "pairs_in_cross_groups": 299600,
+      "coverage": 0.9987,
+      "median_distinct_traj": 15.0,
+      "median_dup_frac": 0.16666666666666663,
+      "median_len_std_dedup": 6.942971953561981,
+      "median_len_std_raw": 6.988821434238216,
+      "median_len_maxmin_dedup": 1.781996479758612,
+      "median_sg_spread": 0.9932708740234375,
+      "global_len_std": 42.62801013279831
+    }
+  }
+}

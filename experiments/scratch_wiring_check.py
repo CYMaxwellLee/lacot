@@ -1,4 +1,4 @@
-"""Wiring check for the M4 success-rate eval — verify the pieces line up BEFORE
+"""Wiring check for the LaCoT success-rate eval — verify the pieces line up BEFORE
 trusting any success number. Checks the frame/normalization consistency between
 the .npz observations (used for mu/sd) and the LIVE env obs + goal, plus that
 goal==success-target and actions actually move the agent toward the goal.

@@ -1,11 +1,11 @@
-"""M4 flow-connect v2: tighten the flow. e_target 1500 steps; flow 5000 steps, 6 blocks;
+"""LaCoT flow-connect v2: tighten the flow. e_target 1500 steps; flow 5000 steps, 6 blocks;
 track sampled-u <-> e_target cosine periodically to see the alignment tighten / plateau.
 """
 import os
 import sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
 

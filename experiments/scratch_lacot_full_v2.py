@@ -1,4 +1,4 @@
-"""M4 full loop v2 (fix action head, per 主人): action head = deep MLP that takes
+"""LaCoT full loop v2 (fix action head, per 主人): action head = deep MLP that takes
 (s,g)-cond AND u  -> continuous 2D action chunk (MSE). Fixes: (1) MLP not 1 Linear,
 (2) action sees (s,g) directly, (3) continuous output (drop 256 bins).
 Checks: action MSE anchor(from true e_target) vs refined vs baseline; test-time scaling.
@@ -8,7 +8,7 @@ import os
 import sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
 from lacot.model import RefineOperator
@@ -124,7 +124,7 @@ with torch.no_grad():
     err_anchor = mse(ahead(cond, et), act).item()
     zero = torch.zeros(B, K, D_MODEL, device=device)
     err_sg_only = mse(ahead(cond, zero), act).item()   # ablation: (s,g) + ZERO u  -> does u help?
-    print("\n==== M4 v2 RESULTS ====", flush=True)
+    print("\n==== LaCoT v2 RESULTS ====", flush=True)
     print(f"baseline (predict-mean) MSE {base:.4f}", flush=True)
     print(f"ANCHOR head(s,g, TRUE e_target) MSE {err_anchor:.4f}   (ceiling)", flush=True)
     print(f"ablation head(s,g, ZERO-u)      MSE {err_sg_only:.4f}   (u helps if anchor < this)", flush=True)

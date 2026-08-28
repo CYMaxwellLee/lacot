@@ -5,7 +5,7 @@ decoding that reasoning into actions. A normalizing flow generates a latent
 "thought" trajectory `u` conditioned on the current state and goal; a refine
 operator revises it; an action head decodes it into a control chunk.
 
-Named 2026-08-23 (previously the internal codename "M4").
+Named 2026-08-23 (previously the internal codename "LaCoT").
 
 ## Status — what is proven and what is not
 
@@ -49,16 +49,16 @@ lacot/           the model — backbone (CausalTransformer), e_target
                  nf_head (Flow, ARFlowBlock), heads, model (LaCoTActor,
                  RefineOperator).  No wpm imports.
 experiments/     18 clean experiment scripts (2026-08-22 research day):
-                 scratch_m4_oracle.py   — the ORACLE=100% run
-                 scratch_m4_rollout.py  — success-rate eval (real rollouts)
+                 scratch_lacot_oracle.py   — the ORACLE=100% run
+                 scratch_lacot_rollout.py  — success-rate eval (real rollouts)
                  scratch_value.py       — GCIVL value training
                  exp_u_diagnose.py      — the u-sampling diagnosis
                  scratch_wiring_check.py— plumbing check, no training needed
-docs/            M4-NF-latent-planning-design.md (the design, born 2026-08-17)
+docs/            LaCoT-NF-latent-planning-design.md (the design, born 2026-08-17)
 checkpoints/     scratch_value.pt (trained GCIVL value)
 legacy/          quarantined, NOT part of LaCoT:
                  wpm_toplevel_model.py  — WPM's image-based top-level model
-                 m4_*.py                — old smokes that import wpm
+                 lacot_*.py                — old smokes that import wpm
                  visual-track/          — 8 scripts still needing
                                           wpm.data.pipeline / ImpalaSmall /
                                           build_pointmaze_pixel_env; the visual

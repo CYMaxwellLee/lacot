@@ -1,0 +1,24 @@
+{
+ "env": "pointmaze-medium-navigate-v0",
+ "seed": 0,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps1": 50,
+ "steps2": 100,
+ "episodes": 5,
+ "maxh": 200,
+ "match_acc": 0.625,
+ "offline": {
+  "A_data": 0.5282863527536392,
+  "B_data": 0.43834590911865234,
+  "C": 0.4437926262617111,
+  "A_oracle": 0.5323521494865417,
+  "B_oracle": 0.443981796503067
+ },
+ "rates": {
+  "C_bc_floor": 0.0,
+  "A_etarget_only": 0.0,
+  "B_cond_etarget": 0.0
+ }
+}

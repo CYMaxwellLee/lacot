@@ -1,0 +1,33 @@
+{
+ "env": "pointmaze-medium-stitch-v0",
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 20,
+ "tcap": 201,
+ "tcap_requested": 256,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 5,
+ "maxh": 1000,
+ "rates": {
+  "bc": 0.0,
+  "null_u": 0.0,
+  "shuf": 0.0,
+  "R0": 0.0,
+  "R1": 0.0,
+  "R3": 0.0,
+  "R5": 0.0,
+  "R8": 0.0,
+  "R8_reversed": 0.0
+ },
+ "x_refine_direction": {
+  "forward": 0.0,
+  "reversed": 0.0,
+  "gap": 0.0,
+  "R": 8
+ }
+}

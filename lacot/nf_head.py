@@ -1,10 +1,10 @@
-"""Normalizing-flow head for M4 latent reasoning — the "generate u" block.
+"""Normalizing-flow head for LaCoT latent reasoning — the "generate u" block.
 
-Design doc: docs/M4-NF-latent-planning-design.md S3-S5 (component 1), S7
+Design doc: docs/LaCoT-NF-latent-planning-design.md S3-S5 (component 1), S7
 (NF-CoT method). Engine = TARFlow ("Normalizing Flows are Capable Generative
 Models", arXiv:2412.06329, github.com/apple/ml-tarflow).
 
-M4 replaces WPM's explicit future-image imagination with a compact continuous
+LaCoT replaces WPM's explicit future-image imagination with a compact continuous
 latent "thought" `u`, sampled and refined by a normalizing flow, then decoded
 to an action chunk. This module is **component 1**: the flow itself — the
 density `p(u | cond)` we can (a) evaluate *exactly* (log-likelihood) and (b)
@@ -24,7 +24,7 @@ the change-of-variables likelihood is exact, not a bound. Several such blocks
 are stacked with the token order flipped between them, so across blocks every
 token can condition on every other.
 
-**Why exact likelihood matters for M4** (design doc S1, S7): `u` is a "thought"
+**Why exact likelihood matters for LaCoT** (design doc S1, S7): `u` is a "thought"
 we must score (the flow loss aligns u to a compressed future trajectory) and,
 later, optimize in latent space. A diffusion model gives only an ELBO and needs
 many denoising steps to sample; a plain autoregressive transformer over

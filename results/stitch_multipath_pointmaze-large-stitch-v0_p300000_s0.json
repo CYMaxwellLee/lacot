@@ -1,0 +1,78 @@
+{
+  "env": "pointmaze-large-stitch-v0",
+  "pairs": 300000,
+  "seed": 0,
+  "n_traj": 5000,
+  "bins": {
+    "0.1": {
+      "n_groups": 142778,
+      "n_multi": 18429,
+      "n_cross_traj": 15121,
+      "pairs_in_cross_groups": 167993,
+      "coverage": 0.56,
+      "median_distinct_traj": 3.0,
+      "median_dup_frac": 0.23076923076923073,
+      "median_len_std_dedup": 25.53898979991182,
+      "median_len_std_raw": 27.408433414228952,
+      "median_len_maxmin_dedup": 5.333333333333333,
+      "median_sg_spread": 0.043285369873046875,
+      "global_len_std": 47.09094017978216
+    },
+    "0.25": {
+      "n_groups": 90471,
+      "n_multi": 24272,
+      "n_cross_traj": 22058,
+      "pairs_in_cross_groups": 229031,
+      "coverage": 0.7634,
+      "median_distinct_traj": 2.0,
+      "median_dup_frac": 0.0,
+      "median_len_std_dedup": 24.5,
+      "median_len_std_raw": 25.381533094401966,
+      "median_len_maxmin_dedup": 1.6818181818181819,
+      "median_sg_spread": 0.0782155990600586,
+      "global_len_std": 47.09094017978216
+    },
+    "0.5": {
+      "n_groups": 36046,
+      "n_multi": 13051,
+      "n_cross_traj": 12396,
+      "pairs_in_cross_groups": 275524,
+      "coverage": 0.9184,
+      "median_distinct_traj": 4.0,
+      "median_dup_frac": 0.16666666666666663,
+      "median_len_std_dedup": 28.5,
+      "median_len_std_raw": 30.404677783027786,
+      "median_len_maxmin_dedup": 1.967741935483871,
+      "median_sg_spread": 0.2062211036682129,
+      "global_len_std": 47.09094017978216
+    },
+    "1.0": {
+      "n_groups": 15679,
+      "n_multi": 9303,
+      "n_cross_traj": 9060,
+      "pairs_in_cross_groups": 293108,
+      "coverage": 0.977,
+      "median_distinct_traj": 4.0,
+      "median_dup_frac": 0.0,
+      "median_len_std_dedup": 3.8533522036921646,
+      "median_len_std_raw": 3.918675815926896,
+      "median_len_maxmin_dedup": 1.6059437829396837,
+      "median_sg_spread": 0.4258384704589844,
+      "global_len_std": 47.09094017978216
+    },
+    "2.0": {
+      "n_groups": 3494,
+      "n_multi": 2871,
+      "n_cross_traj": 2808,
+      "pairs_in_cross_groups": 299232,
+      "coverage": 0.9974,
+      "median_distinct_traj": 12.0,
+      "median_dup_frac": 0.18181818181818177,
+      "median_len_std_dedup": 7.003329707722331,
+      "median_len_std_raw": 7.194357866138688,
+      "median_len_maxmin_dedup": 2.3666428953467644,
+      "median_sg_spread": 0.9891338348388672,
+      "global_len_std": 47.09094017978216
+    }
+  }
+}

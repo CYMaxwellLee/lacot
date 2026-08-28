@@ -1,4 +1,4 @@
-"""M4 connect the flow (option a): stage-1 contrastive-pretrain e_target -> FREEZE;
+"""LaCoT connect the flow (option a): stage-1 contrastive-pretrain e_target -> FREEZE;
 stage-2 train the TARFlow to model p(u|s,g) with u=e_target. Checks:
   - NLL/dim drops
   - NLL with WRONG (shuffled) cond is worse  => conditioning is really used
@@ -8,7 +8,7 @@ import os
 import sys, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
 

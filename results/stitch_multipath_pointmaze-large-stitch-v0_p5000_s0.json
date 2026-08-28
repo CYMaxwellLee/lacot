@@ -1,0 +1,56 @@
+{
+  "env": "pointmaze-large-stitch-v0",
+  "pairs": 5000,
+  "seed": 0,
+  "n_traj": 5000,
+  "bins": {
+    "0.25": {
+      "n_groups": 2835,
+      "n_multi": 573,
+      "n_cross_traj": 567,
+      "pairs_in_cross_groups": 2724,
+      "coverage": 0.5448,
+      "median_distinct_traj": 4.0,
+      "median_len_std": 25.5,
+      "median_len_maxmin": 6.125,
+      "median_sg_spread": 0.08522224426269531,
+      "global_len_std": 46.8438318325903
+    },
+    "0.5": {
+      "n_groups": 1998,
+      "n_multi": 261,
+      "n_cross_traj": 256,
+      "pairs_in_cross_groups": 3253,
+      "coverage": 0.6506,
+      "median_distinct_traj": 2.0,
+      "median_len_std": 27.25,
+      "median_len_maxmin": 1.8683982683982685,
+      "median_sg_spread": 0.14833831787109375,
+      "global_len_std": 46.8438318325903
+    },
+    "1.0": {
+      "n_groups": 1640,
+      "n_multi": 396,
+      "n_cross_traj": 388,
+      "pairs_in_cross_groups": 3740,
+      "coverage": 0.748,
+      "median_distinct_traj": 2.0,
+      "median_len_std": 27.964126580109287,
+      "median_len_maxmin": 1.849418604651163,
+      "median_sg_spread": 0.2800426483154297,
+      "global_len_std": 46.8438318325903
+    },
+    "2.0": {
+      "n_groups": 1031,
+      "n_multi": 499,
+      "n_cross_traj": 496,
+      "pairs_in_cross_groups": 4462,
+      "coverage": 0.8924,
+      "median_distinct_traj": 3.0,
+      "median_len_std": 31.0,
+      "median_len_maxmin": 2.1769151494331846,
+      "median_sg_spread": 0.5812573432922363,
+      "global_len_std": 46.8438318325903
+    }
+  }
+}

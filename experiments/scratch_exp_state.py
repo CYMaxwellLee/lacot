@@ -1,4 +1,4 @@
-"""M4 on STATE input (master's call): e_target compresses the future POSITION trajectory,
+"""LaCoT on STATE input (master's call): e_target compresses the future POSITION trajectory,
 encoder aligned to SOTA (MLP 512/512, GELU+LayerNorm, xavier -- like train_value_official).
 Non-reconstruction objective = contrastive: (s,g) query <-> trajectory e_target key, InfoNCE.
 Loads the state pointmaze npz directly (obs = 2D position); simple geometric hindsight goals.
@@ -11,7 +11,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # m4 repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
 from lacot.e_target import PerceiverPooler
 
 # 資料位置：預設走官方 OGBENCH_DATA_DIR，沒設才用本機 archive

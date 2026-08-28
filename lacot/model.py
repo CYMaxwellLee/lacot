@@ -1,6 +1,6 @@
-"""M4 full-model wiring (build order S5 step 5): compose the validated blocks.
+"""LaCoT full-model wiring (build order S5 step 5): compose the validated blocks.
 
-Design doc: docs/M4-NF-latent-planning-design.md (S3 losses, S4 components, S5
+Design doc: docs/LaCoT-NF-latent-planning-design.md (S3 losses, S4 components, S5
 build order, S8 F=identity, S10 refine+consistency, S11 target side, Q1/Q2/Q3).
 
 Pieces, each already validated in isolation:
@@ -72,7 +72,7 @@ class RefineOperator(nn.Module):
 
 
 class LaCoTActor(nn.Module):
-    """Compose the M4 blocks into one model (training + inference paths).
+    """Compose the LaCoT blocks into one model (training + inference paths).
 
     The `generator` must already be reconstruction-pretrained and FROZEN before it
     is handed in (its encoder is reused, frozen, for the (s,g) conditioning).
@@ -124,7 +124,7 @@ class LaCoTActor(nn.Module):
         rounds: int = 3,
         lam_cons: float = 0.5,
     ) -> tuple[torch.Tensor, dict[str, float]]:
-        """All three M4 losses given PRECOMPUTED (frozen) cond + u_target.
+        """All three LaCoT losses given PRECOMPUTED (frozen) cond + u_target.
 
         Split out so callers can cache the frozen front-end (encoder + generator)
         for a fixed batch instead of re-encoding every step.
@@ -170,7 +170,7 @@ class LaCoTActor(nn.Module):
         rounds: int = 3,
         lam_cons: float = 0.5,
     ) -> tuple[torch.Tensor, dict[str, float]]:
-        """All three M4 losses on one raw batch (encodes cond + e_target, then delegates)."""
+        """All three LaCoT losses on one raw batch (encodes cond + e_target, then delegates)."""
         cond = self.encode_cond(s_frame, g_frame)     # frozen encoder
         u_target = self.e_target(future_frames)       # frozen; F=identity -> u=e_target
         return self.losses_given(cond, u_target, actions, rounds, lam_cons)

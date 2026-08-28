@@ -1,0 +1,28 @@
+{
+ "env": "pointmaze-medium-navigate-v0",
+ "seed": 0,
+ "K": 4,
+ "cond": 256,
+ "chunk": 4,
+ "steps1": 1500,
+ "steps2": 12000,
+ "episodes": 250,
+ "maxh": 1000,
+ "match_acc": 0.765625,
+ "offline": {
+  "A_data": 0.3775507897138596,
+  "B_data": 0.35769187957048415,
+  "C": 0.46033676713705063,
+  "A_oracle": 0.48697926849126816,
+  "B_oracle": 0.48045908063650133
+ },
+ "rates": {
+  "C_bc_floor": 0.312,
+  "A_etarget_only": 0.368,
+  "B_cond_etarget": 0.5
+ },
+ "tcap": 256,
+ "oracle_horizon": 800,
+ "oracle_trunc_rate": 0.0,
+ "goal_sampling": "uniform-official"
+}
