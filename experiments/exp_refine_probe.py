@@ -45,7 +45,15 @@ STEPS = int(os.environ.get("LACOT_PROBE_STEPS", 5 if SMOKE else 100))
 NOISE = float(os.environ.get("LACOT_PROBE_NOISE", 2.0))
 # ⭐ 分布外跨度模式（Q2 軸）：(s,g) 仍在同一條軌跡上（⇒ u_true anchor 造得出來），
 #    但跨度強制 ≥ MINSPAN 步 —— 訓練抽樣的跨度 p99 只有 33 步，MINSPAN=100 就是分布外。
+#    ⚠️ exp_span_difficulty 實測：這只是【時間】分布外 —— BFS 難度 p50 仍只有 1 格。
 MINSPAN = int(os.environ.get("LACOT_PROBE_MINSPAN", 0))
+# ⭐⭐ TASKS 模式（真正的 Q2 探針）：(s,g) 直接用 dev 尺的題（tier2 = BFS 7~11 格，
+#    訓練抽法 p90 才 3 格）。這種配對資料裡沒有真軌跡 ⇒「true」起點換成
+#    【BFS 參考路（格心折線沿弧長重採樣）的編碼】—— ⚠️ 那是 encoder 沒見過的合成輸入，
+#    它的 decode 品質本身就是「拿 BFS 生 e_target」（主人 8/24 的問題）的直接證據。
+#    先跑 experiments/exp_dump_dev_tasks.py 產 npz。
+TASKS_NPZ = os.environ.get("LACOT_PROBE_TASKS", "")
+PROBE_TIER = int(os.environ.get("LACOT_PROBE_TIER", 2))
 ETAS = [float(x) for x in os.environ.get("LACOT_PROBE_ETAS", "0.05,0.1,0.5").split(",")]
 LAMS = [float(x) for x in os.environ.get("LACOT_PROBE_LAMS", "0.1,0.3,1.0").split(",")]
 torch.manual_seed(SEED)
@@ -185,10 +193,37 @@ if not SMOKE:
     print(f"GEO health ✓  格心 round-trip {_gh['mapping_err']:.2e}"
           f"  盒內隨機點穿牆中位 {_gh['wall_median_random']:.4f}", flush=True)
 
+def arc_resample(p, n):
+    """[L,2] 折線沿弧長均勻取 n 點（跟主線 subgoal 的弧長原則同款）。"""
+    seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
+    cum = np.concatenate([[0.0], np.cumsum(seg)])
+    t = np.linspace(0.0, cum[-1], n)
+    return np.stack([np.interp(t, cum, p[:, k]) for k in (0, 1)], 1)
+
+
 # ── 四種起點 ─────────────────────────────────────────────────────────────────
+if TASKS_NPZ:
+    _tp = TASKS_NPZ if os.path.isabs(TASKS_NPZ) else os.path.join(ROOT, TASKS_NPZ)
+    tz = np.load(_tp)
+    _sel = np.flatnonzero(tz["tier"] == PROBE_TIER)
+    B = len(_sel)
+    print(f"TASKS 模式：tier{PROBE_TIER} {B} 題  BFS 距離"
+          f" {int(tz['bfs_dist'][_sel].min())}~{int(tz['bfs_dist'][_sel].max())} 格"
+          f"（⚠️「true」起點＝BFS 參考路的編碼，是 encoder 沒見過的合成輸入）", flush=True)
+    _paths = np.stack([arc_resample(tz["path_xy"][i][: int(tz["path_len"][i])], T_CAP)
+                       for i in _sel])
+    traj = torch.from_numpy(((_paths - mu) / sd).astype(np.float32)).to(device)
+    mask = torch.zeros(B, T_CAP, dtype=torch.bool, device=device)
+    S = torch.from_numpy(((tz["init_xy"][_sel] - mu) / sd).astype(np.float32)).to(device)
+    G = torch.from_numpy(((tz["goal_xy"][_sel] - mu) / sd).astype(np.float32)).to(device)
+    with torch.no_grad():
+        _bref = GEO.wall_depth(traj).mean(1)
+    print(f"  BFS 參考路本身：穿牆中位 {float(_bref.median()):.4f}"
+          f"（格心折線，理應貼 0 —— 大了就是 dump 或映射錯）", flush=True)
 with torch.no_grad():
-    traj, mask, S, G = probe_batch(rng, B)
-    U_TRUE = encode(traj, mask)                      # 本題的 u_true
+    if not TASKS_NPZ:
+        traj, mask, S, G = probe_batch(rng, B)
+    U_TRUE = encode(traj, mask)                      # 本題的 u_true（TASKS 模式＝BFS 參考路編碼）
     CONDV = condvec(S, G)
     U_FLOW = flow.sample(B, CONDV)
     U_BAD = U_FLOW + NOISE * torch.randn_like(U_FLOW)
@@ -277,14 +312,16 @@ print(f"壞 u 全 pass 的 (η,λ)：{len(full)} 組 ⇒ 推薦 {recommend}", fl
 print(f"{verdict['diseaseA']}   {verdict['diseaseB_hint']}", flush=True)
 
 tag = (f"{ENV_NAME}_st{STEPS}_B{B}_n{NOISE}"
-       + (f"_span{MINSPAN}" if MINSPAN else "") + f"_s{SEED}"
+       + (f"_span{MINSPAN}" if MINSPAN else "")
+       + (f"_tasks-t{PROBE_TIER}" if TASKS_NPZ else "") + f"_s{SEED}"
        + ("" if SMOKE else "_" + os.path.basename(_lp).removeprefix("ckpt_").removesuffix(".pt")))
 out = os.path.join(ROOT, "results", f"refineprobe_{tag}.json")
 if SMOKE:
     import tempfile
     out = os.path.join(tempfile.gettempdir(), f"refineprobe_{tag}.json")  # ⛔ smoke 不碰 results/
 json.dump(dict(meta=dict(env=ENV_NAME, steps=STEPS, B=B, noise=NOISE, seed=SEED,
-                         minspan=MINSPAN, etas=ETAS, lams=LAMS, smoke=SMOKE,
+                         minspan=MINSPAN, tasks=TASKS_NPZ or None, tier=PROBE_TIER if TASKS_NPZ else None,
+                         etas=ETAS, lams=LAMS, smoke=SMOKE,
                          ckpt=None if SMOKE else os.path.basename(_lp), cfg=dict(cfg)),
                anchor=ANCH, logp_floor=LOGP_FLOOR, arms=ARMS, verdict=verdict),
           open(out, "w"), indent=1, default=float)
