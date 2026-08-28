@@ -198,6 +198,32 @@ K=16→ 0.0578   反而回頭（容量過剩開始傷害）
 
 ⭐ 順帶解釋了一個之前沒想通的事：large t2 的 BC 只有 0.08 —— 那層的題資料裡本來就沒走完過。
 
+## ②′ 機制實錘（2026-08-29 探針，A2 ckpt）
+
+`[實測]` **flow 在 tier2 cond 上抽的計畫「終點沒對到 g」，而且它自己不知道；梯度爬坡是解藥。**
+
+```
+                          分布內 cond    tier2 cond（BFS 6~11 格）
+flow 抽的計畫終點離 g         0.070          0.630   ← 差 9 倍 ≈ 1.5 格
+其 log p                     2542(界內)     1337(界內) ← 對自己的偏差【無自覺】
+爬 100 步後終點離 g           0.002          0.023   ← 羅盤把它修回目標
+```
+
+- ⭐ 這是「訓練沒教過遠目標」在 flow 上的直接顯影：conditional 生成在分布外 cond 系統性偏，
+  而結界（log p）量的是模型自家的密度 ⇒ 偵測不到這種病。
+- ⭐⭐ 主人的更新式第一次在該發揮的地方被量到發揮 —— 分布內它沒事做（flow 本來就好），
+  tier2 上它把終點偏差修掉 96%。⇒ G2 用的 η=0.1 λ=0.3 已是 flow 起點最佳檔；
+  萬用檔（2σ 深坑/完全錯題都救回）= η=0.5 λ=1.0。
+- ⚠️ 難度的正確尺度是 **BFS 格數**、⛔ 不是資料步數：`exp_span_difficulty.py` 實測
+  訓練抽法 BFS p50=0 p90=3、故意抽 64+ 步跨度（span64 探針）也才 p50=1 —— stitch 軌跡繞圈，
+  時間跨度長 ≠ 空間任務難。⇒ span64 那份探針量的仍是分布內，⛔ 別引它說「分布外沒問題」。
+- ⭐ 附帶：BFS 合成路（格心折線弧長重採樣）零樣本餵 encoder，重建終點誤差 0.64 ——
+  有損不災難 ⇒「拿 BFS 生 e_target 來練」（主人 8/24 問）的下限證據，訓練後只會更好。
+
+出處：`experiments/exp_refine_probe.py`（TASKS 模式）＋ `exp_dump_dev_tasks.py` ＋
+`exp_span_difficulty.py`；結果 `results/refineprobe_*_tasks-t2_*.json`（另兩份：無後綴＝分布內、
+`_span64_`＝假分布外）；log `slurm/logs/probe-{A2,span,t2}-2090{2,6,7}.out`。
+
 ## ③ 出處
 
 `experiments/exp_span_gap.py`、`slurm/run_spangap.sh`，結果 `results/spangap_*.json`，
