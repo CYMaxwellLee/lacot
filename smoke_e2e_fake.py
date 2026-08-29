@@ -105,6 +105,12 @@ ARMS = {
     # ⭐ 信心選點（主人 2026-08-29）：M 份共識 subgoal —— M=2 夠驗管線
     "Sc(conf)": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
                      LACOT_SUBGOAL="conf", LACOT_SUB_M="2"),
+    # ⭐ conf2（主人 8/29 統一版：最遠信心點＋g 直達＋fresh 重想）
+    "S2(conf2)": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
+                      LACOT_SUBGOAL="conf2", LACOT_SUB_M="2"),
+    # ⭐ 終局 resample 模式（fin 觸發時 fresh 短計畫而非換 bc head）
+    "fl-finrs": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
+                     LACOT_FINISH_R="2.0", LACOT_FINISH_MODE="resample"),
 }
 
 

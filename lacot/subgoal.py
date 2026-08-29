@@ -103,6 +103,54 @@ def consensus_subgoal(paths, lo, hi, ret_stats=False):
     return sub
 
 
+def farthest_confident_subgoal(paths, g_xy, min_arc, tau=None, tau_g=None, ret_stats=False):
+    """主人 2026-08-29 的統一選點：「g 信心夠高就直接走到底；不夠就挑最遠但信心夠高的點」。
+
+    paths [M,T,2] 原始座標的 M 份計畫；g_xy [2] 最終目標（原始座標）。
+    信心 ＝ M 條路在同一進度上的分散度（小＝共識高）；g 端另加「尾點對 g 的貼合」。
+
+    ⭐ 門檻自校準（⛔ 不拍絕對值）：路的開頭大家必然從同一點出發 ⇒ 前 20% 進度段的
+       分散度就是「共識好」的天然基準 ⇒ tau 預設 = 2 × 那段的中位。tau_g 同源。
+    流程：
+      1. g 端：尾端分散度 ≤ tau 且 尾點對 g 的平均距離 ≤ tau_g ⇒ 回 (g, direct=True)
+      2. 否則從遠往近掃：第一個「分散度 ≤ tau 且 弧長 ≥ min_arc」的進度點
+      3. 全都不過 ⇒ 回 (None, ...)（呼叫端退回固定弧長的保底）
+    """
+    P = paths.detach().cpu().numpy() if torch.is_tensor(paths) else np.asarray(paths)
+    M, T = P.shape[0], P.shape[1]
+    assert M >= 2, "⛔ 信心要至少兩份計畫"
+    tgrid = np.linspace(0.0, 1.0, T)
+    R = np.empty_like(P); total = np.empty(M)
+    for m in range(M):
+        seg = np.linalg.norm(np.diff(P[m], axis=0), axis=1)
+        cum = np.concatenate([[0.0], np.cumsum(seg)])
+        total[m] = cum[-1]
+        tm = cum / max(cum[-1], 1e-9)
+        for k in (0, 1):
+            R[m, :, k] = np.interp(tgrid, tm, P[m, :, k])
+    spread = np.zeros(T)
+    for a in range(M):
+        for b in range(a + 1, M):
+            spread += np.linalg.norm(R[a] - R[b], axis=1)
+    spread /= max(M * (M - 1) / 2, 1)
+    head_med = float(np.median(spread[tgrid < 0.2])) if (tgrid < 0.2).any() else float(spread[0])
+    tau = (2.0 * max(head_med, 1e-6)) if tau is None else float(tau)
+    tau_g = tau if tau_g is None else float(tau_g)
+    arc = tgrid * float(total.mean())
+    g_err = float(np.linalg.norm(R[:, -1] - np.asarray(g_xy, np.float64), axis=1).mean())
+    stats = dict(tau=tau, g_spread=float(spread[-1]), g_err=g_err,
+                 head_med=head_med, direct=False)
+    if spread[-1] <= tau and g_err <= tau_g:                 # ① g 信心夠 ⇒ 走到底
+        stats["direct"] = True
+        return (np.asarray(g_xy, np.float64), stats) if ret_stats else np.asarray(g_xy, np.float64)
+    ok = (spread <= tau) & (arc >= min_arc)
+    if ok.any():                                             # ② 最遠但信心夠高
+        j = int(np.flatnonzero(ok)[-1])
+        stats.update(t=float(tgrid[j]), spread=float(spread[j]), arc=float(arc[j]))
+        return (R[:, j].mean(0), stats) if ret_stats else R[:, j].mean(0)
+    return (None, stats) if ret_stats else None              # ③ 整條發散 ⇒ 呼叫端保底
+
+
 class SubgoalPlanner:
     """管「什麼時候該重想」與「subgoal 在哪」。⛔ 不管動作 —— 那是短程層的事。
 

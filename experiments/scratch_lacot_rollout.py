@@ -102,8 +102,10 @@ BC_INDEP = int(os.environ.get("LACOT_BC_INDEP", 0))
 #     bfs     subgoal 由 BFS 在格圖上生 ⇒ ⭐ 對照組：拆「贏的是階層化還是長程推理」
 #             ⛔ 少了它，latent 贏了我們會把功勞記錯人
 SUBGOAL = os.environ.get("LACOT_SUBGOAL", "")
-assert SUBGOAL in ("", "latent", "bfs", "conf"), \
-    f"⛔ LACOT_SUBGOAL 只能是空/latent/bfs/conf，收到 {SUBGOAL}"
+assert SUBGOAL in ("", "latent", "bfs", "conf", "conf2"), \
+    f"⛔ LACOT_SUBGOAL 只能是空/latent/bfs/conf/conf2，收到 {SUBGOAL}"
+# ⭐ conf2 ── 主人 8/29 下午的統一版：「g 信心夠高就直接走到底，不夠就挑最遠但信心夠高的點」。
+#   每次重想 fresh 抽 M 份（⛔ 不接續修 —— 治「計畫殘骸」病）、修完、判信心。門檻自校準。
 # 間距用訓練分布的中位數（exp_span_gap.py 實測 7.5，原始座標單位）⇒ 短程層坐在資料最肥的地方
 DELTA_SUB = float(os.environ.get("LACOT_DELTA_SUB", 7.5))
 # ⭐ conf ── 信心選點（主人 2026-08-29）：抽 M 份長程計畫，subgoal 取「窗內共識最高」的點。
@@ -128,6 +130,12 @@ W_LEN = float(os.environ.get("LACOT_W_LEN", 0.3))
 # ⭐ 病二快篩（主人 8/29 開跑）：所有帶 u 的 arm 都「到附近進不了洞」而 bc 進得去
 #   ⇒ 終局讓 u 退位、換獨立 bc head 收尾。>0 開啟（原始座標單位；半格＝2.0）。
 FINISH_R = float(os.environ.get("LACOT_FINISH_R", 0.0))
+# ⭐ 終局接管的模式（主人 8/29 下午）：
+#   bc        換獨立 bc head 收尾（已實測 flat 0.390→0.520）
+#   resample  fresh 重抽一份短計畫、不爬不碰快取（R=0 語義）——
+#             驗「終局病是計畫殘骸、不是 head 權重」：這個過了，統一信心機制就不需要第二顆 head
+FINISH_MODE = os.environ.get("LACOT_FINISH_MODE", "bc")
+assert FINISH_MODE in ("bc", "resample"), f"⛔ LACOT_FINISH_MODE 只能是 bc/resample，收到 {FINISH_MODE}"
 _FIN_COUNT = [0]   # ⭐ 終局接管的觸發次數 —— ⛔ 開關條件寫錯＝永不觸發＝快篩白跑，要能看見
 # ⭐ LOAD_CKPT ── 載入已訓好的權重，跳過訓練，只跑評估。
 #   🚨 起因：交接記著「今天為了換探針重訓了三輪」。換一個 arm、換一個判準就重訓一次，
@@ -561,7 +569,11 @@ def policy_chunk(obs, goal, R, use_u):
     if FINISH_R > 0.0 and use_u is True and float(
             np.linalg.norm(np.asarray(obs[:2], np.float64)
                            - np.asarray(goal[:2], np.float64))) < FINISH_R:
-        use_u = "bc"; _FIN_COUNT[0] += 1
+        _FIN_COUNT[0] += 1
+        if FINISH_MODE == "bc":
+            use_u = "bc"
+        else:               # resample：R=0 語義 ⇒ fresh flow 短計畫、不爬、不碰快取
+            R = 0
     s = normstate(obs); g = normstate(goal); cond = condvec(s, g)
     if use_u == "bc":                              # ⭐ 誠實地板，走另一顆 head
         a = bc_head(cond)[0].cpu().numpy()
@@ -616,11 +628,12 @@ N_TASKS = len(env.unwrapped.task_infos); SEEDS = int(os.environ.get("LACOT_EVAL_
 # ─────────────────────────────────────────────────────────────────────
 GEO = SUB_HELPERS = None
 if SUBGOAL:
-    from lacot.subgoal import SubgoalPlanner, arc_subgoal, bfs_subgoal, consensus_subgoal
+    from lacot.subgoal import (SubgoalPlanner, arc_subgoal, bfs_subgoal, consensus_subgoal,
+                               farthest_confident_subgoal)
 # 幾何 energy：SUBGOAL=latent/conf（長程層要它修）與 GRAD_REFINE（短程層要它修）都需要
-if SUBGOAL in ("latent", "conf") or GRAD_REFINE:
+if SUBGOAL in ("latent", "conf", "conf2") or GRAD_REFINE:
     assert u_dec is not None, (
-        f"⛔ {'SUBGOAL=' + SUBGOAL if SUBGOAL in ('latent', 'conf') else 'GRAD_REFINE=1'} 需要 decoder，"
+        f"⛔ {'SUBGOAL=' + SUBGOAL if SUBGOAL else 'GRAD_REFINE=1'} 需要 decoder，"
         f" 而 ENC_OBJ={ENC_OBJ} 沒有訓 decoder。"
         " ⇒ 用 ENC_OBJ=recon/recon_ictr（或載一顆有 u_dec 的 ckpt），或改用 SUBGOAL=bfs")
     from lacot.refine_grad import GeoEnergy, grad_refine, grad_steps
@@ -680,7 +693,8 @@ if SUBGOAL == "bfs":
 #          而兩個 arm 的差正是歸因依據。⇒ 至少把實際落點的分布印出來對照。
 #          ⛔ 沒有統一單位：弧長是「沿著計畫走的長度」、BFS 是「沿著最短路走的格數」，
 #            各自都是自己那層的自然單位；硬換算會把 decode 路徑的彎曲度算進 S0 頭上。
-SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": [], "spread": []}
+SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": [],
+            "spread": [], "n_direct": 0, "n_fallback": 0}
 
 
 def make_subgoal_policy(R, use_u):
@@ -740,6 +754,28 @@ def make_subgoal_policy(R, use_u):
             SUB_DIAG["d0"].append(_d0)
             if _d0 > 0.5 * DELTA_SUB:
                 SUB_DIAG["n_bad_d0"] += 1
+        elif SUBGOAL == "conf2":
+            # ⭐ 主人 8/29 統一版：fresh M 份（⛔ 不 warm，治計畫殘骸）→ 修 → 判信心。
+            cond_l = condvec(s_n, g_n).expand(SUB_M, -1)
+            u_l = flow.sample(SUB_M, cond_l).detach()
+            u_l = grad_refine(u_l, cond_l, u_dec, flow, GEO,
+                              s_n.expand(SUB_M, -1), g_n.expand(SUB_M, -1),
+                              steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
+            with torch.no_grad():
+                pts_raw = u_dec(u_l) * SD + MU           # [M, T_CAP, 2] 原始座標
+            sub, _fc = farthest_confident_subgoal(
+                pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True)
+            SUB_DIAG["spread"].append(_fc.get("spread", _fc["g_spread"]))
+            if _fc["direct"]:
+                SUB_DIAG["n_direct"] += 1                # 走到底（g 信心夠）
+            if sub is None:                              # ③ 整條發散 ⇒ 固定弧長保底
+                SUB_DIAG["n_fallback"] += 1
+                sub = arc_subgoal(pts_raw, DELTA_SUB)[0].cpu().numpy()
+            _d0 = float(np.linalg.norm(
+                pts_raw[:, 0].mean(0).cpu().numpy() - np.asarray(obs[:2])))
+            SUB_DIAG["d0"].append(_d0)
+            if _d0 > 0.5 * DELTA_SUB:
+                SUB_DIAG["n_bad_d0"] += 1
         else:
             c = bfs_subgoal(env, SUB_HELPERS[1](obs), SUB_HELPERS[1](box["goal"]),
                             delta_cells=max(1, int(round(DELTA_SUB / SUB_HELPERS[2]))),
@@ -759,7 +795,9 @@ def make_subgoal_policy(R, use_u):
         if FINISH_R > 0.0 and use_u is True and float(
                 np.linalg.norm(np.asarray(obs[:2], np.float64) - box["goal"])) < FINISH_R:
             _FIN_COUNT[0] += 1
-            return policy_chunk(obs, box["goal"], R, "bc")
+            if FINISH_MODE == "bc":
+                return policy_chunk(obs, box["goal"], R, "bc")
+            return policy_chunk(obs, box["goal"], 0, True)   # resample：fresh 短計畫直取 g
         if planner.observe(obs[:2]):
             planner.set(_plan(obs))
         return policy_chunk(obs, planner.sub, R, use_u)
@@ -1065,7 +1103,7 @@ import json
 def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0,
                SUBGOAL="", GRAD_REFINE=0, GRAD_R=50, GRAD_ETA=0.1, GRAD_LAM=0.3,
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
-               W_LEN=0.3, FINISH_R=0.0, SUB_M=4):
+               W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc"):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1088,7 +1126,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"_sc{SUB_CAP}"
         if SUB_STUCK != 3:
             x += f"_sk{SUB_STUCK}"
-        if SUBGOAL == "conf" and SUB_M != 4:
+        if SUBGOAL.startswith("conf") and SUB_M != 4:
             x += f"_m{SUB_M}"
     if GRAD_REFINE:                              # ⭐ flat-grad 的分水嶺
         x += f"_gr{GRAD_R}"
@@ -1100,8 +1138,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"w{GRAD_R_WARM}"
         if W_LEN != 0.3:                         # 病一快篩（w_len 只在爬坡開著時有作用）
             x += f"_wl{W_LEN:g}"
-    if FINISH_R > 0.0:                           # 病二快篩
-        x += f"_fin{FINISH_R:g}"
+    if FINISH_R > 0.0:                           # 病二快篩（rs＝resample 模式）
+        x += f"_fin{FINISH_R:g}" + ("rs" if FINISH_MODE == "resample" else "")
     if DEV_TIERS:                                # 只跑部分 tier 的結果 ⛔ 不可跟全 tier 混
         x += "_dt" + DEV_TIERS.replace(",", "")
     return x
@@ -1112,7 +1150,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     GRAD_R=GRAD_R, GRAD_ETA=GRAD_ETA, GRAD_LAM=GRAD_LAM,
                     GRAD_R_WARM=GRAD_R_WARM, DELTA_SUB=DELTA_SUB, SUB_CAP=SUB_CAP,
                     SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
-                    W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M)
+                    W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
