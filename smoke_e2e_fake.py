@@ -111,6 +111,11 @@ ARMS = {
     # ⭐ 終局 resample 模式（fin 觸發時 fresh 短計畫而非換 bc head）
     "fl-finrs": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
                      LACOT_FINISH_R="2.0", LACOT_FINISH_MODE="resample"),
+    # ⭐ energy-guided selection（中間站一）＋往返投影（中間站二）
+    "fl-sel": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
+                   LACOT_GRAD_MODE="select", LACOT_SEL_N="3"),
+    "fl-prj": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
+                   LACOT_GRAD_PROJ="1"),
 }
 
 

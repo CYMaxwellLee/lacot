@@ -156,6 +156,13 @@ GRAD_REFINE = int(os.environ.get("LACOT_GRAD_REFINE", 0))
 #   🚨 為什麼一定要有：每 chunk 都從頭爬 50 步 ⇒ 300 題要三十幾小時，⛔ 跑不完。
 #   ⭐ 而且它本來就是對的形狀 —— u 是一條【邊走邊修】的計畫，⛔ 不是每四步重想一次的東西。
 GRAD_R_WARM = int(os.environ.get("LACOT_GRAD_R_WARM", 10))
+# ⭐ 中間站（主人 8/29 晚核准，方言病的兩帖便宜藥）：
+#   GRAD_MODE=climb（現行梯度爬坡）| select（抽 SEL_N 份、E 挑最低 —— 永遠是殼上的點）
+#   GRAD_PROJ=1：爬完過 encoder 往返（decode→re-encode）拉回殼上再給 head
+GRAD_MODE = os.environ.get("LACOT_GRAD_MODE", "climb")
+assert GRAD_MODE in ("climb", "select"), f"⛔ LACOT_GRAD_MODE 只能是 climb/select，收到 {GRAD_MODE}"
+SEL_N = int(os.environ.get("LACOT_SEL_N", 8))
+GRAD_PROJ = int(os.environ.get("LACOT_GRAD_PROJ", 0))
 # ⭐ 只跑指定的 tier（例：LACOT_DEV_TIERS=2）。⛔ 空＝全部。
 #   ⚠️ 前兩層 bc 已經 0.93/0.87，⛔ 沒有空間；效應只可能出現在最難那層。
 DEV_TIERS = os.environ.get("LACOT_DEV_TIERS", "")
@@ -308,6 +315,12 @@ def _decoder_health():
 def etarget(traj, mask):
     Bc, Tc, _ = traj.shape
     return e_pooler(traj_enc(traj.reshape(Bc * Tc, 2)).reshape(Bc, Tc, 512), key_padding_mask=mask)
+
+
+def encode_u(pts):
+    """往返投影的後半：decode 出的（正規化）座標點重新編碼回 u —— 拉回 encoder 的殼上。"""
+    m = torch.zeros(pts.shape[0], pts.shape[1], dtype=torch.bool, device=pts.device)
+    return etarget(pts, m)
 # ⭐ ENC_OBJ=recon* 要一顆 decoder：解得回 128 個座標點，才代表 u 真的裝了那條路。
 #    ⛔ 它不是暫時的鷹架 —— E_geo（幾何 energy）也靠同一顆把 u 解成可微的座標點。
 u_dec = None
@@ -601,14 +614,28 @@ def policy_chunk(obs, goal, R, use_u):
             #    ⇒ 每次 flow.sample 抽的新 u 全被丟掉 ⇒ 整集都在用第 0 個 chunk 那個 u，
             #      而 cond 已經換過幾十次。註解寫「R=0 ⇒ flow 直接用」，行為跟它相反。
             #    ⇒ 決策抽成 lacot.refine_grad.grad_steps（純函式 ⇒ 沒有 GPU 也驗得了）。
-            _use_warm, _steps = grad_steps(R, _GRAD_CACHE["u"] is not None, GRAD_R, GRAD_R_WARM)
-            if _steps > 0:
-                if _use_warm:
-                    u = _GRAD_CACHE["u"]                 # 接續上一個 chunk 的計畫
-                u = grad_refine(u, cond, u_dec, flow, GEO, s, g,
-                                steps=_steps, eta=GRAD_ETA, lam=GRAD_LAM)
-                _GRAD_CACHE["u"] = u
-            # ⛔ _steps == 0（R=0）⇒ flow 抽的 u 直接用，⛔ 不碰 _GRAD_CACHE
+            if GRAD_MODE == "select" and R > 0:
+                # ⭐ energy-guided selection（主人 8/29 晚核准的中間站一）：
+                #    抽 N 份、E 打分、挑最低 —— 挑出來的永遠是 flow 原生樣本（殼上的點）
+                #    ⇒ 零方言病，E 的幾何品味直接兌現。⛔ 不碰快取（每 chunk fresh 選）。
+                cand = flow.sample(SEL_N, cond.expand(SEL_N, -1))
+                with torch.no_grad():
+                    _e = GEO(u_dec(cand), s.expand(SEL_N, -1), g.expand(SEL_N, -1))
+                u = cand[int(_e.argmin())][None]
+            else:
+                _use_warm, _steps = grad_steps(R, _GRAD_CACHE["u"] is not None, GRAD_R, GRAD_R_WARM)
+                if _steps > 0:
+                    if _use_warm:
+                        u = _GRAD_CACHE["u"]                 # 接續上一個 chunk 的計畫
+                    u = grad_refine(u, cond, u_dec, flow, GEO, s, g,
+                                    steps=_steps, eta=GRAD_ETA, lam=GRAD_LAM)
+                    if GRAD_PROJ:
+                        # ⭐ 中間站二：encoder 往返投影 —— 爬完拉回 head 熟悉的殼上再用。
+                        #    這格若讓爬坡從「變差」變「不差」，方言假說確診。
+                        with torch.no_grad():
+                            u = encode_u(u_dec(u))
+                    _GRAD_CACHE["u"] = u
+                # ⛔ _steps == 0（R=0）⇒ flow 抽的 u 直接用，⛔ 不碰 _GRAD_CACHE
         else:
             u = _apply_refine(cond, u, R)
     else:
@@ -1108,7 +1135,8 @@ import json
 def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0,
                SUBGOAL="", GRAD_REFINE=0, GRAD_R=50, GRAD_ETA=0.1, GRAD_LAM=0.3,
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
-               W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY=""):
+               W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
+               GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1136,6 +1164,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         if SUB_POLICY:                           # 歸因對照：短程走 bc
             x += f"_sp{SUB_POLICY}"
     if GRAD_REFINE:                              # ⭐ flat-grad 的分水嶺
+        if GRAD_MODE == "select":
+            x += f"_sel{SEL_N}"
         x += f"_gr{GRAD_R}"
         if GRAD_ETA != 0.1:
             x += f"e{GRAD_ETA:g}"
@@ -1145,6 +1175,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"w{GRAD_R_WARM}"
         if W_LEN != 0.3:                         # 病一快篩（w_len 只在爬坡開著時有作用）
             x += f"_wl{W_LEN:g}"
+        if GRAD_PROJ:
+            x += "_prj"
     if FINISH_R > 0.0:                           # 病二快篩（rs＝resample 模式）
         x += f"_fin{FINISH_R:g}" + ("rs" if FINISH_MODE == "resample" else "")
     if DEV_TIERS:                                # 只跑部分 tier 的結果 ⛔ 不可跟全 tier 混
@@ -1158,7 +1190,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     GRAD_R_WARM=GRAD_R_WARM, DELTA_SUB=DELTA_SUB, SUB_CAP=SUB_CAP,
                     SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
-                    SUB_POLICY=SUB_POLICY)
+                    SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
