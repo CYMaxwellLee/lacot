@@ -97,11 +97,14 @@ BASE = dict(
     LACOT_GRAD_R="2", LACOT_GRAD_R_WARM="1",
 )
 ARMS = {
-    # ⭐ 三個要互相對打的配置 —— 它們以前會產生【同一個檔名】
+    # ⭐ 四個要互相對打的配置 —— 前三個以前會產生【同一個檔名】
     "S0(bfs)": dict(LACOT_SUBGOAL="bfs"),
     "flat-grad": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1"),
     "S1(latent)": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
                        LACOT_SUBGOAL="latent"),
+    # ⭐ 信心選點（主人 2026-08-29）：M 份共識 subgoal —— M=2 夠驗管線
+    "Sc(conf)": dict(LACOT_ENC_OBJ="recon", LACOT_LEARNED_REFINE="0", LACOT_GRAD_REFINE="1",
+                     LACOT_SUBGOAL="conf", LACOT_SUB_M="2"),
 }
 
 

@@ -102,9 +102,15 @@ BC_INDEP = int(os.environ.get("LACOT_BC_INDEP", 0))
 #     bfs     subgoal 由 BFS 在格圖上生 ⇒ ⭐ 對照組：拆「贏的是階層化還是長程推理」
 #             ⛔ 少了它，latent 贏了我們會把功勞記錯人
 SUBGOAL = os.environ.get("LACOT_SUBGOAL", "")
-assert SUBGOAL in ("", "latent", "bfs"), f"⛔ LACOT_SUBGOAL 只能是空/latent/bfs，收到 {SUBGOAL}"
+assert SUBGOAL in ("", "latent", "bfs", "conf"), \
+    f"⛔ LACOT_SUBGOAL 只能是空/latent/bfs/conf，收到 {SUBGOAL}"
 # 間距用訓練分布的中位數（exp_span_gap.py 實測 7.5，原始座標單位）⇒ 短程層坐在資料最肥的地方
 DELTA_SUB = float(os.environ.get("LACOT_DELTA_SUB", 7.5))
+# ⭐ conf ── 信心選點（主人 2026-08-29）：抽 M 份長程計畫，subgoal 取「窗內共識最高」的點。
+#   固定弧長 7.5 是它的固定近似；窗 [LO,HI]×DELTA_SUB 下限擋原地共識、上限擋短程 cond 出分布。
+SUB_M = int(os.environ.get("LACOT_SUB_M", 4))
+SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
+SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # 🚨 2026-08-28 修（單位錯）：SubgoalPlanner.observe() 是【每個 chunk】呼叫一次，
 #    ⛔ 不是每個 env step —— 呼叫端是 policy，而 policy 一次回 CHUNK 步。
 #    ⇒ 舊預設 cap=40 讀起來像「40 步」、實際是 160 個 env step（CHUNK=4）
@@ -595,11 +601,11 @@ N_TASKS = len(env.unwrapped.task_infos); SEEDS = int(os.environ.get("LACOT_EVAL_
 # ─────────────────────────────────────────────────────────────────────
 GEO = SUB_HELPERS = None
 if SUBGOAL:
-    from lacot.subgoal import SubgoalPlanner, arc_subgoal, bfs_subgoal
-# 幾何 energy：SUBGOAL=latent（長程層要它爬）與 GRAD_REFINE（短程層要它爬）都需要
-if SUBGOAL == "latent" or GRAD_REFINE:
+    from lacot.subgoal import SubgoalPlanner, arc_subgoal, bfs_subgoal, consensus_subgoal
+# 幾何 energy：SUBGOAL=latent/conf（長程層要它修）與 GRAD_REFINE（短程層要它修）都需要
+if SUBGOAL in ("latent", "conf") or GRAD_REFINE:
     assert u_dec is not None, (
-        f"⛔ {'SUBGOAL=latent' if SUBGOAL == 'latent' else 'GRAD_REFINE=1'} 需要 decoder，"
+        f"⛔ {'SUBGOAL=' + SUBGOAL if SUBGOAL in ('latent', 'conf') else 'GRAD_REFINE=1'} 需要 decoder，"
         f" 而 ENC_OBJ={ENC_OBJ} 沒有訓 decoder。"
         " ⇒ 用 ENC_OBJ=recon/recon_ictr（或載一顆有 u_dec 的 ckpt），或改用 SUBGOAL=bfs")
     from lacot.refine_grad import GeoEnergy, grad_refine, grad_steps
@@ -657,7 +663,7 @@ if SUBGOAL == "bfs":
 #          而兩個 arm 的差正是歸因依據。⇒ 至少把實際落點的分布印出來對照。
 #          ⛔ 沒有統一單位：弧長是「沿著計畫走的長度」、BFS 是「沿著最短路走的格數」，
 #            各自都是自己那層的自然單位；硬換算會把 decode 路徑的彎曲度算進 S0 頭上。
-SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": []}
+SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": [], "spread": []}
 
 
 def make_subgoal_policy(R, use_u):
@@ -694,6 +700,28 @@ def make_subgoal_policy(R, use_u):
             _d0 = float(np.linalg.norm(pts_raw[0, 0].cpu().numpy() - np.asarray(obs[:2])))
             SUB_DIAG["d0"].append(_d0)
             if _d0 > 0.5 * DELTA_SUB:                    # 路的起點根本不在現在這裡
+                SUB_DIAG["n_bad_d0"] += 1
+        elif SUBGOAL == "conf":
+            # ⭐ 信心選點（主人 2026-08-29）：抽 M 份長程計畫、各自修完，
+            #    subgoal 取「窗內 M 條共識最高（分散最小）」的點 —— 固定 7.5 的自適應版。
+            cond_l = condvec(s_n, g_n).expand(SUB_M, -1)
+            if box.get("u_long") is not None and GRAD_R_WARM > 0:
+                u_l, _st = box["u_long"], GRAD_R_WARM    # M 份一起接續修
+            else:
+                u_l, _st = flow.sample(SUB_M, cond_l).detach(), GRAD_R
+            u_l = grad_refine(u_l, cond_l, u_dec, flow, GEO,
+                              s_n.expand(SUB_M, -1), g_n.expand(SUB_M, -1),
+                              steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
+            box["u_long"] = u_l
+            with torch.no_grad():
+                pts_raw = u_dec(u_l) * SD + MU           # [M, T_CAP, 2] 原始座標
+            sub, _cs = consensus_subgoal(pts_raw, SUB_CONF_LO * DELTA_SUB,
+                                         SUB_CONF_HI * DELTA_SUB, ret_stats=True)
+            SUB_DIAG["spread"].append(_cs["spread"])
+            _d0 = float(np.linalg.norm(
+                pts_raw[:, 0].mean(0).cpu().numpy() - np.asarray(obs[:2])))
+            SUB_DIAG["d0"].append(_d0)
+            if _d0 > 0.5 * DELTA_SUB:
                 SUB_DIAG["n_bad_d0"] += 1
         else:
             c = bfs_subgoal(env, SUB_HELPERS[1](obs), SUB_HELPERS[1](box["goal"]),

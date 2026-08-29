@@ -54,6 +54,55 @@ def arc_subgoal(pts, delta, ret_index=False):
     return (sg, idx) if ret_index else sg
 
 
+def consensus_subgoal(paths, lo, hi, ret_stats=False):
+    """信心選點（主人 2026-08-29 提案）：M 份計畫的【共識點】當 subgoal。
+
+    paths [M, T, 2] —— 同一題抽 M 份 u、各自修完、decode 出的【原始座標】路徑。
+    lo/hi 候選窗（弧長，與 paths 同單位）：subgoal 只在「離現在 lo~hi」的進度帶裡選，
+          下限擋「原地不動也算共識」、上限擋「短程 cond 掉出訓練分布」。
+
+    做法：
+      1. 每條各自沿弧長重參數化到同一把進度尺 t∈[0,1]（T 個等比例點）
+         ⛔ 不能用「第 k 個點」對齊 —— 同 arc_subgoal 的理由，各條路長不同。
+      2. spread(t) ＝ M 條路在 t 處兩兩距離的平均 ⇒ 模型在該進度上的【共識度】
+      3. 在窗內選 spread 最小的 t*；subgoal ＝ M 條路在 t* 的平均點。
+    ⭐ 固定弧長 7.5（arc_subgoal）＝這個的固定近似；此版自適應選「最有把握的地方」。
+    ⚠️ 窗內全無候選（路太短，平均總弧長 < lo）⇒ 回整條的終點 —— 跟 bfs_subgoal
+       「已在半徑內就直接指目標」同一個哲學，⛔ 不硬湊一個近身 subgoal。
+
+    回 subgoal [2] np.float64（ret_stats=True 時另回 dict(t、spread、arc)）。
+    """
+    P = paths.detach().cpu().numpy() if torch.is_tensor(paths) else np.asarray(paths)
+    M, T = P.shape[0], P.shape[1]
+    assert M >= 2, "⛔ 共識要至少兩份計畫，M=1 請直接用 arc_subgoal"
+    tgrid = np.linspace(0.0, 1.0, T)
+    R = np.empty_like(P)                       # 重參數化後：R[m, j] = 路 m 在進度 t_j 的點
+    total = np.empty(M)
+    for m in range(M):
+        seg = np.linalg.norm(np.diff(P[m], axis=0), axis=1)
+        cum = np.concatenate([[0.0], np.cumsum(seg)])
+        total[m] = cum[-1]
+        tm = cum / max(cum[-1], 1e-9)          # 該條自己的進度 ∈ [0,1]
+        for k in (0, 1):
+            R[m, :, k] = np.interp(tgrid, tm, P[m, :, k])
+    # 兩兩距離的平均（M 小，直接雙迴圈）
+    spread = np.zeros(T)
+    for a in range(M):
+        for b in range(a + 1, M):
+            spread += np.linalg.norm(R[a] - R[b], axis=1)
+    spread /= max(M * (M - 1) / 2, 1)
+    arc = tgrid * float(total.mean())          # 進度 t 對應的【平均】弧長
+    win = (arc >= lo) & (arc <= hi)
+    if not win.any():                          # 路太短 ⇒ 直接指整條的終點
+        j = T - 1
+    else:
+        j = int(np.flatnonzero(win)[np.argmin(spread[win])])
+    sub = R[:, j].mean(0)
+    if ret_stats:
+        return sub, dict(t=float(tgrid[j]), spread=float(spread[j]), arc=float(arc[j]))
+    return sub
+
+
 class SubgoalPlanner:
     """管「什麼時候該重想」與「subgoal 在哪」。⛔ 不管動作 —— 那是短程層的事。
 
