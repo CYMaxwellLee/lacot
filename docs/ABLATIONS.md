@@ -16,6 +16,8 @@ _新想到的變形先進這張表，⛔ 別直接動主線。_
 | 7 | cond-dropout p | `LACOT_COND_DROP` | 現 0.1（head 讀 u 三件套之一）。值的敏感度沒掃 |
 | 8 | subgoal 間距 | `LACOT_DELTA_SUB` | 現 7.5＝訓練分布路長中位（讓短程層坐在資料最肥處）。S1/S0 有訊號後再掃 |
 | 9 | consistency 目標 self vs ema | `LACOT_CONS/EMA_M` | 8/23 anti-collapse 掃過：ema 系列全過、byol 全塌 —— 但每格 1 seed。若 refine 回主線才需重驗 |
+| 10 | V_geo 四項權重（10/3/3/0.3）敏感度 | `refine_grad.py` GeoValue.w | 撞牆×10 是主人 8/26 裁示（大懲罰），其餘是初設沒掃過。reviewer 必問。η λ 已有探針格點、權重還沒有 |
+| 11 | 中繼點選法：固定弧長 7.5 vs 信心選點 | 待實作 | 主人 8/29 提案。「信心」候選定義：(a) 同題多抽幾份 u、選多條計畫的【共識點】（跟 D4 多樣性量測共用機制、成本低）；(b) 候選短程 cond 的 flow 密度；(c) GeoValue 局部安全度。7.5 的現行理由＝訓練分布路長中位（短程坐在資料最肥處），是信心選點的固定近似 |
 
 ## 已定案（不重掃，證據在索引）
 
