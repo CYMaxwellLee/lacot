@@ -65,3 +65,20 @@ p_guided(u) ∝ p(u|s,g) · exp(−E_geo(u)/λ′)
   （`results/refineprobe_*_tasks-t2_*.json`）⇒ 爬坡目前救得回；救不完就是換引擎的訊號。
 - NF 的多樣性塌：D4 線索（recon 目標下塌成點質量）。score/diffusion 的 mode coverage 是強項。
 - 成本形狀不變：我們本來就在迭代修 u ⇒ 多步生成不是新增成本。
+
+## 方言病與離散化階梯（主人 2026-08-29 晚定向）
+
+病：爬坡沿 decoder 靈敏方向把 u 推出 encoder 流形薄殼（log p 沒掉不代表在殼上），
+head 對殼外輸入行為未定義 ⇒「decoder 視角的改善」不轉化成成功率。
+證據：noclimb+fin 0.580 > climb+fin 0.520；R 線 0.460→0.360；D0 弱；shuf 崩 0.056。
+
+三層階梯（由軟到硬，逐層驗證後再上）：
+
+1. **投影回殼（軟）**：爬完 decode→re-encode 拉回 encoder 流形（`LACOT_GRAD_PROJ=1`，Z-prj 驗證中）。
+   姊妹招：energy-guided selection —— 抽 N 份挑 E 最低，永遠是殼上的點（`LACOT_GRAD_MODE=select`）。
+2. **VQ 錨定（中）**：encoder 出口加 codebook，連續爬坡＋週期 quantize（Diffusion-LM/CDCD/
+   bit-diffusion 的「操作連續、表示離散」哲學）。flow 與 E 全保留、引擎不換，
+   只重訓 encoder(VQ)+head+decoder。⭐ v2 首選候補 —— prj 若有效，此路只會更穩。
+3. **全 categorical（硬）**：DreamerV2 式 one-hot 組合，先驗換 discrete 系
+   （AR / discrete diffusion），refine 變離散搜索（座標搜索/退火、引導生成、遮罩重填 ——
+   第三種與分段 thinking 敘事同構）。⚠️ 8/22 淘汰的是 action 離散化，⛔ 與 latent 離散化無關。
