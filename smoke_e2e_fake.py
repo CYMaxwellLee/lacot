@@ -3,11 +3,11 @@
 🚨 為什麼要有這一支（2026-08-28）：那天的 code review 抓到的六個坑，全部是
    「不報錯、只安靜給出錯誤結論」—— 而它們全都在【只有真的跑起來才會經過】的路徑上：
      R=0 的爬坡快取、官方 rollout 的跨集汙染、三個 arm 的檔名、
-     decoder 探針的位置、幾何 value 的健康檢查、subgoal 的落點。
+     decoder 探針的位置、幾何 energy 的健康檢查、subgoal 的落點。
    ⇒ 純函式的 smoke（smoke_rollout_fixes.py）驗得了邏輯，⛔ 驗不了「這條路真的走得通」。
 
 ⭐ 做法：用迷宮的 BFS 最短路造一份形狀對的假資料 ⇒ 佔據圖真的是那張迷宮
-   ⇒ GeoValue / BFS subgoal / arc_subgoal 走的都是真的程式碼。
+   ⇒ GeoEnergy / BFS subgoal / arc_subgoal 走的都是真的程式碼。
 ⛔ 數值沒有任何意義（只訓幾十步）—— 這支驗的是【接線】，⛔ 不是成績。
 ⛔ 產物一律寫進 tempdir（LACOT_OUT_DIR），⛔ 不准落進 results/。
 
@@ -150,8 +150,8 @@ try:
              f"json 讀得出 grad_refine={js.get('grad_refine')}")
 
         if extra.get("LACOT_GRAD_REFINE") == "1":
-            # #8：幾何 value 的健康檢查真的跑了、而且過了
-            want("幾何 value 健康檢查通過" in stdout, name, "GEO.health() 跑過並通過")
+            # #8：幾何 energy 的健康檢查真的跑了、而且過了
+            want("幾何 energy 健康檢查通過" in stdout, name, "GEO.health() 跑過並通過")
             want("格心 round-trip" in stdout, name, "印出格心 round-trip 誤差")
             # #6：decoder 的 ctx_usage gate 真的跑了
             want("decoder 讀得到 u" in stdout, name, "decoder 讀 u 的 gate 跑過並通過")

@@ -260,7 +260,7 @@ def _decoder_health():
 
     🚨 2026-08-28 修（探針跑在載入【之前】）：舊版這段緊接在 stage 1 後面，而 LOAD_CKPT 模式下
        _S1=0 ⇒ stage 1 整個跳過 ⇒ 它評的是【隨機初始化】的 u_dec，然後照樣印判決；
-       真權重要到 LOAD_CKPT 那一段才進來 ⇒ ⛔ 只評估模式下，真正要當 V_geo 眼睛的那顆
+       真權重要到 LOAD_CKPT 那一段才進來 ⇒ ⛔ 只評估模式下，真正要當 E_geo 眼睛的那顆
        decoder【一個檢查都沒有】。
     ⚠️ 疊加：u_dec.eval() 之後，traj_decoder.py 裡的塌陷 assert 因 self.training=False 永不執行。
     ⇒ 搬到載入之後呼叫。⭐ 為了讓訓練【逐位元不變】，這裡用自己的 numpy RNG，
@@ -284,7 +284,7 @@ def etarget(traj, mask):
     Bc, Tc, _ = traj.shape
     return e_pooler(traj_enc(traj.reshape(Bc * Tc, 2)).reshape(Bc, Tc, 512), key_padding_mask=mask)
 # ⭐ ENC_OBJ=recon* 要一顆 decoder：解得回 128 個座標點，才代表 u 真的裝了那條路。
-#    ⛔ 它不是暫時的鷹架 —— V_geo（幾何 value）也靠同一顆把 u 解成可微的座標點。
+#    ⛔ 它不是暫時的鷹架 —— E_geo（幾何 energy）也靠同一顆把 u 解成可微的座標點。
 u_dec = None
 if ENC_OBJ.startswith("recon"):
     from lacot.traj_decoder import TrajDecoder
@@ -335,7 +335,7 @@ for m in (traj_enc, e_pooler):
     for p in m.parameters():
         p.requires_grad_(False)
 if u_dec is not None:
-    # ⭐ decoder 也凍住：stage 2 之後它只被當成「u → 座標」的固定讀取器（V_geo 要用）。
+    # ⭐ decoder 也凍住：stage 2 之後它只被當成「u → 座標」的固定讀取器（E_geo 要用）。
     u_dec.eval()
     for p in u_dec.parameters():
         p.requires_grad_(False)
@@ -450,7 +450,7 @@ if LOAD_CKPT:
     if u_dec is not None:
         assert "u_dec" in _ck, (
             "⛔ ENC_OBJ=recon* 但 ckpt 裡沒有 u_dec ⇒ 那顆 ckpt 是舊版存的，"
-            " 沒有 decoder 就沒有 V_geo 的眼睛")
+            " 沒有 decoder 就沒有 E_geo 的眼睛")
         u_dec.load_state_dict(_ck["u_dec"])
     print(f"✅ 載入 {os.path.basename(_lp)}（跳過訓練，只跑評估）"
           f"  cfg={ {k: _cfg.get(k) for k in ('K','T_CAP','ENC_OBJ','LEARNED_REFINE','COND_DROP')} }",
@@ -596,21 +596,21 @@ N_TASKS = len(env.unwrapped.task_infos); SEEDS = int(os.environ.get("LACOT_EVAL_
 GEO = SUB_HELPERS = None
 if SUBGOAL:
     from lacot.subgoal import SubgoalPlanner, arc_subgoal, bfs_subgoal
-# 幾何 value：SUBGOAL=latent（長程層要它爬）與 GRAD_REFINE（短程層要它爬）都需要
+# 幾何 energy：SUBGOAL=latent（長程層要它爬）與 GRAD_REFINE（短程層要它爬）都需要
 if SUBGOAL == "latent" or GRAD_REFINE:
     assert u_dec is not None, (
         f"⛔ {'SUBGOAL=latent' if SUBGOAL == 'latent' else 'GRAD_REFINE=1'} 需要 decoder，"
         f" 而 ENC_OBJ={ENC_OBJ} 沒有訓 decoder。"
         " ⇒ 用 ENC_OBJ=recon/recon_ictr（或載一顆有 u_dec 的 ckpt），或改用 SUBGOAL=bfs")
-    from lacot.refine_grad import GeoValue, grad_refine, grad_steps
-    GEO = GeoValue(OBS, mu, sd, res=8, device=device)
-    print(f"  幾何 value：佔據圖 {tuple(GEO.shape)}，資料覆蓋 {GEO.coverage:.1%} 的格", flush=True)
+    from lacot.refine_grad import GeoEnergy, grad_refine, grad_steps
+    GEO = GeoEnergy(OBS, mu, sd, res=8, device=device)
+    print(f"  幾何 energy：佔據圖 {tuple(GEO.shape)}，資料覆蓋 {GEO.coverage:.1%} 的格", flush=True)
     # 🚨 sanity：資料裡【真實走過】的路，穿牆懲罰必須 ≈0。不 ≈0 就是 SDF 蓋歪了。
     # ⚠️ 2026-08-28：⛔ 這一格【結構上必然通過】—— occ 是拿 OBS 蓋的，而 _t 又是
     #    make_batch 從【同一批 OBS】內插出來的 ⇒ 穿牆深度恆為 0，跟映射對不對無關。
-    #    `[實測]` 用「覆蓋整個盒子」的資料建 GeoValue ⇒ 這行照樣是 0.0000、照樣通過，
+    #    `[實測]` 用「覆蓋整個盒子」的資料建 GeoEnergy ⇒ 這行照樣是 0.0000、照樣通過，
     #    但盒內隨機點的穿牆中位也是 0.0000 ⇒ 牆這一項是【空的】，
-    #    V_geo 安靜地退化成只有 goal/start/length。
+    #    E_geo 安靜地退化成只有 goal/start/length。
     # ⇒ 留著它（便宜、而且真的壞掉時它會第一個叫），但真正的守門員是下面 GEO.health()。
     with torch.no_grad():
         _t, _m, _s, _g, _ = make_batch(rng)
@@ -621,15 +621,15 @@ if SUBGOAL == "latent" or GRAD_REFINE:
     print(f"  sanity：真軌跡穿牆中位 {float(_wd.median()):.4f}（⚠️ 恆真、參考用）"
           f"   格心 round-trip {_gh['mapping_err']:.2e}"
           f"   盒內隨機點穿牆中位 {_gh['wall_median_random']:.4f}", flush=True)
-    assert _gh["ok"], "⛔ 幾何 value 沒過健康檢查 ⇒ " + "；".join(_gh["reasons"])
-    print("  ✓ 幾何 value 健康檢查通過（映射對得上、牆這一項不是空的）", flush=True)
-    # 🚨 decoder 是 V_geo 的【眼睛】—— 它若不讀 u，爬坡就是在對一條固定的平均路做最佳化，
+    assert _gh["ok"], "⛔ 幾何 energy 沒過健康檢查 ⇒ " + "；".join(_gh["reasons"])
+    print("  ✓ 幾何 energy 健康檢查通過（映射對得上、牆這一項不是空的）", flush=True)
+    # 🚨 decoder 是 E_geo 的【眼睛】—— 它若不讀 u，爬坡就是在對一條固定的平均路做最佳化，
     #    ⛔ 而且不會報錯：V 照樣會上升（它在改那條平均路），u 卻沒有任何意義。
     #    ⇒ 跟上面穿牆那格同層級：不過就停。
     _dn, _dsh, _dgap = _decoder_health()
     assert _dgap >= 0.02, (
         f"⛔ decoder 幾乎沒在讀 u（打亂 u 之後內部點 RMSE 只變 {_dgap:+.4f} < 0.02）"
-        f" ⇒ 它吐的是「不管給什麼都一樣的平均路」⇒ V_geo 沒有眼睛，爬坡沒有意義")
+        f" ⇒ 它吐的是「不管給什麼都一樣的平均路」⇒ E_geo 沒有眼睛，爬坡沒有意義")
     print(f"  ✓ decoder 讀得到 u（打亂後 RMSE {_dn:.4f} → {_dsh:.4f}，差 {_dgap:+.4f}）", flush=True)
 
 if SUBGOAL == "bfs":
@@ -677,7 +677,7 @@ def make_subgoal_policy(R, use_u):
     def _plan(obs):
         s_n = normstate(obs); g_n = normstate(box["goal"])
         if SUBGOAL == "latent":
-            # 長程層：flow 起手 → V_geo 爬 → 解碼 → 沿弧長取點
+            # 長程層：flow 起手 → E_geo 爬 → 解碼 → 沿弧長取點
             # ⚠️ λ 調小：cond=(現在, 最終目標) 對 flow 來說是分布外的，結界本來就不太可信
             cond_l = condvec(s_n, g_n)
             if box.get("u_long") is not None and GRAD_R_WARM > 0:
@@ -1079,7 +1079,7 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             "flow": flow.state_dict(), "refine": refine.state_dict(),
             "ahead": ahead.state_dict(), "bc_head": bc_head.state_dict(),
             "traj_enc": traj_enc.state_dict(), "e_pooler": e_pooler.state_dict(),
-            # ⭐ decoder 一定要跟著存：V_geo（幾何 value）靠它把 u 解成可微的座標點，
+            # ⭐ decoder 一定要跟著存：E_geo（幾何 energy）靠它把 u 解成可微的座標點，
             #    ⛔ 沒存的話下一步要重訓 encoder 才拿得回配得上的 decoder。
             **({"u_dec": u_dec.state_dict()} if u_dec is not None else {}),
             "cfg": dict(K=K, COND=COND, CHUNK=CHUNK, D_MODEL=D_MODEL, STEPS2=STEPS2, T_CAP=T_CAP,

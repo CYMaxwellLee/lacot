@@ -1,18 +1,22 @@
-"""主人的更新式 —— 在 latent 上做 value-guided 梯度爬坡。
+"""主人的更新式 —— 在 latent 上做 energy-guided 梯度修正。
 
-    u ← u + η · [ clip(∇u V_geo(u)) + λ · clip(∇u log p(u | s,g)) ]
-        羅盤（往好的路走）        結界（別走出 flow 認得的地方）
+    u ← u + η · [ −clip(∇u E_geo(u)) + λ · clip(∇u log p(u | s,g)) ]
+        羅盤（往 energy 低的好路走）   結界（別走出 flow 認得的地方）
+
+⭐ 2026-08-29 主人裁：叫 energy、不叫 value —— (a) 不跟 RL 的 value（expected return）
+   混淆；(b) energy 框架自然接 score-based generative 一族（引擎未必永遠是 NF）。
+   E 越小越好、沿 −∇E 下坡；與舊的 V=−E 版逐位等價。
 
 🚨 出處：主人 2026-08-22 提的 value-directed refine。到 2026-08-28 之前一行都沒寫，
-   而主線的 `refine` 是一顆【學出來的網路】—— 裡面沒有 value、不是梯度爬坡，
+   而主線的 `refine` 是一顆【學出來的網路】—— 裡面沒有打分項、不是梯度修正，
    ⛔ 那不是這條式子。（8/26 實測：那顆網路反向跑反而追平 bc 地板 ⇒ 它是主動有害的。）
 
-## 為什麼 value 用【算的】不用【學的】
+## 為什麼 energy 用【算的】不用【學的】
 
-交接記著一條文獻結論：裸的「梯度爬一個學出來的 V」至今沒有一篇成功 ——
-學出來的 V 一定有破綻，爬坡會去找那個破綻（找到 V 給高分、實際很爛的點）。
+交接記著一條文獻結論：裸的「梯度優化一個學出來的評分器」至今沒有一篇成功 ——
+學出來的評分一定有破綻，優化會去找那個破綻（找到分數好看、實際很爛的點）。
 
-⇒ ⭐ 幾何算出來的 value 沒有破綻可找：想騙它，就得真的走出一條不穿牆、真的到得了目標的短路。
+⇒ ⭐ 幾何算出來的 energy 沒有破綻可找：想騙它，就得真的走出一條不穿牆、真的到得了目標的短路。
 ⇒ 而這正是 pointmaze 給我們、而做語言模型的那批人沒有的牌 —— 路好不好是幾何可驗的。
 
 ## 佔據圖從【資料】蓋，⛔ 不從 env.maze_map 讀
@@ -26,10 +30,10 @@ import torch
 import torch.nn.functional as F
 
 
-class GeoValue:
-    """幾何 value —— 四項全部對【座標點】可微，因此對 u 可微（經過 decoder）。
+class GeoEnergy:
+    """幾何 energy —— 四項全部對【座標點】可微，因此對 u 可微（經過 decoder）。
 
-        V_geo = −[ w_wall·穿牆 + w_goal·終點沒到 + w_start·起點不對 + w_len·路徑長度 ]
+        E_geo = w_wall·穿牆 + w_goal·終點沒到 + w_start·起點不對 + w_len·路徑長度（越小越好）
 
     ⭐ 權重排序是主人 2026-08-26 的原話：「穿牆應該要有個大懲罰」⇒ w_wall 最大。
     ⚠️ w_len 最小是刻意的：先要求「走得通」，再要求「走得短」。
@@ -85,9 +89,9 @@ class GeoValue:
     # 🚨 為什麼要加：主線舊有的 sanity 是「真軌跡的穿牆深度中位 < 0.15」，而它
     #    【結構上必然通過】—— occ 是用 OBS 蓋的，探針的點又是 make_batch 從
     #    【同一批 OBS】內插出來的 ⇒ 穿牆深度恆為 0，跟映射對不對無關。
-    #    `[實測]` 拿「覆蓋整個盒子」的資料建 GeoValue ⇒ 真軌跡穿牆中位 0.0000、
+    #    `[實測]` 拿「覆蓋整個盒子」的資料建 GeoEnergy ⇒ 真軌跡穿牆中位 0.0000、
     #    舊 assert 照樣通過，但 ‖∂wall/∂pts‖ = 1.2e-03 ⇒ 穿牆項對爬坡毫無貢獻，
-    #    V_geo 安靜地退化成只有 goal/start/length。
+    #    E_geo 安靜地退化成只有 goal/start/length。
     # ⇒ 下面兩格才是真的擋得住的：
     #     mapping_error()  抓「映射寫歪」  —— 格心 round-trip
     #     health()         抓「牆這項是空的」—— 盒內隨機點必須真的被判成牆
@@ -132,7 +136,7 @@ class GeoValue:
             reasons.append(f"格心 round-trip 誤差 {me:.2e} ≥ {map_tol:g} ⇒ 座標映射寫歪了")
         if not (wd > wall_min):
             reasons.append(f"盒內隨機點的穿牆中位 {wd:.4f} ≤ {wall_min:g} ⇒ 幾乎每個點都被判成"
-                           f"自由空間 ⇒ 穿牆這一項是【空的】，V_geo 退化成 goal/start/length")
+                           f"自由空間 ⇒ 穿牆這一項是【空的】，E_geo 退化成 goal/start/length")
         if not (cov_lo < self.coverage < cov_hi):
             reasons.append(f"資料覆蓋 {self.coverage:.1%} 不在 ({cov_lo:.0%}, {cov_hi:.0%}) 之間"
                            f" ⇒ 佔據圖不是一張迷宮（太空或太滿）")
@@ -140,16 +144,21 @@ class GeoValue:
                     coverage=float(self.coverage), reasons=reasons)
 
     def __call__(self, pts, s, g, per_term=False):
-        """pts [B,T,2]、s/g [B,2]（皆正規化座標）→ V [B]（越大越好）。"""
+        """pts [B,T,2]、s/g [B,2]（皆正規化座標）→ E [B]（energy，越【小】越好）。
+
+        ⭐ 2026-08-29 主人裁：改稱 energy、符號翻正 —— 不跟 value（expected return）混淆，
+           energy 框架也自然接 score-based generative 那一族（引擎未必永遠是 NF）。
+           更新式同步翻成下坡：u ← u + η[−clip(∇E) + λ clip(∇log p)]，行為逐位等價。
+        """
         wall = self.wall_depth(pts).mean(1)
         goal = (pts[:, -1] - g).norm(dim=-1)
         start = (pts[:, 0] - s).norm(dim=-1)
         length = (pts[:, 1:] - pts[:, :-1]).norm(dim=-1).sum(1)
-        v = -(self.w["wall"] * wall + self.w["goal"] * goal
-              + self.w["start"] * start + self.w["length"] * length)
+        e = (self.w["wall"] * wall + self.w["goal"] * goal
+             + self.w["start"] * start + self.w["length"] * length)
         if per_term:
-            return v, dict(wall=wall, goal=goal, start=start, length=length)
-        return v
+            return e, dict(wall=wall, goal=goal, start=start, length=length)
+        return e
 
 
 def grad_steps(R, has_warm, grad_r, grad_r_warm):
@@ -173,7 +182,7 @@ def _clip(grad, mode="normalize", dims=(1, 2)):
     """把一項梯度限制成單位長度。
 
     ⭐ 主人 2026-08-26 的原話是「value guided trust region」。兩種讀法都合理，這裡預設 normalize：
-       normalize  兩項【等權】相加 —— 解掉「V 的梯度比 log p 大兩個數量級」這種問題
+       normalize  兩項【等權】相加 —— 解掉「E 的梯度比 log p 大兩個數量級」這種問題
        clamp      只在超過 1 時縮放 —— 純粹限制步長，兩項的相對量級保持原樣
     ⚠️ 這是一個【選擇】，⛔ 不是唯一正解。要換就換，但要記得結果不可跨模式比較。
     """
@@ -193,14 +202,15 @@ def grad_refine(u0, cond, decoder, flow, geo, s, g, steps=50, eta=0.1, lam=0.3,
         u = u0.detach().clone().requires_grad_(True)
         for i in range(steps):
             pts = decoder(u)
-            v, terms = geo(pts, s, g, per_term=True)
-            gv = torch.autograd.grad(v.sum(), u, retain_graph=True)[0]
+            e, terms = geo(pts, s, g, per_term=True)
+            ge = torch.autograd.grad(e.sum(), u, retain_graph=True)[0]
             lp = flow.log_prob(u, cond)
             gp = torch.autograd.grad(lp.sum(), u)[0]
-            # ⭐ 兩項【各自】限長再相加 —— 主人的 trust region
-            step = _clip(gv, clip_mode) + lam * _clip(gp, clip_mode)
+            # ⭐ 兩項【各自】限長再相加 —— 主人的 trust region。
+            #    energy 走下坡（−∇E）、log p 走上坡（+∇log p）；normalize 下與舊 V 版逐位等價。
+            step = -_clip(ge, clip_mode) + lam * _clip(gp, clip_mode)
             u = (u + eta * step).detach().requires_grad_(True)
             if trace:
-                hist.append(dict(i=i, v=float(v.mean()), logp=float(lp.mean()),
+                hist.append(dict(i=i, e=float(e.mean()), logp=float(lp.mean()),
                                  **{k: float(t.mean()) for k, t in terms.items()}))
     return (u.detach(), hist) if trace else u.detach()

@@ -2,7 +2,7 @@
 
 ⭐ 兩個地方要用同一顆，所以抽出來共用：
    ① `experiments/exp_decode_probe.py` —— 量「u 裡裝了多少路線資訊」（2026-08-28 已封盤，見索引 Q1）
-   ② 主線的 recon encoder 目標 ＋ V_geo（幾何 value 要靠它把 u 解成可微的座標點）
+   ② 主線的 recon encoder 目標 ＋ E_geo（幾何 energy 要靠它把 u 解成可微的座標點）
 
 ⛔ 不要在別處另寫一份 —— 這個 repo 已經被「同族東西兩份實作」咬過。
 """

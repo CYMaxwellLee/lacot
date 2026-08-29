@@ -66,7 +66,7 @@ CHECK_P = float(os.environ.get("LACOT_DP_CHECKP", 0.01))   # 塌掉檢查的抽�
 # ⭐ corruption control 專用：故意把 pos_q 初始化成 encoder 那邊的 0.02，
 #    用來驗「塌掉檢查」真的會叫。⛔ 正式跑一律 0 —— 檔名不帶它，因為它不該出現在結果裡。
 BREAK_POSQ = int(os.environ.get("LACOT_DP_BREAK", 0))
-# ⭐ 存 decoder：V_geo 需要「u → 128 個座標點」這條可微的路，而那顆就是這裡訓出來的。
+# ⭐ 存 decoder：E_geo 需要「u → 128 個座標點」這條可微的路，而那顆就是這裡訓出來的。
 #    ⛔ 預設不存（七支掃描存七顆沒意義），要用的那一顆明確指定。
 SAVE_DEC = int(os.environ.get("LACOT_DP_SAVE", 0))
 # 🚨 smoke 用假資料跑出來的檔【不准】落進 results/ —— 2026-08-28 我自己犯過一次。
@@ -157,7 +157,7 @@ def sota_mlp(i, h, o, n=2):
 # TrajDecoder —— PerceiverPooler 的鏡像：M 個 token → T_CAP 個座標點
 # ─────────────────────────────────────────────────────────────────────
 # ⭐ TrajDecoder 已抽進 lacot/traj_decoder.py（2026-08-28）——
-#    主線的 recon 目標與 V_geo 要用同一顆，⛔ 不能留兩份分岔。
+#    主線的 recon 目標與 E_geo 要用同一顆，⛔ 不能留兩份分岔。
 #    搬過去的是逐字同一份（本檔 2026-08-28 的結果就是用它跑的），
 #    連 corruption control 的結論註解一起帶走了。
 

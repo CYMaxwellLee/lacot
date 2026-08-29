@@ -18,7 +18,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 from lacot.dev_eval import _bfs_from, _passable_cells, cell_width
-from lacot.refine_grad import GeoValue, grad_steps
+from lacot.refine_grad import GeoEnergy, grad_steps
 from lacot.subgoal import SubgoalPlanner, arc_subgoal, bfs_subgoal
 
 fails = []
@@ -414,7 +414,7 @@ print(f"    兩支呼叫端都改用 DE.cell_width ✓（⛔ 不留兩份會分�
 # ═══════════════════════════════════════════════════════════════════
 # #8  wall_depth 的 sanity assert 結構上必然通過
 # ═══════════════════════════════════════════════════════════════════
-print("\n#8  幾何 value 的健康檢查要擋得住「牆是空的」")
+print("\n#8  幾何 energy 的健康檢查要擋得住「牆是空的」")
 rng = np.random.default_rng(0)
 seg = []
 for _ in range(400):
@@ -427,7 +427,7 @@ BADBOX = rng.uniform(-1, 9, (24000, 2)).astype(np.float32)    # 整盒都走過 
 for name, OBS, want_ok in (("L 形走廊（真的有牆）", GOOD, True),
                            ("整盒都是自由空間", BADBOX, False)):
     mu, sd_ = OBS.mean(0), OBS.std(0) + 1e-6
-    geo = GeoValue(OBS, mu, sd_, res=8)
+    geo = GeoEnergy(OBS, mu, sd_, res=8)
     Z = torch.tensor((OBS[:64 * 32] - mu) / sd_, dtype=torch.float32).reshape(64, 32, 2)
     old_med = float(geo.wall_depth(Z).median())               # 舊 assert 看的東西
     h = geo.health()

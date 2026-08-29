@@ -8,15 +8,15 @@
   true   本題的 u_true                         已經是好答案 ⇒ 爬坡應該【幾乎不動它】
 掃 η×λ 格點各爬 STEPS 步，＋三個對照：
   η=0    null control ── ⛔ 它必須【不過】驗收門檻，不然探針是裝飾
-  λ=0    只有羅盤（V_geo）
-  zeroV  只有結界（flow log p）
+  λ=0    只有羅盤（E_geo）
+  zeroE  只有結界（flow log p）
 判（對 bad/perm 起點，per-sample 中位數）：
   wall、goal 要降到 anchor 的 p90 以內；log p 不准跌出 anchor p10 − 2×IQR。
   anchor ＝ decode(u_true) 的分布 ── ⭐ 跟被評物走同一個 decoder，才是「爬坡可達的好」；
   真軌跡本身的 wall 恆 0（佔據圖由同批 OBS 蓋成，見主線 sanity 註解）⇒ 只印參考、不當門檻。
 兩種病的訊號：
   病 A（爬出 flow 認得的範圍）＝ wall/goal 改善但 logp 跌出下限 ⇒ λ 太小
-  病 B（V_geo 的最佳解不在資料流形上）＝ true 起點被爬走很遠（‖Δdecode‖ 大、logp 掉）
+  病 B（E_geo 的最佳解不在資料流形上）＝ true 起點被爬走很遠（‖Δdecode‖ 大、logp 掉）
 輸出：results/refineprobe_{tag}.json ＋ console 摘要表（等寬，可直接貼給主人）。
 
 用法（lady 上，A2 的 ckpt）：
@@ -33,7 +33,7 @@ from torch import nn
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
-from lacot.refine_grad import GeoValue, grad_refine
+from lacot.refine_grad import GeoEnergy, grad_refine
 from lacot.traj_decoder import TrajDecoder
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -102,7 +102,7 @@ else:
     ck = torch.load(_lp, map_location=device, weights_only=False)
     cfg = ck.get("cfg", {})
     assert str(cfg.get("ENC_OBJ", "")).startswith("recon") and "u_dec" in ck, (
-        f"⛔ ckpt 的 ENC_OBJ={cfg.get('ENC_OBJ')!r} 沒有 decoder ⇒ V_geo 沒有眼睛，探針無意義")
+        f"⛔ ckpt 的 ENC_OBJ={cfg.get('ENC_OBJ')!r} 沒有 decoder ⇒ E_geo 沒有眼睛，探針無意義")
 K = int(cfg["K"]); COND = int(cfg["COND"]); T_CAP = int(cfg["T_CAP"])
 D_MODEL = int(cfg.get("D_MODEL", 256)); DIM = K * D_MODEL
 print(f"cfg: K={K} COND={COND} T_CAP={T_CAP} D_MODEL={D_MODEL}"
@@ -175,7 +175,7 @@ def probe_batch(rng, B):
     return T(traj), torch.from_numpy(mask).to(device), T(s), T(g)
 
 
-class ZeroGeo:
+class ZeroEnergy:
     """「只有結界」對照：V≡0 但保持對 u 的計算圖（grad 恆 0，⛔ 不會炸 autograd）。"""
 
     def __call__(self, pts, s, g, per_term=False):
@@ -186,10 +186,10 @@ class ZeroGeo:
         return v
 
 
-GEO = GeoValue(OBS, mu, sd, res=8, device=device)
+GEO = GeoEnergy(OBS, mu, sd, res=8, device=device)
 if not SMOKE:
     _gh = GEO.health()
-    assert _gh["ok"], "⛔ 幾何 value 沒過健康檢查 ⇒ " + "；".join(_gh["reasons"])
+    assert _gh["ok"], "⛔ 幾何 energy 沒過健康檢查 ⇒ " + "；".join(_gh["reasons"])
     print(f"GEO health ✓  格心 round-trip {_gh['mapping_err']:.2e}"
           f"  盒內隨機點穿牆中位 {_gh['wall_median_random']:.4f}", flush=True)
 
@@ -261,7 +261,7 @@ print(f"anchor（decode(u_true)）：wall p90 {ANCH['wall_p90']:.4f}  goal p90 {
 # ── 掃描 ─────────────────────────────────────────────────────────────────────
 CONFIGS = ([("null", 0.0, 0.3, GEO)] +                      # η=0（不動）
            [("compass", e, 0.0, GEO) for e in ETAS] +       # λ=0 只有羅盤
-           [("barrier", e, 1.0, ZeroGeo()) for e in ETAS] + # V≡0 只有結界
+           [("barrier", e, 1.0, ZeroEnergy()) for e in ETAS] + # V≡0 只有結界
            [("grid", e, l, GEO) for e in ETAS for l in LAMS])
 ARMS = []
 for src, u0 in SOURCES.items():
