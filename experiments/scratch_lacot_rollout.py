@@ -122,6 +122,13 @@ SUB_STUCK = int(os.environ.get("LACOT_SUB_STUCK", 3))     # chunk 數
 GRAD_R = int(os.environ.get("LACOT_GRAD_R", 50))       # 長程 u 爬幾步
 GRAD_ETA = float(os.environ.get("LACOT_GRAD_ETA", 0.1))
 GRAD_LAM = float(os.environ.get("LACOT_GRAD_LAM", 0.3))
+# ⭐ 病一快篩（主人 8/29 開跑）：E_geo 的 length 項是唯一不飽和的梯度 ⇒ 接力爬幾千步
+#   的漸近行為＝把路越磨越短（G3 的 S1 量到路蜷縮在 1.15 內）。w_len=0 直接驗這個假說。
+W_LEN = float(os.environ.get("LACOT_W_LEN", 0.3))
+# ⭐ 病二快篩（主人 8/29 開跑）：所有帶 u 的 arm 都「到附近進不了洞」而 bc 進得去
+#   ⇒ 終局讓 u 退位、換獨立 bc head 收尾。>0 開啟（原始座標單位；半格＝2.0）。
+FINISH_R = float(os.environ.get("LACOT_FINISH_R", 0.0))
+_FIN_COUNT = [0]   # ⭐ 終局接管的觸發次數 —— ⛔ 開關條件寫錯＝永不觸發＝快篩白跑，要能看見
 # ⭐ LOAD_CKPT ── 載入已訓好的權重，跳過訓練，只跑評估。
 #   🚨 起因：交接記著「今天為了換探針重訓了三輪」。換一個 arm、換一個判準就重訓一次，
 #      是這個 repo 從 8/23 就有的浪費 —— 而且它讓「補一個對照」的成本高到我們不想補。
@@ -547,6 +554,14 @@ def _foreign_u(R):
 
 @torch.no_grad()
 def policy_chunk(obs, goal, R, use_u):
+    # ⭐ 病二快篩（主人 8/29）：終局讓 u 退位 —— 離目標 < FINISH_R 就換獨立 bc head 收尾。
+    #   ⛔ 只影響主 arm（use_u is True）；bc/shuf/null 對照不受影響。
+    #   ⚠️ 分段模式另有一道在 make_subgoal_policy.policy()（那裡的 goal 是 subgoal，
+    #      這裡判的必須是【最終目標】—— flat 的呼叫端傳的就是最終目標）。
+    if FINISH_R > 0.0 and use_u is True and float(
+            np.linalg.norm(np.asarray(obs[:2], np.float64)
+                           - np.asarray(goal[:2], np.float64))) < FINISH_R:
+        use_u = "bc"; _FIN_COUNT[0] += 1
     s = normstate(obs); g = normstate(goal); cond = condvec(s, g)
     if use_u == "bc":                              # ⭐ 誠實地板，走另一顆 head
         a = bc_head(cond)[0].cpu().numpy()
@@ -609,7 +624,9 @@ if SUBGOAL in ("latent", "conf") or GRAD_REFINE:
         f" 而 ENC_OBJ={ENC_OBJ} 沒有訓 decoder。"
         " ⇒ 用 ENC_OBJ=recon/recon_ictr（或載一顆有 u_dec 的 ckpt），或改用 SUBGOAL=bfs")
     from lacot.refine_grad import GeoEnergy, grad_refine, grad_steps
-    GEO = GeoEnergy(OBS, mu, sd, res=8, device=device)
+    GEO = GeoEnergy(OBS, mu, sd, res=8, device=device, w_len=W_LEN)
+    if W_LEN != 0.3:
+        print(f"  ⚠️ 病一快篩：w_len={W_LEN:g}（預設 0.3）", flush=True)
     print(f"  幾何 energy：佔據圖 {tuple(GEO.shape)}，資料覆蓋 {GEO.coverage:.1%} 的格", flush=True)
     # 🚨 sanity：資料裡【真實走過】的路，穿牆懲罰必須 ≈0。不 ≈0 就是 SDF 蓋歪了。
     # ⚠️ 2026-08-28：⛔ 這一格【結構上必然通過】—— occ 是拿 OBS 蓋的，而 _t 又是
@@ -738,6 +755,11 @@ def make_subgoal_policy(R, use_u):
     def policy(obs, goal):
         if box["goal"] is None:                          # ⚠️ 沒接 on_start 的呼叫端也要能跑
             box["goal"] = np.asarray(goal[:2], np.float64)
+        # ⭐ 病二快篩：分段模式的終局判斷用【最終目標】（planner.sub 是中繼點，⛔ 不能拿來判）
+        if FINISH_R > 0.0 and use_u is True and float(
+                np.linalg.norm(np.asarray(obs[:2], np.float64) - box["goal"])) < FINISH_R:
+            _FIN_COUNT[0] += 1
+            return policy_chunk(obs, box["goal"], R, "bc")
         if planner.observe(obs[:2]):
             planner.set(_plan(obs))
         return policy_chunk(obs, planner.sub, R, use_u)
@@ -1042,7 +1064,8 @@ import json
 #    ⭐ 抽成純函式 ⇒ 沒有 GPU／資料也驗得了「三個 arm 的檔名互不相同」。
 def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0,
                SUBGOAL="", GRAD_REFINE=0, GRAD_R=50, GRAD_ETA=0.1, GRAD_LAM=0.3,
-               GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS=""):
+               GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
+               W_LEN=0.3, FINISH_R=0.0, SUB_M=4):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1065,6 +1088,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"_sc{SUB_CAP}"
         if SUB_STUCK != 3:
             x += f"_sk{SUB_STUCK}"
+        if SUBGOAL == "conf" and SUB_M != 4:
+            x += f"_m{SUB_M}"
     if GRAD_REFINE:                              # ⭐ flat-grad 的分水嶺
         x += f"_gr{GRAD_R}"
         if GRAD_ETA != 0.1:
@@ -1073,6 +1098,10 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"l{GRAD_LAM:g}"
         if GRAD_R_WARM != 10:
             x += f"w{GRAD_R_WARM}"
+        if W_LEN != 0.3:                         # 病一快篩（w_len 只在爬坡開著時有作用）
+            x += f"_wl{W_LEN:g}"
+    if FINISH_R > 0.0:                           # 病二快篩
+        x += f"_fin{FINISH_R:g}"
     if DEV_TIERS:                                # 只跑部分 tier 的結果 ⛔ 不可跟全 tier 混
         x += "_dt" + DEV_TIERS.replace(",", "")
     return x
@@ -1082,7 +1111,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     BC_INDEP=BC_INDEP, SUBGOAL=SUBGOAL, GRAD_REFINE=GRAD_REFINE,
                     GRAD_R=GRAD_R, GRAD_ETA=GRAD_ETA, GRAD_LAM=GRAD_LAM,
                     GRAD_R_WARM=GRAD_R_WARM, DELTA_SUB=DELTA_SUB, SUB_CAP=SUB_CAP,
-                    SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS)
+                    SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
+                    W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -1097,6 +1127,8 @@ with open(dst, "w") as f:
     json.dump(out, f, indent=1)
 print(f"寫入 {dst}", flush=True)
 
+if FINISH_R > 0.0:
+    print(f"  病二快篩：終局接管觸發 {_FIN_COUNT[0]} 次（⛔ 0 次＝開關沒作用，快篩白跑）", flush=True)
 # ⭐ 存 checkpoint：以後要換探針就不必重訓一次（今天為了換探針重訓了三輪）。
 ck = os.path.join(os.path.dirname(dst), f"ckpt_{tag}.pt")
 if LOAD_CKPT:
