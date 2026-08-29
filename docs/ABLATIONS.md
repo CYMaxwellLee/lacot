@@ -12,7 +12,7 @@ _新想到的變形先進這張表，⛔ 別直接動主線。_
 | 3 | chunk=1 vs 4 雙報 | `LACOT_CHUNK` | 對標公平性必要：chunk=4 的時間平滑本身值 0.15→0.85（POMDP 效應）。最終表兩個都報 |
 | 4 | 爬坡步數 R = 0/1/3/5/8（test-time scaling 曲線） | `LACOT_GRAD_R` ×輪數 | 主線本來就列的 scaling 軸；修好 steps=R×GRAD_R 之後才可信 |
 | 5 | (η, λ) 敏感度（rollout 端） | `LACOT_GRAD_ETA/LAM` | 機制層已有探針 3×3 格點（refineprobe_*_tasks-t2）：flow 起點最佳 η=0.1 λ=0.1~0.3、萬用檔 η=0.5 λ=1.0。rollout 端待驗 |
-| 6 | K（query 數）rollout 端 | `LACOT_K` | decoder 側新考題已掃：K=4 夠、K=16 回頭（EXPERIMENT-INDEX Q1）。rollout 端待 |
+| 6 | K（計畫摘要長度）rollout 端；離散版與 codebook 大小聯掃 | `LACOT_K` | decoder 側新考題已掃：K=4 夠、K=16 回頭（Q1）。rollout 端待。⭐ 主人 8/29：離散版 K=句長、codebook=字彙量，聯掃小格網；最佳 K 可能隨環境難度變（large 路深一倍）＝好圖表；未來可信心自適應 K（同 M 的尺） |
 | 7 | cond-dropout p | `LACOT_COND_DROP` | 現 0.1（head 讀 u 三件套之一）。值的敏感度沒掃 |
 | 8 | subgoal 間距 | `LACOT_DELTA_SUB` | 現 7.5＝訓練分布路長中位（讓短程層坐在資料最肥處）。S1/S0 有訊號後再掃 |
 | 9 | consistency 目標 self vs ema | `LACOT_CONS/EMA_M` | 8/23 anti-collapse 掃過：ema 系列全過、byol 全塌 —— 但每格 1 seed。若 refine 回主線才需重驗 |
