@@ -32,6 +32,8 @@ _對象：LAVL（SOTA）、HIQL（階層近親）、TTGS（test-time 同軸）�
 
 ⭐ 我們的獨有賣點：**信心機制＝算力自適應** —— 簡單題直達（算少）、難題多抽多修（算多），
 per-episode 算力分布可直接量、畫進圖（adaptive test-time compute 敘事）。
+⭐ 第二層自適應（主人 8/29）：**抽樣數 M 也自適應** —— 先抽 2 份判信心、夠就用、
+不夠再加抽（sequential sampling，至 M_max）⇒ 簡單題的算力再砍一半以上。ablation #12。
 
 ## 已知的自家強 baseline 事實
 
