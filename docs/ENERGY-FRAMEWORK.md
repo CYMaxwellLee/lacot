@@ -32,6 +32,31 @@ u ← u − η·∇E_total        （實作上兩項各自 normalize 再相加 �
 
 ⭐ 8/24 的疑慮「refine 改去噪會跟 flow 重疊」在 score 框架下是 feature：整個生成即 refine。
 
+## 數學身分：更新式＝乘積分布的 score（主人 8/29 追問後補）
+
+真正想取樣的分布是「引擎分布 × 幾何 Boltzmann 因子」的乘積：
+
+```
+p_guided(u) ∝ p(u|s,g) · exp(−E_geo(u)/λ′)
+∇log p_guided = ∇log p − ∇E_geo/λ′          ← 分布相乘 ⇒ score 相加
+```
+
+對照更新式 `u ← u + η(−clip(∇E) + λ·clip(∇log p))`：方向就是乘積分布的 score。
+⇒ 爬坡不是 heuristic —— 它是在 p_guided 上找眾數（Langevin 拿掉噪聲項的 MAP 版）。
+⇒ 這個等式跟引擎無關（NF / score model 都成立）＝引擎可換的數學保證。
+⚠️ 誠實註記：per-term clip（trust region）讓實作偏離嚴格的 score 方向 —— 那是刻意的
+（兩項量級差兩個數量級，8/26 主人裁），寫 paper 時照實講。
+
+## NF ＋ score 一起用的三種真組合（主人 8/29 問「數學上有什麼好處」）
+
+1. **score 疊加性**（上節）—— energy 可加 ↔ 分布可乘，guidance 是精確操作不是近似。
+2. **互補組合**：diffusion 的 log p 難算（要沿 probability-flow ODE 積分）、NF 的 log p
+   一次前向且精確 ⇒ score model 當生成器（表達力、抗塌）、NF 當守門員（精確結界）。
+3. **統一形式＝flow matching**：把連續 NF 與 diffusion 統一 —— 訓練是穩定回歸
+   （不碰 NLL 的 Jacobian）、取樣是 ODE、密度仍可估。NF 的兩個實測痛點
+   （NLL 不穩、塌成點質量）它都對症；「refine 改去噪會跟 flow 重疊」的疑慮在此變成
+   feature：生成本身就是一串 refine。主人 8/18 的 flow-matching 直覺在 energy 框架下歸位。
+
 ## 什麼時候值得換（觸發條件，都是實測痛點）
 
 - NF 的 cond 泛化偏：tier2 探針量到 flow 抽的計畫終點偏 9 倍且 log p 無自覺
