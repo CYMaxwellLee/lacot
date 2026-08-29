@@ -39,3 +39,16 @@ per-episode 算力分布可直接量、畫進圖（adaptive test-time compute �
 
 - bc 0.710（medium-stitch dev tier2）之所以高：chunk=4 平滑紅利＋同資料同預算的獨立
   head＋小迷宮岔路有限。⏳ 官方 GCBC 在 stitch 的原表數字待查核後填入此處。
+
+## Related work 結構（主人 2026-08-29 裁：就這三類）
+
+定位一句話：**offline 學一個「路網先驗」，測試時在上面做 energy 引導的 latent thinking，
+想多深、走多遠由信心自適應。**（廣義 offline model-based —— model 的是軌跡先驗，非轉移動態。）
+
+| 族 | 代表 | 我們拿了什麼 | 我們補了什麼 |
+|---|---|---|---|
+| offline model-based RL | MOPO、COMBO、MOReL | 不用環境互動 | 不學轉移 f(s,a)→s'（少一個誤差源）；model 的是「世界允許哪些路」 |
+| 生成式軌跡規劃 | Diffuser、Decision Diffuser | 整條路一次想、分布上引導 | latent 壓縮的計畫（u）＋信心自適應（選點與抽樣數兩層） |
+| test-time thinking / scaling | TTGS、LLM CoT | 測試時算力換品質、自己決定想多深 | 幾何可驗的 energy —— 想錯了推得回來，不是純自我一致性 |
+
+⭐ 三族交界不是身分尷尬、是賣點：每族的優點各拿一塊，各族缺的那塊都有補。
