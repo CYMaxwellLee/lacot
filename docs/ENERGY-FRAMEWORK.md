@@ -74,8 +74,11 @@ head 對殼外輸入行為未定義 ⇒「decoder 視角的改善」不轉化成
 
 三層階梯（由軟到硬，逐層驗證後再上）：
 
-1. **投影回殼（軟）**：爬完 decode→re-encode 拉回 encoder 流形（`LACOT_GRAD_PROJ=1`，Z-prj 驗證中）。
-   姊妹招：energy-guided selection —— 抽 N 份挑 E 最低，永遠是殼上的點（`LACOT_GRAD_MODE=select`）。
+1. **投影回殼（軟）**：`[實測 8/29 夜]` ❌ 失敗 —— climb+prj+fin 0.430 < climb+fin 0.520。
+   ⚠️ 打掉的是「enc∘dec＝乾淨投影」這個實作（往返有損＋encoder 對合成路有域差 0.64），
+   ⛔ 不是方言假說本身：selection 0.600 > noclimb 0.580 > climb 0.520 仍完整支持
+   「殼上的點就是好、手續越多越傷」。⇒ v2 立項證據降一級，硬錨定論證仍活。
+   姊妹招 selection ✅ 成功：抽 N=8 挑 E 最低＝flat 家族新王 0.600（`LACOT_GRAD_MODE=select`）。
 2. **VQ 錨定（中）**：encoder 出口加 codebook，連續爬坡＋週期 quantize（Diffusion-LM/CDCD/
    bit-diffusion 的「操作連續、表示離散」哲學）。flow 與 E 全保留、引擎不換，
    只重訓 encoder(VQ)+head+decoder。⭐ v2 首選候補 —— prj 若有效，此路只會更穩。
