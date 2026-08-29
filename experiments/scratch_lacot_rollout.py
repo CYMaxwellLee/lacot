@@ -113,6 +113,10 @@ DELTA_SUB = float(os.environ.get("LACOT_DELTA_SUB", 7.5))
 SUB_M = int(os.environ.get("LACOT_SUB_M", 4))
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
+# ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
+#   回答 0.750 的 +4 是短程 u 的功勞、還是分段結構本身的功勞。⛔ 只影響分段 arm。
+SUB_POLICY = os.environ.get("LACOT_SUB_POLICY", "")
+assert SUB_POLICY in ("", "bc"), f"⛔ LACOT_SUB_POLICY 只能是空/bc，收到 {SUB_POLICY}"
 # 🚨 2026-08-28 修（單位錯）：SubgoalPlanner.observe() 是【每個 chunk】呼叫一次，
 #    ⛔ 不是每個 env step —— 呼叫端是 policy，而 policy 一次回 CHUNK 步。
 #    ⇒ 舊預設 cap=40 讀起來像「40 步」、實際是 160 個 env step（CHUNK=4）
@@ -800,7 +804,8 @@ def make_subgoal_policy(R, use_u):
             return policy_chunk(obs, box["goal"], 0, True)   # resample：fresh 短計畫直取 g
         if planner.observe(obs[:2]):
             planner.set(_plan(obs))
-        return policy_chunk(obs, planner.sub, R, use_u)
+        return policy_chunk(obs, planner.sub, R,
+                            "bc" if SUB_POLICY == "bc" else use_u)
 
     return policy, on_start
 
@@ -1103,7 +1108,7 @@ import json
 def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0,
                SUBGOAL="", GRAD_REFINE=0, GRAD_R=50, GRAD_ETA=0.1, GRAD_LAM=0.3,
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
-               W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc"):
+               W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY=""):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1128,6 +1133,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"_sk{SUB_STUCK}"
         if SUBGOAL.startswith("conf") and SUB_M != 4:
             x += f"_m{SUB_M}"
+        if SUB_POLICY:                           # 歸因對照：短程走 bc
+            x += f"_sp{SUB_POLICY}"
     if GRAD_REFINE:                              # ⭐ flat-grad 的分水嶺
         x += f"_gr{GRAD_R}"
         if GRAD_ETA != 0.1:
@@ -1150,7 +1157,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     GRAD_R=GRAD_R, GRAD_ETA=GRAD_ETA, GRAD_LAM=GRAD_LAM,
                     GRAD_R_WARM=GRAD_R_WARM, DELTA_SUB=DELTA_SUB, SUB_CAP=SUB_CAP,
                     SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
-                    W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE)
+                    W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
+                    SUB_POLICY=SUB_POLICY)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
