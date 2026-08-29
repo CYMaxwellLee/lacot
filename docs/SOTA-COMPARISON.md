@@ -52,3 +52,18 @@ per-episode 算力分布可直接量、畫進圖（adaptive test-time compute �
 | test-time thinking / scaling | TTGS、LLM CoT | 測試時算力換品質、自己決定想多深 | 幾何可驗的 energy —— 想錯了推得回來，不是純自我一致性 |
 
 ⭐ 三族交界不是身分尷尬、是賣點：每族的優點各拿一塊，各族缺的那塊都有補。
+
+## Anticipated QA：「離散了幹嘛不直接 Transformer 出軌跡？」（DT/TT 之問，主人 8/29 晚）
+
+四張牌（硬度排序）：
+1. **AR 序列模型結構性不會 stitch**：它是密度模型，抗拒「資料裡沒出現過的片段組合」，
+   而那正是 stitch 的定義（DT can't stitch 有專文；OGBench stitch 上 GCBC 23/7 分同病）。
+   我們把組合搬到 latent 規劃層＋分段執行：短程踩分布內、長程只需幾何合法。
+2. **token 粒度差三個數量級**：TT 的 token 是軌跡逐步轉錄（千級、beam 貴、改=重生）；
+   我們的 u 是計畫摘要（K=4、成本與 horizon 解耦、修正=改四個字）。
+   categorical 化之後仍是「計畫的字」，不會變成「軌跡的字」。
+3. **幾何可驗的 E**：TT 的剪枝靠 likelihood / learned reward（有破綻可鑽）；E 算的沒破綻。
+4. **test-time compute 形狀**：TT 只有加寬 beam 一招；我們有結構化階梯（抽樣數、修正輪、
+   信心深度）可畫劑量曲線。
+誠實邊界：短程、資料有完整示範的 regime，TT 簡單有效 —— claim 圈定在
+「長程＋無完整示範」（large-stitch 除 QRL 全滅的那塊）。
