@@ -149,7 +149,7 @@ def consensus_subgoal(paths, lo, hi, ret_stats=False):
 
 
 def farthest_confident_subgoal(paths, g_xy, min_arc, tau=None, tau_g=None, ret_stats=False,
-                               calib=(0.0, 0.2)):
+                               calib=(0.0, 0.2), max_arc=None):
     """主人 2026-08-29 的統一選點：「g 信心夠高就直接走到底；不夠就挑最遠但信心夠高的點」。
 
     paths [M,T,2] 原始座標的 M 份計畫；g_xy [2] 最終目標（原始座標）。
@@ -196,6 +196,11 @@ def farthest_confident_subgoal(paths, g_xy, min_arc, tau=None, tau_g=None, ret_s
         stats["direct"] = True
         return (np.asarray(g_xy, np.float64), stats) if ret_stats else np.asarray(g_xy, np.float64)
     ok = (spread <= tau) & (arc >= min_arc)
+    if max_arc is not None:
+        # 🚨 2026-08-30（L-tch 診斷後補）：沒有上限時，路歪而 M 份一致（confidently wrong）
+        #    會挑到 18+ 遠的錯點 ⇒ 「一次只走一小段」的分段哲學要用上限落實。
+        #    ⛔ direct 分支（g 信心夠 ⇒ 直指 g）不受限 —— 走到底是刻意設計。
+        ok &= (arc <= max_arc)
     if ok.any():                                             # ② 最遠但信心夠高
         j = int(np.flatnonzero(ok)[-1])
         stats.update(t=float(tgrid[j]), spread=float(spread[j]), arc=float(arc[j]))

@@ -123,6 +123,10 @@ assert SUB_POLICY in ("", "bc"), f"⛔ LACOT_SUB_POLICY 只能是空/bc，收到
 #   目的＝把 93% 病拆層：cond ignoring 的「絕對位置錯」被平移修掉（Diffuser inpainting 的
 #   零重訓近似），殘下的才是「形狀錯」。⇒ 錨定後 d0 診斷恆 0 是【生效指標】，不是尺壞了。
 DEC_ANCHOR = int(os.environ.get("LACOT_DEC_ANCHOR", 0))
+# ⭐ SUB_MAX_ARC ── conf2 選點的【上限】（單位＝DELTA_SUB 的倍數；0＝關＝歷史行為）。
+#   L-tch 診斷（8/30）：路線內容錯而 M 份一致 ⇒「最遠但信心夠」挑到 18+ 遠的錯點。
+#   上限把「一次只走一小段」落實成硬約束；direct 分支（直指 g）不受限。
+SUB_MAX_ARC = float(os.environ.get("LACOT_SUB_MAX_ARC", 0.0))
 # 🚨 2026-08-28 修（單位錯）：SubgoalPlanner.observe() 是【每個 chunk】呼叫一次，
 #    ⛔ 不是每個 env step —— 呼叫端是 policy，而 policy 一次回 CHUNK 步。
 #    ⇒ 舊預設 cap=40 讀起來像「40 步」、實際是 160 個 env step（CHUNK=4）
@@ -935,7 +939,8 @@ def make_subgoal_policy(R, use_u):
             sub, _fc = farthest_confident_subgoal(
                 pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True,
                 # 🚨 錨定把頭端分散人工歸零 ⇒ tau 校準窗挪到中段（見 subgoal.py 註解）
-                calib=(0.2, 0.4) if DEC_ANCHOR else (0.0, 0.2))
+                calib=(0.2, 0.4) if DEC_ANCHOR else (0.0, 0.2),
+                max_arc=SUB_MAX_ARC * DELTA_SUB if SUB_MAX_ARC > 0 else None)
             SUB_DIAG["spread"].append(_fc.get("spread", _fc["g_spread"]))
             if _fc["direct"]:
                 SUB_DIAG["n_direct"] += 1                # 走到底（g 信心夠）
@@ -1285,7 +1290,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUBGOAL="", GRAD_REFINE=0, GRAD_R=50, GRAD_ETA=0.1, GRAD_LAM=0.3,
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
-               GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0):
+               GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
+               SUB_MAX_ARC=0.0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1312,6 +1318,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"_sk{SUB_STUCK}"
         if SUBGOAL.startswith("conf") and SUB_M != 4:
             x += f"_m{SUB_M}"
+        if SUB_MAX_ARC > 0:                      # conf2 選點上限（DELTA_SUB 倍數）
+            x += f"_ma{SUB_MAX_ARC:g}"
         if SUB_POLICY:                           # 歸因對照：短程走 bc
             x += f"_sp{SUB_POLICY}"
         if DEC_ANCHOR:                           # eval-time 平移錨定（供點解碼路徑）
@@ -1344,7 +1352,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
                     SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
-                    DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX)
+                    DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
