@@ -73,14 +73,39 @@ flow 先驗 × energy Boltzmann 傾斜。每個零件都是對 p* 的一個運�
 | R／深度隨機化 | 對計算深度的先驗（邊際化 compute；Poisson 家族） |
 | 爬坡（已判死的那條） | 對 p* 找眾數（MAP）— 判死的是「用梯度找眾數」這個**採樣器**，⛔ 不是 p* 本身 |
 
-**血統對位（reviewer 一看就認得）**：p* ∝ p_0·exp(r/β) 正是 RLHF KL-正則化目標的最優解
-形式（reward = −E、非參數）；ReST-EM 把自舉寫成 EM；GFlowNet 的按 reward 比例採樣同族。
-我們＝這個家族的 planner 版，verifier 是非參數幾何。
+**血統對位（2026-08 參照系；主人 8/30 裁「RLHF 舊了、GRPO 也舊了」後全面換新）**：
+1. **MaxRL（2602.02710, ICML 2026）＋ power sampling（2510.14901, ICLR 2026）**＝
+   「RL≈tilted likelihood」的正典：前者證明 expected-reward RL 只是 tilted likelihood 的
+   一階近似、後者不訓練直接 MCMC 抽 p^α 就追平 RL post-training。我們＝把同一個 tilted
+   分布在訓練時**迭代 amortize** 掉的 exact 版；且 tilt 來自外部 verifier E 而非自身
+   likelihood — 恰好躲開「純 sharpening 不穩」（2604.16259）。
+2. **On-policy distillation 原語（MOPD 2606.30406、SDPO 2601.20802；DeepSeek-V4／
+   Kimi K3／GLM-5 的工業 default）**：2026 年「RL 出 teacher → 蒸餾回 student」已是一級
+   原語。我們的 M-step＝它的 verifier 版 — teacher 不是另一顆網路，是「自己被 exp(−βE)
+   tilt 過的分布」（BOND→OPD 血脈的下一步）。
+3. **Tilt Matching 家族＋SOC 統一觀點（2512.21829、2512.03234、2605.00229）**：同一個
+   目標 p·exp(−βE)，他們在無 exact likelihood 的 diffusion/interpolant 上只能走速度場／
+   SOC 近似；我們的 exact-likelihood NF 讓 tilted 權重逐樣本解析精確 — test-time select
+   與訓練蒸餾用**同一組權重**。
+4. **正確性血統**：Boltzmann generators（NF exact-IS reweight 二十年標準作業）— 我們的
+   權重正確性宣稱直接接這條正統；差異＝E 是 verifier 定義＋迭代自舉＋planner conditioning。
+
+**撞題檢查（2026-08 調研）**：「exact-likelihood NF＋exact tilt 蒸餾＋verifier 閉環」五個
+方向查遍仍空著。四鄰居點名：Boltzmann（無 verifier/自舉）、DISA（AR LLM、離線凍 Z）、
+Tilt Matching（velocity 近似、無 exact weight）、NF-CoT 2606.06447（TARFlow 進 LLM 但走
+policy gradient）。機器人 BoN 線（CoVer/EVE）全停在 test-time selection、無人蒸餾閉環。
+⛔ 措辭：別喊「免 clip」（會與丟 ratio 的 GPG 族混淆）— 喊「IS 權重解析精確；clip-free
+是 exact likelihood 的**推論**，不是手工選擇」（以 CTPO 2605.07331 承認 exact sequence IS
+在 LLM 不可行當反襯）。
 
 **NF 的結構性優勢（「為什麼不用 diffusion」的第二個理由）**：p_θ 是 exact likelihood ⇒
 tilted 分布的重要性權重 w = exp(−βE) **精確**、零密度估計誤差；diffusion 只有 ELBO ⇒
 tilted sampling 必然近似（LaDiR 族做不到 exact tilt）。第一個理由（exact NLL 當訓練目標）
 8/19 已錄。
+
+**自舉的外部錨（2026 self-play 文獻的教訓）**：R-Zero/Absolute Zero 一族的已知病＝
+pseudo-label 噪音＋多樣性幻覺（R-Diverse 2602.13103 實錘），公認需要外部錨 —
+我們的非參數 E 正是那個錨；此為 E-verified 自舉相對純 self-play 的結構優勢。
 
 **誠實邊界**：E 是真成功率的 proxy（8/30 verifier 調研的定論）⇒ p* 的「好」上限在
 proxy gap；封縫三件套（fuzz／同構不變性／held-out rollout）與 pass@M 警報是這個框架的

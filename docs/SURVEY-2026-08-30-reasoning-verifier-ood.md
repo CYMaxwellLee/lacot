@@ -291,3 +291,73 @@ OOD 濾法總表:conditioning 取代梯度引導、guidance 保守化、restorat
 - 「圖搜索本身打穿 stitch」：GAS、TTGS — 但都是 test-time，**TTGS 自己列了部署要帶資料＋建圖的 limitation**。
 
 **剩餘新穎性（由大到小）**：① **Amortization 故事** — 把 GAS/TTGS 的 test-time 圖蒸餾掉，部署時只剩一個 planner（他們的 limitation 段落等於替我們寫好動機）；② **teacher 帶最優性** — 教的是 d\* 下的最優拼接而非覆蓋，可以量 optimality gap、可以講「蒸餾的是搜索的解而不是資料的分布」；③ **condition-consistency 病理學** — 「93% 不從 s 出發」這種條件一致性違反的量化診斷在 RL planner 文獻是空位（因為主流被 inpainting 繞掉），把「病 → 機制（CFG 文獻）→ 藥」串成敘事沒人寫過；④ verifier 閉環 EI 疊在圖 teacher 上（AdaptDiffuser 用的是 reward gradient＋discriminator，不同 teacher）。**風險**：只做「augmentation 讓 planner 變好」會被 SCoTS 蓋台 — SCoTS、GAS、TTGS 必須全部進 baseline 表，賣點壓在 ①②③ 上。
+
+---
+
+# 第四路（追加）：RL Post-Training 參照系更新至 2026-08
+
+_主人 8/30 指示「RLHF 舊了、甚至 GRPO 也舊了」＋「更新知識到 2026 現在」後的專項調研。_
+_⚠️ 26xx 番號全是 2026 年 arXiv、在ルナ基底知識（2026-01）之後 — 全靠本次檢索，引用前抽查原文。_
+
+## 總覽一句話
+
+2026 年的主軸有三個：(1) 演算法層從「GRPO 微調變體」分化成「任務形狀決定演算法」（短驗證任務留 GRPO 系、長 horizon agentic 把 critic 請回來）；(2) **on-policy distillation 升格為一級 post-training 原語**，DeepSeek-V4／Kimi K3／GLM-5 都用「領域 RL 專家 → 蒸餾回單一 student」；(3) 理論層「RL ≈ likelihood／tilted 分布」從邊緣論戰變成 ICML/ICLR 2026 主舞台。這三條全部往我們框架的方向收斂。
+
+## 主題 1：GRPO 之後的主流演算法（2026 年 1–8 月）
+
+- **GSPO**（Qwen，2507.18071）sequence-level ratio、Qwen3/3.5 正式配方，主流。
+- **CISPO**（MiniMax，2506.13585）clip importance weight 而非 token 更新；M2/M2.5 沿用、Meta ScaleRL 選為核心 loss，主流。
+- **ScaleRL**（Meta，2510.13786，ICLR 2026）CISPO＋PipelineRL 異步＋FP32 logits 的「可預測 scaling 配方」，方法論主流。
+- **SAO**（Zhipu／清華，2607.07508，2026-07）丟 group、**把 value model 請回來**，GLM-5.2 正式配方、長 horizon agentic 不崩 — **2026 最重要的新命名演算法**。
+- **MOPD**（2606.30406）多 teacher on-policy 蒸餾合併 — **2026 工業 default 之一**（DeepSeek-V4 2606.19348、Kimi K3 2607.24653、GLM-5、MiMo-V2、Nemotron-Cascade 2 全採用）。
+- OpenAI／Anthropic：無公開命名演算法（誠實標注查不到）。
+- 學界變體（CTPO 2605.07331、μ-GRPO、GPG/AAPO/OPO 丟 ratio 族）共同訊號：**token-level clipped ratio 被公認是 bias 來源**。
+- 一句話：沒有單一新王 — 短任務三分天下、長 horizon SAO、「合併收尾」王座歸 on-policy distillation。
+
+## 主題 2：「RL ≈ tilted 蒸餾／sharpening」理論線
+
+- pass@k 論戰收成「兩階段動態觀」：先 sharpen、拉長訓練＋足夠探索才可能 expand（2510.04028；ProRL 2505.24864）。診斷工具：2607.20543、2606.15455、2510.02230。
+- **Beyond Distribution Sharpening**（2604.16259）：純 sharpening 本質不穩 ⇒「tilt 裡要有真的 task energy」的 2026 論據。
+- **Power sampling**：Reasoning with Sampling（2510.14901，ICLR 2026）MCMC 抽 p^α 不訓練追平 RL；Scalable（2601.21590）、Entropy-Guided（2606.09926）。
+- **MaxRL**（2602.02710，ICML 2026）：expected-reward RL＝tilted likelihood 的一階近似 — **本理論線 2026 旗艦，必引**。
+- **SDPO**（2601.20802）：自己＋feedback 當 teacher 的 logit 蒸餾、無 clip 無 IS，4× 效率贏 GRPO。
+- **FlowRL→GFlowRL**（2509.15207→2607.13394）：reward 轉 tilted 目標＋trajectory balance。
+- **DISA**（2605.17295）：離線 IS 凍 Z 再分布匹配 — LLM 側跟我們最同構的親戚。
+- RAFT 族（RAFT++ 2504.11343、GVM-RAFT 2505.02391）：rejection-FT 當 baseline 永生、已被 likelihood 敘事吸收（MaxRL＝其嚴格化）。
+- BOND／J-BOND（2407.14622）：已被吸收，精神由 OPD＋Filter-Then-Reweight（2606.02684）延續。
+- **「exact IS／免 ratio-clip」**：LLM 側**沒人做到 exact 不截斷**（full-sequence exact IS 變異數爆炸、CTPO 明說）。「proposal 是 exact-likelihood 模型故 weight 本身精確」在短 latent 序列＋NF 上做＝我們的結構性優勢。
+
+## 主題 3：RLVR 2026 現況
+
+- **Rubric 化＝最強趨勢**：Rubrics-as-Rewards（2507.17746）開路；Open Rubric System（2602.14069）、rubric-RM 交替訓練（2602.01511）、robust rubric（2605.30244）、綜述（2606.08625）；Kimi K3 的 Agentic Generative RM 工業落地。
+- Generative／process verifier 回潮：VeriGate（2605.30451）、SPARK（2512.03244）、顆粒度比較（2607.02869）。
+- 自舉 self-play：R-Zero（2508.05004）／Absolute Zero（2505.03335）模板成熟；**R-Diverse（2602.13103）戳破多樣性幻覺**；Evolutionary Task Discovery（2605.11666）。⇒ **self-play 已知病＝pseudo-label 噪音＋多樣性假象、需外部錨 — 我們的非參數 E 正是錨**。
+
+## 主題 4：Agentic／長 horizon RL
+
+- AgentGym-RL＋ScalingInter-RL（2509.08755，ICLR 2026 Oral）：訓練中漸進拉長 horizon。
+- Credit assignment survey（2604.09459）：47 法分類。
+- **環境縮放＝新瓶頸共識**（2511.09586、Agent-World 2604.18292、EnvFactory 2605.18703）；「data → environment」典範轉移。
+- 經驗自我改進線（Evolving-RL 2605.10663、Test-Time Self-Distillation）＝對我們 planner 自舉最有參照價值。
+
+## 主題 5：RL for diffusion／flow
+
+- **Flow-GRPO 家族**（2505.05470、DanceGRPO、MixGRPO、Neighbor GRPO 2511.16955…）：主流 baseline，但公認「LLM-RL 硬搬到 flow 的 likelihood 近似很粗」。
+- **Tilted 分布系（與我們最近）**：Adjoint Matching（2409.08861）→ **Tilt Matching**（2512.21829，旗艦）→ **Iterative Tilting**（2512.03234 —「迭代 amortize tilt」措辭與我們訓練 loop 直接同構，必引）→ Discrete TM（2604.18739）→ **統一 SOC 觀點（2605.00229，Domingo-Enrich＋Du＋Albergo）＝子領域參照系論文，我們＝其 exact-likelihood 特例，必引並對位**。
+- **Exact-likelihood NF 動態**：NF-CoT（2606.06447，TARFlow 進 LLM 接 GRPO — 證明接口是活話題、但走 PG）；Normalizing Trajectory Models（2605.08078，Apple — exact-likelihood 軌跡模型旗艦、無 reward）；機器人側 ReinFlow／πRL／SERNF 全是 PG 思路。
+- **Boltzmann generator 一系**＝「exact tilt＋exact IS」正統血統（Sequential BG 2502.18462、Jeffreys Flow 2604.05303、Energy-Weighted FM 2509.03726）。
+- **機器人 verifier/BoN 線**：CoVer（2602.12281「scaling verification 勝 scaling policy learning」）、RoVer、MG-Select、EVE — **全部停在 test-time selection、無人蒸餾回 policy 閉環 ＝ 我們補的格**。
+
+## 三個對位點（paper 用）
+
+1. **MaxRL＋power sampling**＝likelihood 觀正典：他們證明/抽樣，我們在訓練時迭代 amortize、tilt 來自外部 E（躲開純 sharpening 不穩）。
+2. **On-policy distillation 原語（MOPD/SDPO/工業 default）**：我們的 M-step＝verifier 版 — teacher 是「自己被 exp(−βE) tilt 過的分布」。
+3. **Tilt Matching 家族＋SOC 統一觀**：同目標、他們只能速度場/SOC 近似，我們 exact weight、select 與蒸餾同一組權重。
+
+## 撞題檢查
+
+「exact-likelihood NF＋exact tilt 蒸餾＋verifier 閉環」五方向查遍**空著**。四鄰居：Boltzmann generators（無 verifier/自舉）、DISA（AR、凍 Z）、Tilt Matching（velocity 近似）、NF-CoT（PG）。措辭：⛔ 別喊「免 clip」— 喊「IS 權重解析精確；clip-free 是 exact likelihood 的推論」（CTPO 當反襯）。
+
+## 閱讀深度（誠實）
+
+正文級：Kimi K3 RL 節、SDPO、NF-CoT、EVE、兩篇 2026 綜覽 blog。摘要級：Tilt Matching、Iterative Tilting、統一觀點、DISA、NTM、MaxRL、Beyond Sharpening。搜尋摘要級（引用前抽查原文）：SAO、MOPD、CTPO、FlowRL、rubric/self-play 各篇、Flow-GRPO 變體群、Boltzmann 各篇、ScaleRL、各家模型報告。查不到：OpenAI/Anthropic 2026 具體演算法；「R2 不存在」為第三方整理。
