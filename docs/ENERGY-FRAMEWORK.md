@@ -49,6 +49,43 @@ p_guided(u) ∝ p(u|s,g) · exp(−E_geo(u)/λ′)
 ⚠️ 誠實註記：per-term clip（trust region）讓實作偏離嚴格的 score 方向 —— 那是刻意的
 （兩項量級差兩個數量級，8/26 主人裁），寫 paper 時照實講。
 
+## 統一框架：整套方法＝對 energy-tilted 分布的迭代 amortization（主人 8/30 裁定）
+
+_主人 8/30：「把 latent reasoning 與 verifier 的最新 insights 拿來用，但要避免拼裝車 —
+在數學上精巧融合」。⇒ 下面一個式子統攝全部零件；上一節（乘積分布 score）是它的梯度視角特例。_
+
+**目標分布（全法的中心對象）**：
+
+```
+p*(u|s,g) ∝ p_θ(u|s,g) · exp(−β·E(u; s,g))
+```
+
+flow 先驗 × energy Boltzmann 傾斜。每個零件都是對 p* 的一個運算元：
+
+| 零件 | 數學身分 |
+|---|---|
+| select／BoN（抽 M 挑 E 低） | 對 p* 的 self-normalized importance sampling（M→∞ 收斂到 p*） |
+| exp(−E) 加權蒸餾 | min KL(p*‖p_θ) 的蒙特卡羅梯度（M-step，⛔ 不是外掛 trick） |
+| expert iteration 自舉 | 反覆 amortize：p_θ ← p*；分布沿 energy 地景逐輪下降（ReST-EM 的 EM 視角） |
+| ebfs teacher 蒸餾（P1b） | β→∞ 極限：圖最短路 ≈ argmin E ⇒ **冷啟動與自舉＝同一式的兩個 β 檔位** |
+| 課程 | (cond 難度, β) 的退火 schedule（annealed importance sampling 一族） |
+| E 逐段打分＋beam search | E 因子化成段位能 E(τ)=Σφ(seg_k) ⇒ p* 成因子圖 ⇒ 逐段剪枝＝因子圖近似推斷 |
+| R／深度隨機化 | 對計算深度的先驗（邊際化 compute；Poisson 家族） |
+| 爬坡（已判死的那條） | 對 p* 找眾數（MAP）— 判死的是「用梯度找眾數」這個**採樣器**，⛔ 不是 p* 本身 |
+
+**血統對位（reviewer 一看就認得）**：p* ∝ p_0·exp(r/β) 正是 RLHF KL-正則化目標的最優解
+形式（reward = −E、非參數）；ReST-EM 把自舉寫成 EM；GFlowNet 的按 reward 比例採樣同族。
+我們＝這個家族的 planner 版，verifier 是非參數幾何。
+
+**NF 的結構性優勢（「為什麼不用 diffusion」的第二個理由）**：p_θ 是 exact likelihood ⇒
+tilted 分布的重要性權重 w = exp(−βE) **精確**、零密度估計誤差；diffusion 只有 ELBO ⇒
+tilted sampling 必然近似（LaDiR 族做不到 exact tilt）。第一個理由（exact NLL 當訓練目標）
+8/19 已錄。
+
+**誠實邊界**：E 是真成功率的 proxy（8/30 verifier 調研的定論）⇒ p* 的「好」上限在
+proxy gap；封縫三件套（fuzz／同構不變性／held-out rollout）與 pass@M 警報是這個框架的
+配套量測，⛔ 不是可選項。β 的 schedule 是新超參（退火太快＝Goodhart 提早進場）。
+
 ## NF ＋ score 一起用的三種真組合（主人 8/29 問「數學上有什麼好處」）
 
 1. **score 疊加性**（上節）—— energy 可加 ↔ 分布可乘，guidance 是精確操作不是近似。
