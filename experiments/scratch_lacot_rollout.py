@@ -117,6 +117,12 @@ SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 #   回答 0.750 的 +4 是短程 u 的功勞、還是分段結構本身的功勞。⛔ 只影響分段 arm。
 SUB_POLICY = os.environ.get("LACOT_SUB_POLICY", "")
 assert SUB_POLICY in ("", "bc"), f"⛔ LACOT_SUB_POLICY 只能是空/bc，收到 {SUB_POLICY}"
+# ⭐ DEC_ANCHOR ── eval-time 平移錨定（P1a 前哨、2026-08-30 調研引出）：把長程解碼路徑
+#   整條平移到「第 0 點＝當前位置」再取 subgoal。⛔ 只影響 latent/conf/conf2 的供點解碼，
+#   不碰爬坡的 E 評分、不碰 head 的 u。
+#   目的＝把 93% 病拆層：cond ignoring 的「絕對位置錯」被平移修掉（Diffuser inpainting 的
+#   零重訓近似），殘下的才是「形狀錯」。⇒ 錨定後 d0 診斷恆 0 是【生效指標】，不是尺壞了。
+DEC_ANCHOR = int(os.environ.get("LACOT_DEC_ANCHOR", 0))
 # 🚨 2026-08-28 修（單位錯）：SubgoalPlanner.observe() 是【每個 chunk】呼叫一次，
 #    ⛔ 不是每個 env step —— 呼叫端是 policy，而 policy 一次回 CHUNK 步。
 #    ⇒ 舊預設 cap=40 讀起來像「40 步」、實際是 160 個 env step（CHUNK=4）
@@ -782,6 +788,17 @@ SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": []
             "spread": [], "n_direct": 0, "n_fallback": 0}
 
 
+def _anchor_pts(pts_raw, obs):
+    """DEC_ANCHOR：把解碼路徑整條平移到「第 0 點＝當前位置」（原始座標、[B,T,2] 各自平移）。
+
+    ⛔ 平移是等距變換：弧長、形狀、點間距全不變，只修絕對位置 ⇒ 拆「位置錯 vs 形狀錯」。
+    """
+    if not DEC_ANCHOR:
+        return pts_raw
+    s0 = torch.as_tensor(np.asarray(obs[:2], np.float32), device=pts_raw.device)
+    return pts_raw - pts_raw[:, :1] + s0
+
+
 def make_subgoal_policy(R, use_u):
     """回傳 (policy_chunk_fn, on_episode_start)。⭐ policy 有狀態 ⇒ 每題一定要重置。"""
     planner = SubgoalPlanner(delta_sub=DELTA_SUB, cap=SUB_CAP, stuck_m=SUB_STUCK, chunk=CHUNK)
@@ -812,6 +829,7 @@ def make_subgoal_policy(R, use_u):
             with torch.no_grad():
                 pts_n = u_dec(u_l)                       # [1, T_CAP, 2] 正規化座標
                 pts_raw = pts_n * SD + MU                # ⭐ 換回原始座標 ⇒ 跟 DELTA_SUB 同單位
+                pts_raw = _anchor_pts(pts_raw, obs)
                 sub = arc_subgoal(pts_raw, DELTA_SUB)[0].cpu().numpy()
             _d0 = float(np.linalg.norm(pts_raw[0, 0].cpu().numpy() - np.asarray(obs[:2])))
             SUB_DIAG["d0"].append(_d0)
@@ -830,7 +848,7 @@ def make_subgoal_policy(R, use_u):
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_raw = u_dec(u_l) * SD + MU           # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(u_dec(u_l) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _cs = consensus_subgoal(pts_raw, SUB_CONF_LO * DELTA_SUB,
                                          SUB_CONF_HI * DELTA_SUB, ret_stats=True)
             SUB_DIAG["spread"].append(_cs["spread"])
@@ -847,9 +865,11 @@ def make_subgoal_policy(R, use_u):
                               s_n.expand(SUB_M, -1), g_n.expand(SUB_M, -1),
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
             with torch.no_grad():
-                pts_raw = u_dec(u_l) * SD + MU           # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(u_dec(u_l) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _fc = farthest_confident_subgoal(
-                pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True)
+                pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True,
+                # 🚨 錨定把頭端分散人工歸零 ⇒ tau 校準窗挪到中段（見 subgoal.py 註解）
+                calib=(0.2, 0.4) if DEC_ANCHOR else (0.0, 0.2))
             SUB_DIAG["spread"].append(_fc.get("spread", _fc["g_spread"]))
             if _fc["direct"]:
                 SUB_DIAG["n_direct"] += 1                # 走到底（g 信心夠）
@@ -936,7 +956,7 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            bc_indep=BC_INDEP, w_var=W_VAR, w_cov=W_COV,
            subgoal=SUBGOAL, grad_refine=GRAD_REFINE, grad_r=GRAD_R, grad_eta=GRAD_ETA,
            grad_lam=GRAD_LAM, grad_r_warm=GRAD_R_WARM, delta_sub=DELTA_SUB,
-           sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK,
+           sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK, dec_anchor=DEC_ANCHOR,
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 # ⚠️ rollout 是整支腳本最貴的部分，而成本跟 CHUNK 成反比：CHUNK=1 每步都要重新決策，
 #    比 CHUNK=4 多四倍的 policy 呼叫。⇒ 要跑 chunk 對照時用 LACOT_EVAL_RS 只留需要的輪數，
@@ -1198,7 +1218,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUBGOAL="", GRAD_REFINE=0, GRAD_R=50, GRAD_ETA=0.1, GRAD_LAM=0.3,
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
-               GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0):
+               GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1225,6 +1245,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"_m{SUB_M}"
         if SUB_POLICY:                           # 歸因對照：短程走 bc
             x += f"_sp{SUB_POLICY}"
+        if DEC_ANCHOR:                           # eval-time 平移錨定（供點解碼路徑）
+            x += "_anch"
     if GRAD_REFINE:                              # ⭐ flat-grad 的分水嶺
         if GRAD_MODE == "select":
             x += f"_sel{SEL_N}"
@@ -1252,7 +1274,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     GRAD_R_WARM=GRAD_R_WARM, DELTA_SUB=DELTA_SUB, SUB_CAP=SUB_CAP,
                     SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
-                    SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ)
+                    SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
+                    DEC_ANCHOR=DEC_ANCHOR)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過

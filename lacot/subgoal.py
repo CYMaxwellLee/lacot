@@ -103,14 +103,20 @@ def consensus_subgoal(paths, lo, hi, ret_stats=False):
     return sub
 
 
-def farthest_confident_subgoal(paths, g_xy, min_arc, tau=None, tau_g=None, ret_stats=False):
+def farthest_confident_subgoal(paths, g_xy, min_arc, tau=None, tau_g=None, ret_stats=False,
+                               calib=(0.0, 0.2)):
     """主人 2026-08-29 的統一選點：「g 信心夠高就直接走到底；不夠就挑最遠但信心夠高的點」。
 
     paths [M,T,2] 原始座標的 M 份計畫；g_xy [2] 最終目標（原始座標）。
     信心 ＝ M 條路在同一進度上的分散度（小＝共識高）；g 端另加「尾點對 g 的貼合」。
 
-    ⭐ 門檻自校準（⛔ 不拍絕對值）：路的開頭大家必然從同一點出發 ⇒ 前 20% 進度段的
-       分散度就是「共識好」的天然基準 ⇒ tau 預設 = 2 × 那段的中位。tau_g 同源。
+    ⭐ 門檻自校準（⛔ 不拍絕對值）：calib=(lo,hi) 進度窗內的分散中位＝「共識好」的基準，
+       tau 預設 = 2 × 那個中位。tau_g 同源。
+    🚨 2026-08-30（DEC_ANCHOR 前哨抓到）：預設窗 (0,0.2) 的立論「路的開頭大家必然從同一點
+       出發」在沒錨定時是【假的】（cond ignoring、各飄各的）——校準靠的正是那個不重合；
+       平移錨定把它變成真的 ⇒ 頭端分散被人工歸零 ⇒ tau→0 ⇒ 門檻無限嚴 ⇒「最遠但信心夠」
+       塌到腳邊（實測挑點中位 0.37、該 ~7.5）。⇒ 錨定模式的呼叫端把 calib 挪到不受平移
+       影響的中段（例如 (0.2,0.4)）。⛔ 預設值不動——沒錨定的 conf2 行為與歷史結果不變。
     流程：
       1. g 端：尾端分散度 ≤ tau 且 尾點對 g 的平均距離 ≤ tau_g ⇒ 回 (g, direct=True)
       2. 否則從遠往近掃：第一個「分散度 ≤ tau 且 弧長 ≥ min_arc」的進度點
@@ -133,7 +139,8 @@ def farthest_confident_subgoal(paths, g_xy, min_arc, tau=None, tau_g=None, ret_s
         for b in range(a + 1, M):
             spread += np.linalg.norm(R[a] - R[b], axis=1)
     spread /= max(M * (M - 1) / 2, 1)
-    head_med = float(np.median(spread[tgrid < 0.2])) if (tgrid < 0.2).any() else float(spread[0])
+    _cm = (tgrid >= calib[0]) & (tgrid < calib[1])
+    head_med = float(np.median(spread[_cm])) if _cm.any() else float(spread[0])
     tau = (2.0 * max(head_med, 1e-6)) if tau is None else float(tau)
     tau_g = tau if tau_g is None else float(tau_g)
     arc = tgrid * float(total.mean())
