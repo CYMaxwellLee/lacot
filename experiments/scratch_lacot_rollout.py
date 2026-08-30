@@ -942,25 +942,24 @@ if DEV_EVAL:
     print("\n  --- 尺的驗收 ---", flush=True)
     _rr, _sr = dev_rollout(0, "random", "亂走       ")          # 靈敏度的下界
     _rb, _sb = dev_rollout(0, "bc", "bc 地板    ")
-    _rb2, _sb2 = dev_rollout(0, "bc", "bc 重跑    ", tseed=71337)  # 特異度：同一顆模型
     _rz, _sz = dev_rollout(0, False, "u 歸零     ")
     _R_ARM = max(1, min(RS_PRE))
     _rm, _sm = dev_rollout(_R_ARM, True, f"LaCoT (R={_R_ARM})   ")
+    # ⭐ 特異度受測臂（主人 2026-08-30 裁定）：同一顆模型、同配置、只換 action-noise stream。
+    #    ⛔ 受測對象必須是【會抽樣】的 arm（lacot 走 flow.sample）—— bc 不消耗 torch 亂數，
+    #    拿 bc 當受測臂時換 tseed 是 no-op ⇒ 兩臂逐位元相同 ⇒ 那格什麼都沒驗到（8/28-8/29 的紅燈）。
+    _rm2, _sm2 = dev_rollout(_R_ARM, True, f"LaCoT 重跑 ", tseed=71337)
     # 🚨 2026-08-28 修：舊版分段 arm 寫死 R=0，而它的對手 LaCoT 用 R=1。
     #    ⇒ 短程層一步都不爬（疊上 policy_chunk 的 R=0 凍結 bug ⇒ 整集凍在第一個 u），
     #      而 ("subgoal","lacot") 這個 pair 照樣算得出 p 值 ⇒ 差值會被讀成「階層化沒幫助」。
     #    ⇒ 兩邊用【同一個 R】，差的才只有「有沒有分段」這一件事。
     _rsg, _ssg = (dev_rollout(_R_ARM, True, f"分段 {SUBGOAL:<6}", subgoal=True)
                   if SUBGOAL else (None, None))
-    # ⏳ 2026-08-28 待主人裁（docs/2026-08-28-fable-plan-verification.md ④）：
-    #    bc 這條路徑（bc_head(cond)）⛔ 不消耗 torch 亂數 ⇒ 換 tseed 是 no-op
-    #    ⇒ bc 與 bc_rerun 位元相同 ⇒ 特異度那格【沒有驗到配對】。
-    #    ⭐ dev_eval.sanity_check 現在會為此判 specificity=False 並說明原因
-    #      ⇒ ⚠️ 在主人裁定之前，`尺的驗收` 會固定顯示沒過 —— 那是【誠實的紅燈】，
-    #        ⛔ 不是新的故障。要讓它變綠，得把受測對象換成【會抽樣】的 arm
-    #        （例如把 "bc 重跑" 改成 "LaCoT 重跑"，成本一樣是一個 arm）。
-    #    ⛔ ルナ沒有自己換 —— 那份文件把它列成「二選一，待裁」。
-    _named = {"random": _rr, "bc": _rb, "bc_rerun": _rb2, "null_u": _rz, "lacot": _rm}
+    # ✅ 2026-08-30 主人裁定（前身：docs/2026-08-28-fable-plan-verification.md ④ 的二選一）：
+    #    特異度受測對象換成 LaCoT 主臂的兩次重跑（"bc 重跑" 臂退場，成本不變＝一個 arm）。
+    #    紅燈史：8/28 發現 bc 不抽樣 ⇒ 換 tseed 是 no-op ⇒ 那格恆為位元相同；
+    #    8/28~8/29 每輪誠實紅燈；8/30 主人裁定後換臂，這格才第一次真的在驗配對。
+    _named = {"random": _rr, "bc": _rb, "lacot_rerun": _rm2, "null_u": _rz, "lacot": _rm}
     _pairs = [("bc", "lacot"), ("null_u", "lacot"), ("bc", "null_u")]
     if _rsg is not None:
         _named["subgoal"] = _rsg
@@ -997,13 +996,14 @@ if DEV_EVAL:
             n_replan_med=float(np.median(SUB_DIAG["n_replan"])) if SUB_DIAG["n_replan"] else None,
             sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK, chunk=CHUNK)
 
-    _chk = DE.sanity_check(_named, report_pairs=tuple(_pairs))
+    _chk = DE.sanity_check(_named, spec_pair=("lacot", "lacot_rerun"),
+                           report_pairs=tuple(_pairs))
     for _n in _chk["notes"]:
         print("    " + _n, flush=True)
     print(f"  ⇒ 尺的驗收 {'✓ 通過' if _chk['passed'] else '🚨 沒過 ⇒ 這把尺還分不開已知不同的東西'}",
           flush=True)
     out["dev_eval"] = dict(n_tasks=len(DEV_TASKS), passed=bool(_chk["passed"]),
-                           gates=_chk["gates"], random=_sr, bc=_sb, bc_rerun=_sb2,
+                           gates=_chk["gates"], random=_sr, bc=_sb, lacot_rerun=_sm2,
                            null_u=_sz, lacot_r1=_sm, notes=_chk["notes"],
                            **({"subgoal": _ssg, "subgoal_mode": SUBGOAL} if _ssg else {}))
     # 🚨 2026-08-28 補：per-episode 明細一定要落 json。
@@ -1013,7 +1013,7 @@ if DEV_EVAL:
     #      ⇒ 沒有明細就沒有 discordant，沒有 discordant 就沒有合法的統計。
     out["dev_rows"] = {k: [{kk: vv for kk, vv in r.items()
                             if kk in ("idx", "tier", "bfs_dist", "success", "steps")} for r in v]
-                       for k, v in ([("random", _rr), ("bc", _rb), ("bc_rerun", _rb2),
+                       for k, v in ([("random", _rr), ("bc", _rb), ("lacot_rerun", _rm2),
                                      ("null_u", _rz), ("lacot_r1", _rm)]
                                     + ([("subgoal", _rsg)] if _rsg is not None else []))}
 

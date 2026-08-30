@@ -200,7 +200,7 @@ def _mcnemar_p(nb, nc):
     return float(min(1.0, 2.0 * tail))
 
 
-def sanity_check(named_rows, sens_pair=("random", "bc"), spec_pair=("bc", "bc_rerun"),
+def sanity_check(named_rows, sens_pair=("random", "bc"), spec_pair=("lacot", "lacot_rerun"),
                  sens_min=0.30, spec_max=0.03, sep_alpha=0.05, report_pairs=()):
     """⭐ 驗收這把尺【本身】。
 
@@ -211,8 +211,9 @@ def sanity_check(named_rows, sens_pair=("random", "bc"), spec_pair=("bc", "bc_re
 
     ⇒ gate 只用「已知排序」的對子：
         靈敏度  random-action vs 訓好的 bc   ⇒ 必須分得開，而且差 ≥ sens_min
-        特異度  同一顆 bc 換 action-seed 重跑 ⇒ 必須【分不開】，而且 |差| < spec_max
-                （⚠️ 這格會抓到配對沒釘好 —— 沒釘的話同一顆模型自己跟自己都會有差）
+        特異度  同一顆【會抽樣的】受測 arm 換 action-seed 重跑 ⇒ 必須【分不開】，
+                而且 |差| < spec_max（主人 2026-08-30 裁定：受測對象＝lacot 主臂；
+                ⚠️ 這格會抓到配對沒釘好 —— 沒釘的話同一顆模型自己跟自己都會有差）
     ⇒ 其他對子（lacot / null_u / oracle）照跑照報，但 ⛔ 不進 gate。
 
     🚨 2026-08-28 修正 —— 「分得開」舊版只看 bootstrap CI，而 CI 在 discordant pairs
@@ -232,6 +233,9 @@ def sanity_check(named_rows, sens_pair=("random", "bc"), spec_pair=("bc", "bc_re
        配對沒釘好的話，破綻只會出現在它們身上。
        ⇒ 下面新增的 discordant==0 判 False 只是【讓它叫】；⛔ 要真的驗到配對，
          呼叫端必須把 spec_pair 換成一個會抽樣的 arm 的兩次重跑。
+       ✅ 2026-08-30 主人裁定採此案：預設 spec_pair 已改為 ("lacot", "lacot_rerun")，
+         主線呼叫端同步換臂。discordant==0 的防呆分支保留 —— 它抓的是
+         「受測 arm 其實沒在抽樣」這一族的退化，不限 bc。
     """
     summ = {k: summarize(v) for k, v in named_rows.items()}
     notes, gates = [], {}
