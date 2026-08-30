@@ -990,7 +990,8 @@ def make_subgoal_policy(R, use_u):
     return policy, on_start
 
 
-def rollout(R, use_u, tag):
+def rollout(R, use_u, tag, policy_fn=None, on_start=None):
+    """官方協定 rollout。policy_fn/on_start 給了就用它（分段臂），否則走 policy_chunk（flat）。"""
     succ, ep = 0, 0
     for task in range(1, N_TASKS + 1):
         for sd_ in range(SEEDS):
@@ -1003,9 +1004,12 @@ def rollout(R, use_u, tag):
             #      ⛔ 而且不會報錯：後面每一集都拿到「別題的計畫」，成績照樣算得出來。
             #    ⚠️ _GRAD_CACHE 定義處的註解自己就寫著「⛔ 每集一定要重置」。
             _reset_grad_cache()
+            if on_start is not None:           # ⭐ 分段 policy 有狀態 ⇒ 每集重置（同 dev 那條）
+                on_start(obs, goal, None)
             _reseed_shuf(1000 * task + sd_)    # #16：shuf arm 也要每集釘死 ⇒ 各 arm 配對
             while steps < MAXH and not success:
-                for a in policy_chunk(obs, goal, R, use_u):
+                for a in (policy_fn(obs, goal) if policy_fn is not None
+                          else policy_chunk(obs, goal, R, use_u)):
                     obs, rew, term, trunc, info = env.step(a)
                     steps += 1
                     if info.get("success"):
@@ -1242,6 +1246,13 @@ out["rates"]["null_u"] = rollout(0, False, "u 歸零（⚠️ OOD 探針，不�
 out["rates"]["shuf"] = rollout(3, "shuf", "別人的 u（分布對、內容錯）")
 for R in RS:
     out["rates"][f"R{R}"] = rollout(R, True, f"LaCoT refine R={R}")
+if SUBGOAL:
+    # ⭐ 2026-08-30 補：官方協定的【分段】臂 —— 沒有這格，主打配置（分段供點）就永遠
+    #    只有 dev 尺數字、上不了對標表。policy 與 dev 那條同一支（make_subgoal_policy），
+    #    每集 on_start 重置狀態。
+    _spol, _son = make_subgoal_policy(max(1, min(RS_PRE)), True)
+    out["rates"]["subgoal"] = rollout(0, True, f"分段 {SUBGOAL}（官方協定）",
+                                      policy_fn=_spol, on_start=_son)
 # ⭐ X：反向 refine。⛔ 少了這格，「refine 有用」這個主張沒有任何直接證據。
 # 🚨 2026-08-28 修：_RDIR 只被 _apply_refine 讀，而 _apply_refine 在 LEARNED_REFINE=0 時
 #    直接 return、在 GRAD_REFINE=1 時根本不會被呼叫（policy_chunk 走爬坡那一支）
