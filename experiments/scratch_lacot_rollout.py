@@ -184,9 +184,71 @@ if T_CAP != T_CAP_REQ:
 B, D_MODEL, TEMP, ADIM = 64, 256, 0.1, 2
 DIM = K * D_MODEL
 
-def make_batch(rng):
+# ═══ P1b：ebfs teacher 資料引擎（主人 2026-08-30「開始跑」）════════════════
+# ⭐ 治 cond OOD 的根：訓練配對混入「資料圖搜出來的遠距 (s,g)＋最優拼接軌跡」。
+#    圖＝GeoEnergy 的佔據圖（資訊 ⊆ D、跟 ebfs 供點同一張 ⇒ 公平性同一條論證）。
+#    teacher 樣本【只餵幾何側】（e_target/flow/decoder）；action loss（l_anchor/l_bc）
+#    用 real-mask 擋掉 —— ⛔ bc/head 只吃真資料的真動作，執行器不被合成動作污染。
+# ⚠️ (s,g) 抽法＝全域均勻可達對：原資料（hindsight、全短）供「短」的密度，teacher 專供
+#    遠距 ⇒ 混合本身就是重尾（調研配方）。mix 比例是超參（ablation #13）。
+TEACHER_MIX = float(os.environ.get("LACOT_TEACHER_MIX", 0.0))
+_TCH = None
+if TEACHER_MIX > 0:
+    assert not LEARNED_REFINE, "⛔ TEACHER_MIX 的 real-mask 尚未接進 l_refine 分支 —— 要開先接"
+    from lacot.refine_grad import GeoEnergy as _TchGeo
+    from lacot.subgoal import grid_shortest_path as _tch_sp
+    _tg = _TchGeo(OBS, mu, sd, res=8, device="cpu")
+    _tocc = (_tg.dist[0, 0].numpy() == 0.0)
+    _tfree = np.argwhere(_tocc)
+    _tlo = np.asarray(_tg.lo, np.float64)
+    _tspan = np.asarray(_tg.hi - _tg.lo, np.float64)
+    _tshape = np.asarray(_tg.shape, np.int64)
+    _tcell_norm = _tspan / (_tshape - 1)                     # 一格的正規化尺寸（jitter 用）
+
+    def _tch_cell_to_norm(c):
+        return _tlo + np.asarray(c, np.float64) * _tcell_norm
+
+    _trng = np.random.default_rng(20260830)                  # ⛔ 題庫 seed 固定，不綁 LACOT_SEED
+    _pool = []
+    _tries = 0
+    while len(_pool) < 4096 and _tries < 100000:
+        _tries += 1
+        a = tuple(_tfree[int(_trng.integers(len(_tfree)))])
+        b = tuple(_tfree[int(_trng.integers(len(_tfree)))])
+        p = _tch_sp(_tocc, a, b)
+        if p is not None and len(p) >= 4:                    # 太短的不進 teacher（原資料已滿是短的）
+            _pool.append(np.array([_tch_cell_to_norm(c) for c in p]))   # [L,2] 正規化格心序列
+    assert len(_pool) >= 1024, f"⛔ teacher 題庫只湊到 {len(_pool)} 條 —— 佔據圖連通性有問題"
+    _TCH = _pool
+    _tlens = np.array([len(p) for p in _pool])
+    print(f"  teacher 題庫：{len(_pool)} 條（細格步數 p50 {np.median(_tlens):.0f} "
+          f"p90 {np.percentile(_tlens, 90):.0f} max {_tlens.max()}），mix={TEACHER_MIX:g}", flush=True)
+
+# make_batch 的 real-mask side channel：最近一個 batch 裡哪些樣本是真資料（有真動作）。
+_REAL_W = [None]
+
+
+def _teacher_traj(rng, n):
+    """從題庫抽 n 條 teacher 軌跡 → (traj[n,T,2] 正規化、s[n,2]、g[n,2])。cell 內 jitter。"""
+    trajs = np.empty((n, T_CAP, 2), np.float64)
+    for i in range(n):
+        p = _TCH[int(rng.integers(len(_TCH)))]
+        p = p + rng.uniform(-0.5, 0.5, size=(1, 2)) * _tcell_norm   # 整條小平移（cell 內）
+        seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
+        cum = np.concatenate([[0.0], np.cumsum(seg)])
+        tt = np.linspace(0.0, cum[-1], T_CAP)
+        for k in (0, 1):
+            trajs[i, :, k] = np.interp(tt, cum, p[:, k])
+    return trajs.astype(np.float32)
+
+
+def make_batch(rng, teacher_mix=0.0):
+    """⚠️ teacher_mix 預設 0 ⇒ 行為與歷史完全一致；只有 stage1/stage2 的訓練呼叫傳 TEACHER_MIX。
+    探針（D0/D4/GEO sanity）一律用預設 0 —— 它們的 act/穿牆語義不容 teacher 樣本混入。"""
+    n_t = int(round(B * teacher_mix)) if (_TCH is not None and teacher_mix > 0) else 0
+    n_r = B - n_t
     rows, goals = [], []
-    while len(rows) < B:
+    while len(rows) < n_r:
         r = int(rng.integers(0, N)); te = int(traj_end[r])
         if te - r < CHUNK:
             continue
@@ -219,16 +281,25 @@ def make_batch(rng):
     #      ⭐ 長度資訊還在，它藏在【相鄰點的間距】裡 —— 那本來就是該讀的東西。
     #    ⭐ 順便修掉 F1：現在 pos_emb[0:T_CAP] 每一格都會收到梯度。
     f = np.linspace(rows[:, None].astype(np.float64), goals[:, None].astype(np.float64),
-                    T_CAP, axis=1).reshape(B, T_CAP)
+                    T_CAP, axis=1).reshape(n_r, T_CAP)
     lo_i = np.floor(f).astype(np.int64)
     hi_i = np.minimum(lo_i + 1, goals[:, None])      # ⚠️ 夾在終點內，⛔ 不可以跨到下一條軌跡
     w = (f - lo_i)[..., None]
     traj = ((OBS[lo_i] * (1.0 - w) + OBS[hi_i] * w - mu) / sd).astype(np.float32)
+    s = (OBS[rows] - mu) / sd; g = (OBS[goals] - mu) / sd
+    act = np.stack([ACT[r:r + CHUNK] for r in rows]).astype(np.float32)
+    if n_t > 0:
+        # teacher 樣本：正規化格心內插軌跡；s/g＝軌跡端點；act＝零（⛔ 只佔位，loss 端用
+        # real-mask 擋掉 —— head/bc 不吃合成動作）。
+        tt = _teacher_traj(rng, n_t)                 # [n_t, T_CAP, 2] 已正規化
+        traj = np.concatenate([traj, tt], 0)
+        s = np.concatenate([s, tt[:, 0].astype(np.float64)], 0)
+        g = np.concatenate([g, tt[:, -1].astype(np.float64)], 0)
+        act = np.concatenate([act, np.zeros((n_t, CHUNK, ADIM), np.float32)], 0)
     mask = np.zeros((B, T_CAP), bool)                # 全 False ＝ 全部都是真點
     # ⚠️ 自檢：一響就代表洩漏又回來了（⛔ 別把它拿掉）
     assert mask.shape[1] == T_CAP and not mask.any(), "⛔ 取樣點數不再固定 ⇒ 長度會從 mask 洩漏"
-    s = (OBS[rows] - mu) / sd; g = (OBS[goals] - mu) / sd
-    act = np.stack([ACT[r:r + CHUNK] for r in rows]).astype(np.float32)
+    _REAL_W[0] = torch.cat([torch.ones(n_r), torch.zeros(n_t)]).to(device)
     T = lambda x: torch.from_numpy(x.astype(np.float32)).to(device)
     return T(traj), torch.from_numpy(mask).to(device), T(s), T(g), T(act)
 
@@ -344,7 +415,7 @@ print(f"stage 1 e_target 目標={ENC_OBJ} ...  w_var={W_VAR} w_cov={W_COV}"
 _S1 = 0 if LOAD_CKPT else int(os.environ.get("LACOT_STEPS1", 1500))
 _ed_hist, logits = [], None
 for stp in range(_S1):
-    traj, mask, s, g, _ = make_batch(rng)
+    traj, mask, s, g, _ = make_batch(rng, teacher_mix=TEACHER_MIX)   # stage1 不用 act ⇒ teacher 全參與
     et = etarget(traj, mask)
     if ENC_OBJ == "sg_infonce":
         q = q_pooler(torch.stack([sg_c(s), sg_c(g)], 1))
@@ -425,18 +496,22 @@ mse = lambda p, a: (p - a).pow(2).mean()
 print("stage 2 flow+refine+action ...", flush=True)
 STEPS2 = 0 if LOAD_CKPT else int(os.environ.get("LACOT_STEPS2", 2000))
 for stp in range(STEPS2):
-    traj, mask, s, g, act = make_batch(rng)
+    traj, mask, s, g, act = make_batch(rng, teacher_mix=TEACHER_MIX)
     with torch.no_grad():
         et = etarget(traj, mask)
     cond = condvec(s, g)
     l_nf = flow.nll(et, cond) / DIM
+    # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
+    #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
+    _rw = _REAL_W[0]
+    _wmse = lambda p, a: ((p - a).pow(2).reshape(len(p), -1).mean(1) * _rw).sum() / _rw.sum().clamp(min=1)
     # ⭐ COND_DROP：l_anchor 這一路以 p 機率把整個 cond 歸零，逼 head 從 u 讀路徑。
     #    ⛔ 只丟 cond、不丟 u —— 丟 u 會反過來教 head 繞開 u。
     _ca = cond
     if COND_DROP > 0:
         _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
         _ca = cond * _keep
-    l_anchor = mse(ahead(_ca, et), act)
+    l_anchor = _wmse(ahead(_ca, et), act)
     if LEARNED_REFINE:
         u = flow.sample(B, cond).detach(); us = [u]
         for _ in range(3):
@@ -457,7 +532,7 @@ for stp in range(STEPS2):
     #    把 cond 訓練得更會單獨預測動作 ⇒ ① 主模型被這個 baseline 改動了、
     #    ② 比較會系統性地偏向「u 沒必要」。detach 之後量的才是乾淨的問題：
     #    「在【同一個】cond 表徵上，u 有沒有加值」。
-    l_bc = mse(bc_head(cond.detach()), act)
+    l_bc = _wmse(bc_head(cond.detach()), act)
     total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
     opt2.zero_grad(set_to_none=True)
     if opt_bc is not None:
@@ -753,19 +828,10 @@ if SUBGOAL == "ebfs":
         return z * sd + mu
 
     def _e_bfs_from(_env_unused, src):
-        """GEO 佔據圖上的 4 鄰 BFS。介面對齊 DE._bfs_from ⇒ bfs_subgoal 一行不用改。"""
-        from collections import deque
-        dist = {tuple(src): 0}
-        q = deque([tuple(src)])
-        H, W = _EOCC.shape
-        while q:
-            i, j = q.popleft()
-            for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                ni, nj = i + di, j + dj
-                if 0 <= ni < H and 0 <= nj < W and _EOCC[ni, nj] and (ni, nj) not in dist:
-                    dist[(ni, nj)] = dist[(i, j)] + 1
-                    q.append((ni, nj))
-        return dist
+        """GEO 佔據圖上的 BFS。介面對齊 DE._bfs_from ⇒ bfs_subgoal 一行不用改。
+        ⭐ 實作在 lacot.subgoal.grid_bfs（單一來源，teacher 資料引擎共用）。"""
+        from lacot.subgoal import grid_bfs
+        return grid_bfs(_EOCC, src)
 
     # DELTA_SUB（xy 單位）→ E 細格數：E 格的 xy 尺寸 = span_norm/(shape-1) × sd（兩維平均）。
     # ⚠️ E 格是各向異性的長方形（x/y 的 sd 不同），平均是近似 —— subgoal 隔多遠本來就是超參。
@@ -957,6 +1023,7 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            subgoal=SUBGOAL, grad_refine=GRAD_REFINE, grad_r=GRAD_R, grad_eta=GRAD_ETA,
            grad_lam=GRAD_LAM, grad_r_warm=GRAD_R_WARM, delta_sub=DELTA_SUB,
            sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK, dec_anchor=DEC_ANCHOR,
+           teacher_mix=TEACHER_MIX,
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 # ⚠️ rollout 是整支腳本最貴的部分，而成本跟 CHUNK 成反比：CHUNK=1 每步都要重新決策，
 #    比 CHUNK=4 多四倍的 policy 呼叫。⇒ 要跑 chunk 對照時用 LACOT_EVAL_RS 只留需要的輪數，
@@ -1218,7 +1285,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUBGOAL="", GRAD_REFINE=0, GRAD_R=50, GRAD_ETA=0.1, GRAD_LAM=0.3,
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
-               GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0):
+               GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1227,6 +1294,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
     x = ""
     if ENC_OBJ != "sg_infonce":
         x += f"_eo{ENC_OBJ}"
+    if TEACHER_MIX > 0:                              # ⭐ P1b teacher 資料引擎
+        x += f"_tch{TEACHER_MIX:g}"
     if not LEARNED_REFINE:
         x += "_norf"
     if COND_DROP > 0:
@@ -1275,7 +1344,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
                     SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
-                    DEC_ANCHOR=DEC_ANCHOR)
+                    DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過

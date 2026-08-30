@@ -32,6 +32,51 @@ import numpy as np
 import torch
 
 
+def grid_bfs(occ, src):
+    """佔據圖上的 4 鄰 BFS 步距。回 dict[(i,j)]=步數；到不了的不在 dict 裡。
+
+    ⭐ 單一來源：ebfs 供點（rollout 腳本）與 teacher 資料引擎共用這一份。
+    ⛔ 不要在別處另寫 —— 這個 repo 已經被「同族東西兩份實作」咬過。
+    """
+    from collections import deque
+    dist = {tuple(src): 0}
+    q = deque([tuple(src)])
+    H, W = occ.shape
+    while q:
+        i, j = q.popleft()
+        for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            ni, nj = i + di, j + dj
+            if 0 <= ni < H and 0 <= nj < W and occ[ni, nj] and (ni, nj) not in dist:
+                dist[(ni, nj)] = dist[(i, j)] + 1
+                q.append((ni, nj))
+    return dist
+
+
+def grid_shortest_path(occ, src, dst):
+    """佔據圖上 src→dst 的一條最短路（cell 列表、含兩端）。到不了回 None。"""
+    from collections import deque
+    src, dst = tuple(src), tuple(dst)
+    prev = {src: None}
+    q = deque([src])
+    H, W = occ.shape
+    while q:
+        c = q.popleft()
+        if c == dst:
+            break
+        i, j = c
+        for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            n = (i + di, j + dj)
+            if 0 <= n[0] < H and 0 <= n[1] < W and occ[n] and n not in prev:
+                prev[n] = c
+                q.append(n)
+    if dst not in prev:
+        return None
+    path = [dst]
+    while prev[path[-1]] is not None:
+        path.append(prev[path[-1]])
+    return path[::-1]
+
+
 def arc_subgoal(pts, delta, ret_index=False):
     """沿 decode 出來的路徑取【弧長 ≈ delta】的那個點當 subgoal。
 
