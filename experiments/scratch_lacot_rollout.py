@@ -102,8 +102,8 @@ BC_INDEP = int(os.environ.get("LACOT_BC_INDEP", 0))
 #     bfs     subgoal 由 BFS 在格圖上生 ⇒ ⭐ 對照組：拆「贏的是階層化還是長程推理」
 #             ⛔ 少了它，latent 贏了我們會把功勞記錯人
 SUBGOAL = os.environ.get("LACOT_SUBGOAL", "")
-assert SUBGOAL in ("", "latent", "bfs", "conf", "conf2"), \
-    f"⛔ LACOT_SUBGOAL 只能是空/latent/bfs/conf/conf2，收到 {SUBGOAL}"
+assert SUBGOAL in ("", "latent", "bfs", "conf", "conf2", "ebfs"), \
+    f"⛔ LACOT_SUBGOAL 只能是空/latent/bfs/conf/conf2/ebfs，收到 {SUBGOAL}"
 # ⭐ conf2 ── 主人 8/29 下午的統一版：「g 信心夠高就直接走到底，不夠就挑最遠但信心夠高的點」。
 #   每次重想 fresh 抽 M 份（⛔ 不接續修 —— 治「計畫殘骸」病）、修完、判信心。門檻自校準。
 # 間距用訓練分布的中位數（exp_span_gap.py 實測 7.5，原始座標單位）⇒ 短程層坐在資料最肥的地方
@@ -661,12 +661,16 @@ GEO = SUB_HELPERS = None
 if SUBGOAL:
     from lacot.subgoal import (SubgoalPlanner, arc_subgoal, bfs_subgoal, consensus_subgoal,
                                farthest_confident_subgoal)
-# 幾何 energy：SUBGOAL=latent/conf（長程層要它修）與 GRAD_REFINE（短程層要它修）都需要
-if SUBGOAL in ("latent", "conf", "conf2") or GRAD_REFINE:
+# 幾何 energy：SUBGOAL=latent/conf（長程層要它修）與 GRAD_REFINE（短程層要它修）需要
+#   GEO＋decoder；SUBGOAL=ebfs（E 圖搜索供點）只要 GEO 的【佔據圖】、⛔ 不需要 decoder
+#   （它不走 latent 路，直接在資料重建的圖上搜）。
+_NEED_DEC = SUBGOAL in ("latent", "conf", "conf2") or GRAD_REFINE
+if _NEED_DEC:
     assert u_dec is not None, (
         f"⛔ {'SUBGOAL=' + SUBGOAL if SUBGOAL else 'GRAD_REFINE=1'} 需要 decoder，"
         f" 而 ENC_OBJ={ENC_OBJ} 沒有訓 decoder。"
         " ⇒ 用 ENC_OBJ=recon/recon_ictr（或載一顆有 u_dec 的 ckpt），或改用 SUBGOAL=bfs")
+if _NEED_DEC or SUBGOAL == "ebfs":
     from lacot.refine_grad import GeoEnergy, grad_refine, grad_steps
     GEO = GeoEnergy(OBS, mu, sd, res=8, device=device, w_len=W_LEN)
     if W_LEN != 0.3:
@@ -690,9 +694,10 @@ if SUBGOAL in ("latent", "conf", "conf2") or GRAD_REFINE:
           f"   盒內隨機點穿牆中位 {_gh['wall_median_random']:.4f}", flush=True)
     assert _gh["ok"], "⛔ 幾何 energy 沒過健康檢查 ⇒ " + "；".join(_gh["reasons"])
     print("  ✓ 幾何 energy 健康檢查通過（映射對得上、牆這一項不是空的）", flush=True)
+if _NEED_DEC:
     # 🚨 decoder 是 E_geo 的【眼睛】—— 它若不讀 u，爬坡就是在對一條固定的平均路做最佳化，
     #    ⛔ 而且不會報錯：V 照樣會上升（它在改那條平均路），u 卻沒有任何意義。
-    #    ⇒ 跟上面穿牆那格同層級：不過就停。
+    #    ⇒ 跟上面穿牆那格同層級：不過就停。（ebfs 不進這格：它不用 decoder。）
     _dn, _dsh, _dgap = _decoder_health()
     assert _dgap >= 0.02, (
         f"⛔ decoder 幾乎沒在讀 u（打亂 u 之後內部點 RMSE 只變 {_dgap:+.4f} < 0.02）"
@@ -713,6 +718,55 @@ if SUBGOAL == "bfs":
     SUB_HELPERS = (_cells, _xy_to_ij, _CELL_W)
     print(f"  BFS subgoal：格寬 {_CELL_W:.2f}，"
           f"subgoal 隔 {max(1, int(round(DELTA_SUB / _CELL_W)))} 格", flush=True)
+
+if SUBGOAL == "ebfs":
+    # ⭐ E 圖搜索供點（主人 2026-08-30「energy 自己 reason 串接」）：subgoal 由
+    #    【資料重建佔據圖】上的 BFS 生 —— 跟 oracle 格（SUBGOAL=bfs）同一套挑點邏輯，
+    #    差別只在圖：bfs 用 env.maze_map（真圖＝privileged、只准當診斷），
+    #    ebfs 用 GEO 的佔據圖（資訊全來自 D ⇒ 可部署、可進對標表）。
+    #    可行性 gate（8/30 探針）：medium/large tier2 各 100/100 連通、端點 snap 0、
+    #    E步/真格比值穩定（3.1／5.2）⇒ 4 鄰就夠。
+    _EOCC = (GEO.dist[0, 0].cpu().numpy() == 0.0)      # 自由空間＝資料走過的格
+    _EFREE = np.argwhere(_EOCC)
+    _E_LO = np.asarray(GEO.lo, np.float64)
+    _E_SPAN = np.asarray(GEO.hi - GEO.lo, np.float64)
+    _E_SHAPE = np.asarray(GEO.shape, np.int64)
+
+    def _e_xy_to_cell(xy):
+        """原始座標 → E 細格；落在牆格就 snap 到最近自由格（探針實測 snap 恆 0，保底用）。"""
+        z = (np.asarray(xy[:2], np.float64) - mu) / sd
+        idx = np.clip(np.round((z - _E_LO) / _E_SPAN * (_E_SHAPE - 1)).astype(int),
+                      0, _E_SHAPE - 1)
+        c = tuple(idx)
+        if _EOCC[c]:
+            return c
+        return tuple(_EFREE[int(np.abs(_EFREE - idx).sum(1).argmin())])
+
+    def _e_cell_to_xy(c):
+        z = _E_LO + np.asarray(c, np.float64) / (_E_SHAPE - 1) * _E_SPAN
+        return z * sd + mu
+
+    def _e_bfs_from(_env_unused, src):
+        """GEO 佔據圖上的 4 鄰 BFS。介面對齊 DE._bfs_from ⇒ bfs_subgoal 一行不用改。"""
+        from collections import deque
+        dist = {tuple(src): 0}
+        q = deque([tuple(src)])
+        H, W = _EOCC.shape
+        while q:
+            i, j = q.popleft()
+            for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                ni, nj = i + di, j + dj
+                if 0 <= ni < H and 0 <= nj < W and _EOCC[ni, nj] and (ni, nj) not in dist:
+                    dist[(ni, nj)] = dist[(i, j)] + 1
+                    q.append((ni, nj))
+        return dist
+
+    # DELTA_SUB（xy 單位）→ E 細格數：E 格的 xy 尺寸 = span_norm/(shape-1) × sd（兩維平均）。
+    # ⚠️ E 格是各向異性的長方形（x/y 的 sd 不同），平均是近似 —— subgoal 隔多遠本來就是超參。
+    _E_CELL_XY = float(np.mean(_E_SPAN / (_E_SHAPE - 1) * sd))
+    _E_DELTA_CELLS = max(1, int(round(DELTA_SUB / _E_CELL_XY)))
+    print(f"  E 圖 subgoal：佔據圖 {tuple(GEO.shape)} 覆蓋 {GEO.coverage:.1%}，"
+          f"E 格寬≈{_E_CELL_XY:.2f}，subgoal 隔 {_E_DELTA_CELLS} 格", flush=True)
 
 
 # ⭐ #11/#12 診斷（2026-08-28）。⛔ 只記錄、不改行為。
@@ -807,11 +861,19 @@ def make_subgoal_policy(R, use_u):
             SUB_DIAG["d0"].append(_d0)
             if _d0 > 0.5 * DELTA_SUB:
                 SUB_DIAG["n_bad_d0"] += 1
-        else:
+        elif SUBGOAL == "ebfs":
+            # E 圖搜索供點：同一支 bfs_subgoal（含「嚴格更靠近目標」的挑點修正），
+            # 只是圖換成資料重建的佔據圖、格制換成 E 細格。
+            c = bfs_subgoal(env, _e_xy_to_cell(obs), _e_xy_to_cell(box["goal"]),
+                            delta_cells=_E_DELTA_CELLS, bfs_from=_e_bfs_from)
+            sub = _e_cell_to_xy(c) if c is not None else box["goal"]
+        elif SUBGOAL == "bfs":
             c = bfs_subgoal(env, SUB_HELPERS[1](obs), SUB_HELPERS[1](box["goal"]),
                             delta_cells=max(1, int(round(DELTA_SUB / SUB_HELPERS[2]))),
                             bfs_from=DE._bfs_from)
             sub = np.asarray(env.unwrapped.ij_to_xy(c), np.float64) if c is not None else box["goal"]
+        else:
+            raise SystemExit(f"⛔ _plan 不認得 SUBGOAL={SUBGOAL}（新模式要顯式接，⛔ 不准靜默掉進別人的分支）")
         sub = np.asarray(sub, np.float64)
         _ds = float(np.linalg.norm(sub - np.asarray(obs[:2])))
         SUB_DIAG["dsub"].append(_ds)
