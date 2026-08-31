@@ -514,6 +514,19 @@ class CondOnlyMLP(nn.Module):
         return self.net(cond).reshape(-1, CHUNK, ADIM)
 
 bc_head = CondOnlyMLP().to(device)
+# ═══ 真獨立 GCBC＋chunk（LACOT_BC_OWN；8/24 floor 舊債、主人 2026-08-31 核為 paper 必做）═══
+# 跟主模型【零共用】：自己的 encoder＋cond head＋action head、自己的 optimizer、獨立 backward。
+# 同容量同預算（完整複製 cond 鏈的架構）、只吃真資料（real-mask）⇒ 這才是「GCBC+chunk4」對照。
+# ⛔ bc_head（共 cond 的近似版）保留不動 —— 兩顆並存，歷史可比性不變。
+BC_OWN = int(os.environ.get("LACOT_BC_OWN", 0))
+bc_own_enc = bc_own_ch = bc_own_head = None
+if BC_OWN:
+    bc_own_enc = sota_mlp(2, 512, 512).to(device)
+    bc_own_ch = sota_mlp(1024, 512, COND).to(device)
+    bc_own_head = CondOnlyMLP().to(device)
+    def own_condvec(s, g):
+        return bc_own_ch(torch.cat([bc_own_enc(s), bc_own_enc(g)], 1))
+    print("  真獨立 GCBC 開啟（own encoder/head、零共用、只吃真資料）", flush=True)
 # ⭐ BC_INDEP：bc 地板拆出去用自己的 optimizer ＋ 自己的 grad-clip。
 #    主人 8/24 對 floor 的定義是「真正 BC 能到達的」—— 而共用 opt2 與全域 clip 的話，
 #    它的更新會被主模型的梯度規模牽著走 ⇒ ⛔ 那不是獨立 baseline。
@@ -522,6 +535,8 @@ f_mods = ([cond_enc, cond_head, flow, refine, ahead] if BC_INDEP
           else [cond_enc, cond_head, flow, refine, ahead, bc_head])
 opt2 = torch.optim.Adam([p for m in f_mods for p in m.parameters()], lr=5e-4)
 opt_bc = torch.optim.Adam(bc_head.parameters(), lr=5e-4) if BC_INDEP else None
+opt_bc_own = (torch.optim.Adam([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
+                                for p in m.parameters()], lr=5e-4) if BC_OWN else None)
 def condvec(s, g):
     return cond_head(torch.cat([cond_enc(s), cond_enc(g)], 1))
 mse = lambda p, a: (p - a).pow(2).mean()
@@ -583,6 +598,14 @@ for stp in range(STEPS2):
     #    ② 比較會系統性地偏向「u 沒必要」。detach 之後量的才是乾淨的問題：
     #    「在【同一個】cond 表徵上，u 有沒有加值」。
     l_bc = _wmse(bc_head(cond.detach()), act)
+    if BC_OWN:
+        # ⭐ 完全獨立的 backward（自己的 graph、自己的 clip）—— 對主模型零影響
+        l_bco = _wmse(bc_own_head(own_condvec(s, g)), act)
+        opt_bc_own.zero_grad(set_to_none=True)
+        l_bco.backward()
+        torch.nn.utils.clip_grad_norm_([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
+                                        for p in m.parameters()], 1.0)
+        opt_bc_own.step()
     total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
     opt2.zero_grad(set_to_none=True)
     if opt_bc is not None:
@@ -625,6 +648,12 @@ if LOAD_CKPT:
                         ("refine", refine), ("ahead", ahead), ("bc_head", bc_head),
                         ("traj_enc", traj_enc), ("e_pooler", e_pooler)):
         _mod.load_state_dict(_ck[_name])
+    if BC_OWN:
+        assert "bc_own" in _ck, "⛔ BC_OWN=1 但這顆 ckpt 沒有 bc_own 段（訓練時沒開 LACOT_BC_OWN）"
+        bc_own_enc.load_state_dict(_ck["bc_own"]["enc"])
+        bc_own_ch.load_state_dict(_ck["bc_own"]["ch"])
+        bc_own_head.load_state_dict(_ck["bc_own"]["head"])
+        print("  ⭐ 真獨立 GCBC 三模組已載入（bc 臂走 own 鏈）", flush=True)
     # ⭐ LACOT_LOAD_EMA=1：用影子權重覆蓋供點鏈五模組（同顆 ckpt 的 raw/ema 配對對照）
     LOAD_EMA = int(os.environ.get("LACOT_LOAD_EMA", 0))
     if LOAD_EMA:
@@ -834,7 +863,10 @@ def policy_chunk(obs, goal, R, use_u):
             R = 0
     s = normstate(obs); g = normstate(goal); cond = condvec(s, g)
     if use_u == "bc":                              # ⭐ 誠實地板，走另一顆 head
-        a = bc_head(cond)[0].cpu().numpy()
+        if BC_OWN:                                 # ⭐ 真獨立 GCBC：全鏈自有權重（8/31）
+            a = bc_own_head(own_condvec(s, g))[0].cpu().numpy()
+        else:
+            a = bc_head(cond)[0].cpu().numpy()
         return np.clip(a, -1.0, 1.0).astype(np.float32)
     if use_u == "shuf":                            # ⭐ 別人的 u，本題的 cond
         a = ahead(cond, _foreign_u(R))[0].cpu().numpy()
@@ -1458,7 +1490,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
-               SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0):
+               SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1475,6 +1507,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_emw{EMA_W:g}"
     if LOAD_EMA:                                     # ⭐ eval 用影子權重（同顆 raw/ema 配對對照）
         x += "_ema"
+    if BC_OWN:                                       # ⭐ 真獨立 GCBC（own 鏈、8/31）
+        x += "_bcown"
     if not LEARNED_REFINE:
         x += "_norf"
     if COND_DROP > 0:
@@ -1526,7 +1560,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
                     SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
                     DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
-                    BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA)
+                    BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -1558,6 +1592,9 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             **({"u_dec": u_dec.state_dict()} if u_dec is not None else {}),
             # ⭐ 權重 EMA 影子（LACOT_EMA_W>0 時）：eval 端 LACOT_LOAD_EMA=1 取用
             **({"ema": {n: m.state_dict() for n, m in _EMA_SHADOW.items()}} if _EMA_PAIRS else {}),
+            # ⭐ 真獨立 GCBC 三模組（BC_OWN 時）
+            **({"bc_own": {"enc": bc_own_enc.state_dict(), "ch": bc_own_ch.state_dict(),
+                           "head": bc_own_head.state_dict()}} if BC_OWN else {}),
             "cfg": dict(K=K, COND=COND, CHUNK=CHUNK, D_MODEL=D_MODEL, STEPS2=STEPS2, T_CAP=T_CAP,
                         GOAL_SAMPLING="uniform-official", EVAL_EPISODES=SEEDS,
                         CONS=CONS, EMA_M=EMA_M, SEED=SEED, EMA_W=EMA_W,
