@@ -5,7 +5,7 @@ then ROLL OUT in the pointmaze env and measure success rate, comparing:
   * LaCoT refine R = 0/1/3/5/8                        [test-time scaling]
 Success = the env's own info['success']. Receding-horizon CHUNK execution.
 """
-import os, sys, numpy as np, torch
+import os, sys, json, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
@@ -228,14 +228,39 @@ if TEACHER_MIX > 0:
     print(f"  teacher 題庫：{len(_pool)} 條（細格步數 p50 {np.median(_tlens):.0f} "
           f"p90 {np.percentile(_tlens, 90):.0f} max {_tlens.max()}），mix={TEACHER_MIX:g}", flush=True)
 
+# ═══ P2：自舉蒸餾資料（LACOT_BOOT_DATA＝BOOT_GEN 產的 npz）═════════════════
+# exp(−βE) 加權蒸餾的實作＝【按 w 加權抽樣】（期望上等價、⛔ 不動 loss）。
+# 樣本走 teacher 通道 ⇒ real-mask 自動擋 action loss（bc/head 不吃合成動作，同 P1b）。
+BOOT_DATA = os.environ.get("LACOT_BOOT_DATA", "")
+BOOT_TAG = os.environ.get("LACOT_BOOT_TAG", "")
+BOOT_BETA = float(os.environ.get("LACOT_BOOT_BETA", 4.0))    # 有限 β＝自舉檔位（β→∞＝argmax）
+BOOT_FRAC = float(os.environ.get("LACOT_BOOT_FRAC", 0.5))    # teacher 樣本裡自舉佔比
+_BOOT = None
+if BOOT_DATA:
+    assert TEACHER_MIX > 0, "⛔ BOOT_DATA 走 teacher 通道 —— LACOT_TEACHER_MIX 要 > 0 才有通道"
+    assert BOOT_TAG, "⛔ 自舉訓練必須給 LACOT_BOOT_TAG（進檔名）—— 不給會跟非自舉 ckpt 互蓋"
+    _bz = np.load(BOOT_DATA, allow_pickle=False)
+    _bmeta = json.loads(str(_bz["meta"]))
+    assert _bmeta.get("env") == ENV_NAME, (
+        f"⛔ 自舉樣本是 {_bmeta.get('env')} 生的，本次訓練是 {ENV_NAME} —— 拿錯檔了")
+    _bE = _bz["E"].astype(np.float64)
+    _bw = np.exp(-BOOT_BETA * (_bE - _bE.min()))
+    _BOOT = (_bz["trajs"].astype(np.float32), _bw / _bw.sum())
+    print(f"  自舉蒸餾集：{len(_bE)} 條（{os.path.basename(BOOT_DATA)}，"
+          f"pass@{_bmeta.get('M')} {_bmeta.get('pass_at_m'):.3f}）β={BOOT_BETA:g} "
+          f"frac={BOOT_FRAC:g}   有效樣本數 {1.0 / float((_BOOT[1] ** 2).sum()):.0f}", flush=True)
+
 # make_batch 的 real-mask side channel：最近一個 batch 裡哪些樣本是真資料（有真動作）。
 _REAL_W = [None]
 
 
 def _teacher_traj(rng, n):
-    """從題庫抽 n 條 teacher 軌跡 → (traj[n,T,2] 正規化、s[n,2]、g[n,2])。cell 內 jitter。"""
+    """從題庫抽 n 條 teacher 軌跡 → traj[n,T,2] 正規化。cell 內 jitter。
+    ⭐ P2：_BOOT 有東西時，n 條裡 BOOT_FRAC 比例改抽自舉樣本（按 exp(−βE) 權重）。
+    自舉樣本已是 T_CAP 點 ⇒ 不再內插、不 jitter（flow 生成自帶連續多樣性）。"""
+    n_b = int(round(n * BOOT_FRAC)) if _BOOT is not None else 0
     trajs = np.empty((n, T_CAP, 2), np.float64)
-    for i in range(n):
+    for i in range(n - n_b):
         p = _TCH[int(rng.integers(len(_TCH)))]
         p = p + rng.uniform(-0.5, 0.5, size=(1, 2)) * _tcell_norm   # 整條小平移（cell 內）
         seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
@@ -243,6 +268,9 @@ def _teacher_traj(rng, n):
         tt = np.linspace(0.0, cum[-1], T_CAP)
         for k in (0, 1):
             trajs[i, :, k] = np.interp(tt, cum, p[:, k])
+    if n_b > 0:
+        idx = rng.choice(len(_BOOT[0]), size=n_b, p=_BOOT[1])
+        trajs[n - n_b:] = _BOOT[0][idx]
     return trajs.astype(np.float32)
 
 
@@ -589,6 +617,89 @@ if u_dec is not None:
     _n, _sh, _gap = _decoder_health()
     print(f"  decoder 內部點 RMSE {_n:.4f}   打亂 u 之後 {_sh:.4f}   用到的 u 值 {_gap:+.4f}"
           f"   {'🚨 幾乎沒在讀 u ⇒ 這一輪的 recon 數字不能拿來談 u' if _gap < 0.02 else '✓'}", flush=True)
+
+# ═══ P2：自舉生成模式（LACOT_BOOT_GEN；主人 2026-08-31 核可「寫好＋smoke、不無人跑」）═══
+# p* ∝ p_θ·exp(−βE) 的生成半邊：flow 自己生 M 份 → 幾何 E 打分 → 通過集存檔。
+#   合法性＝【硬門檻】（wall ≈ 0 才算合法計畫 —— E 高分≠合法，這是 fuzz 精神的第一道縫）；
+#   蒸餾權重＝【軟權重】exp(−βE)。⭐ npz 只存 E 原值，β 由訓練端算 ⇒ 換 β 檔位不用重生成。
+# 課程半徑：(s,g) 從佔據圖抽、BFS 距離 ∈ [BOOT_RMIN, BOOT_RMAX] 格 —— 逐輪推遠的旋鈕。
+# 跟 teacher 引擎同一張圖（GeoEnergy res=8、資訊 ⊆ D）⇒ 公平性同一條論證。
+# ⚠️ 這段跑在 GEO（L745+）定義之前 ⇒ ⛔ 不可引用 GEO，自己建（同參數、便宜）。
+BOOT_GEN = os.environ.get("LACOT_BOOT_GEN", "")
+if BOOT_GEN:
+    assert LOAD_CKPT, "⛔ 生成模式要在載入模式下跑（LACOT_LOAD_CKPT）—— 別拿沒訓過的權重生樣本"
+    assert u_dec is not None, "⛔ 生成模式需要 decoder（ENC_OBJ=recon*）—— E 靠它把 u 解成座標"
+    BOOT_Q = int(os.environ.get("LACOT_BOOT_Q", 512))        # 題數
+    BOOT_M = int(os.environ.get("LACOT_BOOT_M", 8))          # 每題生成份數（pass@M 的 M）
+    BOOT_RMIN = int(os.environ.get("LACOT_BOOT_RMIN", 8))    # 課程半徑下限（BFS 格數）
+    BOOT_RMAX = int(os.environ.get("LACOT_BOOT_RMAX", 25))   # 課程半徑上限 —— 逐輪推遠的旋鈕
+    BOOT_WMAX = float(os.environ.get("LACOT_BOOT_WMAX", 0.05))   # 合法性硬門檻：穿牆均值上限
+    BOOT_EPT = float(os.environ.get("LACOT_BOOT_EPT", 0.25))     # 端點硬門檻：首尾偏離 s/g 上限
+    from lacot.refine_grad import GeoEnergy as _BgGeo
+    from lacot.subgoal import grid_bfs as _bg_bfs
+    _bgeo = _BgGeo(OBS, mu, sd, res=8, device=device, w_len=W_LEN)
+    _bocc = (_bgeo.dist[0, 0].cpu().numpy() == 0.0)
+    _bfree = np.argwhere(_bocc)
+    _blo = np.asarray(_bgeo.lo, np.float64)
+    _bcell = np.asarray(_bgeo.hi - _bgeo.lo, np.float64) / (np.asarray(_bgeo.shape, np.int64) - 1)
+    _brng = np.random.default_rng(20260831 + SEED)
+    # 課程題庫：抽 a → BFS 距離場 → 從 d∈[RMIN,RMAX] 的格挑 b（一場 BFS 供多題、快）
+    _bq = []
+    while len(_bq) < BOOT_Q:
+        a = tuple(_bfree[int(_brng.integers(len(_bfree)))])
+        d = _bg_bfs(_bocc, a)                                # dict[(i,j)]=BFS 步數
+        cand = [c for c, dr in d.items() if BOOT_RMIN <= dr <= BOOT_RMAX]
+        if not cand:
+            continue
+        _pi = _brng.permutation(len(cand))[:8]               # 一個起點最多貢獻 8 題（別讓單點主導）
+        for b in (cand[int(i)] for i in _pi):
+            _bq.append((a, b, int(d[b])))
+            if len(_bq) >= BOOT_Q:
+                break
+    print(f"  自舉題庫：{len(_bq)} 題（BFS 距離 {BOOT_RMIN}~{BOOT_RMAX} 格）", flush=True)
+    _keep_t, _keep_e, _keep_s, _keep_g, _keep_r = [], [], [], [], []
+    _npass = 0
+    with torch.no_grad():
+        for a, b, dr in _bq:
+            sn = _blo + np.asarray(a, np.float64) * _bcell + _brng.uniform(-0.4, 0.4, 2) * _bcell
+            gn = _blo + np.asarray(b, np.float64) * _bcell + _brng.uniform(-0.4, 0.4, 2) * _bcell
+            st = torch.tensor(sn, dtype=torch.float32, device=device)[None]
+            gt = torch.tensor(gn, dtype=torch.float32, device=device)[None]
+            cond_b = condvec(st, gt)
+            u_b = flow.sample(BOOT_M, cond_b.expand(BOOT_M, -1))
+            pts = u_dec(u_b)                                  # [M, T_CAP, 2] 正規化
+            e_tot, e_terms = _bgeo(pts, st.expand(BOOT_M, -1), gt.expand(BOOT_M, -1), per_term=True)
+            # 合法性硬門檻：穿牆 ≈0 ＋ 首尾錨在 (s,g) —— ⛔ 不合法的再低 E 也不進蒸餾集
+            ok = ((e_terms["wall"] < BOOT_WMAX) & (e_terms["start"] < BOOT_EPT)
+                  & (e_terms["goal"] < BOOT_EPT))
+            if bool(ok.any()):
+                _npass += 1
+                idx = torch.nonzero(ok).flatten()
+                _keep_t.append(pts[idx].cpu().numpy().astype(np.float32))
+                _keep_e.append(e_tot[idx].cpu().numpy().astype(np.float32))
+                _keep_s.append(np.repeat(sn[None], len(idx), 0).astype(np.float32))
+                _keep_g.append(np.repeat(gn[None], len(idx), 0).astype(np.float32))
+                _keep_r.append(np.full(len(idx), dr, np.int32))
+    _pass_at_m = _npass / max(len(_bq), 1)
+    if _npass == 0:
+        # ⛔ 空檔案不落地 —— 載到空自舉集的訓練會安靜地退化成純 ebfs-teacher（檢查不會叫）
+        raise SystemExit(f"⛔ pass@{BOOT_M} = 0/{len(_bq)} —— 一題都沒通過，自舉樣本檔不寫。"
+                         f" 半徑 {BOOT_RMIN}~{BOOT_RMAX} 對這顆太遠，先降 RMAX。")
+    _bt = np.concatenate(_keep_t); _be = np.concatenate(_keep_e)
+    _bs = np.concatenate(_keep_s); _bgl = np.concatenate(_keep_g); _br = np.concatenate(_keep_r)
+    os.makedirs(os.path.dirname(os.path.abspath(BOOT_GEN)) or ".", exist_ok=True)
+    np.savez_compressed(BOOT_GEN, trajs=_bt, E=_be, s=_bs, g=_bgl, bfs_r=_br,
+                        meta=json.dumps(dict(ckpt=os.path.basename(LOAD_CKPT), Q=len(_bq),
+                                             M=BOOT_M, rmin=BOOT_RMIN, rmax=BOOT_RMAX,
+                                             wmax=BOOT_WMAX, ept=BOOT_EPT,
+                                             pass_at_m=_pass_at_m, env=ENV_NAME)))
+    # 🚨 pass@M 是多樣性警報器：逐輪往下掉＝多樣性死（Goodhart 進場）⇒ 停迭代
+    print(f"==== BOOT_GEN 完成 ====", flush=True)
+    print(f"  pass@{BOOT_M}: {_npass}/{len(_bq)} = {_pass_at_m:.3f}   通過樣本 {len(_bt)} 條"
+          f"   E 分布 p10/p50/p90 {np.percentile(_be, 10):.3f}/{np.percentile(_be, 50):.3f}/"
+          f"{np.percentile(_be, 90):.3f}", flush=True)
+    print(f"  半徑分布：p50 {np.median(_br):.0f} max {_br.max()} 格   寫入 {BOOT_GEN}", flush=True)
+    raise SystemExit(0)
 
 # -------- SUCCESS-RATE ROLLOUT --------
 def normstate(x):  # raw env position -> normalized torch [1,2]
@@ -1302,7 +1413,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
-               SUB_MAX_ARC=0.0):
+               SUB_MAX_ARC=0.0, BOOT_TAG=""):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1313,6 +1424,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_eo{ENC_OBJ}"
     if TEACHER_MIX > 0:                              # ⭐ P1b teacher 資料引擎
         x += f"_tch{TEACHER_MIX:g}"
+    if BOOT_TAG:                                     # ⭐ P2 自舉輪次（⛔ 沒有它自舉 ckpt 會蓋非自舉）
+        x += f"_bt{BOOT_TAG}"
     if not LEARNED_REFINE:
         x += "_norf"
     if COND_DROP > 0:
@@ -1363,7 +1476,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     SUB_STUCK=SUB_STUCK, DEV_TIERS=DEV_TIERS,
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
                     SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
-                    DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC)
+                    DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
+                    BOOT_TAG=BOOT_TAG)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
