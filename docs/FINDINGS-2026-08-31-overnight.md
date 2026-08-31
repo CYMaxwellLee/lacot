@@ -78,6 +78,26 @@ LK16-c2ma   21220  L K16 s1 + conf2+ma2        0.300   （K16 官方段未跑；
 - ma3>ma2（s1 單點 +6.8）⇒ 選點上限沒掃完，跟 DELTA_SUB 聯動掃升priority。
 - mix 0.3/0.7 在 s1 線未翻身 ⇒ tch0.5 續當 default（10ep 證據、弱）。
 
+## ⑥+ 白天 D 系開獎（8/31 隨到隨記；主人上午核可的 A/B/C 三問）
+
+`[實測]` 官方尺（250 ep）：
+
+```
+D-MK8s1-off  medium K8 s1 + conf2+ma2   0.920   bc 0.552   ⭐ 新高：QRL 80 +12、超上界 80.0
+D-MK8s0-off  medium K8 s0 + conf2+ma2   0.784   bc 0.600
+D-Ms1-off    medium K4 s1 + conf2+ma2   0.592   bc 0.560   （K4 也有 seed 方差：0.832↔0.592）
+D-Ls0ma3     large  K8 s0 + conf2+ma3   0.672   bc 0.408   （⛔ 好顆疊 ma3 反而 −12.4 vs ma2 0.796）
+```
+
+- **問題 A 初判**：medium 贏 QRL 靠 K8 — 兩 seed 0.784/0.920（平均 0.852 > QRL 0.80），且都 ≥0.78
+  比 K4（0.832/0.592）穩。dev 判決（0.700/0.900）→ 官方（0.784/0.920）方向一致、第二次走通。
+- **ma×顆品質交互**：s1 爛顆 ma3>ma2（0.456>0.388）、s0 好顆 ma3<ma2（0.672<0.796）
+  ⇒ 爛顆要鬆（confidently-wrong 多、偶爾放行遠跳有救）、好顆要緊。⛔ ma 不是全域常數。
+- 🚨 **json 互蓋病抓到＋修好**（commit 4a72607）：eval 支檔名 _s 段跟 env LACOT_SEED 走（沒帶=0）
+  ⇒ 跨 seed 官方 json 同名互蓋（8/30 offLs0 被 offLs2 蓋；8/31 晨三對）。修＝TAG_SEED 跟
+  ckpt cfg 的 SEED 走（⛔ 只動檔名、不動噪聲流）。被蓋前快照：results/seedfix_backup_0831/
+  （全部 ep50 json 帶 __cks<seed> 歸屬後綴）。⭐ 數字無損 —— 一手來源是 slurm log，本檔全從 log 收。
+
 ## ⑥ 待跑（等主人裁）
 
 1. medium K8 官方段（dev 0.7/0.9 兩顆都沒上過官方尺；若 K8 也 >0.8 ⇒ medium 贏 QRL 就有第二 seed）
