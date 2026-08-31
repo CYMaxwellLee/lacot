@@ -527,6 +527,24 @@ def condvec(s, g):
 mse = lambda p, a: (p - a).pow(2).mean()
 print("stage 2 flow+refine+action ...", flush=True)
 STEPS2 = 0 if LOAD_CKPT else int(os.environ.get("LACOT_STEPS2", 2000))
+# ═══ 權重 EMA（LACOT_EMA_W；「練穩」B 問題的藥之一，2026-08-31）══════════════
+# 訓練不變（影子不參與 forward/backward）；ckpt 多存一份 ema 權重；
+# eval 時 LACOT_LOAD_EMA=1 用影子 ⇒ 同一次訓練、兩種權重可對照（配對比較、seed 噪聲咬不到）。
+# ⚠️ 對象＝stage2 會更新的供點鏈五模組（u_dec 只在 stage1 訓、refine 在 norf 慣例下閒置 ⇒ 皆不追）。
+EMA_W = float(os.environ.get("LACOT_EMA_W", 0.0))    # 0=off（歷史行為不變）；慣例 0.999
+_EMA_PAIRS = []
+if EMA_W > 0 and not LOAD_CKPT:
+    import copy as _cp
+    _EMA_NAMED = [("cond_enc", cond_enc), ("cond_head", cond_head), ("flow", flow),
+                  ("ahead", ahead), ("bc_head", bc_head)]
+    _EMA_SHADOW = {}
+    for _n, _m in _EMA_NAMED:
+        _sh = _cp.deepcopy(_m)
+        for _p in _sh.parameters():
+            _p.requires_grad_(False)
+        _EMA_SHADOW[_n] = _sh
+        _EMA_PAIRS.append((_sh, _m))
+    print(f"  權重 EMA 開啟：m={EMA_W:g}（影子五模組，訓練行為不變）", flush=True)
 for stp in range(STEPS2):
     traj, mask, s, g, act = make_batch(rng, teacher_mix=TEACHER_MIX)
     with torch.no_grad():
@@ -580,9 +598,17 @@ for stp in range(STEPS2):
         with torch.no_grad():
             for pe, pr in zip(refine_ema.parameters(), refine.parameters()):
                 pe.mul_(EMA_M).add_(pr, alpha=1 - EMA_M)
+    if _EMA_PAIRS:
+        with torch.no_grad():
+            for _me, _ml in _EMA_PAIRS:
+                for _pe, _pl in zip(_me.parameters(), _ml.parameters()):
+                    _pe.mul_(EMA_W).add_(_pl, alpha=1 - EMA_W)
+                for _be, _bl in zip(_me.buffers(), _ml.buffers()):
+                    _be.copy_(_bl)
     if (stp + 1) % 1000 == 0:
         print(f"  step {stp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}", flush=True)
 TAG_SEED = SEED          # 檔名用的 seed；載入模式下改跟 ckpt 的 seed 走（2026-08-31 修互蓋病）
+LOAD_EMA = 0             # 載入模式下由 LACOT_LOAD_EMA 蓋掉；訓練模式恆 0
 if LOAD_CKPT:
     _lp = LOAD_CKPT if os.path.isabs(LOAD_CKPT) else os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), LOAD_CKPT)
@@ -599,6 +625,14 @@ if LOAD_CKPT:
                         ("refine", refine), ("ahead", ahead), ("bc_head", bc_head),
                         ("traj_enc", traj_enc), ("e_pooler", e_pooler)):
         _mod.load_state_dict(_ck[_name])
+    # ⭐ LACOT_LOAD_EMA=1：用影子權重覆蓋供點鏈五模組（同顆 ckpt 的 raw/ema 配對對照）
+    LOAD_EMA = int(os.environ.get("LACOT_LOAD_EMA", 0))
+    if LOAD_EMA:
+        assert "ema" in _ck, "⛔ LOAD_EMA=1 但這顆 ckpt 沒有 ema 段（訓練時沒開 LACOT_EMA_W）"
+        for _name, _sd in _ck["ema"].items():
+            {"cond_enc": cond_enc, "cond_head": cond_head, "flow": flow,
+             "ahead": ahead, "bc_head": bc_head}[_name].load_state_dict(_sd)
+        print(f"  ⭐ 已切到 EMA 影子權重（m={_cfg.get('EMA_W', '?')}，五模組）", flush=True)
     if u_dec is not None:
         assert "u_dec" in _ck, (
             "⛔ ENC_OBJ=recon* 但 ckpt 裡沒有 u_dec ⇒ 那顆 ckpt 是舊版存的，"
@@ -612,6 +646,8 @@ if LOAD_CKPT:
         TAG_SEED = _cfg["SEED"]
         if TAG_SEED != SEED:
             print(f"  ⚠️ 檔名 seed 跟 ckpt 走：_s{TAG_SEED}（env LACOT_SEED={SEED} 只管噪聲流）", flush=True)
+    if _cfg.get("EMA_W"):
+        EMA_W = _cfg["EMA_W"]        # ⭐ 只進檔名（顆身份的一部分）；影子建立條件含 not LOAD_CKPT、不受影響
     print(f"✅ 載入 {os.path.basename(_lp)}（跳過訓練，只跑評估）"
           f"  cfg={ {k: _cfg.get(k) for k in ('K','T_CAP','ENC_OBJ','LEARNED_REFINE','COND_DROP')} }",
           flush=True)
@@ -1422,7 +1458,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
-               SUB_MAX_ARC=0.0, BOOT_TAG=""):
+               SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1435,6 +1471,10 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_tch{TEACHER_MIX:g}"
     if BOOT_TAG:                                     # ⭐ P2 自舉輪次（⛔ 沒有它自舉 ckpt 會蓋非自舉）
         x += f"_bt{BOOT_TAG}"
+    if EMA_W > 0:                                    # ⭐ 權重 EMA 訓練檔（ckpt 內容多 ema 段）
+        x += f"_emw{EMA_W:g}"
+    if LOAD_EMA:                                     # ⭐ eval 用影子權重（同顆 raw/ema 配對對照）
+        x += "_ema"
     if not LEARNED_REFINE:
         x += "_norf"
     if COND_DROP > 0:
@@ -1486,7 +1526,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
                     SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
                     DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
-                    BOOT_TAG=BOOT_TAG)
+                    BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -1516,9 +1556,11 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             # ⭐ decoder 一定要跟著存：E_geo（幾何 energy）靠它把 u 解成可微的座標點，
             #    ⛔ 沒存的話下一步要重訓 encoder 才拿得回配得上的 decoder。
             **({"u_dec": u_dec.state_dict()} if u_dec is not None else {}),
+            # ⭐ 權重 EMA 影子（LACOT_EMA_W>0 時）：eval 端 LACOT_LOAD_EMA=1 取用
+            **({"ema": {n: m.state_dict() for n, m in _EMA_SHADOW.items()}} if _EMA_PAIRS else {}),
             "cfg": dict(K=K, COND=COND, CHUNK=CHUNK, D_MODEL=D_MODEL, STEPS2=STEPS2, T_CAP=T_CAP,
                         GOAL_SAMPLING="uniform-official", EVAL_EPISODES=SEEDS,
-                        CONS=CONS, EMA_M=EMA_M, SEED=SEED,
+                        CONS=CONS, EMA_M=EMA_M, SEED=SEED, EMA_W=EMA_W,
                         ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE,
                         COND_DROP=COND_DROP, BC_INDEP=BC_INDEP)}, ck)
 print(f"存 checkpoint {ck}", flush=True)
