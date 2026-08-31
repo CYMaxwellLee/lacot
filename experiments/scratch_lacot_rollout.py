@@ -521,12 +521,17 @@ bc_head = CondOnlyMLP().to(device)
 BC_OWN = int(os.environ.get("LACOT_BC_OWN", 0))
 bc_own_enc = bc_own_ch = bc_own_head = None
 if BC_OWN:
-    bc_own_enc = sota_mlp(2, 512, 512).to(device)
-    bc_own_ch = sota_mlp(1024, 512, COND).to(device)
-    bc_own_head = CondOnlyMLP().to(device)
+    # 🚨 2026-08-31 檢討 R3 修：建構包 fork_rng ⇒ 不消耗全域 RNG 流。
+    #    舊版三模組建構吃掉全域流 ⇒ 名義同 seed 的主模型初始化整個變掉（bcown 顆分段
+    #    0.728/0.328 掉出常軌＝落進 seed 方差）。fork 內用自己的確定性 seed。
+    with torch.random.fork_rng(devices=[device] if str(device) != "cpu" else []):
+        torch.manual_seed(20260831 + SEED)
+        bc_own_enc = sota_mlp(2, 512, 512).to(device)
+        bc_own_ch = sota_mlp(1024, 512, COND).to(device)
+        bc_own_head = CondOnlyMLP().to(device)
     def own_condvec(s, g):
         return bc_own_ch(torch.cat([bc_own_enc(s), bc_own_enc(g)], 1))
-    print("  真獨立 GCBC 開啟（own encoder/head、零共用、只吃真資料）", flush=True)
+    print("  真獨立 GCBC 開啟（own encoder/head、零共用、只吃真資料；fork_rng 隔離）", flush=True)
 # ⭐ BC_INDEP：bc 地板拆出去用自己的 optimizer ＋ 自己的 grad-clip。
 #    主人 8/24 對 floor 的定義是「真正 BC 能到達的」—— 而共用 opt2 與全域 clip 的話，
 #    它的更新會被主模型的梯度規模牽著走 ⇒ ⛔ 那不是獨立 baseline。
