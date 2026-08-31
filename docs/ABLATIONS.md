@@ -26,3 +26,7 @@ _新想到的變形先進這張表，⛔ 別直接動主線。_
 - ENC_OBJ：`recon_ictr`（A2）勝 `recon`（A1）—— 替身指標反著看（A1 門票漂亮但 D0 1.2%、flow 塌成點質量）。見 EXPERIMENT-INDEX Q3。單 seed，headline 前補 multi-seed。
 - T_CAP=128（主人 8/24 裁、8/28 落進預設）。
 - 主線 refine＝梯度爬坡（主人的更新式），learned refine 退居 #2。
+
+- **flow engine 對照（NF vs FM/RF）**〔主人 2026-08-31 裁「維持原案，頂多加 ablation」〕：
+  同配方換 flow-matching 引擎訓一顆＋官方 — 把「為什麼用 exact-NF」變 empirical 決定。
+  預期敘事：exact likelihood 的 tilt 蒸餾精確性 vs FM 的生成速度；⛔ 主線引擎不換。
