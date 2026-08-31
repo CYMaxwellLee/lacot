@@ -35,10 +35,41 @@ per-episode 算力分布可直接量、畫進圖（adaptive test-time compute �
 ⭐ 第二層自適應（主人 8/29）：**抽樣數 M 也自適應** —— 先抽 2 份判信心、夠就用、
 不夠再加抽（sequential sampling，至 M_max）⇒ 簡單題的算力再砍一半以上。ablation #12。
 
+## 官方對標表現況（2026-08-31 白天收官；全部 5 task × 50 seed 官方協定）
+
+```
+pointmaze-＊-stitch     medium          large
+我方主打（蒸餾+ma2）     0.852 (K8,2sd)  0.535 (K8,3sd) / 0.796 (best sd)
+我方 ebfs 上界（帶圖）   0.800           0.972
+官方行情  QRL            0.80            0.84
+          HIQL           0.74            0.13
+          GCIVL          0.70            —
+          GCIQL          —               0.31
+          GCBC           0.23            0.07
+```
+
+- ⚠️ 紅線遵守註記：medium K8 只有 2 seeds（0.784/0.920）—— 上正式表前補 s2（紅線 6）。
+  我方全部 chunk=4 —— **chunk=1 主打數字未跑**（紅線 1、8/29 舊債），上表前必還。
+- large 報法：平均 0.535 誠實報＋best-seed 0.796 另欄標明（seed 方差 0.388~0.796 是
+  已量化的已知問題，藥＝EMA／dev 挑顆，8/31 三問已判：步數無效、K12 無效）。
+- ⭐ 敘事鏈（表的故事）：ebfs 上界 97.2 證天花板 ≫ QRL ⇒ 蒸餾（medium 已到 0.920 單 seed、
+  超上界＝amortization 不設限）⇒ large gap＝訓練方差工程債，非方法債。
+
+### Test-time 圖搜索三 baseline（SURVEY 8/30 正文級抽讀；主人批註定位）
+
+| 法 | 已知數字（其報告尺） | 我們的差異化 |
+|---|---|---|
+| SCoTS (2505.20983) | 只做 pointmaze/antmaze 兩 maze | 贏法四件：最優性 teacher、零生成縫、amortization（部署無圖）、humanoidmaze 覆蓋 |
+| GAS (2506.07744) | giant-stitch 88.3（vs 先前最佳 1.0） | 它部署帶圖＋另訓低層；我們蒸餾掉圖 |
+| TTGS (2510.07257) | pm-giant GCIQL 0→98.0；hm-giant 4.4→78.1 | 它自列限制：部署訪問訓練資料＋建圖 35-100s/次 ＝我們「蒸餾去圖」的現成 motivation |
+
+⏳ 三法在 medium/large-stitch 的逐格數字待抽原文表（現只有 giant 級）；⛔ 引用前抽查原文（26xx 番號全在基底知識後）。
+
 ## 已知的自家強 baseline 事實
 
 - bc 0.710（medium-stitch dev tier2）之所以高：chunk=4 平滑紅利＋同資料同預算的獨立
-  head＋小迷宮岔路有限。⏳ 官方 GCBC 在 stitch 的原表數字待查核後填入此處。
+  head＋小迷宮岔路有限。⭐ 8/31 官方段的對應事實：我方 bc 頭 medium 0.60~0.78（顆各異）
+  vs 官方 GCBC 0.23 —— 差距三因子（chunk4＋cond 表徵＋teacher 外溢）已列 8/30 續帶、待拆。
 
 ## Related work 結構（主人 2026-08-29 裁：就這三類）
 
