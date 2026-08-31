@@ -582,6 +582,7 @@ for stp in range(STEPS2):
                 pe.mul_(EMA_M).add_(pr, alpha=1 - EMA_M)
     if (stp + 1) % 1000 == 0:
         print(f"  step {stp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}", flush=True)
+TAG_SEED = SEED          # 檔名用的 seed；載入模式下改跟 ckpt 的 seed 走（2026-08-31 修互蓋病）
 if LOAD_CKPT:
     _lp = LOAD_CKPT if os.path.isabs(LOAD_CKPT) else os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), LOAD_CKPT)
@@ -603,6 +604,14 @@ if LOAD_CKPT:
             "⛔ ENC_OBJ=recon* 但 ckpt 裡沒有 u_dec ⇒ 那顆 ckpt 是舊版存的，"
             " 沒有 decoder 就沒有 E_geo 的眼睛")
         u_dec.load_state_dict(_ck["u_dec"])
+    # 🚨 2026-08-31 修：eval 檔名的 _s 段跟【ckpt 的 seed】走，⛔ 不是 env 的 LACOT_SEED。
+    #    舊病：跨 seed 的 eval 支沒帶 LACOT_SEED ⇒ 全寫 _s0 ⇒ 不同顆的官方 json 互蓋
+    #    （8/30 offLs0 被 offLs2 蓋、8/31 三對；⛔ 蓋掉的檔數值上完全合理、看不出來）。
+    #    ⚠️ 只動檔名，⛔ 不動 SEED 變數本身 —— eval 噪聲流跟 SEED 綁著，動了就跟歷史不可比。
+    if _cfg.get("SEED") is not None:
+        TAG_SEED = _cfg["SEED"]
+        if TAG_SEED != SEED:
+            print(f"  ⚠️ 檔名 seed 跟 ckpt 走：_s{TAG_SEED}（env LACOT_SEED={SEED} 只管噪聲流）", flush=True)
     print(f"✅ 載入 {os.path.basename(_lp)}（跳過訓練，只跑評估）"
           f"  cfg={ {k: _cfg.get(k) for k in ('K','T_CAP','ENC_OBJ','LEARNED_REFINE','COND_DROP')} }",
           flush=True)
@@ -1479,7 +1488,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
                     BOOT_TAG=BOOT_TAG)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
-       f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{SEED}")   # gu = goal uniform(official)
+       f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
 #    我們三次的病。exp_decode_probe.py 早就有 LACOT_DP_OUT 這個逃生口，主線一直沒有
 #    ⇒ 補上。⭐ 預設仍是 "results" ⇒ ⛔ 既有行為不變。
