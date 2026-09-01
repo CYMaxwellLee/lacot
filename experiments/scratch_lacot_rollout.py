@@ -384,11 +384,31 @@ SEED = int(os.environ.get("LACOT_SEED", 0))
 #    只有「ema 系列 vs byol 系列」那個差距大到不可能是 seed 噪聲。
 CONS = os.environ.get("LACOT_CONS", "self")
 EMA_M = float(os.environ.get("LACOT_EMA_M", 0.996))
-torch.manual_seed(SEED); rng = np.random.default_rng(SEED)
-print(f"設定：seed={SEED} cons={CONS} ema_m={EMA_M} K={K} COND={COND}", flush=True)
+# ⭐ seed 拆分診斷（LACOT_DATA_SEED、9/1 seed 病因 2×2）：-1（預設）＝跟 SEED 走、行為不變；
+#    ≥0＝資料抽樣流（batch 順序）改用此值，model init／torch 訓練噪聲仍吃 SEED。
+#    ⇒ 2×2 交叉可拆「壞初始化 vs 壞資料順序」誰是爛 seed 元兇。
+DATA_SEED = int(os.environ.get("LACOT_DATA_SEED", -1))
+# ⭐ lr 縮放診斷（LACOT_LR_SCALE、9/1）：全部 optimizer 的 lr 乘此係數。1.0＝行為不變。
+LR_SCALE = float(os.environ.get("LACOT_LR_SCALE", 1.0))
+# ⭐ 訓練期高頻診斷（LACOT_DIAG_TRAIN=1、9/1）：stage1 前 300 步每 10 步印
+#    recon／總 loss／梯度範數／u 有效維度。只加記錄、⛔ 不改任何訓練行為。
+DIAG_TRAIN = int(os.environ.get("LACOT_DIAG_TRAIN", 0))
+
+
+def _apply_lr_scale(opt):
+    if LR_SCALE != 1.0:
+        for pg in opt.param_groups:
+            pg["lr"] *= LR_SCALE
+    return opt
+
+
+torch.manual_seed(SEED); rng = np.random.default_rng(SEED if DATA_SEED < 0 else DATA_SEED)
+print(f"設定：seed={SEED} cons={CONS} ema_m={EMA_M} K={K} COND={COND}"
+      + (f" data_seed={DATA_SEED}" if DATA_SEED >= 0 else "")
+      + (f" lr_scale={LR_SCALE:g}" if LR_SCALE != 1.0 else ""), flush=True)
 traj_enc = sota_mlp(2, 512, 512).to(device); e_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
 sg_c = sota_mlp(2, 512, 512).to(device); q_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
-opt1 = torch.optim.Adam([p for m in (traj_enc, e_pooler, sg_c, q_pooler) for p in m.parameters()], lr=1e-3)
+opt1 = _apply_lr_scale(torch.optim.Adam([p for m in (traj_enc, e_pooler, sg_c, q_pooler) for p in m.parameters()], lr=1e-3))
 lab = torch.arange(B, device=device)
 # ⭐ A1（2026-08-26）：VICReg 的 variance ＋ covariance 兩項。
 #    出處：PLDM(arXiv 2502.14819) 的消融 —— 完整 98.0% / 拿掉 variance 13.4% / 拿掉 covariance 29.2%
@@ -463,7 +483,7 @@ if ENC_OBJ.startswith("recon"):
     u_dec = TrajDecoder(D_MODEL, T_CAP).to(device)
     u_dec.check_p = 0.01
     # ⛔ sg_c / q_pooler 不進 optimizer —— (s,g)↔τ InfoNCE 整條移除，⛔ 不是降權重。
-    opt1 = torch.optim.Adam([p for m in (traj_enc, e_pooler, u_dec) for p in m.parameters()], lr=1e-3)
+    opt1 = _apply_lr_scale(torch.optim.Adam([p for m in (traj_enc, e_pooler, u_dec) for p in m.parameters()], lr=1e-3))
 elif ENC_OBJ != "sg_infonce":
     raise ValueError(f"⛔ LACOT_ENC_OBJ 只能是 sg_infonce/recon/recon_ictr，收到 {ENC_OBJ}")
 
@@ -514,7 +534,14 @@ for stp in range(_S1):
         _v, _c = vicreg_terms(et)
         loss = loss + W_VAR * _v + W_COV * _c
     _warm_lr(opt1, stp)
-    opt1.zero_grad(set_to_none=True); loss.backward(); opt1.step()
+    opt1.zero_grad(set_to_none=True); loss.backward()
+    if DIAG_TRAIN and stp < 300 and stp % 10 == 0:
+        # ⭐ 出生後前三百步逐幀（9/1 seed 病因診斷）：爛顆 vs 好顆的分岔點與最早死亡訊號
+        _gs = [p.grad.norm() for g in opt1.param_groups for p in g["params"] if p.grad is not None]
+        _gn = torch.norm(torch.stack(_gs)).item() if _gs else 0.0
+        print(f"  DIAG stp {stp}  recon {_main.item():.4f}  總 {loss.item():.4f}"
+              f"  grad {_gn:.3f}  effdim {eff_dim(et):.3f}", flush=True)
+    opt1.step()
     if _S1 and ((stp + 1) % max(_S1 // 4, 1) == 0 or stp == 0):
         _ed_hist.append(eff_dim(et))                # ⚠️ 守門員：⛔ 別等結果出來才發現 u 塌了
         _lbl = "ctr" if ENC_OBJ == "sg_infonce" else "recon-mse"
@@ -581,8 +608,8 @@ if BC_OWN:
 #    ⚠️ 開了之後 bc 的數字跟歷史結果不可直接比 ⇒ 預設仍是 0。
 f_mods = ([cond_enc, cond_head, flow, refine, ahead] if BC_INDEP
           else [cond_enc, cond_head, flow, refine, ahead, bc_head])
-opt2 = torch.optim.Adam([p for m in f_mods for p in m.parameters()], lr=5e-4)
-opt_bc = torch.optim.Adam(bc_head.parameters(), lr=5e-4) if BC_INDEP else None
+opt2 = _apply_lr_scale(torch.optim.Adam([p for m in f_mods for p in m.parameters()], lr=5e-4))
+opt_bc = _apply_lr_scale(torch.optim.Adam(bc_head.parameters(), lr=5e-4)) if BC_INDEP else None
 opt_bc_own = (torch.optim.Adam([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
                                 for p in m.parameters()], lr=5e-4) if BC_OWN else None)
 def condvec(s, g):
@@ -1579,7 +1606,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
-               WARMUP=0, DATA_RESAMPLE=0):
+               WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1602,6 +1629,10 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_wu{WARMUP}"
     if DATA_RESAMPLE:                                # ⭐ 荒漠重採樣（9/1 seed 病理藥）
         x += "_rs"
+    if DATA_SEED >= 0:                               # ⭐ seed 拆分 2×2（9/1 病因診斷）
+        x += f"_dseed{DATA_SEED}"
+    if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
+        x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
         x += "_norf"
     if COND_DROP > 0:
@@ -1654,7 +1685,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
                     DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
-                    WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE))
+                    WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
+                    DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
