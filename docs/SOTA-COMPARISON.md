@@ -104,3 +104,24 @@ pointmaze-＊-stitch     medium          large
    信心深度）可畫劑量曲線。
 誠實邊界：短程、資料有完整示範的 regime，TT 簡單有效 —— claim 圈定在
 「長程＋無完整示範」（large-stitch 除 QRL 全滅的那塊）。
+
+## 高維戰場 baseline 表（2026-09-01 抓 OGBench 原文 arXiv:2410.20092 HTML）
+
+大家比的 stitch/play 系、官方六 baseline 的每題最強（success %）：
+
+```
+antmaze-large-stitch     HIQL  67±5    （GCBC 3, QRL 18, CRL 11）
+antmaze-giant-stitch     HIQL   2±2    ⭐ 全滅級無人區
+humanoid-med-stitch      HIQL  88±2
+humanoid-large-stitch    HIQL  28±3    ⭐ 半滅、最高維 locomotion（21-DoF）
+cube-single-play         GCIQL 68±6
+cube-double-play         GCIQL 40±5
+scene-play               GCIQL 51±4
+puzzle-3x3-play          GCIQL 95±1
+```
+
+- QRL（pointmaze 的對手）在高維 stitch 全弱（18/0/18/3）⇒ 高維對手換人：
+  locomotion＝HIQL、manipulation＝GCIQL、＋TTGS 78 於 humanoidmaze-stitch
+  （size 未確認、SURVEY 記錄、⛔ 引用前抽原文）。
+- 甜蜜點：humanoid-large-stitch(28)＋antmaze-giant-stitch(2)＝長程拼接×高維交叉、方法主場。
+- 主人 9/1 路線 antmaze→cube→機械手臂 正踩得分谷；高維缺課地圖（9/2 第一題）＝入場券。
