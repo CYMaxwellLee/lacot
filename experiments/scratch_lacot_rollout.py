@@ -274,6 +274,31 @@ def _teacher_traj(rng, n):
     return trajs.astype(np.float32)
 
 
+# ⭐ 荒漠重採樣（LACOT_DATA_RESAMPLE=1）：訓練 batch 的起點 transition 從「均勻」改成
+#    「按位置資料密度反比」兩段式抽（先加權抽 4×4 格、再格內均勻）。病理依據 2026-09-01
+#    驗屍：稀疏走廊＝BC 跨 seed 共通爛＝學習訊號弱。⛔ 預設關＝抽樣分布與歷史完全一致。
+#    ⚠️ 只動 dataset transition 的抽法；teacher 題庫與 shuf 探針的抽樣不碰。
+DATA_RESAMPLE = int(os.environ.get("LACOT_DATA_RESAMPLE", 0))
+_RS_CELLS = None
+if DATA_RESAMPLE:
+    _rs_ij = np.floor((OBS[:, :2] + 2.0) / 4.0).astype(np.int64)   # 4×4 格、對齊迷宮牆格
+    _rs_key = _rs_ij[:, 0] * 1000 + _rs_ij[:, 1]
+    _rs_uniq, _rs_inv, _rs_cnt = np.unique(_rs_key, return_inverse=True, return_counts=True)
+    _rs_w = 1.0 / (_rs_cnt + 0.1 * _rs_cnt.mean())
+    _rs_w = _rs_w / _rs_w.sum()
+    _RS_CELLS = [np.flatnonzero(_rs_inv == k) for k in range(len(_rs_uniq))]
+    print(f"⭐ 荒漠重採樣：{len(_rs_uniq)} 格、最稀/最富抽中率比 "
+          f"{float(_rs_w.max() / _rs_w.min()):.1f}x", flush=True)
+
+
+def _sample_r(rng):
+    if _RS_CELLS is None:
+        return int(rng.integers(0, N))
+    c = int(rng.choice(len(_RS_CELLS), p=_rs_w))
+    idx = _RS_CELLS[c]
+    return int(idx[int(rng.integers(len(idx)))])
+
+
 def make_batch(rng, teacher_mix=0.0):
     """⚠️ teacher_mix 預設 0 ⇒ 行為與歷史完全一致；只有 stage1/stage2 的訓練呼叫傳 TEACHER_MIX。
     探針（D0/D4/GEO sanity）一律用預設 0 —— 它們的 act/穿牆語義不容 teacher 樣本混入。"""
@@ -281,7 +306,7 @@ def make_batch(rng, teacher_mix=0.0):
     n_r = B - n_t
     rows, goals = [], []
     while len(rows) < n_r:
-        r = int(rng.integers(0, N)); te = int(traj_end[r])
+        r = _sample_r(rng); te = int(traj_end[r])
         if te - r < CHUNK:
             continue
         # 🚨 官方抽法（OGBench `impls/utils/datasets.py` GCDataset.sample_goals,
@@ -442,8 +467,25 @@ if ENC_OBJ.startswith("recon"):
 elif ENC_OBJ != "sg_infonce":
     raise ValueError(f"⛔ LACOT_ENC_OBJ 只能是 sg_infonce/recon/recon_ictr，收到 {ENC_OBJ}")
 
+# ⭐ 起步暖身（LACOT_WARMUP=N）：兩段訓練各自的前 N 步 lr 線性 0→base。病理依據 2026-09-01
+#    驗屍：s1/s4 型爛 seed＝encoder 前期一步走歪就卡死（現狀等於全油門起步）。⛔ 預設 0＝行為不變。
+WARMUP = int(os.environ.get("LACOT_WARMUP", 0))
+
+
+def _warm_lr(opt, stp):
+    if WARMUP <= 0 or opt is None:
+        return
+    if not hasattr(opt, "_base_lrs"):
+        opt._base_lrs = [pg["lr"] for pg in opt.param_groups]
+    if stp <= WARMUP:
+        f = min(1.0, (stp + 1) / WARMUP)
+        for pg, b in zip(opt.param_groups, opt._base_lrs):
+            pg["lr"] = b * f
+
+
 print(f"stage 1 e_target 目標={ENC_OBJ} ...  w_var={W_VAR} w_cov={W_COV}"
-      + (f" w_ictr={W_ICTR} sigma={ICTR_SIGMA}" if ENC_OBJ == "recon_ictr" else ""), flush=True)
+      + (f" w_ictr={W_ICTR} sigma={ICTR_SIGMA}" if ENC_OBJ == "recon_ictr" else "")
+      + (f"  warmup={WARMUP}" if WARMUP else ""), flush=True)
 _S1 = 0 if LOAD_CKPT else int(os.environ.get("LACOT_STEPS1", 1500))
 _ed_hist, logits = [], None
 for stp in range(_S1):
@@ -471,6 +513,7 @@ for stp in range(_S1):
     if W_VAR > 0 or W_COV > 0:                      # ⭐ A1：防塌正則
         _v, _c = vicreg_terms(et)
         loss = loss + W_VAR * _v + W_COV * _c
+    _warm_lr(opt1, stp)
     opt1.zero_grad(set_to_none=True); loss.backward(); opt1.step()
     if _S1 and ((stp + 1) % max(_S1 // 4, 1) == 0 or stp == 0):
         _ed_hist.append(eff_dim(et))                # ⚠️ 守門員：⛔ 別等結果出來才發現 u 塌了
@@ -612,6 +655,7 @@ for stp in range(STEPS2):
                                         for p in m.parameters()], 1.0)
         opt_bc_own.step()
     total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
+    _warm_lr(opt2, stp)
     opt2.zero_grad(set_to_none=True)
     if opt_bc is not None:
         opt_bc.zero_grad(set_to_none=True)
@@ -722,10 +766,33 @@ if BOOT_GEN:
     _blo = np.asarray(_bgeo.lo, np.float64)
     _bcell = np.asarray(_bgeo.hi - _bgeo.lo, np.float64) / (np.asarray(_bgeo.shape, np.int64) - 1)
     _brng = np.random.default_rng(20260831 + SEED)
+    # ⭐ 荒漠出題（LACOT_BOOT_DESERT=1）：起點格從「均勻」改成「按訓練資料密度反比」加權抽。
+    #    病理依據 2026-09-01 驗屍：稀疏區＝學習訊號弱的抽籤區、s2 死區即在此。
+    #    ⛔ 半徑課程、硬門檻、軟權重全不動；預設關＝出題分布與 v1 完全一致。
+    BOOT_DESERT = os.environ.get("LACOT_BOOT_DESERT", "0") == "1"
+    _bp = None
+    if BOOT_DESERT:
+        # ⚠️ GeoEnergy 的格制建在【正規化】座標（(xy−mu)/sd，見 refine_grad.py L50）——
+        #    OBS 是原始座標，先正規化再映射。⛔ 直接用原始座標＝覆蓋率 0.004 的錯位（smoke 抓過）。
+        _dz = (OBS[:, :2] - np.asarray(mu, np.float64)[:2]) / np.asarray(sd, np.float64)[:2]
+        _dij = np.rint((_dz - _blo) / _bcell).astype(np.int64)
+        _fidx = {tuple(map(int, c)): k for k, c in enumerate(_bfree)}
+        _cnt = np.zeros(len(_bfree))
+        for _ij in _dij:
+            _k = _fidx.get((int(_ij[0]), int(_ij[1])))
+            if _k is not None:
+                _cnt[_k] += 1
+        _bp = 1.0 / (_cnt + 0.1 * max(float(_cnt[_cnt > 0].mean()), 1.0) + 1.0)
+        _bp = _bp / _bp.sum()
+        # ⚠️ 覆蓋率是座標系對齊的哨兵：資料點落進 open 細格的比例太低＝xy→格映射錯位。
+        print(f"  ⭐ 荒漠出題：{len(_bfree)} 起點格、零資料格 {int((_cnt == 0).sum())} 個、"
+              f"最稀/最富權重比 {float(_bp.max() / _bp.min()):.1f}x、"
+              f"資料覆蓋率 {float(_cnt.sum()) / len(OBS):.3f}", flush=True)
     # 課程題庫：抽 a → BFS 距離場 → 從 d∈[RMIN,RMAX] 的格挑 b（一場 BFS 供多題、快）
     _bq = []
     while len(_bq) < BOOT_Q:
-        a = tuple(_bfree[int(_brng.integers(len(_bfree)))])
+        a = tuple(_bfree[int(_brng.choice(len(_bfree), p=_bp)) if _bp is not None
+                  else int(_brng.integers(len(_bfree)))])
         d = _bg_bfs(_bocc, a)                                # dict[(i,j)]=BFS 步數
         cand = [c for c, dr in d.items() if BOOT_RMIN <= dr <= BOOT_RMAX]
         if not cand:
@@ -1511,7 +1578,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_R_WARM=10, DELTA_SUB=7.5, SUB_CAP=10, SUB_STUCK=3, DEV_TIERS="",
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
-               SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0):
+               SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
+               WARMUP=0, DATA_RESAMPLE=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1530,6 +1598,10 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += "_ema"
     if BC_OWN:                                       # ⭐ 真獨立 GCBC（own 鏈、8/31）
         x += "_bcown"
+    if WARMUP > 0:                                   # ⭐ 起步暖身（9/1 seed 病理藥）
+        x += f"_wu{WARMUP}"
+    if DATA_RESAMPLE:                                # ⭐ 荒漠重採樣（9/1 seed 病理藥）
+        x += "_rs"
     if not LEARNED_REFINE:
         x += "_norf"
     if COND_DROP > 0:
@@ -1581,7 +1653,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     W_LEN=W_LEN, FINISH_R=FINISH_R, SUB_M=SUB_M, FINISH_MODE=FINISH_MODE,
                     SUB_POLICY=SUB_POLICY, GRAD_MODE=GRAD_MODE, SEL_N=SEL_N, GRAD_PROJ=GRAD_PROJ,
                     DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
-                    BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN)
+                    BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
+                    WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE))
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
