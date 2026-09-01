@@ -1183,6 +1183,12 @@ def make_subgoal_policy(R, use_u):
     return policy, on_start
 
 
+# ⭐ 行為驗屍開關（LACOT_DIAG_DUMP=1）：官方 rollout 每一集落 start/goal/final/距離/步數，
+#    分辨「卡死不動／走偏／差臨門」三種死法。⛔ 預設關 ⇒ 既有行為與 rollout json 完全不變。
+DIAG_DUMP = os.environ.get("LACOT_DIAG_DUMP", "0") == "1"
+DIAG_ROWS = []
+
+
 def rollout(R, use_u, tag, policy_fn=None, on_start=None):
     """官方協定 rollout。policy_fn/on_start 給了就用它（分段臂），否則走 policy_chunk（flat）。"""
     succ, ep = 0, 0
@@ -1190,6 +1196,7 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
         for sd_ in range(SEEDS):
             obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
             goal = info["goal"]; success = False; steps = 0
+            _st0 = np.asarray(obs[:2], np.float64).tolist()
             torch.manual_seed(7 * task + sd_)  # action-sampler stream
             # 🚨 2026-08-28 修：這條官方路徑【從來沒有】重置過爬坡快取 —— 而 dev 那條有
             #    （dev_rollout 掛了 on_episode_start=_reset_grad_cache）。
@@ -1210,6 +1217,15 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
                     if success or term or trunc or steps >= MAXH:
                         break
             succ += int(success); ep += 1
+            if DIAG_DUMP:                    # 成功集也記 —— 讀屍體要有活人對照
+                _fp = np.asarray(obs[:2], np.float64)
+                _gl = np.asarray(goal[:2], np.float64)
+                DIAG_ROWS.append(dict(
+                    arm=str(tag).strip(), task=task, sd=sd_, start=_st0,
+                    goal=_gl.tolist(), final=_fp.tolist(),
+                    dist_final=float(np.linalg.norm(_fp - _gl)),
+                    dist_start=float(np.linalg.norm(np.asarray(_st0) - _gl)),
+                    steps=steps, success=bool(success)))
     print(f"  {tag}: success {succ}/{ep} = {succ/ep:.3f}", flush=True)
     return succ / ep
 
@@ -1578,6 +1594,11 @@ dst = os.path.join(_OUT_DIR or os.path.join(
 os.makedirs(os.path.dirname(dst), exist_ok=True)
 with open(dst, "w") as f:
     json.dump(out, f, indent=1)
+if DIAG_DUMP and DIAG_ROWS:
+    _ddst = dst.replace("rollout_", "diag_")
+    with open(_ddst, "w") as f:
+        json.dump(DIAG_ROWS, f)
+    print(f"⭐ diag dump: {len(DIAG_ROWS)} rows -> {_ddst}", flush=True)
 print(f"寫入 {dst}", flush=True)
 
 if FINISH_R > 0.0:
