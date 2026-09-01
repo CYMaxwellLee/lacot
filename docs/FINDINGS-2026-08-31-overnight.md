@@ -342,3 +342,19 @@ ebfs 上界     80.0             97.2
 3. medium ma2 的 s1/s2 顆（把 0.832 跨 seed 站穩）
 4. EMA／12000 步重訓（第 0 路、8/23 舊債）
 5. K12 的 s0/s2（把 K12 從顆混雜裡解開）
+
+## ⑦ 48h 長尾收屍（9/1 上午收；8/29 舊配置、僅登記完備）
+
+兩支 TIMEOUT（實際 8/31 15:02 到頂、比 handoff 預估的 9/1 傍晚早）；官方段在
+TIMEOUT 前完成、R=8 臂損失。⚠️ 舊配置（conf 選點、無 DS4/EMA/ma2）⇒ 數字不進對標
+表、只作 R 軸行為的歷史參考：
+
+```
+medium 官方 5task×50sd     R=0    R=1    R=3    R=5    (BC地板)
+M-conf-wf (W_LEN=0,fin2.0) 0.384  0.392  0.356  0.356  0.600
+R-finrs   (finish rescale) 0.460  0.436  0.420  0.428  0.600
+```
+
+- 兩臂 refine R 軸皆平/微降 ⇒ 與主線判決一致（refine 不是 medium 的增益軸）。
+- json 未落（TIMEOUT 砍在收尾前）、數字撈自 slurm/logs/*-2092{2,5}.out（pocahontas）。
+- 至此 8/29 舊 48h 系全數出清，Slurm 上ルナ已無在跑/待收 job。
