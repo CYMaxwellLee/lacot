@@ -111,6 +111,10 @@ DELTA_SUB = float(os.environ.get("LACOT_DELTA_SUB", 7.5))
 # ⭐ conf ── 信心選點（主人 2026-08-29）：抽 M 份長程計畫，subgoal 取「窗內共識最高」的點。
 #   固定弧長 7.5 是它的固定近似；窗 [LO,HI]×DELTA_SUB 下限擋原地共識、上限擋短程 cond 出分布。
 SUB_M = int(os.environ.get("LACOT_SUB_M", 4))
+# ⭐ E 選計畫（LACOT_SUB_ESEL、9/2）：0（預設）＝行為不變；N>0＝conf2 先抽 N 份、用 GEO 的 E 留最低的 SUB_M 份
+#    再做共識選路標。動機：ebfs 分辨器證明執行通道 1.000、失敗全在計畫內容；而主打臂測試時 E 未出場
+#    （GRAD_R=0、只看 M 份共識 ⇒「一致地錯」挑到遠錯點）。8/29 flat 家族 selection 0.600 > climb 0.520 為先例。
+SUB_ESEL = int(os.environ.get("LACOT_SUB_ESEL", 0))
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
@@ -1149,7 +1153,7 @@ if SUBGOAL == "ebfs":
 #          ⛔ 沒有統一單位：弧長是「沿著計畫走的長度」、BFS 是「沿著最短路走的格數」，
 #            各自都是自己那層的自然單位；硬換算會把 decode 路徑的彎曲度算進 S0 頭上。
 SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": [],
-            "spread": [], "n_direct": 0, "n_fallback": 0}
+            "spread": [], "n_direct": 0, "n_fallback": 0, "esel_e_gap": []}
 
 
 def _anchor_pts(pts_raw, obs):
@@ -1223,11 +1227,18 @@ def make_subgoal_policy(R, use_u):
                 SUB_DIAG["n_bad_d0"] += 1
         elif SUBGOAL == "conf2":
             # ⭐ 主人 8/29 統一版：fresh M 份（⛔ 不 warm，治計畫殘骸）→ 修 → 判信心。
-            cond_l = condvec(s_n, g_n).expand(SUB_M, -1)
-            u_l = flow.sample(SUB_M, cond_l).detach()
+            _NS = SUB_ESEL if SUB_ESEL > SUB_M else SUB_M       # ⭐ 9/2 E 選計畫：先抽 N 份
+            cond_l = condvec(s_n, g_n).expand(_NS, -1)
+            u_l = flow.sample(_NS, cond_l).detach()
             u_l = grad_refine(u_l, cond_l, u_dec, flow, GEO,
-                              s_n.expand(SUB_M, -1), g_n.expand(SUB_M, -1),
+                              s_n.expand(_NS, -1), g_n.expand(_NS, -1),
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
+            if _NS > SUB_M:                                     # 用 E 留最低的 SUB_M 份（越小越好）
+                with torch.no_grad():
+                    _eN = GEO(u_dec(u_l), s_n.expand(_NS, -1), g_n.expand(_NS, -1))
+                    _keep = torch.topk(-_eN, SUB_M).indices
+                SUB_DIAG["esel_e_gap"].append(float(_eN.max() - _eN.min()))
+                u_l, cond_l = u_l[_keep], cond_l[_keep]
             with torch.no_grad():
                 pts_raw = _anchor_pts(u_dec(u_l) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _fc = farthest_confident_subgoal(
@@ -1613,7 +1624,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
-               WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1):
+               WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
+               SUB_ESEL=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1640,6 +1652,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_dseed{DATA_SEED}"
     if BOOT_SEED >= 0:                               # ⭐ boot 抽樣獨立流（9/2 方差溯源）
         x += f"_bseed{BOOT_SEED}"
+    if SUB_ESEL > 0:                                 # ⭐ conf2 前 E 選計畫（9/2）
+        x += f"_esel{SUB_ESEL}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1695,7 +1709,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
-                    DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED)
+                    DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
+                    SUB_ESEL=SUB_ESEL)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
