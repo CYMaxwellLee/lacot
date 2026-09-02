@@ -26,19 +26,21 @@ sub() { local node=$1 name=$2 deps=$3; shift 3; local depflag=""
     --job-name=$name -o slurm/logs/%x-%j.out $depflag \
     --wrap "cd ~/Projects/lacot && env $*" | awk '{print $4}'; }
 
-echo "== A. V8 失敗地理（只 eval）"
+echo "== A. V8 失敗地理（只 eval；主人 11:19 裁五台都灑 ⇒ 四台 NVIDIA 各一支）"
+i=0
 for S in 23 25 26 27; do
+  NODE=$(echo lady moana pocahontas jasmine | cut -d" " -f$((i%4+1))); i=$((i+1))
   CK=results/${PRE}_eorecon_ictr_tch0.5_emw0.999_wu500_norf_cd0.1_bci_s$S.pt
   [ -f "$CK" ] || { echo "⛔ 缺 ckpt $CK"; exit 1; }
-  J=$(sub zeldajr SD-s$S-diag - "OGBENCH_DATA_DIR=$ZDATA $BASE LACOT_ENV=$LENV LACOT_K=8 LACOT_TEACHER_MIX=0.5 LACOT_LOAD_EMA=1 LACOT_LOAD_CKPT=$CK LACOT_DIAG_DUMP=1 LACOT_OUT_DIR=results/night_0902/v8diag $OFF $C2MA $ZPY -u experiments/scratch_lacot_rollout.py")
-  echo "SD-s$S-diag -> zeldajr ($J)"
+  J=$(sub $NODE SD-s$S-diag - "OGBENCH_DATA_DIR=$ADATA $BASE LACOT_ENV=$LENV LACOT_K=8 LACOT_TEACHER_MIX=0.5 LACOT_LOAD_EMA=1 LACOT_LOAD_CKPT=$CK LACOT_DIAG_DUMP=1 LACOT_OUT_DIR=results/night_0902/v8diag $OFF $C2MA $APY -u experiments/scratch_lacot_rollout.py")
+  echo "SD-s$S-diag -> $NODE ($J)"
 done
 
-echo "== B. dz2 重現（boot 不動、換資料流 seed）"
+echo "== B. dz2 重現（boot 不動、換資料流 seed；訓練四台各一、ema eval 走 zeldajr 四卡）"
 [ -f results/boot_s2_dz2.npz ] || { echo "⛔ 缺 boot_s2_dz2.npz"; exit 1; }
 i=0
 for D in 2 12 22 32; do
-  NODE=$(echo lady moana pocahontas | cut -d" " -f$((i%3+1))); i=$((i+1))
+  NODE=$(echo lady moana pocahontas jasmine | cut -d" " -f$((i%4+1))); i=$((i+1))
   mkdir -p results/night_0902/dz2rep_d$D
   J=$(sub $NODE R2-d$D - "OGBENCH_DATA_DIR=$ADATA $TRAIN_BASE LACOT_ENV=$LENV LACOT_K=8 LACOT_SEED=2 LACOT_DATA_SEED=$D LACOT_EMA_W=0.999 LACOT_BOOT_DATA=results/boot_s2_dz2.npz LACOT_BOOT_TAG=dz2 $APY -u experiments/scratch_lacot_rollout.py")
   CK=results/${PRE}_eorecon_ictr_tch0.5_btdz2_emw0.999_dseed${D}_norf_cd0.1_bci_s2.pt
