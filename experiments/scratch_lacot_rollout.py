@@ -129,6 +129,9 @@ VQ_NOISE_P = float(os.environ.get("LACOT_VQ_NOISE_P", 0.0))
 # ⭐ 軟錨（LACOT_VQ_SOFT=1、9/2 VQ64 硬量化容量損失後的變體）：codebook 與 commitment 照舊（把 u 拉向字彙），
 #    但 decoder／head／推論都吃【連續】u、不 snap ⇒ 只留「錨」、不留「瓶頸」。0（預設）＝硬量化。
 VQ_SOFT = int(os.environ.get("LACOT_VQ_SOFT", 0))
+# ⭐ flow 探針（LACOT_FLOW_PROBE=M、9/2 主人「好好看看問題出在哪」）：eval 載入時，對每個官方任務抽 M 份計畫、解碼，
+#    逐份量「離 BFS 正確路徑的距離（Chamfer 一邊）／穿牆深度／末點距終點」⇒ 對路率與 M 份分散度。只診斷、不改任何行為。
+FLOW_PROBE = int(os.environ.get("LACOT_FLOW_PROBE", 0))
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
@@ -523,6 +526,45 @@ def _oracle_u(obs_xy, goal_xy, n):
     with torch.no_grad():
         u = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
     return u.expand(n, -1, -1).contiguous()
+
+
+def flow_probe(tasks_sg, M):
+    """對每題：flow.sample(M | cond(s,g)) → (VQ snap) → decoder → 錨到 obs（同 conf2）→ 只看計畫【開頭一段】
+    （弧長 ≤ SUB_MAX_ARC×DELTA_SUB 原始單位＝conf2 選路標的視窗），量它離 BFS 正確路徑多遠（原始座標、Chamfer 一邊）、
+    穿牆深度、與 M 份的分散度。對路門檻＝正確路徑往返後同一段的距離 ×2（下限 0.5）。⛔ 只診斷。"""
+    out = []
+    arc_cap = (SUB_MAX_ARC * DELTA_SUB) if SUB_MAX_ARC > 0 else 2.0 * DELTA_SUB
+    def _head_mask(pr):                                             # pr [B,T,2] 原始 → 開頭弧長 ≤ arc_cap 的點
+        seg = (pr[:, 1:] - pr[:, :-1]).norm(dim=-1); cum = torch.cat([torch.zeros(pr.shape[0], 1, device=pr.device), seg.cumsum(1)], 1)
+        m = cum <= arc_cap; m[:, :4] = True
+        return m
+    def _route_d(pr, route_raw):                                    # 開頭段各點到路徑折線最近距離的平均 [B]
+        d = torch.cdist(pr, route_raw[None].expand(pr.shape[0], -1, -1)).min(2).values   # [B,T]
+        m = _head_mask(pr).float()
+        return (d * m).sum(1) / m.sum(1)
+    for (sx, gx) in tasks_sg:
+        tr = _route_traj(sx, gx)
+        if tr is None or u_dec is None:
+            out.append(None); continue
+        with torch.no_grad():
+            route_raw = tr[0] * SD + MU                                # [T,2] 原始
+            s_n = normstate(np.asarray(sx, np.float64)); g_n = normstate(np.asarray(gx, np.float64))
+            cond = condvec(s_n, g_n).expand(M, -1)
+            u = flow.sample(M, cond)
+            pts_n = u_dec(_q(u)); pts_raw = _anchor_pts(pts_n * SD + MU, np.asarray(sx, np.float64))   # [M,T,2]
+            route_d = _route_d(pts_raw, route_raw)                     # [M]
+            wall = (GEO.wall_depth(pts_n) * _head_mask(pts_raw).float()).sum(1) / _head_mask(pts_raw).float().sum(1)
+            u_o = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
+            po = _anchor_pts(u_dec(_q(u_o)) * SD + MU, np.asarray(sx, np.float64))
+            ref = float(_route_d(po, route_raw)[0]); thr = max(2.0 * ref, 0.5)
+            onroute = (route_d < thr).float()                          # 對路只看路徑距；穿牆分開報
+            heads = [pr[_head_mask(pr[None])[0]] for pr in pts_raw]
+            ends = torch.stack([h[-1] for h in heads])                 # 每份開頭段的終點 [M,2]
+            spread = float(torch.cdist(ends, ends).mean())
+        out.append(dict(M=M, ref_route_d=ref, thr=thr, onroute=float(onroute.mean()),
+                        route_d_med=float(route_d.median()), route_d_min=float(route_d.min()),
+                        wall_med=float(wall.median()), head_end_spread=spread))
+    return out
 
 
 def roundtrip_gate(tasks_sg):
@@ -1438,12 +1480,20 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
 # ⭐ embedding 軟尺（9/2 主人「先確認 embedding 好」）：五個官方任務各做一次「任務路徑→enc→(VQ)→dec」往返，
 #    印 mse／解出路徑的穿牆深度／末點距終點；不跑模擬器。載入 ckpt 評測時才算（訓練跑本身不算）。
 RT_GATE = None
+FLOW_PROBE_OUT = None
 if LOAD_CKPT and _TCH is not None and u_dec is not None and GEO is not None:
     _rt_sg = []
     for _t in range(1, N_TASKS + 1):
         _o, _i = env.reset(seed=1000 * _t, options={"task_id": _t, "render_goal": False})
         _rt_sg.append((np.asarray(_o[:2], np.float64), np.asarray(_i["goal"][:2], np.float64)))
     RT_GATE = roundtrip_gate(_rt_sg)
+    if FLOW_PROBE > 0:
+        FLOW_PROBE_OUT = flow_probe(_rt_sg, FLOW_PROBE)
+        print(f"  ⭐ flow 探針（每題抽 {FLOW_PROBE} 份、只看開頭段；對路率/路徑距中位(門檻)/穿牆中位/開頭段終點分散）：" + "  ".join(
+            (f"t{k+1}:{r['onroute']:.2f}/{r['route_d_med']:.2f}({r['thr']:.2f})/{r['wall_med']:.3f}/{r['head_end_spread']:.1f}" if r else f"t{k+1}:—")
+            for k, r in enumerate(FLOW_PROBE_OUT)), flush=True)
+    else:
+        FLOW_PROBE_OUT = None
     print("  ⭐ embedding 往返尺（任務路徑→enc→dec；mse/穿牆/末點距）：" + "  ".join(
         (f"t{k+1}:{r['mse']:.4f}/{r['wall']:.3f}/{r['gdist']:.2f}" if r else f"t{k+1}:—") for k, r in enumerate(RT_GATE)), flush=True)
 print(f"\n==== SUCCESS RATE (env={ENV_NAME}, {N_TASKS} tasks x {SEEDS} seeds, MAXH {MAXH}) ====", flush=True)
@@ -1461,6 +1511,7 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            teacher_mix=TEACHER_MIX,
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 out["rt_gate"] = RT_GATE
+out["flow_probe"] = FLOW_PROBE_OUT
 # ⚠️ rollout 是整支腳本最貴的部分，而成本跟 CHUNK 成反比：CHUNK=1 每步都要重新決策，
 #    比 CHUNK=4 多四倍的 policy 呼叫。⇒ 要跑 chunk 對照時用 LACOT_EVAL_RS 只留需要的輪數，
 #    不然單格會超過叢集的時間上限（實測：CHUNK=1 一個變體就要 ~26 分）。
