@@ -561,9 +561,17 @@ def flow_probe(tasks_sg, M):
             heads = [pr[_head_mask(pr[None])[0]] for pr in pts_raw]
             ends = torch.stack([h[-1] for h in heads])                 # 每份開頭段的終點 [M,2]
             spread = float(torch.cdist(ends, ends).mean())
+            # ⭐ 進度（9/2 第二版）：整條計畫沿【正確路徑】走到多遠才偏掉。每個計畫點找最近的路徑點索引，
+            #    只算距離 ≤ 走廊半寬（1.5 原始單位）的點，取最遠索引 / T ⇒ 走錯岔路的計畫會停在岔路口的索引。
+            dfull = torch.cdist(pts_raw, route_raw[None].expand(M, -1, -1))     # [M,T,T]
+            dmin, idx = dfull.min(2)                                             # [M,T]
+            near = dmin <= 1.5
+            prog = torch.where(near, idx.float(), torch.zeros_like(idx.float())).max(1).values / (route_raw.shape[0] - 1)
+            po_d, po_i = torch.cdist(po, route_raw[None]).min(2); po_prog = float(torch.where(po_d <= 1.5, po_i.float(), torch.zeros_like(po_i.float())).max() / (route_raw.shape[0] - 1))
         out.append(dict(M=M, ref_route_d=ref, thr=thr, onroute=float(onroute.mean()),
                         route_d_med=float(route_d.median()), route_d_min=float(route_d.min()),
-                        wall_med=float(wall.median()), head_end_spread=spread))
+                        wall_med=float(wall.median()), head_end_spread=spread,
+                        prog_med=float(prog.median()), prog_frac80=float((prog >= 0.8).float().mean()), oracle_prog=po_prog))
     return out
 
 
@@ -1489,8 +1497,8 @@ if LOAD_CKPT and _TCH is not None and u_dec is not None and GEO is not None:
     RT_GATE = roundtrip_gate(_rt_sg)
     if FLOW_PROBE > 0:
         FLOW_PROBE_OUT = flow_probe(_rt_sg, FLOW_PROBE)
-        print(f"  ⭐ flow 探針（每題抽 {FLOW_PROBE} 份、只看開頭段；對路率/路徑距中位(門檻)/穿牆中位/開頭段終點分散）：" + "  ".join(
-            (f"t{k+1}:{r['onroute']:.2f}/{r['route_d_med']:.2f}({r['thr']:.2f})/{r['wall_med']:.3f}/{r['head_end_spread']:.1f}" if r else f"t{k+1}:—")
+        print(f"  ⭐ flow 探針（每題抽 {FLOW_PROBE} 份；進度中位/進度≥0.8 比例(oracle 進度)｜開頭段對路率/穿牆中位）：" + "  ".join(
+            (f"t{k+1}:{r['prog_med']:.2f}/{r['prog_frac80']:.2f}({r['oracle_prog']:.2f})|{r['onroute']:.2f}/{r['wall_med']:.3f}" if r else f"t{k+1}:—")
             for k, r in enumerate(FLOW_PROBE_OUT)), flush=True)
     else:
         FLOW_PROBE_OUT = None
