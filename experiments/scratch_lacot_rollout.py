@@ -126,6 +126,9 @@ assert U_SOURCE in ("flow", "oracle"), f"⛔ LACOT_U_SOURCE 只能是 flow/oracl
 VQ_V = int(os.environ.get("LACOT_VQ", 0))
 VQ_BETA = float(os.environ.get("LACOT_VQ_BETA", 0.25))
 VQ_NOISE_P = float(os.environ.get("LACOT_VQ_NOISE_P", 0.0))
+# ⭐ 軟錨（LACOT_VQ_SOFT=1、9/2 VQ64 硬量化容量損失後的變體）：codebook 與 commitment 照舊（把 u 拉向字彙），
+#    但 decoder／head／推論都吃【連續】u、不 snap ⇒ 只留「錨」、不留「瓶頸」。0（預設）＝硬量化。
+VQ_SOFT = int(os.environ.get("LACOT_VQ_SOFT", 0))
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
@@ -566,7 +569,7 @@ if VQ_V > 0:
 
 def _q(u):
     """推論用：VQ 開著就 snap 到最近 code；關著＝恆等。"""
-    return vq.snap(u) if vq is not None else u
+    return vq.snap(u) if (vq is not None and not VQ_SOFT) else u
 
 # ⭐ 起步暖身（LACOT_WARMUP=N）：兩段訓練各自的前 N 步 lr 線性 0→base。病理依據 2026-09-01
 #    驗屍：s1/s4 型爛 seed＝encoder 前期一步走歪就卡死（現狀等於全油門起步）。⛔ 預設 0＝行為不變。
@@ -599,8 +602,10 @@ for stp in range(_S1):
         loss = 0.5 * (F.cross_entropy(logits, lab) + F.cross_entropy(logits.t(), lab))
         _main = loss
     else:
-        if vq is not None:                          # ⭐ VQ：decoder 吃量化 u（直通）、加 commitment
+        if vq is not None:                          # ⭐ VQ：decoder 吃量化 u（直通）、加 commitment；軟錨＝吃連續 u
             et_dec, l_vq, _vqst = vq(et)
+            if VQ_SOFT:
+                et_dec = et
         else:
             et_dec, l_vq, _vqst = et, 0.0, None
         _main = (u_dec(et_dec) - traj).pow(2).mean()    # ⭐ 重建 128 個座標點
@@ -835,6 +840,7 @@ if LOAD_CKPT:
                 from lacot.vq import TokenVQ
                 vq = TokenVQ(int(_ck["vq_cfg"]["V"]), D_MODEL).to(device)
             vq.load_state_dict(_ck["vq"]); vq.eval()
+            VQ_SOFT = int(_ck["vq_cfg"].get("soft", 0))          # ⭐ 軟錨 ckpt ⇒ 推論也不 snap
             print(f"  ⭐ 已載入 VQ codebook（V={vq.V}）", flush=True)
         else:
             assert vq is None, "⛔ LACOT_VQ>0 但這顆 ckpt 沒有 vq 段（訓練時沒開）"
@@ -1725,7 +1731,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500):
+               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1757,7 +1763,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
     if U_SOURCE != "flow":                           # ⭐ u 來源探針（9/2）
         x += f"_u{U_SOURCE[:3]}"
     if VQ > 0:                                       # ⭐ VQ 錨定（9/2）
-        x += f"_vq{VQ}"
+        x += f"_vq{VQ}" + ("s" if VQ_SOFT else "")
     if STEPS1 != 1500:                               # ⭐ stage 1 步數（9/2 embedding 先做好；⛔ 不進檔名會蓋 V8 同 seed）
         x += f"_s1{STEPS1}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
@@ -1816,7 +1822,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
-                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1)
+                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -1851,7 +1857,7 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             # ⭐ decoder 一定要跟著存：E_geo（幾何 energy）靠它把 u 解成可微的座標點，
             #    ⛔ 沒存的話下一步要重訓 encoder 才拿得回配得上的 decoder。
             **({"u_dec": u_dec.state_dict()} if u_dec is not None else {}),
-            **({"vq": vq.state_dict(), "vq_cfg": {"V": VQ_V, "beta": VQ_BETA}} if vq is not None else {}),
+            **({"vq": vq.state_dict(), "vq_cfg": {"V": VQ_V, "beta": VQ_BETA, "soft": VQ_SOFT}} if vq is not None else {}),
             # ⭐ 權重 EMA 影子（LACOT_EMA_W>0 時）：eval 端 LACOT_LOAD_EMA=1 取用
             **({"ema": {n: m.state_dict() for n, m in _EMA_SHADOW.items()}} if _EMA_PAIRS else {}),
             # ⭐ 真獨立 GCBC 三模組（BC_OWN 時）
