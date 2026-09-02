@@ -129,6 +129,12 @@ VQ_NOISE_P = float(os.environ.get("LACOT_VQ_NOISE_P", 0.0))
 # ⭐ 軟錨（LACOT_VQ_SOFT=1、9/2 VQ64 硬量化容量損失後的變體）：codebook 與 commitment 照舊（把 u 拉向字彙），
 #    但 decoder／head／推論都吃【連續】u、不 snap ⇒ 只留「錨」、不留「瓶頸」。0（預設）＝硬量化。
 VQ_SOFT = int(os.environ.get("LACOT_VQ_SOFT", 0))
+# ⭐ 開頭綁定（LACOT_DEC_START、9/2 晚主人裁「三為主、二對照」）：""（預設）＝行為不變；
+#    hard＝解碼後整條平移使第 0 點＝起點（訓練與推論全套同一個 helper ⇒ decoder 只學形狀、開頭結構上就是起點）；
+#    soft＝解碼照舊、stage 1 加 W·‖第 0 點 − 起點‖²。動機：單集追蹤實證爛顆的計畫不從 s 出發、conf2 只看尾就直達。
+DEC_START = os.environ.get("LACOT_DEC_START", "")
+assert DEC_START in ("", "hard", "soft"), f"⛔ LACOT_DEC_START 只能是 空/hard/soft，收到 {DEC_START}"
+DEC_START_W = float(os.environ.get("LACOT_DEC_START_W", 1.0))
 # ⭐ flow 探針（LACOT_FLOW_PROBE=M、9/2 主人「好好看看問題出在哪」）：eval 載入時，對每個官方任務抽 M 份計畫、解碼，
 #    逐份量「離 BFS 正確路徑的距離（Chamfer 一邊）／穿牆深度／末點距終點」⇒ 對路率與 M 份分散度。只診斷、不改任何行為。
 FLOW_PROBE = int(os.environ.get("LACOT_FLOW_PROBE", 0))
@@ -560,11 +566,11 @@ def flow_probe(tasks_sg, M):
             s_n = normstate(np.asarray(sx, np.float64)); g_n = normstate(np.asarray(gx, np.float64))
             cond = condvec(s_n, g_n).expand(M, -1)
             u = flow.sample(M, cond)
-            pts_n = u_dec(_q(u)); pts_raw = _anchor_pts(pts_n * SD + MU, np.asarray(sx, np.float64))   # [M,T,2]
+            pts_n = _dec(_q(u), s_n); pts_raw = _anchor_pts(pts_n * SD + MU, np.asarray(sx, np.float64))   # [M,T,2]
             route_d = _route_d(pts_raw, route_raw)                     # [M]
             wall = (GEO.wall_depth(pts_n) * _head_mask(pts_raw).float()).sum(1) / _head_mask(pts_raw).float().sum(1)
             u_o = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
-            po = _anchor_pts(u_dec(_q(u_o)) * SD + MU, np.asarray(sx, np.float64))
+            po = _anchor_pts(_dec(_q(u_o), tr[:, 0]) * SD + MU, np.asarray(sx, np.float64))
             ref = float(_route_d(po, route_raw)[0]); thr = max(2.0 * ref, 0.5)
             onroute = (route_d < thr).float()                          # 對路只看路徑距；穿牆分開報
             heads = [pr[_head_mask(pr[None])[0]] for pr in pts_raw]
@@ -595,7 +601,7 @@ def roundtrip_gate(tasks_sg):
             out.append(None); continue
         with torch.no_grad():
             u = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
-            pts = u_dec(_q(u))                                          # [1,T_CAP,2] 正規化
+            pts = _dec(_q(u), tr[:, 0])                                 # [1,T_CAP,2] 正規化
             mse = float((pts - tr).pow(2).mean())
             wall = float(GEO.wall_depth(pts).mean()) if "GEO" in globals() and GEO is not None else float("nan")
             gdist = float((pts[0, -1] - tr[0, -1]).norm())
@@ -629,6 +635,18 @@ if VQ_V > 0:
 def _q(u):
     """推論用：VQ 開著就 snap 到最近 code；關著＝恆等。"""
     return vq.snap(u) if (vq is not None and not VQ_SOFT) else u
+
+
+def _dec(u, s_n):
+    """u → 座標序列（正規化）。DEC_START=hard 時整條平移使第 0 點＝s_n（[1,2] 或 [B,2]）；其餘＝u_dec(u)。
+    ⛔ 所有解碼點都走這裡（訓練 recon、boot 出題、select、投影、latent/conf/conf2、往返尺、flow 探針）——不要另寫。"""
+    pts = u_dec(u)
+    if DEC_START == "hard":
+        s2 = torch.as_tensor(s_n, dtype=pts.dtype, device=pts.device).reshape(-1, 2)
+        if s2.shape[0] == 1 and pts.shape[0] != 1:
+            s2 = s2.expand(pts.shape[0], -1)
+        pts = pts - pts[:, :1] + s2[:, None, :]
+    return pts
 
 # ⭐ 起步暖身（LACOT_WARMUP=N）：兩段訓練各自的前 N 步 lr 線性 0→base。病理依據 2026-09-01
 #    驗屍：s1/s4 型爛 seed＝encoder 前期一步走歪就卡死（現狀等於全油門起步）。⛔ 預設 0＝行為不變。
@@ -667,8 +685,13 @@ for stp in range(_S1):
                 et_dec = et
         else:
             et_dec, l_vq, _vqst = et, 0.0, None
-        _main = (u_dec(et_dec) - traj).pow(2).mean()    # ⭐ 重建 128 個座標點
+        _pts1 = _dec(et_dec, s)                          # ⭐ 開頭綁定：hard 在這裡平移到 s
+        if DEC_START and stp == 0:                       # 一次性哨兵：traj 第 0 點本來就該＝s（否則 hard 的前提錯）
+            print(f"  ⭐ DEC_START={DEC_START}：‖traj[:,0]−s‖ max {float((traj[:, 0] - s).norm(dim=-1).max()):.4f}（應≈0）", flush=True)
+        _main = (_pts1 - traj).pow(2).mean()             # ⭐ 重建 128 個座標點
         loss = _main + l_vq
+        if DEC_START == "soft":                          # ⭐ 軟綁：第 0 點對起點的懲罰
+            loss = loss + DEC_START_W * (_pts1[:, 0] - s).pow(2).mean()
         if ENC_OBJ == "recon_ictr":
             # instance-level：同一條 τ 的兩個【加噪視角】要互認。
             # ⛔ 這跟被移除的那項不同 —— 它認的是「同一條軌跡」，⛔ 不是「同一組 (s,g)」，
@@ -1000,7 +1023,7 @@ if BOOT_GEN:
             gt = torch.tensor(gn, dtype=torch.float32, device=device)[None]
             cond_b = condvec(st, gt)
             u_b = flow.sample(BOOT_M, cond_b.expand(BOOT_M, -1))
-            pts = u_dec(_q(u_b))                              # [M, T_CAP, 2] 正規化
+            pts = _dec(_q(u_b), st)                           # [M, T_CAP, 2] 正規化
             e_tot, e_terms = _bgeo(pts, st.expand(BOOT_M, -1), gt.expand(BOOT_M, -1), per_term=True)
             # 合法性硬門檻：穿牆 ≈0 ＋ 首尾錨在 (s,g) —— ⛔ 不合法的再低 E 也不進蒸餾集
             ok = ((e_terms["wall"] < BOOT_WMAX) & (e_terms["start"] < BOOT_EPT)
@@ -1154,7 +1177,7 @@ def policy_chunk(obs, goal, R, use_u):
                 #    ⇒ 零方言病，E 的幾何品味直接兌現。⛔ 不碰快取（每 chunk fresh 選）。
                 cand = flow.sample(SEL_N, cond.expand(SEL_N, -1))
                 with torch.no_grad():
-                    _e = GEO(u_dec(_q(cand)), s.expand(SEL_N, -1), g.expand(SEL_N, -1))
+                    _e = GEO(_dec(_q(cand), s), s.expand(SEL_N, -1), g.expand(SEL_N, -1))
                 u = cand[int(_e.argmin())][None]
             else:
                 _use_warm, _steps = grad_steps(R, _GRAD_CACHE["u"] is not None, GRAD_R, GRAD_R_WARM)
@@ -1167,7 +1190,7 @@ def policy_chunk(obs, goal, R, use_u):
                         # ⭐ 中間站二：encoder 往返投影 —— 爬完拉回 head 熟悉的殼上再用。
                         #    這格若讓爬坡從「變差」變「不差」，方言假說確診。
                         with torch.no_grad():
-                            u = encode_u(u_dec(_q(u)))
+                            u = encode_u(_dec(_q(u), s))
                     _GRAD_CACHE["u"] = u
                 # ⛔ _steps == 0（R=0）⇒ flow 抽的 u 直接用，⛔ 不碰 _GRAD_CACHE
         else:
@@ -1355,7 +1378,7 @@ def make_subgoal_policy(R, use_u):
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_n = u_dec(_q(u_l))                   # [1, T_CAP, 2] 正規化座標
+                pts_n = _dec(_q(u_l), s_n)               # [1, T_CAP, 2] 正規化座標
                 pts_raw = pts_n * SD + MU                # ⭐ 換回原始座標 ⇒ 跟 DELTA_SUB 同單位
                 pts_raw = _anchor_pts(pts_raw, obs)
                 sub = arc_subgoal(pts_raw, DELTA_SUB)[0].cpu().numpy()
@@ -1376,7 +1399,7 @@ def make_subgoal_policy(R, use_u):
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_raw = _anchor_pts(u_dec(_q(u_l)) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(_dec(_q(u_l), s_n) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _cs = consensus_subgoal(pts_raw, SUB_CONF_LO * DELTA_SUB,
                                          SUB_CONF_HI * DELTA_SUB, ret_stats=True)
             SUB_DIAG["spread"].append(_cs["spread"])
@@ -1397,12 +1420,12 @@ def make_subgoal_policy(R, use_u):
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
             if _NS > SUB_M:                                     # 用 E 留最低的 SUB_M 份（越小越好）
                 with torch.no_grad():
-                    _eN = GEO(u_dec(_q(u_l)), s_n.expand(_NS, -1), g_n.expand(_NS, -1))
+                    _eN = GEO(_dec(_q(u_l), s_n), s_n.expand(_NS, -1), g_n.expand(_NS, -1))
                     _keep = torch.topk(-_eN, SUB_M).indices
                 SUB_DIAG["esel_e_gap"].append(float(_eN.max() - _eN.min()))
                 u_l, cond_l = u_l[_keep], cond_l[_keep]
             with torch.no_grad():
-                pts_raw = _anchor_pts(u_dec(_q(u_l)) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(_dec(_q(u_l), s_n) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _fc = farthest_confident_subgoal(
                 pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True,
                 # 🚨 錨定把頭端分散人工歸零 ⇒ tau 校準窗挪到中段（見 subgoal.py 註解）
@@ -1849,7 +1872,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0):
+               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START=""):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1888,6 +1911,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
         x += f"_hg{SUB_HEADGUARD:g}"
+    if DEC_START:                                    # ⭐ 開頭綁定（9/2 晚；hard/soft）
+        x += f"_ds{DEC_START}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1945,7 +1970,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
                     SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP,
-                    SUB_HEADGUARD=SUB_HEADGUARD)
+                    SUB_HEADGUARD=SUB_HEADGUARD, DEC_START=DEC_START)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
