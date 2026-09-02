@@ -120,6 +120,12 @@ SUB_ESEL = int(os.environ.get("LACOT_SUB_ESEL", 0))
 #    還是 flow 生的 u 落錯地方（oracle 好、flow 差）。⛔ 只當診斷、不進配方（它偷看了圖）。
 U_SOURCE = os.environ.get("LACOT_U_SOURCE", "flow")
 assert U_SOURCE in ("flow", "oracle"), f"⛔ LACOT_U_SOURCE 只能是 flow/oracle，收到 {U_SOURCE}"
+# ⭐ VQ 錨定（LACOT_VQ=V、9/2 離散化階梯第二層）：0（預設）＝行為不變；V>0＝pooler 出口每個 token 量化到 V 個 code。
+#    訓練：decoder 與 action head 吃 u_q（straight-through）、flow 仍對連續 u 建模（NF 不能吃點質量）；
+#    推論：flow.sample／refine 後 snap 到最近 code 再解碼／餵 head。動機：oracle 探針證明表示本身歪（每顆 init 各長一套字）。
+VQ_V = int(os.environ.get("LACOT_VQ", 0))
+VQ_BETA = float(os.environ.get("LACOT_VQ_BETA", 0.25))
+VQ_NOISE_P = float(os.environ.get("LACOT_VQ_NOISE_P", 0.0))
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
@@ -525,6 +531,17 @@ if ENC_OBJ.startswith("recon"):
 elif ENC_OBJ != "sg_infonce":
     raise ValueError(f"⛔ LACOT_ENC_OBJ 只能是 sg_infonce/recon/recon_ictr，收到 {ENC_OBJ}")
 
+vq = None
+if VQ_V > 0:
+    from lacot.vq import TokenVQ
+    vq = TokenVQ(VQ_V, D_MODEL, beta=VQ_BETA, noise_p=VQ_NOISE_P).to(device)
+    print(f"  ⭐ VQ 錨定：每 token {VQ_V} 個 code（β={VQ_BETA:g} noise_p={VQ_NOISE_P:g}）", flush=True)
+
+
+def _q(u):
+    """推論用：VQ 開著就 snap 到最近 code；關著＝恆等。"""
+    return vq.snap(u) if vq is not None else u
+
 # ⭐ 起步暖身（LACOT_WARMUP=N）：兩段訓練各自的前 N 步 lr 線性 0→base。病理依據 2026-09-01
 #    驗屍：s1/s4 型爛 seed＝encoder 前期一步走歪就卡死（現狀等於全油門起步）。⛔ 預設 0＝行為不變。
 WARMUP = int(os.environ.get("LACOT_WARMUP", 0))
@@ -555,8 +572,12 @@ for stp in range(_S1):
         loss = 0.5 * (F.cross_entropy(logits, lab) + F.cross_entropy(logits.t(), lab))
         _main = loss
     else:
-        _main = (u_dec(et) - traj).pow(2).mean()    # ⭐ 重建 128 個座標點
-        loss = _main
+        if vq is not None:                          # ⭐ VQ：decoder 吃量化 u（直通）、加 commitment
+            et_dec, l_vq, _vqst = vq(et)
+        else:
+            et_dec, l_vq, _vqst = et, 0.0, None
+        _main = (u_dec(et_dec) - traj).pow(2).mean()    # ⭐ 重建 128 個座標點
+        loss = _main + l_vq
         if ENC_OBJ == "recon_ictr":
             # instance-level：同一條 τ 的兩個【加噪視角】要互認。
             # ⛔ 這跟被移除的那項不同 —— 它認的是「同一條軌跡」，⛔ 不是「同一組 (s,g)」，
@@ -578,7 +599,8 @@ for stp in range(_S1):
         _gs = [p.grad.norm() for g in opt1.param_groups for p in g["params"] if p.grad is not None]
         _gn = torch.norm(torch.stack(_gs)).item() if _gs else 0.0
         print(f"  DIAG stp {stp}  recon {_main.item():.4f}  總 {loss.item():.4f}"
-              f"  grad {_gn:.3f}  effdim {eff_dim(et):.3f}", flush=True)
+              f"  grad {_gn:.3f}  effdim {eff_dim(et):.3f}"
+              + (f"  vq ppl {_vqst['perplexity']:.1f} used {_vqst['used']}/{VQ_V}" if ENC_OBJ != "sg_infonce" and _vqst else ""), flush=True)
     opt1.step()
     if _S1 and ((stp + 1) % max(_S1 // 4, 1) == 0 or stp == 0):
         _ed_hist.append(eff_dim(et))                # ⚠️ 守門員：⛔ 別等結果出來才發現 u 塌了
@@ -689,7 +711,7 @@ for stp in range(STEPS2):
     if COND_DROP > 0:
         _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
         _ca = cond * _keep
-    l_anchor = _wmse(ahead(_ca, et), act)
+    l_anchor = _wmse(ahead(_ca, _q(et)), act)         # ⭐ VQ：head 吃量化 u（與推論一致）
     if LEARNED_REFINE:
         u = flow.sample(B, cond).detach(); us = [u]
         for _ in range(3):
@@ -781,6 +803,14 @@ if LOAD_CKPT:
             "⛔ ENC_OBJ=recon* 但 ckpt 裡沒有 u_dec ⇒ 那顆 ckpt 是舊版存的，"
             " 沒有 decoder 就沒有 E_geo 的眼睛")
         u_dec.load_state_dict(_ck["u_dec"])
+        if "vq" in _ck:                                   # ⭐ VQ ckpt：eval 端自動帶起 codebook
+            if vq is None:
+                from lacot.vq import TokenVQ
+                vq = TokenVQ(int(_ck["vq_cfg"]["V"]), D_MODEL).to(device)
+            vq.load_state_dict(_ck["vq"]); vq.eval()
+            print(f"  ⭐ 已載入 VQ codebook（V={vq.V}）", flush=True)
+        else:
+            assert vq is None, "⛔ LACOT_VQ>0 但這顆 ckpt 沒有 vq 段（訓練時沒開）"
     # 🚨 2026-08-31 修：eval 檔名的 _s 段跟【ckpt 的 seed】走，⛔ 不是 env 的 LACOT_SEED。
     #    舊病：跨 seed 的 eval 支沒帶 LACOT_SEED ⇒ 全寫 _s0 ⇒ 不同顆的官方 json 互蓋
     #    （8/30 offLs0 被 offLs2 蓋、8/31 三對；⛔ 蓋掉的檔數值上完全合理、看不出來）。
@@ -878,7 +908,7 @@ if BOOT_GEN:
             gt = torch.tensor(gn, dtype=torch.float32, device=device)[None]
             cond_b = condvec(st, gt)
             u_b = flow.sample(BOOT_M, cond_b.expand(BOOT_M, -1))
-            pts = u_dec(u_b)                                  # [M, T_CAP, 2] 正規化
+            pts = u_dec(_q(u_b))                              # [M, T_CAP, 2] 正規化
             e_tot, e_terms = _bgeo(pts, st.expand(BOOT_M, -1), gt.expand(BOOT_M, -1), per_term=True)
             # 合法性硬門檻：穿牆 ≈0 ＋ 首尾錨在 (s,g) —— ⛔ 不合法的再低 E 也不進蒸餾集
             ok = ((e_terms["wall"] < BOOT_WMAX) & (e_terms["start"] < BOOT_EPT)
@@ -1032,7 +1062,7 @@ def policy_chunk(obs, goal, R, use_u):
                 #    ⇒ 零方言病，E 的幾何品味直接兌現。⛔ 不碰快取（每 chunk fresh 選）。
                 cand = flow.sample(SEL_N, cond.expand(SEL_N, -1))
                 with torch.no_grad():
-                    _e = GEO(u_dec(cand), s.expand(SEL_N, -1), g.expand(SEL_N, -1))
+                    _e = GEO(u_dec(_q(cand)), s.expand(SEL_N, -1), g.expand(SEL_N, -1))
                 u = cand[int(_e.argmin())][None]
             else:
                 _use_warm, _steps = grad_steps(R, _GRAD_CACHE["u"] is not None, GRAD_R, GRAD_R_WARM)
@@ -1045,14 +1075,14 @@ def policy_chunk(obs, goal, R, use_u):
                         # ⭐ 中間站二：encoder 往返投影 —— 爬完拉回 head 熟悉的殼上再用。
                         #    這格若讓爬坡從「變差」變「不差」，方言假說確診。
                         with torch.no_grad():
-                            u = encode_u(u_dec(u))
+                            u = encode_u(u_dec(_q(u)))
                     _GRAD_CACHE["u"] = u
                 # ⛔ _steps == 0（R=0）⇒ flow 抽的 u 直接用，⛔ 不碰 _GRAD_CACHE
         else:
             u = _apply_refine(cond, u, R)
     else:
         u = torch.zeros(1, K, D_MODEL, device=device)  # (s,g)-only floor
-    a = ahead(cond, u)[0].cpu().numpy()  # [CHUNK,2]
+    a = ahead(cond, _q(u))[0].cpu().numpy()  # [CHUNK,2]
     return np.clip(a, -1.0, 1.0).astype(np.float32)
 
 # ⚠️ ogbench 不看 OGBENCH_DATA_DIR，它只看 dataset_dir 參數（預設 ~/.ogbench/data）。
@@ -1224,7 +1254,7 @@ def make_subgoal_policy(R, use_u):
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_n = u_dec(u_l)                       # [1, T_CAP, 2] 正規化座標
+                pts_n = u_dec(_q(u_l))                   # [1, T_CAP, 2] 正規化座標
                 pts_raw = pts_n * SD + MU                # ⭐ 換回原始座標 ⇒ 跟 DELTA_SUB 同單位
                 pts_raw = _anchor_pts(pts_raw, obs)
                 sub = arc_subgoal(pts_raw, DELTA_SUB)[0].cpu().numpy()
@@ -1245,7 +1275,7 @@ def make_subgoal_policy(R, use_u):
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_raw = _anchor_pts(u_dec(u_l) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(u_dec(_q(u_l)) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _cs = consensus_subgoal(pts_raw, SUB_CONF_LO * DELTA_SUB,
                                          SUB_CONF_HI * DELTA_SUB, ret_stats=True)
             SUB_DIAG["spread"].append(_cs["spread"])
@@ -1266,12 +1296,12 @@ def make_subgoal_policy(R, use_u):
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
             if _NS > SUB_M:                                     # 用 E 留最低的 SUB_M 份（越小越好）
                 with torch.no_grad():
-                    _eN = GEO(u_dec(u_l), s_n.expand(_NS, -1), g_n.expand(_NS, -1))
+                    _eN = GEO(u_dec(_q(u_l)), s_n.expand(_NS, -1), g_n.expand(_NS, -1))
                     _keep = torch.topk(-_eN, SUB_M).indices
                 SUB_DIAG["esel_e_gap"].append(float(_eN.max() - _eN.min()))
                 u_l, cond_l = u_l[_keep], cond_l[_keep]
             with torch.no_grad():
-                pts_raw = _anchor_pts(u_dec(u_l) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(u_dec(_q(u_l)) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _fc = farthest_confident_subgoal(
                 pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True,
                 # 🚨 錨定把頭端分散人工歸零 ⇒ tau 校準窗挪到中段（見 subgoal.py 註解）
@@ -1656,7 +1686,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0, U_SOURCE="flow"):
+               SUB_ESEL=0, U_SOURCE="flow", VQ=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1687,6 +1717,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_esel{SUB_ESEL}"
     if U_SOURCE != "flow":                           # ⭐ u 來源探針（9/2）
         x += f"_u{U_SOURCE[:3]}"
+    if VQ > 0:                                       # ⭐ VQ 錨定（9/2）
+        x += f"_vq{VQ}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1743,7 +1775,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
-                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE)
+                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -1778,6 +1810,7 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             # ⭐ decoder 一定要跟著存：E_geo（幾何 energy）靠它把 u 解成可微的座標點，
             #    ⛔ 沒存的話下一步要重訓 encoder 才拿得回配得上的 decoder。
             **({"u_dec": u_dec.state_dict()} if u_dec is not None else {}),
+            **({"vq": vq.state_dict(), "vq_cfg": {"V": VQ_V, "beta": VQ_BETA}} if vq is not None else {}),
             # ⭐ 權重 EMA 影子（LACOT_EMA_W>0 時）：eval 端 LACOT_LOAD_EMA=1 取用
             **({"ema": {n: m.state_dict() for n, m in _EMA_SHADOW.items()}} if _EMA_PAIRS else {}),
             # ⭐ 真獨立 GCBC 三模組（BC_OWN 時）
