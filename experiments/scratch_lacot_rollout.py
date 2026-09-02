@@ -115,6 +115,11 @@ SUB_M = int(os.environ.get("LACOT_SUB_M", 4))
 #    再做共識選路標。動機：ebfs 分辨器證明執行通道 1.000、失敗全在計畫內容；而主打臂測試時 E 未出場
 #    （GRAD_R=0、只看 M 份共識 ⇒「一致地錯」挑到遠錯點）。8/29 flat 家族 selection 0.600 > climb 0.520 為先例。
 SUB_ESEL = int(os.environ.get("LACOT_SUB_ESEL", 0))
+# ⭐ u 來源探針（LACOT_U_SOURCE、9/2 主人「好跑下去」）：flow（預設）＝原行為；oracle＝每次規劃把「當下→終點」
+#    在 E 佔據圖上的 BFS 正確路徑餵進 encoder 得到 u。⇒ 分辨「u 沒練好」是 encoder/decoder 那段歪了（oracle 也差）、
+#    還是 flow 生的 u 落錯地方（oracle 好、flow 差）。⛔ 只當診斷、不進配方（它偷看了圖）。
+U_SOURCE = os.environ.get("LACOT_U_SOURCE", "flow")
+assert U_SOURCE in ("flow", "oracle"), f"⛔ LACOT_U_SOURCE 只能是 flow/oracle，收到 {U_SOURCE}"
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
@@ -480,6 +485,28 @@ def _decoder_health():
 def etarget(traj, mask):
     Bc, Tc, _ = traj.shape
     return e_pooler(traj_enc(traj.reshape(Bc * Tc, 2)).reshape(Bc, Tc, 512), key_padding_mask=mask)
+
+
+def _oracle_u(obs_xy, goal_xy, n):
+    """探針：當下→終點的 BFS 正確路徑（teacher 同一張 E 佔據圖）→ 重採樣 T_CAP → encoder → u [n,K,D]；無路回 None。"""
+    assert _TCH is not None, "⛔ LACOT_U_SOURCE=oracle 需要 TEACHER_MIX>0（借 teacher 的 E 佔據圖）"
+    def _cell(xy):
+        z = (np.asarray(xy[:2], np.float64) - np.asarray(mu, np.float64)[:2]) / np.asarray(sd, np.float64)[:2]
+        c = np.clip(np.rint((z - _tlo) / _tcell_norm).astype(int), 0, _tshape - 1)
+        if not _tocc[tuple(c)]:                         # 牆格 ⇒ snap 到最近自由格
+            c = _tfree[int(((_tfree - c) ** 2).sum(1).argmin())]
+        return tuple(int(v) for v in c)
+    p = _tch_sp(_tocc, _cell(obs_xy), _cell(goal_xy))
+    if p is None or len(p) < 2:
+        return None
+    pts = np.array([_tch_cell_to_norm(c) for c in p], np.float64)
+    seg = np.linalg.norm(np.diff(pts, axis=0), axis=1); cum = np.concatenate([[0.0], np.cumsum(seg)])
+    tt = np.linspace(0.0, cum[-1], T_CAP)
+    traj = np.stack([np.interp(tt, cum, pts[:, k]) for k in (0, 1)], 1).astype(np.float32)
+    tr = torch.tensor(traj, device=device)[None]; mk = torch.zeros(1, T_CAP, dtype=torch.bool, device=device)
+    with torch.no_grad():
+        u = etarget(tr, mk)
+    return u.expand(n, -1, -1).contiguous()
 
 
 def encode_u(pts):
@@ -982,7 +1009,9 @@ def policy_chunk(obs, goal, R, use_u):
         a = ahead(cond, _foreign_u(R))[0].cpu().numpy()
         return np.clip(a, -1.0, 1.0).astype(np.float32)
     if use_u:
-        u = flow.sample(1, cond)
+        u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
+        if u is None:
+            u = flow.sample(1, cond)
         if GRAD_REFINE:
             # ⭐ 主人 8/22 的更新式取代 learned refine。
             # ⚠️ 這一層是 @torch.no_grad()，而 grad_refine 內部自己開 enable_grad
@@ -1229,7 +1258,9 @@ def make_subgoal_policy(R, use_u):
             # ⭐ 主人 8/29 統一版：fresh M 份（⛔ 不 warm，治計畫殘骸）→ 修 → 判信心。
             _NS = SUB_ESEL if SUB_ESEL > SUB_M else SUB_M       # ⭐ 9/2 E 選計畫：先抽 N 份
             cond_l = condvec(s_n, g_n).expand(_NS, -1)
-            u_l = flow.sample(_NS, cond_l).detach()
+            u_l = _oracle_u(obs, box["goal"], _NS) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
+            if u_l is None:
+                u_l = flow.sample(_NS, cond_l).detach()
             u_l = grad_refine(u_l, cond_l, u_dec, flow, GEO,
                               s_n.expand(_NS, -1), g_n.expand(_NS, -1),
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
@@ -1625,7 +1656,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0):
+               SUB_ESEL=0, U_SOURCE="flow"):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1654,6 +1685,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_bseed{BOOT_SEED}"
     if SUB_ESEL > 0:                                 # ⭐ conf2 前 E 選計畫（9/2）
         x += f"_esel{SUB_ESEL}"
+    if U_SOURCE != "flow":                           # ⭐ u 來源探針（9/2）
+        x += f"_u{U_SOURCE[:3]}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1710,7 +1743,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
-                    SUB_ESEL=SUB_ESEL)
+                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
