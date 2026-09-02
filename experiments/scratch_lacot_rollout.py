@@ -132,6 +132,9 @@ VQ_SOFT = int(os.environ.get("LACOT_VQ_SOFT", 0))
 # ⭐ flow 探針（LACOT_FLOW_PROBE=M、9/2 主人「好好看看問題出在哪」）：eval 載入時，對每個官方任務抽 M 份計畫、解碼，
 #    逐份量「離 BFS 正確路徑的距離（Chamfer 一邊）／穿牆深度／末點距終點」⇒ 對路率與 M 份分散度。只診斷、不改任何行為。
 FLOW_PROBE = int(os.environ.get("LACOT_FLOW_PROBE", 0))
+# ⭐ 路標吸附（LACOT_SUB_SNAP=1、9/2 晚）：conf/conf2/latent 挑出的路標，吸附到 3×3 鄰域內「淨空最大」的自由 E 格心。
+#    假說：計畫路線對（flow 探針進度 .8~.95）、路標對就全過（ebfs 1.0）、死在牆角與路口 ⇒ 差在路標貼牆／太遠。0＝行為不變。
+SUB_SNAP = int(os.environ.get("LACOT_SUB_SNAP", 0))
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
@@ -1244,7 +1247,7 @@ if SUBGOAL == "bfs":
     print(f"  BFS subgoal：格寬 {_CELL_W:.2f}，"
           f"subgoal 隔 {max(1, int(round(DELTA_SUB / _CELL_W)))} 格", flush=True)
 
-if SUBGOAL == "ebfs":
+if SUBGOAL == "ebfs" or SUB_SNAP:                     # ⭐ 9/2：SUB_SNAP 也要 E 格 helper（只有定義與一行 print）
     # ⭐ E 圖搜索供點（主人 2026-08-30「energy 自己 reason 串接」）：subgoal 由
     #    【資料重建佔據圖】上的 BFS 生 —— 跟 oracle 格（SUBGOAL=bfs）同一套挑點邏輯，
     #    差別只在圖：bfs 用 env.maze_map（真圖＝privileged、只准當診斷），
@@ -1252,6 +1255,8 @@ if SUBGOAL == "ebfs":
     #    可行性 gate（8/30 探針）：medium/large tier2 各 100/100 連通、端點 snap 0、
     #    E步/真格比值穩定（3.1／5.2）⇒ 4 鄰就夠。
     _EOCC = (GEO.dist[0, 0].cpu().numpy() == 0.0)      # 自由空間＝資料走過的格
+    from scipy.ndimage import distance_transform_edt as _edt
+    _E_CLEAR = _edt(_EOCC)                              # ⭐ 每個自由格離最近非自由格幾格（淨空；9/2 路標吸附用）
     _EFREE = np.argwhere(_EOCC)
     _E_LO = np.asarray(GEO.lo, np.float64)
     _E_SPAN = np.asarray(GEO.hi - GEO.lo, np.float64)
@@ -1415,6 +1420,19 @@ def make_subgoal_policy(R, use_u):
         else:
             raise SystemExit(f"⛔ _plan 不認得 SUBGOAL={SUBGOAL}（新模式要顯式接，⛔ 不准靜默掉進別人的分支）")
         sub = np.asarray(sub, np.float64)
+        if SUB_SNAP and SUBGOAL in ("conf", "conf2", "latent"):     # ⭐ 9/2 路標吸附
+            c0 = np.asarray(_e_xy_to_cell(sub), np.int64)
+            best, bestv = c0, -1.0
+            for di in (-1, 0, 1):
+                for dj in (-1, 0, 1):
+                    c = c0 + np.array([di, dj])
+                    if (c < 0).any() or (c >= _E_SHAPE).any() or not _EOCC[tuple(c)]:
+                        continue
+                    v = float(_E_CLEAR[tuple(c)]) - 0.01 * (abs(di) + abs(dj))   # 淨空優先、同淨空取近
+                    if v > bestv:
+                        best, bestv = c, v
+            SUB_DIAG["n_snap"] = SUB_DIAG.get("n_snap", 0) + int(not np.array_equal(best, c0))
+            sub = np.asarray(_e_cell_to_xy(tuple(int(x) for x in best)), np.float64)
         _ds = float(np.linalg.norm(sub - np.asarray(obs[:2])))
         SUB_DIAG["dsub"].append(_ds)
         if _ds > 2 * DELTA_SUB:                          # subgoal 遠到不像「一小段」
@@ -1790,7 +1808,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0):
+               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1825,6 +1843,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_vq{VQ}" + ("s" if VQ_SOFT else "")
     if STEPS1 != 1500:                               # ⭐ stage 1 步數（9/2 embedding 先做好；⛔ 不進檔名會蓋 V8 同 seed）
         x += f"_s1{STEPS1}"
+    if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
+        x += "_snap"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1881,7 +1901,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
-                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT)
+                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
