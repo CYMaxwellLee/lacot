@@ -135,6 +135,12 @@ FLOW_PROBE = int(os.environ.get("LACOT_FLOW_PROBE", 0))
 # ⭐ 路標吸附（LACOT_SUB_SNAP=1、9/2 晚）：conf/conf2/latent 挑出的路標，吸附到 3×3 鄰域內「淨空最大」的自由 E 格心。
 #    假說：計畫路線對（flow 探針進度 .8~.95）、路標對就全過（ebfs 1.0）、死在牆角與路口 ⇒ 差在路標貼牆／太遠。0＝行為不變。
 SUB_SNAP = int(os.environ.get("LACOT_SUB_SNAP", 0))
+# ⭐ 單集追蹤（LACOT_TRACE=task、9/2 晚）：該 task 的第一集，印每次重規劃的位置／路標／距離／路標 E 格與淨空／計畫開頭，
+#    以及每 200 步的位置。只印、不改行為。0＝關。
+TRACE_TASK = int(os.environ.get("LACOT_TRACE", 0))
+# ⭐ 開頭守門（LACOT_SUB_HEADGUARD=τ 原始單位、9/2 晚追蹤後）：conf2 解出的計畫第 0 點離現在位置 > τ ⇒ 這份計畫不可信
+#    （flow 沒學會「開頭在 s」）⇒ 不准直達、本次重規劃改用 E 圖 BFS 路標（ebfs 同套、資料重建圖、可部署）。0＝關。
+SUB_HEADGUARD = float(os.environ.get("LACOT_SUB_HEADGUARD", 0.0))
 SUB_CONF_LO = float(os.environ.get("LACOT_SUB_CONF_LO", 0.5))
 SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
@@ -1247,7 +1253,7 @@ if SUBGOAL == "bfs":
     print(f"  BFS subgoal：格寬 {_CELL_W:.2f}，"
           f"subgoal 隔 {max(1, int(round(DELTA_SUB / _CELL_W)))} 格", flush=True)
 
-if SUBGOAL == "ebfs" or SUB_SNAP:                     # ⭐ 9/2：SUB_SNAP 也要 E 格 helper（只有定義與一行 print）
+if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0:   # ⭐ 9/2：SNAP／HEADGUARD 也要 E 格 helper（只有定義與一行 print）
     # ⭐ E 圖搜索供點（主人 2026-08-30「energy 自己 reason 串接」）：subgoal 由
     #    【資料重建佔據圖】上的 BFS 生 —— 跟 oracle 格（SUBGOAL=bfs）同一套挑點邏輯，
     #    差別只在圖：bfs 用 env.maze_map（真圖＝privileged、只准當診斷），
@@ -1327,6 +1333,13 @@ def make_subgoal_policy(R, use_u):
         box["goal"] = np.asarray(goal[:2], np.float64)
         box["u_long"] = None
         _reset_grad_cache()
+        box.setdefault("ep_count", {})
+        box["ep_count"][task] = box["ep_count"].get(task, 0) + 1
+        box["trace"] = bool(TRACE_TASK) and task == TRACE_TASK and box["ep_count"][task] == 1
+        box["trace_t"] = 0
+        box["hg_sticky"] = False
+        if box["trace"]:
+            print(f"  🔎 TRACE task {task}: start ({obs[0]:.2f},{obs[1]:.2f}) goal ({goal[0]:.2f},{goal[1]:.2f})", flush=True)
 
     def _plan(obs):
         s_n = normstate(obs); g_n = normstate(box["goal"])
@@ -1404,6 +1417,19 @@ def make_subgoal_policy(R, use_u):
             _d0 = float(np.linalg.norm(
                 pts_raw[:, 0].mean(0).cpu().numpy() - np.asarray(obs[:2])))
             SUB_DIAG["d0"].append(_d0)
+            if SUB_HEADGUARD > 0:                               # ⭐ 9/2 開頭守門（每份計畫各自的偏移取中位；黏住整集）
+                _d0s = np.linalg.norm(pts_raw[:, 0].cpu().numpy() - np.asarray(obs[:2]), axis=1)
+                _d0m = float(np.median(_d0s))
+                _near_goal = float(np.linalg.norm(np.asarray(obs[:2]) - box["goal"])) <= DELTA_SUB
+                if _d0m > SUB_HEADGUARD:
+                    box["hg_sticky"] = True
+                if box.get("hg_sticky") and not _near_goal:     # 計畫不從這裡出發 ⇒ 這一集改走 E 圖搜索
+                    SUB_DIAG["n_headguard"] = SUB_DIAG.get("n_headguard", 0) + 1
+                    _cg = bfs_subgoal(env, _e_xy_to_cell(obs), _e_xy_to_cell(box["goal"]),
+                                      delta_cells=_E_DELTA_CELLS, bfs_from=_e_bfs_from)
+                    sub = _e_cell_to_xy(_cg) if _cg is not None else box["goal"]
+                    if box.get("trace"):
+                        print(f"  🔎 headguard: d0 中位 {_d0m:.2f}（門檻 {SUB_HEADGUARD:g}，黏住）⇒ E 圖 BFS 路標 ({sub[0]:.2f},{sub[1]:.2f})", flush=True)
             if _d0 > 0.5 * DELTA_SUB:
                 SUB_DIAG["n_bad_d0"] += 1
         elif SUBGOAL == "ebfs":
@@ -1437,11 +1463,26 @@ def make_subgoal_policy(R, use_u):
         SUB_DIAG["dsub"].append(_ds)
         if _ds > 2 * DELTA_SUB:                          # subgoal 遠到不像「一小段」
             SUB_DIAG["n_bad_dsub"] += 1
+        if box.get("trace"):
+            _cell_txt = ""
+            if SUB_SNAP or SUBGOAL == "ebfs":
+                _c = _e_xy_to_cell(sub); _cell_txt = f" E格{tuple(int(x) for x in _c)} 淨空{float(_E_CLEAR[tuple(_c)]):.1f}"
+            _head = ""
+            try:
+                _pr = pts_raw[0, :6].cpu().numpy()
+                _head = " 計畫頭 " + " ".join(f"({x:.1f},{y:.1f})" for x, y in _pr)
+            except Exception:
+                pass
+            print(f"  🔎 replan@t={box.get('trace_t', 0)} 位置 ({obs[0]:.2f},{obs[1]:.2f}) → 路標 ({sub[0]:.2f},{sub[1]:.2f}) 距 {_ds:.2f}{_cell_txt}{_head}", flush=True)
         return sub
 
     def policy(obs, goal):
         if box["goal"] is None:                          # ⚠️ 沒接 on_start 的呼叫端也要能跑
             box["goal"] = np.asarray(goal[:2], np.float64)
+        if box.get("trace"):
+            box["trace_t"] = box.get("trace_t", 0) + 1
+            if box["trace_t"] % 200 == 0:
+                print(f"  🔎 t={box['trace_t']} 位置 ({obs[0]:.2f},{obs[1]:.2f}) 現路標 {None if planner.sub is None else tuple(round(float(v), 2) for v in planner.sub)}", flush=True)
         # ⭐ 病二快篩：分段模式的終局判斷用【最終目標】（planner.sub 是中繼點，⛔ 不能拿來判）
         if FINISH_R > 0.0 and use_u is True and float(
                 np.linalg.norm(np.asarray(obs[:2], np.float64) - box["goal"])) < FINISH_R:
@@ -1479,7 +1520,7 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
             #    ⚠️ _GRAD_CACHE 定義處的註解自己就寫著「⛔ 每集一定要重置」。
             _reset_grad_cache()
             if on_start is not None:           # ⭐ 分段 policy 有狀態 ⇒ 每集重置（同 dev 那條）
-                on_start(obs, goal, None)
+                on_start(obs, goal, task)                 # ⭐ 9/2：傳真 task（單集追蹤用；on_start 其餘不吃它）
             _reseed_shuf(1000 * task + sd_)    # #16：shuf arm 也要每集釘死 ⇒ 各 arm 配對
             while steps < MAXH and not success:
                 for a in (policy_fn(obs, goal) if policy_fn is not None
@@ -1808,7 +1849,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0):
+               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1845,6 +1886,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_s1{STEPS1}"
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
+    if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
+        x += f"_hg{SUB_HEADGUARD:g}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1901,7 +1944,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
-                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP)
+                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP,
+                    SUB_HEADGUARD=SUB_HEADGUARD)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
