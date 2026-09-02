@@ -315,3 +315,11 @@ s26      .492    .856     {0,15,0,10,11}
 （其餘六顆＋hard v4 八顆 9/3 早上收；collect_dstart.py）
 ```
 - ⭐ 純訓練側、無搜索、無守門：最爛顆 .49→.83；殘留失敗集中 t2 走廊。⇒ 「頭在 s」是對的靶。
+
+## ⑲ 夜間：hard 綁定 v4 判負、替代臂（22:3x）[實測]
+
+- v4（起點 token 餵 decoder＋位移形式）正式 eval：s21 .200、s22 .216、s25 .000；往返 mse .10~.16（V8 .03~.05）；訓練 recon 1500 步停 .05（V8 .01）。
+  ⇒ ⛔ 四版結構綁死皆不對（v1~v3 學不起來、v4 學得動但解碼品質差）。取消 51 支 hard 相關 job。明天重想（可能：decoder 直接把 s 當 query 的偏置／
+  在 u 上加 s 的條件而非 decoder token／或只用 soft＋抽籤治理）。
+- 替代臂：C' soft ckpt×HG 8 eval（`dssoft_HG/`）、E' s28~35 soft 8+8（`heldout2_soft/`）、F' medium 原配方 8+8（`medium_base/`）。
+- soft 六顆到 22:1x：平均 .725（V8 .607）、sd .189（.120）；s24 .724→.368。⇒ 頭在 s 有效但 stage 2 重抽籤（病二獨立）。
