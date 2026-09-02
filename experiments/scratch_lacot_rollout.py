@@ -269,7 +269,8 @@ def _teacher_traj(rng, n):
         for k in (0, 1):
             trajs[i, :, k] = np.interp(tt, cum, p[:, k])
     if n_b > 0:
-        idx = rng.choice(len(_BOOT[0]), size=n_b, p=_BOOT[1])
+        _r = _BOOT_RNG if _BOOT_RNG is not None else rng      # ⭐ 9/2：BOOT_SEED 設了就走獨立流
+        idx = _r.choice(len(_BOOT[0]), size=n_b, p=_BOOT[1])
         trajs[n - n_b:] = _BOOT[0][idx]
     return trajs.astype(np.float32)
 
@@ -388,6 +389,10 @@ EMA_M = float(os.environ.get("LACOT_EMA_M", 0.996))
 #    ≥0＝資料抽樣流（batch 順序）改用此值，model init／torch 訓練噪聲仍吃 SEED。
 #    ⇒ 2×2 交叉可拆「壞初始化 vs 壞資料順序」誰是爛 seed 元兇。
 DATA_SEED = int(os.environ.get("LACOT_DATA_SEED", -1))
+# ⭐ 自舉抽樣獨立 rng（LACOT_BOOT_SEED、9/2 dz2 重現後）：-1（預設）＝boot 樣本跟主 rng 同一條流、行為不變；
+#    ≥0＝boot 集「抽到哪些條」改用此 seed，主資料順序仍吃 DATA_SEED/SEED。
+#    ⇒ 可拆「主資料順序 vs boot 抽樣」誰是 s2 型方差的來源（9/2 四顆 0.35~0.90 的病根）。
+BOOT_SEED = int(os.environ.get("LACOT_BOOT_SEED", -1))
 # ⭐ lr 縮放診斷（LACOT_LR_SCALE、9/1）：全部 optimizer 的 lr 乘此係數。1.0＝行為不變。
 LR_SCALE = float(os.environ.get("LACOT_LR_SCALE", 1.0))
 # ⭐ 訓練期高頻診斷（LACOT_DIAG_TRAIN=1、9/1）：stage1 前 300 步每 10 步印
@@ -403,8 +408,10 @@ def _apply_lr_scale(opt):
 
 
 torch.manual_seed(SEED); rng = np.random.default_rng(SEED if DATA_SEED < 0 else DATA_SEED)
+_BOOT_RNG = np.random.default_rng(BOOT_SEED) if BOOT_SEED >= 0 else None   # ⭐ 9/2 boot 抽樣獨立流
 print(f"設定：seed={SEED} cons={CONS} ema_m={EMA_M} K={K} COND={COND}"
       + (f" data_seed={DATA_SEED}" if DATA_SEED >= 0 else "")
+      + (f" boot_seed={BOOT_SEED}" if BOOT_SEED >= 0 else "")
       + (f" lr_scale={LR_SCALE:g}" if LR_SCALE != 1.0 else ""), flush=True)
 traj_enc = sota_mlp(2, 512, 512).to(device); e_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
 sg_c = sota_mlp(2, 512, 512).to(device); q_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
@@ -1606,7 +1613,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                W_LEN=0.3, FINISH_R=0.0, SUB_M=4, FINISH_MODE="bc", SUB_POLICY="",
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
-               WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0):
+               WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1631,6 +1638,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += "_rs"
     if DATA_SEED >= 0:                               # ⭐ seed 拆分 2×2（9/1 病因診斷）
         x += f"_dseed{DATA_SEED}"
+    if BOOT_SEED >= 0:                               # ⭐ boot 抽樣獨立流（9/2 方差溯源）
+        x += f"_bseed{BOOT_SEED}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1686,7 +1695,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     DEC_ANCHOR=DEC_ANCHOR, TEACHER_MIX=TEACHER_MIX, SUB_MAX_ARC=SUB_MAX_ARC,
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
-                    DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE)
+                    DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
