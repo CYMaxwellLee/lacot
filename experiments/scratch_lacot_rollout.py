@@ -493,9 +493,9 @@ def etarget(traj, mask):
     return e_pooler(traj_enc(traj.reshape(Bc * Tc, 2)).reshape(Bc, Tc, 512), key_padding_mask=mask)
 
 
-def _oracle_u(obs_xy, goal_xy, n):
-    """探針：當下→終點的 BFS 正確路徑（teacher 同一張 E 佔據圖）→ 重採樣 T_CAP → encoder → u [n,K,D]；無路回 None。"""
-    assert _TCH is not None, "⛔ LACOT_U_SOURCE=oracle 需要 TEACHER_MIX>0（借 teacher 的 E 佔據圖）"
+def _route_traj(obs_xy, goal_xy):
+    """obs→goal 在 E 佔據圖上的 BFS 正確路徑（teacher 同一張圖）→ 重採樣 T_CAP → [1,T_CAP,2] 正規化；無路回 None。"""
+    assert _TCH is not None, "⛔ 需要 TEACHER_MIX>0（借 teacher 的 E 佔據圖）"
     def _cell(xy):
         z = (np.asarray(xy[:2], np.float64) - np.asarray(mu, np.float64)[:2]) / np.asarray(sd, np.float64)[:2]
         c = np.clip(np.rint((z - _tlo) / _tcell_norm).astype(int), 0, _tshape - 1)
@@ -509,10 +509,36 @@ def _oracle_u(obs_xy, goal_xy, n):
     seg = np.linalg.norm(np.diff(pts, axis=0), axis=1); cum = np.concatenate([[0.0], np.cumsum(seg)])
     tt = np.linspace(0.0, cum[-1], T_CAP)
     traj = np.stack([np.interp(tt, cum, pts[:, k]) for k in (0, 1)], 1).astype(np.float32)
-    tr = torch.tensor(traj, device=device)[None]; mk = torch.zeros(1, T_CAP, dtype=torch.bool, device=device)
+    return torch.tensor(traj, device=device)[None]
+
+
+def _oracle_u(obs_xy, goal_xy, n):
+    """探針：正確路徑 → encoder → u [n,K,D]；無路回 None。"""
+    tr = _route_traj(obs_xy, goal_xy)
+    if tr is None:
+        return None
     with torch.no_grad():
-        u = etarget(tr, mk)
+        u = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
     return u.expand(n, -1, -1).contiguous()
+
+
+def roundtrip_gate(tasks_sg):
+    """⭐ embedding 軟尺（9/2 主人「先確認 embedding 好」）：任務路徑 → encoder →（VQ snap）→ decoder，
+    量往返 mse、解出路徑的穿牆深度（E 的 wall 項）、末點離終點距離。不跑模擬器、每顆 ckpt 幾毫秒。
+    tasks_sg: [(start_xy, goal_xy), ...] 原始座標。回 list of dict。"""
+    out = []
+    for (sx, gx) in tasks_sg:
+        tr = _route_traj(sx, gx)
+        if tr is None or u_dec is None:
+            out.append(None); continue
+        with torch.no_grad():
+            u = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
+            pts = u_dec(_q(u))                                          # [1,T_CAP,2] 正規化
+            mse = float((pts - tr).pow(2).mean())
+            wall = float(GEO.wall_depth(pts).mean()) if "GEO" in globals() and GEO is not None else float("nan")
+            gdist = float((pts[0, -1] - tr[0, -1]).norm())
+        out.append(dict(mse=mse, wall=wall, gdist=gdist))
+    return out
 
 
 def encode_u(pts):
@@ -561,7 +587,8 @@ def _warm_lr(opt, stp):
 print(f"stage 1 e_target 目標={ENC_OBJ} ...  w_var={W_VAR} w_cov={W_COV}"
       + (f" w_ictr={W_ICTR} sigma={ICTR_SIGMA}" if ENC_OBJ == "recon_ictr" else "")
       + (f"  warmup={WARMUP}" if WARMUP else ""), flush=True)
-_S1 = 0 if LOAD_CKPT else int(os.environ.get("LACOT_STEPS1", 1500))
+STEPS1 = int(os.environ.get("LACOT_STEPS1", 1500))
+_S1 = 0 if LOAD_CKPT else STEPS1
 _ed_hist, logits = [], None
 for stp in range(_S1):
     traj, mask, s, g, _ = make_batch(rng, teacher_mix=TEACHER_MIX)   # stage1 不用 act ⇒ teacher 全參與
@@ -1402,6 +1429,17 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
     print(f"  {tag}: success {succ}/{ep} = {succ/ep:.3f}", flush=True)
     return succ / ep
 
+# ⭐ embedding 軟尺（9/2 主人「先確認 embedding 好」）：五個官方任務各做一次「任務路徑→enc→(VQ)→dec」往返，
+#    印 mse／解出路徑的穿牆深度／末點距終點；不跑模擬器。載入 ckpt 評測時才算（訓練跑本身不算）。
+RT_GATE = None
+if LOAD_CKPT and _TCH is not None and u_dec is not None and GEO is not None:
+    _rt_sg = []
+    for _t in range(1, N_TASKS + 1):
+        _o, _i = env.reset(seed=1000 * _t, options={"task_id": _t, "render_goal": False})
+        _rt_sg.append((np.asarray(_o[:2], np.float64), np.asarray(_i["goal"][:2], np.float64)))
+    RT_GATE = roundtrip_gate(_rt_sg)
+    print("  ⭐ embedding 往返尺（任務路徑→enc→dec；mse/穿牆/末點距）：" + "  ".join(
+        (f"t{k+1}:{r['mse']:.4f}/{r['wall']:.3f}/{r['gdist']:.2f}" if r else f"t{k+1}:—") for k, r in enumerate(RT_GATE)), flush=True)
 print(f"\n==== SUCCESS RATE (env={ENV_NAME}, {N_TASKS} tasks x {SEEDS} seeds, MAXH {MAXH}) ====", flush=True)
 out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chunk=CHUNK, steps2=STEPS2,
            tcap=T_CAP, tcap_requested=T_CAP_REQ, max_train_T=MAX_TRAIN_T, goal_sampling="uniform-official",
@@ -1416,6 +1454,7 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK, dec_anchor=DEC_ANCHOR,
            teacher_mix=TEACHER_MIX,
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
+out["rt_gate"] = RT_GATE
 # ⚠️ rollout 是整支腳本最貴的部分，而成本跟 CHUNK 成反比：CHUNK=1 每步都要重新決策，
 #    比 CHUNK=4 多四倍的 policy 呼叫。⇒ 要跑 chunk 對照時用 LACOT_EVAL_RS 只留需要的輪數，
 #    不然單格會超過叢集的時間上限（實測：CHUNK=1 一個變體就要 ~26 分）。
@@ -1686,7 +1725,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0, U_SOURCE="flow", VQ=0):
+               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1719,6 +1758,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_u{U_SOURCE[:3]}"
     if VQ > 0:                                       # ⭐ VQ 錨定（9/2）
         x += f"_vq{VQ}"
+    if STEPS1 != 1500:                               # ⭐ stage 1 步數（9/2 embedding 先做好；⛔ 不進檔名會蓋 V8 同 seed）
+        x += f"_s1{STEPS1}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
         x += f"_lrs{LR_SCALE:g}"
     if not LEARNED_REFINE:
@@ -1775,7 +1816,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     BOOT_TAG=BOOT_TAG, EMA_W=EMA_W, LOAD_EMA=LOAD_EMA, BC_OWN=BC_OWN,
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
-                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V)
+                    SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
