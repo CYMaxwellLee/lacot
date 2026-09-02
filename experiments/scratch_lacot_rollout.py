@@ -616,12 +616,15 @@ def encode_u(pts):
 # ⭐ ENC_OBJ=recon* 要一顆 decoder：解得回 128 個座標點，才代表 u 真的裝了那條路。
 #    ⛔ 它不是暫時的鷹架 —— E_geo（幾何 energy）也靠同一顆把 u 解成可微的座標點。
 u_dec = None
+s_embed = None
 if ENC_OBJ.startswith("recon"):
     from lacot.traj_decoder import TrajDecoder
     u_dec = TrajDecoder(D_MODEL, T_CAP).to(device)
+    s_embed = nn.Linear(2, D_MODEL).to(device) if DEC_START == "hard" else None   # ⭐ 起點 token（hard 綁定；進 opt1 與 ckpt）
     u_dec.check_p = 0.01
     # ⛔ sg_c / q_pooler 不進 optimizer —— (s,g)↔τ InfoNCE 整條移除，⛔ 不是降權重。
-    opt1 = _apply_lr_scale(torch.optim.Adam([p for m in (traj_enc, e_pooler, u_dec) for p in m.parameters()], lr=1e-3))
+    opt1 = _apply_lr_scale(torch.optim.Adam([p for m in (traj_enc, e_pooler, u_dec) for p in m.parameters()]
+                                            + ([p for p in s_embed.parameters()] if s_embed is not None else []), lr=1e-3))
 elif ENC_OBJ != "sg_infonce":
     raise ValueError(f"⛔ LACOT_ENC_OBJ 只能是 sg_infonce/recon/recon_ictr，收到 {ENC_OBJ}")
 
@@ -640,12 +643,18 @@ def _q(u):
 def _dec(u, s_n):
     """u → 座標序列（正規化）。DEC_START=hard 時整條平移使第 0 點＝s_n（[1,2] 或 [B,2]）；其餘＝u_dec(u)。
     ⛔ 所有解碼點都走這裡（訓練 recon、boot 出題、select、投影、latent/conf/conf2、往返尺、flow 探針）——不要另寫。"""
-    pts = u_dec(u)
-    if DEC_START == "hard":
-        s2 = torch.as_tensor(s_n, dtype=pts.dtype, device=pts.device).reshape(-1, 2)
-        if s2.shape[0] == 1 and pts.shape[0] != 1:
-            s2 = s2.expand(pts.shape[0], -1)
-        pts = pts - pts[:, :1] + s2[:, None, :]
+    if DEC_START != "hard":
+        return u_dec(u)
+    s2 = torch.as_tensor(s_n, dtype=u.dtype, device=u.device).reshape(-1, 2)
+    if s2.shape[0] == 1 and u.shape[0] != 1:
+        s2 = s2.expand(u.shape[0], -1)
+    ctx = torch.cat([u, s_embed(s2)[:, None, :]], 1)   # ⭐ 起點當第 K+1 個 token 餵 decoder（9/2 晚第四版）
+    pts = u_dec(ctx)
+    if True:
+        # ⭐ 位移形式（9/2 晚第三版）：第 0 點＝起點，decoder 的第 1..T-1 個輸出＝相對起點的位移。
+        #    ⛔ 前兩版「整條減掉自己的第 0 點再加 s」都卡在 recon 0.3~0.46（V8 0.04）：不 detach 時參考點吃到 127 點誤差總和，
+        #    detach 後參考點又變成會漂的移動靶。位移形式沒有參考點耦合，是原目標的線性重參數化。
+        pts = torch.cat([s2[:, None, :], s2[:, None, :] + pts[:, 1:]], 1)
     return pts
 
 # ⭐ 起步暖身（LACOT_WARMUP=N）：兩段訓練各自的前 N 步 lr 線性 0→base。病理依據 2026-09-01
@@ -917,6 +926,11 @@ if LOAD_CKPT:
             "⛔ ENC_OBJ=recon* 但 ckpt 裡沒有 u_dec ⇒ 那顆 ckpt 是舊版存的，"
             " 沒有 decoder 就沒有 E_geo 的眼睛")
         u_dec.load_state_dict(_ck["u_dec"])
+        if "s_embed" in _ck:                              # ⭐ hard 綁定 ckpt：起點 token 的嵌入層
+            assert DEC_START == "hard", "⛔ 這顆 ckpt 是 DEC_START=hard 訓的，eval 要設 LACOT_DEC_START=hard"
+            s_embed.load_state_dict(_ck["s_embed"]); s_embed.eval()
+        else:
+            assert DEC_START != "hard", "⛔ LACOT_DEC_START=hard 但這顆 ckpt 沒有 s_embed（訓練時沒開 hard）"
         if "vq" in _ck:                                   # ⭐ VQ ckpt：eval 端自動帶起 codebook
             if vq is None:
                 from lacot.vq import TokenVQ
@@ -2006,6 +2020,7 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             #    ⛔ 沒存的話下一步要重訓 encoder 才拿得回配得上的 decoder。
             **({"u_dec": u_dec.state_dict()} if u_dec is not None else {}),
             **({"vq": vq.state_dict(), "vq_cfg": {"V": VQ_V, "beta": VQ_BETA, "soft": VQ_SOFT}} if vq is not None else {}),
+            **({"s_embed": s_embed.state_dict(), "dec_start": DEC_START} if s_embed is not None else {}),
             # ⭐ 權重 EMA 影子（LACOT_EMA_W>0 時）：eval 端 LACOT_LOAD_EMA=1 取用
             **({"ema": {n: m.state_dict() for n, m in _EMA_SHADOW.items()}} if _EMA_PAIRS else {}),
             # ⭐ 真獨立 GCBC 三模組（BC_OWN 時）
