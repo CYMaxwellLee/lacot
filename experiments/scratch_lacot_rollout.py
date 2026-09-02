@@ -192,6 +192,7 @@ _FIN_COUNT = [0]   # ⭐ 終局接管的觸發次數 —— ⛔ 開關條件寫�
 #      是這個 repo 從 8/23 就有的浪費 —— 而且它讓「補一個對照」的成本高到我們不想補。
 #   ⚠️ 載入時會逐項比對 ckpt 的 cfg，對不上就停 —— ⛔ 形狀對得上不代表是同一個模型。
 LOAD_CKPT = os.environ.get("LACOT_LOAD_CKPT", "")
+S1_FROM = os.environ.get("LACOT_S1_FROM", "")     # ⭐ 凍同一個 stage 1（9/2 夜）：從這個 ckpt 載 stage 1 模組、跳過 stage 1 訓練；SEED 只抽 stage 2
 # ⭐ GRAD_REFINE ── 用主人的梯度爬坡取代 learned refine（⛔ 跟 SUBGOAL 正交，可單獨開）。
 #   ⇒ 三種部署因此可以同輪對打，⛔ 而且它們共用同一顆 ckpt、同一批題、同一條噪聲流：
 #       flat-grad  GRAD_REFINE=1 SUBGOAL=""       一次規劃整條路（主人問的那個做法）
@@ -677,7 +678,23 @@ print(f"stage 1 e_target 目標={ENC_OBJ} ...  w_var={W_VAR} w_cov={W_COV}"
       + (f" w_ictr={W_ICTR} sigma={ICTR_SIGMA}" if ENC_OBJ == "recon_ictr" else "")
       + (f"  warmup={WARMUP}" if WARMUP else ""), flush=True)
 STEPS1 = int(os.environ.get("LACOT_STEPS1", 1500))
-_S1 = 0 if LOAD_CKPT else STEPS1
+_S1 = 0 if (LOAD_CKPT or S1_FROM) else STEPS1
+if S1_FROM and not LOAD_CKPT:
+    # ⭐ 方言分辨實驗：stage 1 從別的 run 載入並凍住，之後 torch RNG 重播 SEED ⇒ 不同 SEED 只差 stage 2 的 init／資料序。
+    _sk = torch.load(S1_FROM, map_location=device, weights_only=False)
+    traj_enc.load_state_dict(_sk["traj_enc"]); e_pooler.load_state_dict(_sk["e_pooler"])
+    if u_dec is not None:
+        assert "u_dec" in _sk, f"⛔ S1_FROM ckpt 沒有 u_dec：{S1_FROM}"
+        u_dec.load_state_dict(_sk["u_dec"])
+    if s_embed is not None:
+        assert "s_embed" in _sk, "⛔ S1_FROM ckpt 沒有 s_embed（DEC_START=hard 與 ckpt 不一致）"
+        s_embed.load_state_dict(_sk["s_embed"])
+    if vq is not None:
+        assert "vq" in _sk, "⛔ S1_FROM ckpt 沒有 vq（LACOT_VQ 與 ckpt 不一致）"
+        vq.load_state_dict(_sk["vq"])
+    del _sk
+    torch.manual_seed(SEED)
+    print(f"  ⭐ S1_FROM={S1_FROM}：stage 1 載入並跳過訓練；torch RNG 重播 SEED={SEED}（只抽 stage 2）", flush=True)
 _ed_hist, logits = [], None
 for stp in range(_S1):
     traj, mask, s, g, _ = make_batch(rng, teacher_mix=TEACHER_MIX)   # stage1 不用 act ⇒ teacher 全參與
@@ -1886,7 +1903,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                GRAD_MODE="climb", SEL_N=8, GRAD_PROJ=0, DEC_ANCHOR=0, TEACHER_MIX=0.0,
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
-               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START=""):
+               SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START="",
+               S1_FROM=""):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1921,6 +1939,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_vq{VQ}" + ("s" if VQ_SOFT else "")
     if STEPS1 != 1500:                               # ⭐ stage 1 步數（9/2 embedding 先做好；⛔ 不進檔名會蓋 V8 同 seed）
         x += f"_s1{STEPS1}"
+    if S1_FROM:                                      # ⭐ 凍同一個 stage 1（9/2 夜；⛔ 不進檔名會蓋同 seed 原 run）
+        x += "_s1from"
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
@@ -1984,7 +2004,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
                     SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP,
-                    SUB_HEADGUARD=SUB_HEADGUARD, DEC_START=DEC_START)
+                    SUB_HEADGUARD=SUB_HEADGUARD, DEC_START=DEC_START, S1_FROM=S1_FROM)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
