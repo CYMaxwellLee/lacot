@@ -27,9 +27,9 @@ sub() { local node=$1 name=$2 deps=$3; shift 3; local depflag=""
     --job-name=$name -o slurm/logs/%x-%j.out $depflag \
     --wrap "cd ~/Projects/lacot && env $*" | awk '{print $4}'; }
 
-NODES=(lady moana pocahontas jasmine); i=0
+NODES=(lady moana pocahontas); i=0   # jasmine 9/2 被 36h job 佔滿、拿掉
 run_pair() {  # $1=name $2=DATA_SEED $3=BOOT_SEED
-  local name=$1 D=$2 B=$3 NODE=${NODES[$((i%4))]}; i=$((i+1))
+  local name=$1 D=$2 B=$3 NODE=${NODES[$((i%3))]}; i=$((i+1))
   local OUTD=results/night_0902/varsrc_${name}; mkdir -p "$OUTD"
   local J=$(sub $NODE $name - "OGBENCH_DATA_DIR=$ADATA $TRAIN_BASE LACOT_ENV=$LENV LACOT_K=8 LACOT_SEED=2 LACOT_DATA_SEED=$D LACOT_BOOT_SEED=$B LACOT_EMA_W=0.999 LACOT_BOOT_DATA=$BOOT LACOT_BOOT_TAG=dz2 $APY -u experiments/scratch_lacot_rollout.py")
   local CK=results/${PRE}_eorecon_ictr_tch0.5_btdz2_emw0.999_dseed${D}_bseed${B}_norf_cd0.1_bci_s2.pt
