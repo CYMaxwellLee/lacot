@@ -22,7 +22,7 @@ sub() { local node=$1 name=$2 deps=$3; shift 3; local depflag=""
     --job-name=$name -o slurm/logs/%x-%j.out $depflag \
     --wrap "cd ~/Projects/lacot && env $*" | awk '{print $4}'; }
 NODES=(lady moana pocahontas); i=0
-for MODE in hard soft; do
+for MODE in ${MODES:-hard soft}; do
   OUTD=results/night_0902/dstart_$MODE; mkdir -p "$OUTD"; A=$([ $MODE = hard ] && echo DH || echo DS)
   echo "== $MODE"
   for S in 20 21 22 23 24 25 26 27; do

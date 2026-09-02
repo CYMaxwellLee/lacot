@@ -47,7 +47,7 @@ if [[ " $SECT " == *" C "* ]]; then
 fi
 if [[ " $SECT " == *" E "* ]]; then
   echo "== E：新 held-out s28~s35：原配方 vs hard 綁定"
-  for MODE in base hard; do
+  for MODE in ${EMODES:-base hard}; do
     X=$([ $MODE = hard ] && echo "LACOT_DEC_START=hard" || echo ""); TAG=$([ $MODE = hard ] && echo "_dshard" || echo ""); OUTD=results/night_0902/heldout2_$MODE; mkdir -p "$OUTD"; A=$([ $MODE = hard ] && echo EH || echo EB)
     for S in 28 29 30 31 32 33 34 35; do
       N=$(pick); J=$(sub $N $A-s$S - "OGBENCH_DATA_DIR=$ADATA $TRAIN_BASE LACOT_ENV=$LENV LACOT_K=8 LACOT_SEED=$S $X $APY -u experiments/scratch_lacot_rollout.py")
