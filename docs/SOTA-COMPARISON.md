@@ -46,6 +46,7 @@ per-episode 算力分布可直接量、畫進圖（adaptive test-time compute �
 ```
 pointmaze-＊-stitch     medium          large
 我方主打（蒸餾+ma2）     0.852 (K8,2sd)  0.535 (K8,3sd) / 0.796 (best sd)
+我方定版 wu500+EMA(9/2)  —               0.665 (K8, held-out 8sd s20~27, sd .149) / 0.872 (best)
 我方 ebfs 上界（帶圖）   0.800           0.972
 官方行情  QRL            0.80            0.84
           HIQL           0.74            0.13
@@ -58,6 +59,9 @@ pointmaze-＊-stitch     medium          large
   我方全部 chunk=4 —— **chunk=1 主打數字未跑**（紅線 1、8/29 舊債），上表前必還。
 - large 報法：平均 0.535 誠實報＋best-seed 0.796 另欄標明（seed 方差 0.388~0.796 是
   已量化的已知問題，藥＝EMA／dev 挑顆，8/31 三問已判：步數無效、K12 無效）。
+- ⭐ 9/2 更新（FINDINGS-2026-09-02-overnight ①）：定版配方 warmup500＋EMA 在事前註冊的 held-out 八顆
+  （s20~s27、零挑選）平均 **0.665**、sd 0.149、範圍 0.492~0.872、爛顆 0/8。嚴格同 protocol 仍輸 QRL 0.84
+  十七分半；災難級（起步卡死型）已清、殘 gap 全是顆間散佈。⛔ 正式表用這一行，不用 0.535/0.796 舊行。
 - ⭐ 敘事鏈（表的故事）：ebfs 上界 97.2 證天花板 ≫ QRL ⇒ 蒸餾（medium 已到 0.920 單 seed、
   超上界＝amortization 不設限）⇒ large gap＝訓練方差工程債，非方法債。
 
