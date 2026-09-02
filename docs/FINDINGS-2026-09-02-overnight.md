@@ -300,3 +300,13 @@ s27        .908    .908     .996      .476
   要從 u 反推相對位移。**v4**：起點 s 經 `s_embed`（Linear 2→D、進 opt1 與 ckpt）當第 K+1 個 token 餵 decoder ＋ 位移形式
   ⇒ 750 步小試 290 步 recon .068（V8 .040）。已取消 v1 的 56 支相關 job、以 v4 重灑（DH/CHG/CDA/EH/MH）。
 - 過夜（主人 20:04）：A dstart hard(v4)/soft ×8、B HG/DA 補齊八顆、C hard×{HG,DA}、E s28~35 base/hard、F medium hard ×8（jobs ~22435~22615）。
+
+## ⑱ 夜間先收：開頭綁定 soft（只加 W·‖第0點−s‖²、其餘＝V8）[實測、進行中]
+
+```
+          V8      soft     逐題失敗（soft）
+s20      .696    .860     {0,35,0,0,0}
+s23      .492    .828     {0,31,12,0,0}
+（其餘六顆＋hard v4 八顆 9/3 早上收；collect_dstart.py）
+```
+- ⭐ 純訓練側、無搜索、無守門：最爛顆 .49→.83；殘留失敗集中 t2 走廊。⇒ 「頭在 s」是對的靶。
