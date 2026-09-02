@@ -39,3 +39,27 @@ _出處：ENERGY-FRAMEWORK §方言病與離散化階梯（主人 8/29 定向）
 ## 不做的事
 - 不換 flow 引擎、不改 E；不上第三層（全 categorical）——那是先驗換 discrete 系，另一題。
 - 不在同一批混其他旋鈕（warmup 長度、EMA、β）。
+
+## 9/2 晚補：VQ 家族調研與選擇（主人 17:39「你拿什麼 VQ」）
+
+**我用的**：單層 VQ-VAE 式（每 token 一個 code、V=64、EMA codebook、commitment 0.25、死 code 重置、加噪）。
+實測（⑬）：codebook 沒崩（用 20~50/64）但 recon 3~5× 變差、八顆平均 0.412（V8 0.665）⇒ **這個設定**負，不代表字彙錨定負。
+
+**家族（引用前抽原文，摘要頁核過）**：
+- **FSQ** Mentzer 2023, arXiv 2309.15505《Finite Scalar Quantization: VQ-VAE Made Simple》：把表示投到低維（<10 維）、每維
+  切固定幾格（round＋STE），隱式 codebook＝各維格數乘積；摘要明講「不會 codebook 崩、不需要 commitment／重播／分裂／熵懲罰」。
+- **RVQ** Zeghidour 2021, arXiv 2107.03312《SoundStream》：多層殘差量化（每層對上一層的殘差再量化），同字彙量下保真度高很多
+  （機制在正文；摘要只確認用了 residual vector quantizer）。
+- **ViT-VQGAN** Yu 2021, arXiv 2110.04627：codebook 學習改良（正文：查表投到低維＋l2 正規化 code；摘要僅稱「多項改良」）。
+- **Rotation trick** Fifty 2024, arXiv 2410.06424：量化層梯度改用旋轉＋縮放（反向視為常數），摘要稱提升重建、codebook 使用率、降低量化誤差。
+- **LFQ**（MAGVIT-v2）Yu 2023, arXiv 2310.05737：摘要頁未提 LFQ，⚠️ 正文級、未核。
+
+**選擇與理由**：
+1. **主候選 FSQ**：我們要的是「錨」（每顆 init 落在同一套格）而不是「壓縮」；FSQ 沒有 codebook 就沒有崩與死 code 的機關，
+   格數可以開很大（例如 d=8、每維 8 格 ⇒ 每 token 1.7e7 格）當細錨，保真度損失可控；實作只是一個投影＋round＋STE。
+   接法同現在：encoder 出口 → proj 到 d 維 → tanh 有界 → round（STE）→ proj 回 D 維給 decoder／head；flow 仍對連續 u 建模、
+   推論時 snap（走同一個投影-round-投影）。要掃 d∈{4,6,8} 與每維格數。
+2. **備選 RVQ**（4 層 × 256）：若要保留 VQ-VAE 的顯式字彙（可讀、可計數＝缺課地圖），RVQ 在同字彙量下保真度遠優於單層；
+   仍需 EMA／死 code 機關，可疊 rotation trick。
+3. ⛔ **決策門**：先看 flow 探針（⑭）——低分顆是「整個押錯邊」（條件學歪⇒治 (s,g)→u 的配對／覆蓋）還是「太散、對的路只佔少數」
+   （⇒ 字彙錨定與選擇才對症）。押錯邊的話，換哪種 VQ 都不對症。
