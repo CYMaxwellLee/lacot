@@ -144,9 +144,12 @@ FSQ_TAG = os.environ.get("LACOT_FSQ_TAG", "")   # 檔名 tag；通常不手設 �
 #    下游（decoder／head／_q）拿到的已是字典化的 u。TGT 在 z 版的語義：snap＝甲（學連續 z、推論才 round）、
 #    dequant＝乙（學格點＋均勻噪聲＝字典分佈本身）。
 FSQ_SPACE = os.environ.get("LACOT_FSQ_SPACE", "u")
+FSQ_BOUND = os.environ.get("LACOT_FSQ_BOUND", "tanh")   # ⭐ N2（iFSQ）：fit 時選 bound；載入端從 cfg 讀
+FSQ_ROUND = int(os.environ.get("LACOT_FSQ_ROUND", 1))   # ⭐ N3：0＝z 版推論不 round（只壓縮不離散、拆帳用）
 assert FSQ_TGT in ("snap", "dequant"), f"⛔ LACOT_FSQ_TGT 只能是 snap/dequant，收到 {FSQ_TGT}"
 assert FSQ_SPACE in ("u", "z"), f"⛔ LACOT_FSQ_SPACE 只能是 u/z，收到 {FSQ_SPACE}"
 assert not (FSQ_SPACE == "z" and not (FSQ_LOAD or FSQ_FIT)), "⛔ FSQ_SPACE=z 需要 FSQ_LOAD（或 fit）"
+assert FSQ_ROUND or (FSQ_SPACE == "z" and FSQ_TGT == "snap"), "⛔ FSQ_ROUND=0 只支援 z 版甲臂（連續 z 學＋不 round）"
 assert not (FSQ_FIT and FSQ_LOAD), "⛔ FSQ_FIT 與 FSQ_LOAD 互斥（fit 產檔、load 消費）"
 # ⭐ 開頭綁定（LACOT_DEC_START、9/2 晚主人裁「三為主、二對照」）：""（預設）＝行為不變；
 #    hard＝解碼後整條平移使第 0 點＝起點（訓練與推論全套同一個 helper ⇒ decoder 只學形狀、開頭結構上就是起點）；
@@ -658,7 +661,8 @@ fsq = None
 if FSQ_LOAD:
     from lacot.fsq import TokenFSQ
     _fk = torch.load(FSQ_LOAD, map_location=device, weights_only=False)
-    fsq = TokenFSQ(D_MODEL, d=int(_fk["cfg"]["d"]), L=int(_fk["cfg"]["L"])).to(device)
+    fsq = TokenFSQ(D_MODEL, d=int(_fk["cfg"]["d"]), L=int(_fk["cfg"]["L"]),
+                   bound=_fk["cfg"].get("bound", "tanh")).to(device)
     fsq.load_state_dict(_fk["fsq"]); fsq.eval()
     for p in fsq.parameters():
         p.requires_grad_(False)
@@ -667,8 +671,8 @@ if FSQ_LOAD:
 elif FSQ_FIT:
     from lacot.fsq import TokenFSQ
     _fd, _fL = (int(x) for x in FSQ_SPEC.split(","))
-    fsq = TokenFSQ(D_MODEL, d=_fd, L=_fL).to(device)
-    print(f"  ⭐ FSQ fit 模式：d={_fd} L={_fL} → {FSQ_FIT}", flush=True)
+    fsq = TokenFSQ(D_MODEL, d=_fd, L=_fL, bound=FSQ_BOUND).to(device)
+    print(f"  ⭐ FSQ fit 模式：d={_fd} L={_fL} bound={FSQ_BOUND} → {FSQ_FIT}", flush=True)
 assert not (fsq is not None and vq is not None), "⛔ FSQ 與 VQ 不同開（推論鏈只有一個 snap 縫）"
 
 
@@ -762,8 +766,14 @@ if FSQ_FIT:
         _n_codes = len(torch.unique(_used, dim=0))
         print(f"  z 佔格：一個 batch {len(_used)} 個 token 用了 {_n_codes} 種格點；"
               f"每維佔用 {[int(len(_zg[..., i].unique())) for i in range(fsq.d)]} / L={fsq.L}", flush=True)
+        # ⭐ 9/3 夜 N1：每格計數直方圖（iFSQ 的 activation collapse 檢查——中央擠爆＝要換 bound）
+        _lv = sorted(_used.unique().tolist()) if fsq.d == 1 else sorted(_zg.reshape(-1).unique().tolist())
+        for i in range(fsq.d):
+            _c = [int((_zg[..., i].reshape(-1) == v).sum()) for v in _lv]
+            print(f"  維{i} 格計數 {dict(zip([f'{v:g}' for v in _lv], _c))}", flush=True)
     os.makedirs(os.path.dirname(FSQ_FIT) or ".", exist_ok=True)
-    torch.save({"fsq": fsq.state_dict(), "cfg": {"d": fsq.d, "L": fsq.L}, "s1_from": S1_FROM}, FSQ_FIT)
+    torch.save({"fsq": fsq.state_dict(), "cfg": {"d": fsq.d, "L": fsq.L, "bound": fsq.bound_kind},
+                "s1_from": S1_FROM}, FSQ_FIT)
     print(f"⭐ FSQ fit 完成 → {FSQ_FIT}", flush=True)
     raise SystemExit(0)
 _ed_hist, logits = [], None
@@ -846,7 +856,8 @@ if FSQ_SPACE == "z":
         def sample(self, M, cond):
             z = self.inner.sample(M, cond)
             with torch.no_grad():
-                return self.fsq.up(self.fsq._grid(z))
+                # ⭐ N3（9/3 夜）：FSQ_ROUND=0＝只壓縮不離散（拆「壓縮費 vs 離散費」的對照臂）
+                return self.fsq.up(self.fsq._grid(z) if FSQ_ROUND else z)
         def __getattr__(self, k):
             return getattr(self.inner, k)
         def __call__(self, *a, **kw):
@@ -2111,7 +2122,9 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP,
                     SUB_HEADGUARD=SUB_HEADGUARD, DEC_START=DEC_START, S1_FROM=S1_FROM,
                     FSQ_TAG=FSQ_TAG or (f"_fsq{'z' if FSQ_SPACE == 'z' else ''}"
-                                        f"{'d' if FSQ_TGT == 'dequant' else ''}{fsq.d}x{fsq.L}"
+                                        f"{'d' if FSQ_TGT == 'dequant' else ''}"
+                                        f"{'c' if not FSQ_ROUND else ''}{fsq.d}x{fsq.L}"
+                                        f"{'sg' if fsq.bound_kind == 'sig16' else ''}"
                                         if (fsq is not None and not FSQ_FIT) else ""))
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)

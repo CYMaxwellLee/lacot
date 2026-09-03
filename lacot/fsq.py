@@ -20,19 +20,25 @@ import torch.nn as nn
 
 
 class TokenFSQ(nn.Module):
-    def __init__(self, dim: int, d: int = 8, L: int = 8):
+    def __init__(self, dim: int, d: int = 8, L: int = 8, bound: str = "tanh"):
         super().__init__()
         self.dim, self.d, self.L = int(dim), int(d), int(L)
         self.even = (self.L % 2 == 0)
-        # tanh 的放大倍率：even 用 L/2（半整數格覆蓋 (−L/2, L/2)）、odd 用 (L−1)/2（整數格）
+        # 放大倍率：even 用 L/2（半整數格覆蓋 (−L/2, L/2)）、odd 用 (L−1)/2（整數格）
         self.scale = self.L / 2.0 if self.even else (self.L - 1) / 2.0
+        # ⭐ 9/3 夜 N2（iFSQ, arXiv 2601.17124）：tanh 讓高斯激活擠中央格（N1 實測中央 2~4×、邊緣 1/20）
+        #    ⇒ bound="sig16"＝2·sigmoid(1.6x)−1（分佈匹配映射 ⇒ 格點近均勻利用）。預設 tanh（歷史行為）。
+        assert bound in ("tanh", "sig16"), f"⛔ bound 只能是 tanh/sig16，收到 {bound}"
+        self.bound_kind = bound
         self.down = nn.Linear(self.dim, self.d)
         self.up = nn.Linear(self.d, self.dim)
 
     # ---- z 空間（d 維）----
     def z_of(self, u: torch.Tensor) -> torch.Tensor:
         """u [..., D] → 有界連續 z [..., d]（甲目標；未量化）。"""
-        return torch.tanh(self.down(u)) * self.scale
+        x = self.down(u)
+        b = torch.tanh(x) if self.bound_kind == "tanh" else 2.0 * torch.sigmoid(1.6 * x) - 1.0
+        return b * self.scale
 
     def _grid(self, z: torch.Tensor) -> torch.Tensor:
         """z → 格點值（無梯度路徑；clamp 擋 tanh 浮點飽和的溢出）。刻度數恰為 L。"""
