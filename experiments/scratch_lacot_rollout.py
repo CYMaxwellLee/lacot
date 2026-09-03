@@ -139,7 +139,14 @@ FSQ_FIT = os.environ.get("LACOT_FSQ_FIT", "")
 FSQ_LOAD = os.environ.get("LACOT_FSQ_LOAD", "")
 FSQ_TGT = os.environ.get("LACOT_FSQ_TGT", "snap")
 FSQ_TAG = os.environ.get("LACOT_FSQ_TAG", "")   # 檔名 tag；通常不手設 —— fsq 載入後自動算（可覆蓋）
+# ⭐ 9/3 晚（主人裁「修好、檢查、再開始跑」）：LACOT_FSQ_SPACE=u（預設、歷史行為）｜z＝flow 整個搬進
+#    d 維字典座標空間建模（滿秩、tanh 有界 ⇒ 無 9/3 白天臂 B 的薄片病）；sample 端 quantize→up 回 D 維，
+#    下游（decoder／head／_q）拿到的已是字典化的 u。TGT 在 z 版的語義：snap＝甲（學連續 z、推論才 round）、
+#    dequant＝乙（學格點＋均勻噪聲＝字典分佈本身）。
+FSQ_SPACE = os.environ.get("LACOT_FSQ_SPACE", "u")
 assert FSQ_TGT in ("snap", "dequant"), f"⛔ LACOT_FSQ_TGT 只能是 snap/dequant，收到 {FSQ_TGT}"
+assert FSQ_SPACE in ("u", "z"), f"⛔ LACOT_FSQ_SPACE 只能是 u/z，收到 {FSQ_SPACE}"
+assert not (FSQ_SPACE == "z" and not (FSQ_LOAD or FSQ_FIT)), "⛔ FSQ_SPACE=z 需要 FSQ_LOAD（或 fit）"
 assert not (FSQ_FIT and FSQ_LOAD), "⛔ FSQ_FIT 與 FSQ_LOAD 互斥（fit 產檔、load 消費）"
 # ⭐ 開頭綁定（LACOT_DEC_START、9/2 晚主人裁「三為主、二對照」）：""（預設）＝行為不變；
 #    hard＝解碼後整條平移使第 0 點＝起點（訓練與推論全套同一個 helper ⇒ decoder 只學形狀、開頭結構上就是起點）；
@@ -668,6 +675,8 @@ assert not (fsq is not None and vq is not None), "⛔ FSQ 與 VQ 不同開（推
 def _q(u):
     """推論用：FSQ／VQ 開著就 snap 到最近格點/code；關著＝恆等。"""
     if fsq is not None and not FSQ_FIT:
+        if FSQ_SPACE == "z":
+            return u    # ⭐ z 版：sample 端已 quantize→up；再 snap 會過 down∘up 再搬一次（⛔ 非冪等）
         return fsq.snap(u)
     return vq.snap(u) if (vq is not None and not VQ_SOFT) else u
 
@@ -746,6 +755,13 @@ if FSQ_FIT:
             with torch.no_grad():
                 _rt = (_dec(fsq.snap(et), s) - traj).pow(2).mean().item()
             print(f"  fsq fit {_fs+1}/{STEPS1}  loss {loss.item():.4f}  snap往返recon {_rt:.4f}", flush=True)
+    with torch.no_grad():   # ⭐ 9/3 檢查②：資料的 z 有沒有把格子用起來（塌角落＝字典白做）
+        traj, mask, s, g, _ = make_batch(rng, teacher_mix=TEACHER_MIX)
+        _zg = fsq._grid(fsq.z_of(etarget(traj, mask)))
+        _used = _zg.reshape(-1, fsq.d)
+        _n_codes = len(torch.unique(_used, dim=0))
+        print(f"  z 佔格：一個 batch {len(_used)} 個 token 用了 {_n_codes} 種格點；"
+              f"每維佔用 {[int(len(_zg[..., i].unique())) for i in range(fsq.d)]} / L={fsq.L}", flush=True)
     os.makedirs(os.path.dirname(FSQ_FIT) or ".", exist_ok=True)
     torch.save({"fsq": fsq.state_dict(), "cfg": {"d": fsq.d, "L": fsq.L}, "s1_from": S1_FROM}, FSQ_FIT)
     print(f"⭐ FSQ fit 完成 → {FSQ_FIT}", flush=True)
@@ -818,7 +834,25 @@ if _ed_hist:
     print(f"  ⇒ u 有效維度 起 {_ed_hist[0]:.3f} → 末 {_ed_hist[-1]:.3f}", flush=True)
 
 cond_enc = sota_mlp(2, 512, 512).to(device); cond_head = sota_mlp(1024, 512, COND).to(device)
-flow = Flow(token_dim=D_MODEL, seq_len=K, n_blocks=4, cond_dim=COND).to(device)
+flow = Flow(token_dim=(fsq.d if FSQ_SPACE == "z" else D_MODEL), seq_len=K, n_blocks=4, cond_dim=COND).to(device)
+if FSQ_SPACE == "z":
+    # ⭐ 9/3 晚：z 空間版的外皮 —— inner flow 在 d 維建模；sample 出的 z 過 quantize→up 回 D 維，
+    #    下游（_q 恆等、decoder、head）拿到的已是字典化 u，一行都不用改。nll 的目標由訓練迴圈給 z。
+    #    state_dict／parameters／train 等全部透傳 inner ⇒ optimizer／EMA／存載檔跟原版同路。
+    class _ZFlowAdapter:
+        def __init__(self, inner, fsq):
+            object.__setattr__(self, "inner", inner)
+            object.__setattr__(self, "fsq", fsq)
+        def sample(self, M, cond):
+            z = self.inner.sample(M, cond)
+            with torch.no_grad():
+                return self.fsq.up(self.fsq._grid(z))
+        def __getattr__(self, k):
+            return getattr(self.inner, k)
+        def __call__(self, *a, **kw):
+            return self.inner(*a, **kw)
+    flow = _ZFlowAdapter(flow, fsq)
+    print(f"  ⭐ FSQ z 空間版：flow 在 {fsq.d} 維字典座標上建模（TGT={FSQ_TGT}：{'甲·連續 z' if FSQ_TGT == 'snap' else '乙·格點+噪聲'}）", flush=True)
 refine = RefineOperator(COND, K, D_MODEL, hidden=256).to(device)
 import copy
 refine_ema = copy.deepcopy(refine)
@@ -880,7 +914,9 @@ EMA_W = float(os.environ.get("LACOT_EMA_W", 0.0))    # 0=off（歷史行為不�
 _EMA_PAIRS = []
 if EMA_W > 0 and not LOAD_CKPT:
     import copy as _cp
-    _EMA_NAMED = [("cond_enc", cond_enc), ("cond_head", cond_head), ("flow", flow),
+    # ⭐ z 版 flow 是 adapter：EMA 影子要 deepcopy【inner】（deepcopy adapter 會被 __getattr__ 透傳
+    #    dunder 搞出 inner 的 copy 或遞迴）；state_dict／load 語義不變。
+    _EMA_NAMED = [("cond_enc", cond_enc), ("cond_head", cond_head), ("flow", getattr(flow, "inner", flow)),
                   ("ahead", ahead), ("bc_head", bc_head)]
     _EMA_SHADOW = {}
     for _n, _m in _EMA_NAMED:
@@ -895,9 +931,15 @@ for stp in range(STEPS2):
     with torch.no_grad():
         et = etarget(traj, mask)
     cond = condvec(s, g)
-    # ⭐ 9/3 FSQ dequant 臂：flow 目標換成「格點＋均勻噪聲」（錨定字彙的連續化；snap 臂目標不變）
-    _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
-    l_nf = flow.nll(_et_nf, cond) / DIM
+    # ⭐ 9/3 FSQ：z 空間版 flow 目標＝d 維 z（甲連續／乙格點+噪聲；滿秩無薄片病）；
+    #    u 空間版 dequant（⛔ 9/3 判負：目標塌 8 維薄片）留作歷史對照。
+    if fsq is not None and FSQ_SPACE == "z":
+        with torch.no_grad():
+            _et_nf = fsq.dequant_z(et) if FSQ_TGT == "dequant" else fsq.z_of(et)
+        l_nf = flow.nll(_et_nf, cond) / (K * fsq.d)
+    else:
+        _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
+        l_nf = flow.nll(_et_nf, cond) / DIM
     # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
     #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
     _rw = _REAL_W[0]
@@ -908,7 +950,9 @@ for stp in range(STEPS2):
     if COND_DROP > 0:
         _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
         _ca = cond * _keep
-    l_anchor = _wmse(ahead(_ca, _q(et)), act)         # ⭐ VQ：head 吃量化 u（與推論一致）
+    # ⭐ VQ／FSQ：head 吃量化 u（與推論一致）；z 版顯式 snap（_q 對 z 版恆等——sample 端已字典化）
+    _u_head = fsq.snap(et) if (fsq is not None and FSQ_SPACE == "z") else _q(et)
+    l_anchor = _wmse(ahead(_ca, _u_head), act)
     if LEARNED_REFINE:
         u = flow.sample(B, cond).detach(); us = [u]
         for _ in range(3):
@@ -2066,7 +2110,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
                     SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP,
                     SUB_HEADGUARD=SUB_HEADGUARD, DEC_START=DEC_START, S1_FROM=S1_FROM,
-                    FSQ_TAG=FSQ_TAG or (f"_fsq{'d' if FSQ_TGT == 'dequant' else ''}{fsq.d}x{fsq.L}"
+                    FSQ_TAG=FSQ_TAG or (f"_fsq{'z' if FSQ_SPACE == 'z' else ''}"
+                                        f"{'d' if FSQ_TGT == 'dequant' else ''}{fsq.d}x{fsq.L}"
                                         if (fsq is not None and not FSQ_FIT) else ""))
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
