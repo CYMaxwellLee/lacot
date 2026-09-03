@@ -2015,6 +2015,10 @@ dst = os.path.join(_OUT_DIR or os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results"),
     f"rollout_{tag}.json")
 os.makedirs(os.path.dirname(dst), exist_ok=True)
+# ⭐ 9/3：守門開火數寫進頂層（9/2 夜那批有計數沒出口 —— subgoal_diag 掛在 dsub/d0 的
+#    gate 裡，該 gate 在 conf2 沒收樣本時整段跳過 ⇒ n_headguard 白計。⛔ 不掛 gate。）
+if SUB_HEADGUARD > 0:
+    out["n_headguard"] = SUB_DIAG.get("n_headguard", 0)
 with open(dst, "w") as f:
     json.dump(out, f, indent=1)
 if DIAG_DUMP and DIAG_ROWS:
