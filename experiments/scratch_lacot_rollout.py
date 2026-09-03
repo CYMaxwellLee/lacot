@@ -1476,6 +1476,8 @@ def make_subgoal_policy(R, use_u):
                 _d0m = float(np.median(_d0s))
                 _near_goal = float(np.linalg.norm(np.asarray(obs[:2]) - box["goal"])) <= DELTA_SUB
                 if _d0m > SUB_HEADGUARD:
+                    if not box.get("hg_sticky"):    # ⭐ 9/3：首次觸發另計（集數）——n_headguard 是黏住後的 replan 總數，當開火率讀會膨脹
+                        SUB_DIAG["n_headguard_ep"] = SUB_DIAG.get("n_headguard_ep", 0) + 1
                     box["hg_sticky"] = True
                 if box.get("hg_sticky") and not _near_goal:     # 計畫不從這裡出發 ⇒ 這一集改走 E 圖搜索
                     SUB_DIAG["n_headguard"] = SUB_DIAG.get("n_headguard", 0) + 1
@@ -2018,7 +2020,8 @@ os.makedirs(os.path.dirname(dst), exist_ok=True)
 # ⭐ 9/3：守門開火數寫進頂層（9/2 夜那批有計數沒出口 —— subgoal_diag 掛在 dsub/d0 的
 #    gate 裡，該 gate 在 conf2 沒收樣本時整段跳過 ⇒ n_headguard 白計。⛔ 不掛 gate。）
 if SUB_HEADGUARD > 0:
-    out["n_headguard"] = SUB_DIAG.get("n_headguard", 0)
+    out["n_headguard"] = SUB_DIAG.get("n_headguard", 0)          # 黏住模式 replan 總數
+    out["n_headguard_ep"] = SUB_DIAG.get("n_headguard_ep", 0)    # 觸發黏住的集數（開火率的分子）
 with open(dst, "w") as f:
     json.dump(out, f, indent=1)
 if DIAG_DUMP and DIAG_ROWS:
