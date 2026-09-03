@@ -129,6 +129,18 @@ VQ_NOISE_P = float(os.environ.get("LACOT_VQ_NOISE_P", 0.0))
 # ⭐ 軟錨（LACOT_VQ_SOFT=1、9/2 VQ64 硬量化容量損失後的變體）：codebook 與 commitment 照舊（把 u 拉向字彙），
 #    但 decoder／head／推論都吃【連續】u、不 snap ⇒ 只留「錨」、不留「瓶頸」。0（預設）＝硬量化。
 VQ_SOFT = int(os.environ.get("LACOT_VQ_SOFT", 0))
+# ⭐ FSQ 錨定（9/3、主人裁「0.792 用比較好的 VQ 看能不能更好」；家族主候選見 DESIGN-DRAFT-2026-09-02-vq-anchor）：
+#    LACOT_FSQ="d,L"＋LACOT_FSQ_FIT=<out.pt>＝fit 模式：S1_FROM 凍空間上蒸餾 FSQ 投影（只訓 down/up）、存檔、結束。
+#    LACOT_FSQ_LOAD=<fsq.pt>＝載入：推論鏈 _q() 走 fsq.snap（跟 VQ 同縫）；檔名帶 _fsq{d}x{L}。
+#    LACOT_FSQ_TGT=snap（預設）｜dequant：dequant＝stage 2 的 flow 目標換 fsq.dequant(et)（格點＋均勻噪聲、
+#    NF 不能吃點質量）⇒ flow 在錨定字彙的連續化分佈上學；檔名 _fsqd{d}x{L}。全預設關＝行為不變。
+FSQ_SPEC = os.environ.get("LACOT_FSQ", "")
+FSQ_FIT = os.environ.get("LACOT_FSQ_FIT", "")
+FSQ_LOAD = os.environ.get("LACOT_FSQ_LOAD", "")
+FSQ_TGT = os.environ.get("LACOT_FSQ_TGT", "snap")
+FSQ_TAG = os.environ.get("LACOT_FSQ_TAG", "")   # 檔名 tag；通常不手設 —— fsq 載入後自動算（可覆蓋）
+assert FSQ_TGT in ("snap", "dequant"), f"⛔ LACOT_FSQ_TGT 只能是 snap/dequant，收到 {FSQ_TGT}"
+assert not (FSQ_FIT and FSQ_LOAD), "⛔ FSQ_FIT 與 FSQ_LOAD 互斥（fit 產檔、load 消費）"
 # ⭐ 開頭綁定（LACOT_DEC_START、9/2 晚主人裁「三為主、二對照」）：""（預設）＝行為不變；
 #    hard＝解碼後整條平移使第 0 點＝起點（訓練與推論全套同一個 helper ⇒ decoder 只學形狀、開頭結構上就是起點）；
 #    soft＝解碼照舊、stage 1 加 W·‖第 0 點 − 起點‖²。動機：單集追蹤實證爛顆的計畫不從 s 出發、conf2 只看尾就直達。
@@ -635,9 +647,28 @@ if VQ_V > 0:
     vq = TokenVQ(VQ_V, D_MODEL, beta=VQ_BETA, noise_p=VQ_NOISE_P).to(device)
     print(f"  ⭐ VQ 錨定：每 token {VQ_V} 個 code（β={VQ_BETA:g} noise_p={VQ_NOISE_P:g}）", flush=True)
 
+fsq = None
+if FSQ_LOAD:
+    from lacot.fsq import TokenFSQ
+    _fk = torch.load(FSQ_LOAD, map_location=device, weights_only=False)
+    fsq = TokenFSQ(D_MODEL, d=int(_fk["cfg"]["d"]), L=int(_fk["cfg"]["L"])).to(device)
+    fsq.load_state_dict(_fk["fsq"]); fsq.eval()
+    for p in fsq.parameters():
+        p.requires_grad_(False)
+    print(f"  ⭐ FSQ 已載入：d={fsq.d} L={fsq.L}（{FSQ_LOAD}；TGT={FSQ_TGT}）", flush=True)
+    del _fk
+elif FSQ_FIT:
+    from lacot.fsq import TokenFSQ
+    _fd, _fL = (int(x) for x in FSQ_SPEC.split(","))
+    fsq = TokenFSQ(D_MODEL, d=_fd, L=_fL).to(device)
+    print(f"  ⭐ FSQ fit 模式：d={_fd} L={_fL} → {FSQ_FIT}", flush=True)
+assert not (fsq is not None and vq is not None), "⛔ FSQ 與 VQ 不同開（推論鏈只有一個 snap 縫）"
+
 
 def _q(u):
-    """推論用：VQ 開著就 snap 到最近 code；關著＝恆等。"""
+    """推論用：FSQ／VQ 開著就 snap 到最近格點/code；關著＝恆等。"""
+    if fsq is not None and not FSQ_FIT:
+        return fsq.snap(u)
     return vq.snap(u) if (vq is not None and not VQ_SOFT) else u
 
 
@@ -695,6 +726,30 @@ if S1_FROM and not LOAD_CKPT:
     del _sk
     torch.manual_seed(SEED)
     print(f"  ⭐ S1_FROM={S1_FROM}：stage 1 載入並跳過訓練；torch RNG 重播 SEED={SEED}（只抽 stage 2）", flush=True)
+if FSQ_FIT:
+    # ⭐ 9/3 FSQ fit：在凍住的 u 空間上蒸餾投影（只訓 fsq.down/up；loss＝過凍 decoder 的往返
+    #    recon ＋ 0.25 commitment）。存獨立小檔、直接結束 —— fit 一次、八顆 flow 共用。
+    assert S1_FROM, "⛔ FSQ fit 需要 S1_FROM（在凍住的 u 空間上蒸餾）"
+    for _m in (traj_enc, e_pooler) + ((u_dec,) if u_dec is not None else ()):
+        _m.eval()
+        for p in _m.parameters():
+            p.requires_grad_(False)
+    _fopt = torch.optim.Adam(fsq.parameters(), lr=1e-3)
+    for _fs in range(STEPS1):
+        traj, mask, s, g, _ = make_batch(rng, teacher_mix=TEACHER_MIX)
+        with torch.no_grad():
+            et = etarget(traj, mask)
+        u_q, _ = fsq(et)
+        loss = (_dec(u_q, s) - traj).pow(2).mean() + 0.25 * (u_q - et).pow(2).mean()
+        _fopt.zero_grad(set_to_none=True); loss.backward(); _fopt.step()
+        if (_fs + 1) % 300 == 0:
+            with torch.no_grad():
+                _rt = (_dec(fsq.snap(et), s) - traj).pow(2).mean().item()
+            print(f"  fsq fit {_fs+1}/{STEPS1}  loss {loss.item():.4f}  snap往返recon {_rt:.4f}", flush=True)
+    os.makedirs(os.path.dirname(FSQ_FIT) or ".", exist_ok=True)
+    torch.save({"fsq": fsq.state_dict(), "cfg": {"d": fsq.d, "L": fsq.L}, "s1_from": S1_FROM}, FSQ_FIT)
+    print(f"⭐ FSQ fit 完成 → {FSQ_FIT}", flush=True)
+    raise SystemExit(0)
 _ed_hist, logits = [], None
 for stp in range(_S1):
     traj, mask, s, g, _ = make_batch(rng, teacher_mix=TEACHER_MIX)   # stage1 不用 act ⇒ teacher 全參與
@@ -840,7 +895,9 @@ for stp in range(STEPS2):
     with torch.no_grad():
         et = etarget(traj, mask)
     cond = condvec(s, g)
-    l_nf = flow.nll(et, cond) / DIM
+    # ⭐ 9/3 FSQ dequant 臂：flow 目標換成「格點＋均勻噪聲」（錨定字彙的連續化；snap 臂目標不變）
+    _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
+    l_nf = flow.nll(_et_nf, cond) / DIM
     # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
     #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
     _rw = _REAL_W[0]
@@ -1906,7 +1963,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
                SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START="",
-               S1_FROM=""):
+               S1_FROM="", FSQ_TAG=""):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -1943,6 +2000,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_s1{STEPS1}"
     if S1_FROM:                                      # ⭐ 凍同一個 stage 1（9/2 夜；⛔ 不進檔名會蓋同 seed 原 run）
         x += "_s1from"
+    if FSQ_TAG:                                      # ⭐ FSQ 錨定（9/3；⛔ 不進檔名會蓋分辨批同 seed 檔）
+        x += FSQ_TAG
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
@@ -2006,7 +2065,9 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     WARMUP=WARMUP, DATA_RESAMPLE=int(DATA_RESAMPLE),
                     DATA_SEED=DATA_SEED, LR_SCALE=LR_SCALE, BOOT_SEED=BOOT_SEED,
                     SUB_ESEL=SUB_ESEL, U_SOURCE=U_SOURCE, VQ=VQ_V, STEPS1=STEPS1, VQ_SOFT=VQ_SOFT, SUB_SNAP=SUB_SNAP,
-                    SUB_HEADGUARD=SUB_HEADGUARD, DEC_START=DEC_START, S1_FROM=S1_FROM)
+                    SUB_HEADGUARD=SUB_HEADGUARD, DEC_START=DEC_START, S1_FROM=S1_FROM,
+                    FSQ_TAG=FSQ_TAG or (f"_fsq{'d' if FSQ_TGT == 'dequant' else ''}{fsq.d}x{fsq.L}"
+                                        if (fsq is not None and not FSQ_FIT) else ""))
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
