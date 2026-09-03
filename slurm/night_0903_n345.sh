@@ -25,12 +25,12 @@ sub() { local node=$1 name=$2 deps=$3; shift 3; local depflag=""
     --job-name=$name -o slurm/logs/%x-%j.out $depflag \
     --wrap "cd ~/Projects/lacot && env $*" | awk '{print $4}'; }
 NODES=(jasmine lady moana pocahontas); i=0
-nod() { local n=${NODES[$((i%4))]}; i=$((i+1)); echo $n; }
+# ⛔ 別用 $(fn) 取節點——subshell 裡 i 遞增不回傳，40 支全擠第一台（9/3 夜踩過）
 
 # ---- N3 只壓縮不離散（z 甲、ROUND=0、fsq v2）----
 OUTD=results/night_0903/fsqz_cont; mkdir -p "$OUTD"
 for S in ${SEEDS:-40 41 42 43 44 45 46 47}; do
-  NODE=$(nod)
+  NODE=${NODES[$((i%4))]}; i=$((i+1))
   J=$(sub $NODE N3-s$S - "OGBENCH_DATA_DIR=$ADATA $BASE0 LACOT_COND_DROP=0.1 $TRAIN0 LACOT_ENV=$LENV LACOT_K=8 LACOT_SEED=$S LACOT_EMA_W=0.999 LACOT_WARMUP=500 LACOT_S1_FROM=$SOFT20 LACOT_DEC_START=soft LACOT_FSQ_LOAD=$FCK LACOT_FSQ_SPACE=z LACOT_FSQ_TGT=snap LACOT_FSQ_ROUND=0 $APY -u experiments/scratch_lacot_rollout.py")
   CK=results/${PRE}_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_fsqzc8x8_dssoft_norf_cd0.1_bci_s$S.pt
   if [ $((S % 2)) -eq 0 ]; then EN=zeldajr; EP=$ZPY; ED=$ZDATA; else EN=$NODE; EP=$APY; ED=$ADATA; fi
@@ -42,7 +42,7 @@ done
 for CD in 0.3 0.5; do
   CDTAG=${CD/0./}; OUTD=results/night_0903/fsqz_dq_cd$CDTAG; mkdir -p "$OUTD"
   for S in ${SEEDS:-40 41 42 43 44 45 46 47}; do
-    NODE=$(nod)
+    NODE=${NODES[$((i%4))]}; i=$((i+1))
     J=$(sub $NODE N4c$CDTAG-s$S - "OGBENCH_DATA_DIR=$ADATA $BASE0 LACOT_COND_DROP=$CD $TRAIN0 LACOT_ENV=$LENV LACOT_K=8 LACOT_SEED=$S LACOT_EMA_W=0.999 LACOT_WARMUP=500 LACOT_S1_FROM=$SOFT20 LACOT_DEC_START=soft LACOT_FSQ_LOAD=$FCK LACOT_FSQ_SPACE=z LACOT_FSQ_TGT=dequant $APY -u experiments/scratch_lacot_rollout.py")
     CK=results/${PRE}_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_fsqzd8x8_dssoft_norf_cd${CD}_bci_s$S.pt
     if [ $((S % 2)) -eq 0 ]; then EN=zeldajr; EP=$ZPY; ED=$ZDATA; else EN=$NODE; EP=$APY; ED=$ADATA; fi
@@ -57,7 +57,7 @@ for SRC in 26 27; do
   [ -f "$SRCCK" ] || { echo "⛔ 凍源不在：$SRCCK"; exit 1; }
   OUTD=results/night_0903/dialect_s$SRC; mkdir -p "$OUTD"
   for S in ${SEEDS:-40 41 42 43 44 45 46 47}; do
-    NODE=$(nod)
+    NODE=${NODES[$((i%4))]}; i=$((i+1))
     J=$(sub $NODE N5f$SRC-s$S - "OGBENCH_DATA_DIR=$ADATA $BASE0 LACOT_COND_DROP=0.1 $TRAIN0 LACOT_ENV=$LENV LACOT_K=8 LACOT_SEED=$S LACOT_EMA_W=0.999 LACOT_WARMUP=500 LACOT_S1_FROM=$SRCCK LACOT_DEC_START=soft LACOT_BOOT_TAG=f$SRC $APY -u experiments/scratch_lacot_rollout.py")
     CK=results/${PRE}_eorecon_ictr_tch0.5_btf${SRC}_emw0.999_wu500_s1from_dssoft_norf_cd0.1_bci_s$S.pt
     if [ $((S % 2)) -eq 0 ]; then EN=zeldajr; EP=$ZPY; ED=$ZDATA; else EN=$NODE; EP=$APY; ED=$ADATA; fi
