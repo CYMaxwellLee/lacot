@@ -178,6 +178,7 @@ INTENT_SRC = os.environ.get("LACOT_INTENT_SRC", "hindsight")
 assert INTENT_SRC in ("hindsight", "route"), \
     f"⛔ LACOT_INTENT_SRC 只能是 hindsight/route，收到 {INTENT_SRC}"
 INTENT_TAG = os.environ.get("LACOT_INTENT_TAG", "")   # 檔名 tag；通常不手設 —— 由 INTENT/SRC/TA 自動算（可覆蓋）
+INTENT_ZERO = int(os.environ.get("LACOT_INTENT_ZERO", 0))  # ⭐ 蒸餾探針：eval 錨恆零（只動 eval、不進檔名 — 產物用 OUT_DIR 分目錄）
 _N_NOROUTE = [0]        # ⭐ eval 端 E 圖找不到路線的次數（那些次錨改用零向量）
 _N_SRC_FB = [0, 0]      # ⭐ [route 生不出路而 fallback 回 hindsight 的樣本數, 總樣本數]
 _intent_route_zn = None  # ⭐ 由 E 圖 helper 那段賦值（INTENT 非空才建）；⛔ 別在這裡推路徑
@@ -1071,8 +1072,13 @@ def _intent_inv(pts_n, anc):
 
 def _intent_anchor_eval(s_xy, g_xy):
     """eval 端取錨（原始座標進）：INTENT 關著 ⇒ None（下游一切照舊）；
-    有路 ⇒ [1,T_A,2] 正規化錨；無路 ⇒ None 並累計 n_intent_noroute。"""
+    有路 ⇒ [1,T_A,2] 正規化錨；無路 ⇒ None 並累計 n_intent_noroute。
+    ⭐ LACOT_INTENT_ZERO=1（9/4 夜、路線三蒸餾探針、主人「試試看吧」）：eval 恆回 None
+    　⇒ 下游走既有零向量 fallback ⇒ 量「訓練吃錨、推論拿掉」後 flow 內化了多少 BFS。
+    　合法性：COND_DROP=0.1 訓過零條件 ⇒ 非完全 OOD。"""
     if intent_ad is None or _intent_route_zn is None:
+        return None
+    if INTENT_ZERO:
         return None
     a = _intent_route_zn(s_xy, g_xy)
     if a is None:
