@@ -37,7 +37,10 @@ R0 掉              u 的路線負擔被 intent 分掉 — 預期內，⛔ 別�
 
 1. **訓推錨不匹配**：hindsight（彎、實走）vs BFS（直、最短）。預期傷硬約束 (ii)(iii)
    多於 (i)。診斷開關（privileged、eval only）等主人點頭再加。
-2. TA=32 對 large-stitch（中位 48 步）可能欠採樣 — 本輪只跑 medium。
+2. TA=32 對 large-stitch（中位 48 步）可能欠採樣 — TA 是後續 ablation 軸。（v1 誤寫
+   「只跑 medium」— 基準 N3/.842 全是 large-stitch，對照純度要求先導同 env。）
+   先導 4 支（9/4 午）：ITE/ITA 騎 N3 配方；ITR 無 FSQ＋重訓 stage1；ITE0＝ITR 的
+   配對對照（同底、只差 target 變換）。jobs 23522/23524/23526/23528＋各自 eval。
 3. 先導 2 顆只判「值不值得 8 顆」：看 nll 形狀＋不炸，⛔ 不看單顆分數（一顆不是量測）。
 4. 對照組＝N3 已有八顆（.842 sd .108）— 三臂各 8 顆對它，雜訊 ±.03 規則沿用。
 
