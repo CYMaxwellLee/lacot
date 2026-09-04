@@ -3,9 +3,10 @@
 主人 2026-09-04 裁示：intent 來源先 A（現成 E 格路線）再 B（學字典）；
 接法 (i) embed／(ii) per-token 錨／(iii) residual 三臂同日對比。
 
-⛔ 本模組只有幾何，不碰模型、不建圖 —— 佔據圖與 cell↔xy 轉換由呼叫端注入
+⛔ 本模組只有幾何，不碰模型、不建圖 —— 自由格圖（True=可走）與 cell↔xy 轉換由呼叫端注入
 （rollout 主檔已有 _EOCC／_e_xy_to_cell／_e_cell_to_xy，⛔ 不在此另建第二份）。
 ⛔ BFS 一律用 lacot.subgoal 的單一來源（grid_bfs／grid_shortest_path），不另寫。
+⛔ 契約：本模組所有錨輸出一律 np.float32 —— 下游 adapter 的 MLP 是 float32，float64 直餵會 dtype RuntimeError。
 
 資料流：
   訓練 hindsight：軌跡 xy → traj_to_cells()（相鄰去重）→ cells_to_anchors() [K,2]
@@ -34,7 +35,8 @@ def traj_to_cells(traj_xy, xy_to_cell):
 
 
 def jitter_rate(cells):
-    """A→B→A 型抖動佔比（診斷用）：cells[k]==cells[k-2] 的 k 數 / len。"""
+    """A→B→A 型抖動佔比（診斷用）：cells[k]==cells[k-2] 的 k 數 / (len-2)。
+    ⚠️ len<3 回 0.0 ——『量不出來』跟『沒抖動』共用同一個訊號，讀值端注意。"""
     if len(cells) < 3:
         return 0.0
     hits = sum(1 for k in range(2, len(cells)) if cells[k] == cells[k - 2])
@@ -42,14 +44,14 @@ def jitter_rate(cells):
 
 
 def route_cells(occ, s_cell, g_cell):
-    """推論選路：佔據圖上 s→g 的最短 cell 路線（含兩端）。到不了回 None。
+    """推論選路：自由格圖（True=可走）上 s→g 的最短 cell 路線（含兩端）。到不了回 None。
     ⭐ 就是 grid_shortest_path —— 包一層是為了讓 intent 的呼叫端不用知道它住哪。"""
     return grid_shortest_path(occ, s_cell, g_cell)
 
 
 def cells_to_anchors(cells, cell_to_xy):
-    """cell 序列 → 錨點 xy 序列 [K,2] np.float64（cell 中心，呼叫端注入轉換）。"""
-    return np.asarray([cell_to_xy(c) for c in cells], np.float64).reshape(len(cells), 2)
+    """cell 序列 → 錨點 xy 序列 [K,2] np.float32（cell 中心，呼叫端注入轉換）。"""
+    return np.asarray([cell_to_xy(c) for c in cells], np.float64).reshape(len(cells), 2).astype(np.float32)
 
 
 def anchors_resample(anchors, T):
@@ -60,7 +62,7 @@ def anchors_resample(anchors, T):
     """
     A = np.asarray(anchors, np.float64).reshape(-1, 2)
     if len(A) == 1:
-        return np.tile(A, (T, 1))
+        return np.tile(A, (T, 1)).astype(np.float32)
     seg = np.linalg.norm(np.diff(A, axis=0), axis=1)
     cum = np.concatenate([[0.0], np.cumsum(seg)])
     total = max(cum[-1], 1e-9)
@@ -69,7 +71,7 @@ def anchors_resample(anchors, T):
     out = np.empty((T, 2), np.float64)
     for k in (0, 1):
         out[:, k] = np.interp(t_dst, t_src, A[:, k])
-    return out
+    return out.astype(np.float32)
 
 
 def hindsight_intent(traj_xy, xy_to_cell, cell_to_xy, T):
@@ -82,8 +84,11 @@ def hindsight_intent(traj_xy, xy_to_cell, cell_to_xy, T):
 
 def route_intent(occ, s_xy, g_xy, xy_to_cell, cell_to_xy, T):
     """推論用一站式：s,g 座標 → E 圖最短路 → 重採樣錨點 [T,2]。
-    路不通（理論上 gate 過就不會）⇒ 回 None，呼叫端自己保底。"""
-    cells = route_cells(occ, tuple(xy_to_cell(s_xy)), tuple(xy_to_cell(g_xy)))
+    路不通（理論上 gate 過就不會）⇒ 回 None，呼叫端自己保底。
+    ⛔ 契約：轉換後的起/終 cell 必須落在自由格 —— 注入的 xy_to_cell 要保證 snap 到自由格。"""
+    s_c, g_c = tuple(xy_to_cell(s_xy)), tuple(xy_to_cell(g_xy))
+    assert occ[s_c] and occ[g_c], "⛔ 起/終 cell 不是自由格 — 注入的 xy_to_cell 必須 snap 到自由格"
+    cells = route_cells(occ, s_c, g_c)
     if cells is None:
         return None
     return anchors_resample(cells_to_anchors(cells, cell_to_xy), T)

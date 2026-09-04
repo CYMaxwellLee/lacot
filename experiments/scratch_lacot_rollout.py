@@ -157,6 +157,30 @@ assert not (FSQ_FIT and FSQ_LOAD), "⛔ FSQ_FIT 與 FSQ_LOAD 互斥（fit 產檔
 DEC_START = os.environ.get("LACOT_DEC_START", "")
 assert DEC_START in ("", "hard", "soft"), f"⛔ LACOT_DEC_START 只能是 空/hard/soft，收到 {DEC_START}"
 DEC_START_W = float(os.environ.get("LACOT_DEC_START_W", 1.0))
+# ⭐ 兩層架構上層（LACOT_INTENT、9/4 主人裁「先A再B＋三接法同日對比」）：""（預設）＝行為不變；
+#    embed＝(i) 錨序列 pool 成全域向量進 cond_head（軟）；anchor＝(ii) 錨切 K 段 per-token 進
+#    flow prefix（硬、吃 nf_head 3D cond）；residual＝(iii) stage1/decoder 學「真軌跡−錨軌跡」
+#    殘差（⛔ 需重訓 stage1 —— 殘差語言跟完整軌跡語言不同）。
+#    錨來源：訓練＝hindsight（軌跡實際走過的 E 格路線）；推論＝E 佔據圖 BFS 選路（lacot/intent.py）。
+INTENT = os.environ.get("LACOT_INTENT", "")
+assert INTENT in ("", "embed", "anchor", "residual"), f"⛔ LACOT_INTENT 只能是 空/embed/anchor/residual，收到 {INTENT}"
+INTENT_TA = int(os.environ.get("LACOT_INTENT_TA", 32))
+# 🚨 residual × S1_FROM 的互斥 assert 搬到 S1_FROM 定義【之後】（見那一行下面）——
+#    寫在這裡的話 `and` 會短路：INTENT≠residual 時不求值、看起來沒事，
+#    真的設 INTENT=residual 才 NameError ⇒ ⛔ 那道護欄在唯一需要它的情況下是壞的。
+# ⭐ 訓練錨源（LACOT_INTENT_SRC、9/4 主人核准的正式臂，⛔ 不是診斷開關）：
+#    hindsight（預設）＝錨取自軌跡【實際走過】的 cell 序列 —— 彎、貼著資料走。
+#    route      ＝每個樣本拿軌跡首末點，在【資料建的】佔據圖上 BFS 選路生錨 —— 直、最短。
+#    動機：hindsight 錨（彎）跟推論時的 BFS 錨（直）有分佈差 ⇒ 下層看到的條件訓推不同源；
+#         SRC=route 讓訓練與推論的錨【完全同分佈】。(s,g) 訓練時本來就知道、圖全從資料重建
+#         ⇒ 完全合法、非 privileged，可進配方。route 找不到路的樣本 fallback 回 hindsight（計數）。
+INTENT_SRC = os.environ.get("LACOT_INTENT_SRC", "hindsight")
+assert INTENT_SRC in ("hindsight", "route"), \
+    f"⛔ LACOT_INTENT_SRC 只能是 hindsight/route，收到 {INTENT_SRC}"
+INTENT_TAG = os.environ.get("LACOT_INTENT_TAG", "")   # 檔名 tag；通常不手設 —— 由 INTENT/SRC/TA 自動算（可覆蓋）
+_N_NOROUTE = [0]        # ⭐ eval 端 E 圖找不到路線的次數（那些次錨改用零向量）
+_N_SRC_FB = [0, 0]      # ⭐ [route 生不出路而 fallback 回 hindsight 的樣本數, 總樣本數]
+_intent_route_zn = None  # ⭐ 由 E 圖 helper 那段賦值（INTENT 非空才建）；⛔ 別在這裡推路徑
 # ⭐ flow 探針（LACOT_FLOW_PROBE=M、9/2 主人「好好看看問題出在哪」）：eval 載入時，對每個官方任務抽 M 份計畫、解碼，
 #    逐份量「離 BFS 正確路徑的距離（Chamfer 一邊）／穿牆深度／末點距終點」⇒ 對路率與 M 份分散度。只診斷、不改任何行為。
 FLOW_PROBE = int(os.environ.get("LACOT_FLOW_PROBE", 0))
@@ -215,6 +239,8 @@ _FIN_COUNT = [0]   # ⭐ 終局接管的觸發次數 —— ⛔ 開關條件寫�
 #   ⚠️ 載入時會逐項比對 ckpt 的 cfg，對不上就停 —— ⛔ 形狀對得上不代表是同一個模型。
 LOAD_CKPT = os.environ.get("LACOT_LOAD_CKPT", "")
 S1_FROM = os.environ.get("LACOT_S1_FROM", "")     # ⭐ 凍同一個 stage 1（9/2 夜）：從這個 ckpt 載 stage 1 模組、跳過 stage 1 訓練；SEED 只抽 stage 2
+assert not (INTENT == "residual" and S1_FROM), \
+    "⛔ INTENT=residual 不能配 S1_FROM —— 凍的是【完整軌跡】語言，殘差語言必須重訓 stage 1"
 # ⭐ GRAD_REFINE ── 用主人的梯度爬坡取代 learned refine（⛔ 跟 SUBGOAL 正交，可單獨開）。
 #   ⇒ 三種部署因此可以同輪對打，⛔ 而且它們共用同一顆 ckpt、同一批題、同一條噪聲流：
 #       flat-grad  GRAD_REFINE=1 SUBGOAL=""       一次規劃整條路（主人問的那個做法）
@@ -286,6 +312,59 @@ if TEACHER_MIX > 0:
     _tlens = np.array([len(p) for p in _pool])
     print(f"  teacher 題庫：{len(_pool)} 條（細格步數 p50 {np.median(_tlens):.0f} "
           f"p90 {np.percentile(_tlens, 90):.0f} max {_tlens.max()}），mix={TEACHER_MIX:g}", flush=True)
+
+# ═══ INTENT（兩層架構上層）A：訓練錨點供給 ═══════════════════════════════════
+# ⭐ 佔據圖跟 teacher 同款建構（GeoEnergy res=8），但【獨立一份 _ig*】
+#    ⇒ ⛔ 不依賴 LACOT_TEACHER_MIX 有沒有開。
+# ⚠️ 這一段的座標【全部是正規化空間】（make_batch 吐的 traj 就是）⇒ ⛔ 不做 mu/sd。
+if INTENT:
+    from lacot.intent import hindsight_intent, route_intent
+    from lacot.refine_grad import GeoEnergy as _IgGeo
+    _ig = _IgGeo(OBS, mu, sd, res=8, device="cpu")
+    _iocc = (_ig.dist[0, 0].numpy() == 0.0)
+    _ifree = np.argwhere(_iocc)
+    _ilo = np.asarray(_ig.lo, np.float64)
+    _ispan = np.asarray(_ig.hi - _ig.lo, np.float64)
+    _ishape = np.asarray(_ig.shape, np.int64)
+
+    def _i_zn_to_cell(z):
+        """【正規化】座標 → E 細格；落在牆格就 snap 到最近自由格（同 _e_xy_to_cell 的保底寫法，
+        ⛔ 但不做 mu/sd —— 進來的已經是正規化座標）。"""
+        idx = np.clip(np.round((np.asarray(z, np.float64)[:2] - _ilo) / _ispan * (_ishape - 1)).astype(int),
+                      0, _ishape - 1)
+        c = tuple(idx)
+        if _iocc[c]:
+            return c
+        return tuple(_ifree[int(np.abs(_ifree - idx).sum(1).argmin())])
+
+    def _i_cell_to_zn(c):
+        """E 細格 → 格心的【正規化】座標。"""
+        return _ilo + np.asarray(c, np.float64) / (_ishape - 1) * _ispan
+
+    def intent_anchors_of(traj_t):
+        """[B,T,2] 正規化軌跡（device tensor）→ 錨點 [B,INTENT_TA,2] float32（同 device）。
+
+        ⭐ K（LACOT_INTENT_SRC）：hindsight＝實走 cell 序列；route＝首末點在資料佔據圖上 BFS 選路
+           （訓推同分佈）。route 生不出路的樣本 fallback 回 hindsight ⇒ ⛔ 不靜默丟樣本，計數後印。
+        """
+        tr = traj_t.detach().cpu().numpy()
+        A = np.empty((tr.shape[0], INTENT_TA, 2), np.float64)
+        for i in range(tr.shape[0]):
+            a = None
+            if INTENT_SRC == "route":
+                a = route_intent(_iocc, tr[i][0], tr[i][-1],
+                                 _i_zn_to_cell, _i_cell_to_zn, INTENT_TA)
+                if a is None:
+                    _N_SRC_FB[0] += 1
+            if a is None:
+                a = hindsight_intent(tr[i], _i_zn_to_cell, _i_cell_to_zn, INTENT_TA)[0]
+            A[i] = a
+        _N_SRC_FB[1] += tr.shape[0]
+        return torch.from_numpy(A.astype(np.float32)).to(device)
+
+    print(f"⭐ INTENT={INTENT}（src={INTENT_SRC}）：錨點佔據圖 {tuple(_ig.shape)}、T_A={INTENT_TA}", flush=True)
+else:
+    intent_anchors_of = None
 
 # ═══ P2：自舉蒸餾資料（LACOT_BOOT_DATA＝BOOT_GEN 產的 npz）═════════════════
 # exp(−βE) 加權蒸餾的實作＝【按 w 加權抽樣】（期望上等價、⛔ 不動 loss）。
@@ -587,13 +666,17 @@ def flow_probe(tasks_sg, M):
         with torch.no_grad():
             route_raw = tr[0] * SD + MU                                # [T,2] 原始
             s_n = normstate(np.asarray(sx, np.float64)); g_n = normstate(np.asarray(gx, np.float64))
-            cond = condvec(s_n, g_n).expand(M, -1)
-            u = flow.sample(M, cond)
-            pts_n = _dec(_q(u), s_n); pts_raw = _anchor_pts(pts_n * SD + MU, np.asarray(sx, np.float64))   # [M,T,2]
+            # ⭐ H(3)：診斷路徑也要接 intent，否則 anchor 接法在這裡就維度炸（⛔ 不是靜默的）。
+            # ⚠️ 已知缺口：下面 u_o 走的是 etarget(tr)，而 tr 是【絕對】軌跡；INTENT=residual 時
+            #    encoder 學的是殘差語言 ⇒ 那個 oracle 參考值（ref/thr）對 residual 臂不可比。
+            _anc = _intent_anchor_eval(sx, gx)
+            cond = condvec(s_n, g_n, _intent_cond(_anc)).expand(M, -1)
+            u = flow.sample(M, flow_cond(cond, _anc))
+            pts_n = _intent_inv(_dec(_q(u), s_n), _anc); pts_raw = _anchor_pts(pts_n * SD + MU, np.asarray(sx, np.float64))   # [M,T,2]
             route_d = _route_d(pts_raw, route_raw)                     # [M]
             wall = (GEO.wall_depth(pts_n) * _head_mask(pts_raw).float()).sum(1) / _head_mask(pts_raw).float().sum(1)
             u_o = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
-            po = _anchor_pts(_dec(_q(u_o), tr[:, 0]) * SD + MU, np.asarray(sx, np.float64))
+            po = _anchor_pts(_intent_inv(_dec(_q(u_o), tr[:, 0]), _anc) * SD + MU, np.asarray(sx, np.float64))
             ref = float(_route_d(po, route_raw)[0]); thr = max(2.0 * ref, 0.5)
             onroute = (route_d < thr).float()                          # 對路只看路徑距；穿牆分開報
             heads = [pr[_head_mask(pr[None])[0]] for pr in pts_raw]
@@ -623,8 +706,10 @@ def roundtrip_gate(tasks_sg):
         if tr is None or u_dec is None:
             out.append(None); continue
         with torch.no_grad():
+            # ⚠️ 同 flow_probe 的已知缺口：tr 是絕對軌跡 ⇒ residual 臂這格的往返 mse 不可跟別臂比。
+            _anc = _intent_anchor_eval(sx, gx)
             u = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
-            pts = _dec(_q(u), tr[:, 0])                                 # [1,T_CAP,2] 正規化
+            pts = _intent_inv(_dec(_q(u), tr[:, 0]), _anc)              # [1,T_CAP,2] 正規化
             mse = float((pts - tr).pow(2).mean())
             wall = float(GEO.wall_depth(pts).mean()) if "GEO" in globals() and GEO is not None else float("nan")
             gdist = float((pts[0, -1] - tr[0, -1]).norm())
@@ -674,6 +759,20 @@ elif FSQ_FIT:
     fsq = TokenFSQ(D_MODEL, d=_fd, L=_fL, bound=FSQ_BOUND).to(device)
     print(f"  ⭐ FSQ fit 模式：d={_fd} L={_fL} bound={FSQ_BOUND} → {FSQ_FIT}", flush=True)
 assert not (fsq is not None and vq is not None), "⛔ FSQ 與 VQ 不同開（推論鏈只有一個 snap 縫）"
+
+# ═══ INTENT B：三接法 adapter（介面統一，importlib 依 LACOT_INTENT 挑一支）═════
+# ⛔ 一定要建在 cond_head／Flow 之前 —— cond 尾巴多寬、flow 的 cond_dim 多寬都由它決定；
+#    而 residual 接法 stage 1 就要用 target_fwd ⇒ 這裡（fsq 之後）是最早能建的位置。
+# ⚠️ 它的 __init__ 會消耗全域 torch RNG ⇒ INTENT 非空時下游 init 跟歷史不同（本來就是新配置）；
+#    INTENT="" 時整段不執行 ⇒ ⭐ 歷史行為逐位元不變。
+intent_ad = None
+if INTENT:
+    import importlib
+    _im = importlib.import_module(f"lacot.intent_{INTENT}")
+    intent_ad = _im.IntentAdapter(INTENT_TA, K,
+                                  (fsq.d if FSQ_SPACE == "z" else D_MODEL), COND).to(device)
+    print(f"  ⭐ intent 接法 {_im.NAME}（{_im.TAG}）：cond 尾巴 +{intent_ad.cond_extra_dim} 維、"
+          f"per-token +{intent_ad.pertoken_dim} 維", flush=True)
 
 
 def _q(u):
@@ -779,6 +878,10 @@ if FSQ_FIT:
 _ed_hist, logits = [], None
 for stp in range(_S1):
     traj, mask, s, g, _ = make_batch(rng, teacher_mix=TEACHER_MIX)   # stage1 不用 act ⇒ teacher 全參與
+    if INTENT == "residual":
+        # ⭐ E：(iii) 殘差接法 —— stage 1 的目標整個換成「真軌跡 − 錨輪廓」的殘差語言。
+        #    ⛔ 其他兩個接法 stage 1 一行都不動（它們只加條件，不動訓練目標）。
+        traj = intent_ad.target_fwd(traj, intent_anchors_of(traj))
     et = etarget(traj, mask)
     if ENC_OBJ == "sg_infonce":
         q = q_pooler(torch.stack([sg_c(s), sg_c(g)], 1))
@@ -843,8 +946,13 @@ print(f"  e_target match-acc(train batch) {_ma:.3f}", flush=True)   # ⚠️ 訓
 if _ed_hist:
     print(f"  ⇒ u 有效維度 起 {_ed_hist[0]:.3f} → 末 {_ed_hist[-1]:.3f}", flush=True)
 
-cond_enc = sota_mlp(2, 512, 512).to(device); cond_head = sota_mlp(1024, 512, COND).to(device)
-flow = Flow(token_dim=(fsq.d if FSQ_SPACE == "z" else D_MODEL), seq_len=K, n_blocks=4, cond_dim=COND).to(device)
+cond_enc = sota_mlp(2, 512, 512).to(device)
+# ⭐ C：embed/residual 接法把錨的全域摘要拼在 cond 尾巴 ⇒ cond_head 的入口寬 1024+extra。
+cond_head = sota_mlp(1024 + (intent_ad.cond_extra_dim if intent_ad is not None else 0),
+                     512, COND).to(device)
+# ⭐ D：anchor 接法走 per-token prefix（3D cond）⇒ flow 的 cond_dim 要含 per-token 那幾維。
+flow = Flow(token_dim=(fsq.d if FSQ_SPACE == "z" else D_MODEL), seq_len=K, n_blocks=4,
+            cond_dim=COND + (intent_ad.pertoken_dim if intent_ad is not None else 0)).to(device)
 if FSQ_SPACE == "z":
     # ⭐ 9/3 晚：z 空間版的外皮 —— inner flow 在 d 維建模；sample 出的 z 過 quantize→up 回 D 維，
     #    下游（_q 恆等、decoder、head）拿到的已是字典化 u，一行都不用改。nll 的目標由訓練迴圈給 z。
@@ -908,12 +1016,70 @@ if BC_OWN:
 #    ⚠️ 開了之後 bc 的數字跟歷史結果不可直接比 ⇒ 預設仍是 0。
 f_mods = ([cond_enc, cond_head, flow, refine, ahead] if BC_INDEP
           else [cond_enc, cond_head, flow, refine, ahead, bc_head])
+if intent_ad is not None:
+    f_mods = f_mods + [intent_ad]      # ⭐ G：intent adapter 跟 cond 鏈同一個 optimizer／同一把 clip
 opt2 = _apply_lr_scale(torch.optim.Adam([p for m in f_mods for p in m.parameters()], lr=5e-4))
 opt_bc = _apply_lr_scale(torch.optim.Adam(bc_head.parameters(), lr=5e-4)) if BC_INDEP else None
 opt_bc_own = (torch.optim.Adam([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
                                 for p in m.parameters()], lr=5e-4) if BC_OWN else None)
-def condvec(s, g):
-    return cond_head(torch.cat([cond_enc(s), cond_enc(g)], 1))
+def condvec(s, g, ix=None):
+    """(s,g) → 條件向量。⭐ C：intent 的 embed/residual 接法把錨的全域摘要 ix 拼在尾巴；
+    ix=None ⇒ 拼零向量（「沒有路線」＝跟 COND_DROP 歸零同一個哲學）。
+    ⛔ INTENT="" 時 ix 分支整段跳過 ⇒ 呼叫端一行都不用改、行為逐位元不變。"""
+    x = torch.cat([cond_enc(s), cond_enc(g)], 1)
+    if intent_ad is not None and intent_ad.cond_extra_dim > 0:
+        if ix is None:
+            ix = x.new_zeros(x.shape[0], intent_ad.cond_extra_dim)
+        elif ix.shape[0] == 1 and x.shape[0] != 1:
+            ix = ix.expand(x.shape[0], -1)
+        x = torch.cat([x, ix], 1)
+    return cond_head(x)
+
+
+def _intent_cond(anc):
+    """錨 → condvec 的尾巴（本接法不吃全域摘要／沒有錨 ⇒ None ⇒ condvec 自己拼零）。"""
+    if intent_ad is None or intent_ad.cond_extra_dim == 0 or anc is None:
+        return None
+    return intent_ad.cond_global(anc)
+
+
+def flow_cond(cv, anchors_t=None):
+    """⭐ D：flow 要吃的 cond。anchor 接法＝3D per-token prefix [B,K,COND+pertoken]；其餘原樣回 2D。
+    ⛔ Permutation 的 flip 同步在 Flow 內部處理好了 —— 這裡【不要】自己 flip cond。
+    anchors_t=None（eval 沒路線）⇒ per-token 補零＝「什麼都不知道」，跟 condvec 拼零同語義。"""
+    if INTENT != "anchor" or intent_ad is None:
+        return cv
+    if anchors_t is None:
+        pt = cv.new_zeros(cv.shape[0], K, intent_ad.pertoken_dim)
+    else:
+        if anchors_t.shape[0] == 1 and cv.shape[0] != 1:
+            anchors_t = anchors_t.expand(cv.shape[0], -1, -1)
+        pt = intent_ad.cond_pertoken(anchors_t)
+    return torch.cat([cv.unsqueeze(1).expand(-1, K, -1), pt], -1)
+
+
+def _intent_inv(pts_n, anc):
+    """⭐ H(4)：residual 接法 decode 出來的是【殘差】⇒ 加回錨輪廓才是座標序列。其餘接法恆等。
+    ⛔ 只在「要當座標用」（選點／E_geo／診斷）之前呼叫 —— encoder 往返投影要留在殘差空間。
+    ⚠️ anc=None（eval 無路線）⇒ 沒有輪廓可加，原樣回（＝零輪廓，同 fallback 語義）。"""
+    if INTENT != "residual" or intent_ad is None or anc is None:
+        return pts_n
+    if anc.shape[0] == 1 and pts_n.shape[0] != 1:
+        anc = anc.expand(pts_n.shape[0], -1, -1)
+    return intent_ad.target_inv(pts_n, anc)
+
+
+def _intent_anchor_eval(s_xy, g_xy):
+    """eval 端取錨（原始座標進）：INTENT 關著 ⇒ None（下游一切照舊）；
+    有路 ⇒ [1,T_A,2] 正規化錨；無路 ⇒ None 並累計 n_intent_noroute。"""
+    if intent_ad is None or _intent_route_zn is None:
+        return None
+    a = _intent_route_zn(s_xy, g_xy)
+    if a is None:
+        _N_NOROUTE[0] += 1
+    return a
+
+
 mse = lambda p, a: (p - a).pow(2).mean()
 print("stage 2 flow+refine+action ...", flush=True)
 STEPS2 = 0 if LOAD_CKPT else int(os.environ.get("LACOT_STEPS2", 2000))
@@ -927,8 +1093,10 @@ if EMA_W > 0 and not LOAD_CKPT:
     import copy as _cp
     # ⭐ z 版 flow 是 adapter：EMA 影子要 deepcopy【inner】（deepcopy adapter 會被 __getattr__ 透傳
     #    dunder 搞出 inner 的 copy 或遞迴）；state_dict／load 語義不變。
-    _EMA_NAMED = [("cond_enc", cond_enc), ("cond_head", cond_head), ("flow", getattr(flow, "inner", flow)),
-                  ("ahead", ahead), ("bc_head", bc_head)]
+    _EMA_NAMED = ([("cond_enc", cond_enc), ("cond_head", cond_head), ("flow", getattr(flow, "inner", flow)),
+                   ("ahead", ahead), ("bc_head", bc_head)]
+                  # ⭐ G：intent adapter 是普通 module ⇒ 直接 deepcopy（⛔ 不像 z 版 flow 要拆 inner）
+                  + ([("intent_ad", intent_ad)] if intent_ad is not None else []))
     _EMA_SHADOW = {}
     for _n, _m in _EMA_NAMED:
         _sh = _cp.deepcopy(_m)
@@ -939,24 +1107,33 @@ if EMA_W > 0 and not LOAD_CKPT:
     print(f"  權重 EMA 開啟：m={EMA_W:g}（影子五模組，訓練行為不變）", flush=True)
 for stp in range(STEPS2):
     traj, mask, s, g, act = make_batch(rng, teacher_mix=TEACHER_MIX)
+    anc = ix = None
+    if intent_ad is not None:                        # ⭐ F：三接法的錨都在這裡生一次
+        anc = intent_anchors_of(traj)
+        if INTENT == "residual":                     # ⛔ 殘差接法：et 也要吃殘差（跟 stage 1 同一種語言）
+            traj = intent_ad.target_fwd(traj, anc)
+        ix = _intent_cond(anc)                       # embed/residual＝[B,64]；anchor＝None
     with torch.no_grad():
         et = etarget(traj, mask)
-    cond = condvec(s, g)
+    cond = condvec(s, g, ix)
     # ⭐ 9/3 FSQ：z 空間版 flow 目標＝d 維 z（甲連續／乙格點+噪聲；滿秩無薄片病）；
     #    u 空間版 dequant（⛔ 9/3 判負：目標塌 8 維薄片）留作歷史對照。
     if fsq is not None and FSQ_SPACE == "z":
         with torch.no_grad():
             _et_nf = fsq.dequant_z(et) if FSQ_TGT == "dequant" else fsq.z_of(et)
-        l_nf = flow.nll(_et_nf, cond) / (K * fsq.d)
+        l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / (K * fsq.d)
     else:
         _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
-        l_nf = flow.nll(_et_nf, cond) / DIM
+        l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / DIM
     # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
     #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
     _rw = _REAL_W[0]
     _wmse = lambda p, a: ((p - a).pow(2).reshape(len(p), -1).mean(1) * _rw).sum() / _rw.sum().clamp(min=1)
     # ⭐ COND_DROP：l_anchor 這一路以 p 機率把整個 cond 歸零，逼 head 從 u 讀路徑。
     #    ⛔ 只丟 cond、不丟 u —— 丟 u 會反過來教 head 繞開 u。
+    #    ⭐ F/intent：ix（錨的全域摘要）是 condvec 進 cond_head 前就拼進去的 ⇒ cond 歸零＝ix 一起歸零，
+    #       「drop＝什麼都不知道」自動成立。per-token 錨只走 flow 那一路（l_nf），⛔ 不在 l_anchor 上，
+    #       ⇒ 這裡沒有第二個東西要歸零（flow_cond 的補零走 anchors_t=None 那條）。
     _ca = cond
     if COND_DROP > 0:
         _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
@@ -965,7 +1142,7 @@ for stp in range(STEPS2):
     _u_head = fsq.snap(et) if (fsq is not None and FSQ_SPACE == "z") else _q(et)
     l_anchor = _wmse(ahead(_ca, _u_head), act)
     if LEARNED_REFINE:
-        u = flow.sample(B, cond).detach(); us = [u]
+        u = flow.sample(B, flow_cond(cond, anc)).detach(); us = [u]
         for _ in range(3):
             u = refine(cond, u); us.append(u)
         if CONS == "ema":
@@ -1018,6 +1195,10 @@ for stp in range(STEPS2):
                     _be.copy_(_bl)
     if (stp + 1) % 1000 == 0:
         print(f"  step {stp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}", flush=True)
+if INTENT and _N_SRC_FB[1] > 0:
+    # ⭐ K：route 錨源生不出路 ⇒ 那個樣本退回 hindsight。率太高＝訓推同分佈這件事沒兌現到位。
+    print(f"  ⭐ intent 錨源 src={INTENT_SRC}：處理 {_N_SRC_FB[1]} 個樣本，"
+          f"fallback 回 hindsight {_N_SRC_FB[0]} 次（{_N_SRC_FB[0] / _N_SRC_FB[1]:.4f}）", flush=True)
 TAG_SEED = SEED          # 檔名用的 seed；載入模式下改跟 ckpt 的 seed 走（2026-08-31 修互蓋病）
 LOAD_EMA = 0             # 載入模式下由 LACOT_LOAD_EMA 蓋掉；訓練模式恆 0
 if LOAD_CKPT:
@@ -1036,6 +1217,11 @@ if LOAD_CKPT:
                         ("refine", refine), ("ahead", ahead), ("bc_head", bc_head),
                         ("traj_enc", traj_enc), ("e_pooler", e_pooler)):
         _mod.load_state_dict(_ck[_name])
+    if intent_ad is not None:                       # ⭐ G：intent adapter（⚠️ 舊 ckpt 沒有這個 key）
+        assert "intent_ad" in _ck, (
+            f"⛔ LACOT_INTENT={INTENT} 但這顆 ckpt 沒有 intent_ad 段 ⇒ 它是【沒開 intent】訓的"
+            f"（或舊版存的）—— ⛔ 別拿隨機初始化的 adapter 去評估：{os.path.basename(_lp)}")
+        intent_ad.load_state_dict(_ck["intent_ad"])
     if BC_OWN:
         assert "bc_own" in _ck, "⛔ BC_OWN=1 但這顆 ckpt 沒有 bc_own 段（訓練時沒開 LACOT_BC_OWN）"
         bc_own_enc.load_state_dict(_ck["bc_own"]["enc"])
@@ -1048,7 +1234,8 @@ if LOAD_CKPT:
         assert "ema" in _ck, "⛔ LOAD_EMA=1 但這顆 ckpt 沒有 ema 段（訓練時沒開 LACOT_EMA_W）"
         for _name, _sd in _ck["ema"].items():
             {"cond_enc": cond_enc, "cond_head": cond_head, "flow": flow,
-             "ahead": ahead, "bc_head": bc_head}[_name].load_state_dict(_sd)
+             "ahead": ahead, "bc_head": bc_head,
+             **({"intent_ad": intent_ad} if intent_ad is not None else {})}[_name].load_state_dict(_sd)
         print(f"  ⭐ 已切到 EMA 影子權重（m={_cfg.get('EMA_W', '?')}，五模組）", flush=True)
     if u_dec is not None:
         assert "u_dec" in _ck, (
@@ -1104,6 +1291,9 @@ if u_dec is not None:
 BOOT_GEN = os.environ.get("LACOT_BOOT_GEN", "")
 if BOOT_GEN:
     assert LOAD_CKPT, "⛔ 生成模式要在載入模式下跑（LACOT_LOAD_CKPT）—— 別拿沒訓過的權重生樣本"
+    # ⛔ BOOT_GEN 跑在 E 圖 helper 之前（_intent_route_zn 還不存在）⇒ intent 的推論錨在這裡拿不到。
+    #    要開就得先把錨源接進來 —— ⛔ 不准靜默用「沒有錨」的條件生蒸餾樣本。
+    assert not INTENT, "⛔ LACOT_BOOT_GEN 尚未接 INTENT（推論錨源在 E 圖 helper 段之後才建）"
     assert u_dec is not None, "⛔ 生成模式需要 decoder（ENC_OBJ=recon*）—— E 靠它把 u 解成座標"
     BOOT_Q = int(os.environ.get("LACOT_BOOT_Q", 512))        # 題數
     BOOT_M = int(os.environ.get("LACOT_BOOT_M", 8))          # 每題生成份數（pass@M 的 M）
@@ -1267,8 +1457,9 @@ def _foreign_u(R):
     gr = max(gr, min(r + CHUNK, te))
     s2 = torch.tensor((OBS[r] - mu) / sd, device=device)[None]
     g2 = torch.tensor((OBS[gr] - mu) / sd, device=device)[None]
-    c2 = condvec(s2, g2)
-    u = flow.sample(1, c2)
+    _a2 = _intent_anchor_eval(OBS[r], OBS[gr])        # ⭐ H(3)：shuf 也要餵得起 intent 的條件
+    c2 = condvec(s2, g2, _intent_cond(_a2))
+    u = flow.sample(1, flow_cond(c2, _a2))
     return _apply_refine(c2, u, R)
 
 
@@ -1286,7 +1477,10 @@ def policy_chunk(obs, goal, R, use_u):
             use_u = "bc"
         else:               # resample：R=0 語義 ⇒ fresh flow 短計畫、不爬、不碰快取
             R = 0
-    s = normstate(obs); g = normstate(goal); cond = condvec(s, g)
+    # ⭐ H(3)：規劃時生錨（現在位置 → 這一層的目標；分段模式傳進來的 goal 就是 subgoal）。
+    #    無路 ⇒ None ⇒ condvec 拼零、flow_cond 補零（n_intent_noroute 計數）。
+    _anc = _intent_anchor_eval(obs, goal)
+    s = normstate(obs); g = normstate(goal); cond = condvec(s, g, _intent_cond(_anc))
     if use_u == "bc":                              # ⭐ 誠實地板，走另一顆 head
         if BC_OWN:                                 # ⭐ 真獨立 GCBC：全鏈自有權重（8/31）
             a = bc_own_head(own_condvec(s, g))[0].cpu().numpy()
@@ -1299,7 +1493,7 @@ def policy_chunk(obs, goal, R, use_u):
     if use_u:
         u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
         if u is None:
-            u = flow.sample(1, cond)
+            u = flow.sample(1, flow_cond(cond, _anc))
         if GRAD_REFINE:
             # ⭐ 主人 8/22 的更新式取代 learned refine。
             # ⚠️ 這一層是 @torch.no_grad()，而 grad_refine 內部自己開 enable_grad
@@ -1318,21 +1512,28 @@ def policy_chunk(obs, goal, R, use_u):
                 # ⭐ energy-guided selection（主人 8/29 晚核准的中間站一）：
                 #    抽 N 份、E 打分、挑最低 —— 挑出來的永遠是 flow 原生樣本（殼上的點）
                 #    ⇒ 零方言病，E 的幾何品味直接兌現。⛔ 不碰快取（每 chunk fresh 選）。
-                cand = flow.sample(SEL_N, cond.expand(SEL_N, -1))
+                cand = flow.sample(SEL_N, flow_cond(cond.expand(SEL_N, -1), _anc))
                 with torch.no_grad():
-                    _e = GEO(_dec(_q(cand), s), s.expand(SEL_N, -1), g.expand(SEL_N, -1))
+                    # ⭐ H(4)：residual 接法解出來的是殘差 ⇒ 進 E_geo 之前先加回錨輪廓
+                    _e = GEO(_intent_inv(_dec(_q(cand), s), _anc),
+                             s.expand(SEL_N, -1), g.expand(SEL_N, -1))
                 u = cand[int(_e.argmin())][None]
             else:
                 _use_warm, _steps = grad_steps(R, _GRAD_CACHE["u"] is not None, GRAD_R, GRAD_R_WARM)
                 if _steps > 0:
                     if _use_warm:
                         u = _GRAD_CACHE["u"]                 # 接續上一個 chunk 的計畫
-                    u = grad_refine(u, cond, u_dec, flow, GEO, s, g,
+                    # ⚠️ H(4) 已知缺口：grad_refine 內部自己 decode 去算 E_geo，而它在 lacot/（唯讀）
+                    #    ⇒ INTENT=residual＋GRAD_R>0 時那個 E 是對【殘差】算的。
+                    #    ⛔ 別靜默用它：residual 臂請配 GRAD_R=0（爬 0 步 ⇒ grad_refine 是 no-op）。
+                    u = grad_refine(u, flow_cond(cond, _anc), u_dec, flow, GEO, s, g,
                                     steps=_steps, eta=GRAD_ETA, lam=GRAD_LAM)
                     if GRAD_PROJ:
                         # ⭐ 中間站二：encoder 往返投影 —— 爬完拉回 head 熟悉的殼上再用。
                         #    這格若讓爬坡從「變差」變「不差」，方言假說確診。
                         with torch.no_grad():
+                            # ⛔ 往返投影【不】做 target_inv —— encoder 學的就是殘差語言，
+                            #    decode→re-encode 兩端要留在同一個空間（加回輪廓反而錯位）。
                             u = encode_u(_dec(_q(u), s))
                     _GRAD_CACHE["u"] = u
                 # ⛔ _steps == 0（R=0）⇒ flow 抽的 u 直接用，⛔ 不碰 _GRAD_CACHE
@@ -1370,7 +1571,8 @@ if _NEED_DEC:
         f"⛔ {'SUBGOAL=' + SUBGOAL if SUBGOAL else 'GRAD_REFINE=1'} 需要 decoder，"
         f" 而 ENC_OBJ={ENC_OBJ} 沒有訓 decoder。"
         " ⇒ 用 ENC_OBJ=recon/recon_ictr（或載一顆有 u_dec 的 ckpt），或改用 SUBGOAL=bfs")
-if _NEED_DEC or SUBGOAL == "ebfs":
+if _NEED_DEC or SUBGOAL == "ebfs" or INTENT:
+    # ⭐ H(1)：INTENT 也要 GEO —— 推論端的錨是 E 佔據圖上的 BFS 路線，⛔ 沒有 GEO 就沒有那張圖。
     from lacot.refine_grad import GeoEnergy, grad_refine, grad_steps
     GEO = GeoEnergy(OBS, mu, sd, res=8, device=device, w_len=W_LEN)
     if W_LEN != 0.3:
@@ -1419,7 +1621,7 @@ if SUBGOAL == "bfs":
     print(f"  BFS subgoal：格寬 {_CELL_W:.2f}，"
           f"subgoal 隔 {max(1, int(round(DELTA_SUB / _CELL_W)))} 格", flush=True)
 
-if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0:   # ⭐ 9/2：SNAP／HEADGUARD 也要 E 格 helper（只有定義與一行 print）
+if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0 or INTENT:   # ⭐ 9/2：SNAP／HEADGUARD 也要 E 格 helper（只有定義與一行 print）；9/4：INTENT 的推論錨也是
     # ⭐ E 圖搜索供點（主人 2026-08-30「energy 自己 reason 串接」）：subgoal 由
     #    【資料重建佔據圖】上的 BFS 生 —— 跟 oracle 格（SUBGOAL=bfs）同一套挑點邏輯，
     #    差別只在圖：bfs 用 env.maze_map（真圖＝privileged、只准當診斷），
@@ -1447,6 +1649,25 @@ if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0:   # ⭐ 9/2：SNAP／HEAD
     def _e_cell_to_xy(c):
         z = _E_LO + np.asarray(c, np.float64) / (_E_SHAPE - 1) * _E_SPAN
         return z * sd + mu
+
+    def _e_cell_to_zn(c):
+        """⭐ H(2)：_e_cell_to_xy 的【正規化】版（⛔ 不乘 sd、不加 mu）—— intent 的錨住在正規化空間。"""
+        return _E_LO + np.asarray(c, np.float64) / (_E_SHAPE - 1) * _E_SPAN
+
+    _INTENT_ROUTE_CACHE = {}
+
+    def _intent_route_zn(s_xy, g_xy):    # noqa: F811（覆蓋上面那個 None 佔位）
+        """推論錨：E 佔據圖上 s→g 最短路 → 重採樣 [T_A,2]【正規化】→ [1,T_A,2] tensor；無路回 None。
+        ⚠️ 進來的是【原始】座標（_e_xy_to_cell 自己做 mu/sd），出去的是【正規化】錨。
+        ⭐ 同一組 (起點格, 終點格) 的結果快取起來 —— 純加速，⛔ 回傳值與不快取時逐位元相同。"""
+        _k = (_e_xy_to_cell(s_xy), _e_xy_to_cell(g_xy))
+        if _k not in _INTENT_ROUTE_CACHE:
+            if len(_INTENT_ROUTE_CACHE) > 200000:
+                _INTENT_ROUTE_CACHE.clear()
+            _a = route_intent(_EOCC, s_xy, g_xy, _e_xy_to_cell, _e_cell_to_zn, INTENT_TA)
+            _INTENT_ROUTE_CACHE[_k] = (None if _a is None else
+                                       torch.tensor(np.asarray(_a, np.float32), device=device)[None])
+        return _INTENT_ROUTE_CACHE[_k]
 
     def _e_bfs_from(_env_unused, src):
         """GEO 佔據圖上的 BFS。介面對齊 DE._bfs_from ⇒ bfs_subgoal 一行不用改。
@@ -1509,19 +1730,20 @@ def make_subgoal_policy(R, use_u):
 
     def _plan(obs):
         s_n = normstate(obs); g_n = normstate(box["goal"])
+        _anc = _intent_anchor_eval(obs, box["goal"])      # ⭐ H(3)：長程層的錨（現在 → 最終目標）
         if SUBGOAL == "latent":
             # 長程層：flow 起手 → E_geo 爬 → 解碼 → 沿弧長取點
             # ⚠️ λ 調小：cond=(現在, 最終目標) 對 flow 來說是分布外的，結界本來就不太可信
-            cond_l = condvec(s_n, g_n)
+            cond_l = condvec(s_n, g_n, _intent_cond(_anc))
             if box.get("u_long") is not None and GRAD_R_WARM > 0:
                 u_l, _st = box["u_long"], GRAD_R_WARM    # 長程計畫也是接續修，⛔ 不重想
             else:
-                u_l, _st = flow.sample(1, cond_l).detach(), GRAD_R
-            u_l = grad_refine(u_l, cond_l, u_dec, flow, GEO, s_n, g_n,
+                u_l, _st = flow.sample(1, flow_cond(cond_l, _anc)).detach(), GRAD_R
+            u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO, s_n, g_n,
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_n = _dec(_q(u_l), s_n)               # [1, T_CAP, 2] 正規化座標
+                pts_n = _intent_inv(_dec(_q(u_l), s_n), _anc)   # [1, T_CAP, 2] 正規化座標（residual 已還原）
                 pts_raw = pts_n * SD + MU                # ⭐ 換回原始座標 ⇒ 跟 DELTA_SUB 同單位
                 pts_raw = _anchor_pts(pts_raw, obs)
                 sub = arc_subgoal(pts_raw, DELTA_SUB)[0].cpu().numpy()
@@ -1532,17 +1754,17 @@ def make_subgoal_policy(R, use_u):
         elif SUBGOAL == "conf":
             # ⭐ 信心選點（主人 2026-08-29）：抽 M 份長程計畫、各自修完，
             #    subgoal 取「窗內 M 條共識最高（分散最小）」的點 —— 固定 7.5 的自適應版。
-            cond_l = condvec(s_n, g_n).expand(SUB_M, -1)
+            cond_l = condvec(s_n, g_n, _intent_cond(_anc)).expand(SUB_M, -1)
             if box.get("u_long") is not None and GRAD_R_WARM > 0:
                 u_l, _st = box["u_long"], GRAD_R_WARM    # M 份一起接續修
             else:
-                u_l, _st = flow.sample(SUB_M, cond_l).detach(), GRAD_R
-            u_l = grad_refine(u_l, cond_l, u_dec, flow, GEO,
+                u_l, _st = flow.sample(SUB_M, flow_cond(cond_l, _anc)).detach(), GRAD_R
+            u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO,
                               s_n.expand(SUB_M, -1), g_n.expand(SUB_M, -1),
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_raw = _anchor_pts(_dec(_q(u_l), s_n) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(_intent_inv(_dec(_q(u_l), s_n), _anc) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _cs = consensus_subgoal(pts_raw, SUB_CONF_LO * DELTA_SUB,
                                          SUB_CONF_HI * DELTA_SUB, ret_stats=True)
             SUB_DIAG["spread"].append(_cs["spread"])
@@ -1554,21 +1776,22 @@ def make_subgoal_policy(R, use_u):
         elif SUBGOAL == "conf2":
             # ⭐ 主人 8/29 統一版：fresh M 份（⛔ 不 warm，治計畫殘骸）→ 修 → 判信心。
             _NS = SUB_ESEL if SUB_ESEL > SUB_M else SUB_M       # ⭐ 9/2 E 選計畫：先抽 N 份
-            cond_l = condvec(s_n, g_n).expand(_NS, -1)
+            cond_l = condvec(s_n, g_n, _intent_cond(_anc)).expand(_NS, -1)
             u_l = _oracle_u(obs, box["goal"], _NS) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
             if u_l is None:
-                u_l = flow.sample(_NS, cond_l).detach()
-            u_l = grad_refine(u_l, cond_l, u_dec, flow, GEO,
+                u_l = flow.sample(_NS, flow_cond(cond_l, _anc)).detach()
+            u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO,
                               s_n.expand(_NS, -1), g_n.expand(_NS, -1),
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
             if _NS > SUB_M:                                     # 用 E 留最低的 SUB_M 份（越小越好）
                 with torch.no_grad():
-                    _eN = GEO(_dec(_q(u_l), s_n), s_n.expand(_NS, -1), g_n.expand(_NS, -1))
+                    _eN = GEO(_intent_inv(_dec(_q(u_l), s_n), _anc),
+                              s_n.expand(_NS, -1), g_n.expand(_NS, -1))
                     _keep = torch.topk(-_eN, SUB_M).indices
                 SUB_DIAG["esel_e_gap"].append(float(_eN.max() - _eN.min()))
                 u_l, cond_l = u_l[_keep], cond_l[_keep]
             with torch.no_grad():
-                pts_raw = _anchor_pts(_dec(_q(u_l), s_n) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(_intent_inv(_dec(_q(u_l), s_n), _anc) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
             sub, _fc = farthest_confident_subgoal(
                 pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True,
                 # 🚨 錨定把頭端分散人工歸零 ⇒ tau 校準窗挪到中段（見 subgoal.py 註解）
@@ -1744,6 +1967,7 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            grad_lam=GRAD_LAM, grad_r_warm=GRAD_R_WARM, delta_sub=DELTA_SUB,
            sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK, dec_anchor=DEC_ANCHOR,
            teacher_mix=TEACHER_MIX,
+           intent=INTENT, intent_ta=INTENT_TA, intent_src=INTENT_SRC,
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 out["rt_gate"] = RT_GATE
 out["flow_probe"] = FLOW_PROBE_OUT
@@ -1905,10 +2129,13 @@ if PREREQ:
         _r0 = np.random.default_rng(999)
         for _ in range(20):
             traj, mask, s, g, act = make_batch(_r0)
-            cond = condvec(s, g)
+            _anc = intent_anchors_of(traj) if intent_ad is not None else None
+            if INTENT == "residual":
+                traj = intent_ad.target_fwd(traj, _anc)      # ⛔ et 要跟訓練同一種語言
+            cond = condvec(s, g, _intent_cond(_anc))
             et_true = etarget(traj, mask)
             _d0["oracle"].append(mse(ahead(cond, et_true), act).item())
-            _d0["flow"].append(mse(ahead(cond, flow.sample(len(s), cond)), act).item())
+            _d0["flow"].append(mse(ahead(cond, flow.sample(len(s), flow_cond(cond, _anc))), act).item())
             _d0["zero"].append(mse(ahead(cond, torch.zeros_like(et_true)), act).item())
     _m = {k: float(np.mean(v)) for k, v in _d0.items()}
     _gain = (_m["flow"] - _m["oracle"]) / max(_m["flow"], 1e-9)
@@ -1927,8 +2154,9 @@ if PREREQ:
         _within, _act_spreads, _mus = [], [], []
         for _ in range(16):
             traj, mask, s, g, act = make_batch(_r4)
-            c1 = condvec(s[:1], g[:1]).expand(PREREQ_N, -1)
-            us = flow.sample(PREREQ_N, c1).reshape(PREREQ_N, -1)
+            _anc = intent_anchors_of(traj[:1]) if intent_ad is not None else None
+            c1 = condvec(s[:1], g[:1], _intent_cond(_anc)).expand(PREREQ_N, -1)
+            us = flow.sample(PREREQ_N, flow_cond(c1, _anc)).reshape(PREREQ_N, -1)
             # ⭐ 自校準的量法（稽核建議）：同題內的散布 ÷ 跨題的散布。
             #    ⛔ 別用絕對 cos —— 它被「條件均值有多大」支配，門檻只能拍腦袋。
             _c = us - us.mean(0, keepdim=True)
@@ -2018,7 +2246,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
                SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START="",
-               S1_FROM="", FSQ_TAG=""):
+               S1_FROM="", FSQ_TAG="", INTENT_TAG=""):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -2057,6 +2285,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += "_s1from"
     if FSQ_TAG:                                      # ⭐ FSQ 錨定（9/3；⛔ 不進檔名會蓋分辨批同 seed 檔）
         x += FSQ_TAG
+    if INTENT_TAG:                                   # ⭐ intent 三接法（9/4；⛔ 不進檔名三個接法會互蓋）
+        x += INTENT_TAG
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
@@ -2125,7 +2355,13 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                                         f"{'d' if FSQ_TGT == 'dequant' else ''}"
                                         f"{'c' if not FSQ_ROUND else ''}{fsq.d}x{fsq.L}"
                                         f"{'sg' if fsq.bound_kind == 'sig16' else ''}"
-                                        if (fsq is not None and not FSQ_FIT) else ""))
+                                        if (fsq is not None and not FSQ_FIT) else ""),
+                    # ⭐ I/K：_it{e|a|r}（接法首字母）＋大寫 R（SRC=route）＋ T_A≠32 時接 T_A。
+                    #    ⚠️ 大小寫有別：小寫 r＝residual 接法、大寫 R＝route 錨源（_itr vs _iteR）。
+                    INTENT_TAG=INTENT_TAG or (f"_it{INTENT[0]}"
+                                              f"{'R' if INTENT_SRC == 'route' else ''}"
+                                              f"{INTENT_TA if INTENT_TA != 32 else ''}"
+                                              if INTENT else ""))
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -2138,6 +2374,10 @@ dst = os.path.join(_OUT_DIR or os.path.join(
 os.makedirs(os.path.dirname(dst), exist_ok=True)
 # ⭐ 9/3：守門開火數寫進頂層（9/2 夜那批有計數沒出口 —— subgoal_diag 掛在 dsub/d0 的
 #    gate 裡，該 gate 在 conf2 沒收樣本時整段跳過 ⇒ n_headguard 白計。⛔ 不掛 gate。）
+# ⭐ I(5)：intent 的 eval 端無路次數（錨改零向量的次數）—— ⛔ 不掛任何 gate，0 也要落地。
+out["n_intent_noroute"] = _N_NOROUTE[0]
+if INTENT:
+    out["n_intent_src_fallback"] = _N_SRC_FB[0]
 if SUB_HEADGUARD > 0:
     out["n_headguard"] = SUB_DIAG.get("n_headguard", 0)          # 黏住模式 replan 總數
     out["n_headguard_ep"] = SUB_DIAG.get("n_headguard_ep", 0)    # 觸發黏住的集數（開火率的分子）
@@ -2167,6 +2407,8 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             **({"u_dec": u_dec.state_dict()} if u_dec is not None else {}),
             **({"vq": vq.state_dict(), "vq_cfg": {"V": VQ_V, "beta": VQ_BETA, "soft": VQ_SOFT}} if vq is not None else {}),
             **({"s_embed": s_embed.state_dict(), "dec_start": DEC_START} if s_embed is not None else {}),
+            # ⭐ G：intent adapter（三接法共用 key 名；接法本身寫在檔名 _it* 段與 json 的 intent 欄）
+            **({"intent_ad": intent_ad.state_dict()} if intent_ad is not None else {}),
             # ⭐ 權重 EMA 影子（LACOT_EMA_W>0 時）：eval 端 LACOT_LOAD_EMA=1 取用
             **({"ema": {n: m.state_dict() for n, m in _EMA_SHADOW.items()}} if _EMA_PAIRS else {}),
             # ⭐ 真獨立 GCBC 三模組（BC_OWN 時）

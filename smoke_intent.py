@@ -75,4 +75,37 @@ assert Rt is not None and Rt.shape == (16, 2) and np.isfinite(Rt).all()
 assert np.allclose(Rt[0], [1, 1], atol=1e-9) and np.allclose(Rt[-1], [5, 5], atol=1e-9)
 ok += 1; print("⑤ 一站式 OK：hindsight/route 兩條路形狀、端點、有限值全過")
 
-print(f"ALL PASS ({ok}/5)")
+# ⑥ 弧長測試空轉的補丁（驗收攻擊實證）：非等距錨（段長 1/4/3，故意不等距）resample
+#    後，相鄰重採樣點沿「折線弧長」的間隔必須均勻——不是沿索引均攤。用獨立於
+#    anchors_resample 內部算法的「投影找弧長座標」（沿用④ _dist_to_polyline 的
+#    投影公式）重新量測，這樣如果實作退化成索引均攤，這裡一定會 FAIL。
+A6 = np.array([[0.0, 0.0], [1.0, 0.0], [5.0, 0.0], [5.0, 3.0]])  # 段長 1,4,3：不等距
+T6 = 8
+R6 = anchors_resample(A6, T6)
+
+
+def _arclen_coord(q, P):
+    """q 在折線 P 上的弧長座標（從 P[0] 起算）：對每段投影取距離最小的那段定弧長，
+    獨立於 anchors_resample 的內部算法。"""
+    seglens = [float(np.linalg.norm(b - a)) for a, b in zip(P[:-1], P[1:])]
+    cumlens = np.concatenate([[0.0], np.cumsum(seglens)])
+    best_dist, best_arc = np.inf, 0.0
+    for i, (a, b) in enumerate(zip(P[:-1], P[1:])):
+        d = b - a; L2 = float(d @ d)
+        t = 0.0 if L2 == 0 else float(np.clip((q - a) @ d / L2, 0, 1))
+        dist = float(np.linalg.norm(q - (a + t * d)))
+        if dist < best_dist:
+            best_dist, best_arc = dist, cumlens[i] + t * seglens[i]
+    return best_arc
+
+
+arcs6 = np.array([_arclen_coord(q, A6) for q in R6])
+d_arcs6 = np.diff(arcs6)
+total6 = float(np.linalg.norm(np.diff(A6, axis=0), axis=1).sum())
+expect_step = total6 / (T6 - 1)
+assert np.allclose(d_arcs6, expect_step, atol=1e-9), (
+    f"弧長間隔不均勻（非等距錨下應仍均勻）：steps={d_arcs6}, expect={expect_step}"
+)
+ok += 1; print(f"⑥ 非等距錨弧長均勻 OK：step={expect_step:.6f}，max|diff|={np.abs(d_arcs6-expect_step).max():.2e}")
+
+print(f"ALL PASS ({ok}/6)")
