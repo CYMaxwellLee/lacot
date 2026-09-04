@@ -92,3 +92,11 @@ C-MCTD       MCTS×3+圖上Dijkstra  classifier-guided   原始 state    AntMaze
 秒~分鐘級搜索迴圈；④ humanoidmaze-large-stitch＝五篇全空、baseline 28 的空地。
 ⭐ TTGS limitation 自承「未來要用生成模型補中間 state」＝我們的 motivation 引言。
 同構鄰居另 8 篇（MCTD 2502.07202 等）在掃描報告；Hydra 引用鏈太新無收穫。
+
+## 定位定調（9/4 夜、主人）：BFS＝儀器不是產品
+
+主人：「大家比較想 generalize、著重高維用 latent 解；BFS 在高維沒有辦法。」
+⇒ BFS 在本研究＝【實驗儀器】（上層完美 ⇒ 下層 latent 語言的貢獻乾淨歸因），⛔ 不是
+method claim。Paper 擺法：BFS 臂進 ablation 當上界參考；主 claim 系統＝B 階段字典版。
+競品從上層進場（學的搜索×淺下層）、我們從下層進場（查的上層×深下層）— 會合點同一個。
+「不公平」批評自然消解。
