@@ -67,3 +67,28 @@ ITA .976（subgoal 王）／ITE R0 淨 .524（R0 王、破字典 .505）／ITE0 
 
 subgoal 腿：s20 .792 sd .040／s27 .857 sd .032（新王座）／ebfs 天花板 ~.99／N3 .842。
 R0 腿：.373（256d）→ .456（8d 壓縮）→ .505（字典、plateau ~.51）。
+
+## 高維偵察＋競品定位（9/4 晚；細讀正文級、五篇）
+
+**OGBench 高維迷宮地形**：ant 29 維／humanoid 69 維、xy=qpos[:2] 直接 slice ⇒ E 圖照建。
+stitch＝5000 ep（收集政策本身就是 BFS 子目標）。地板（官方 Table 2）：antmaze-large-stitch
+HIQL 67；humanoidmaze-large-stitch HIQL 28；giant 全塌（2~4）。eval＝5 task×20 ep、xy≤0.5。
+⚠️ giant 瓶頸可能在低層 locomotion、無 runtime oracle 可借。
+
+**競品族（搜索＋生成、細讀後修正版）**：
+```
+             圖/搜索              waypoint 進法       生成空間      可比分數(細讀逐字)         成本/query
+XDiffuser    kNN+學距離           能量梯度 guidance   原始 state    AntMaze StitchGiant 90.0   未報
+SIHD         kNN+結構熵樹(無搜路) 純量 CFG            原始 state    D4RL——不可比               未報
+TTGS         value距離+Dijkstra   無生成模型(檢索直餵) N/A          hm-giant-stitch 78.1       輕
+ChronoForest per-anchor樹+multi-tree guidance 注入    原始 state    antmaze-stitch m/l/g ~99   91.9 秒
+C-MCTD       MCTS×3+圖上Dijkstra  classifier-guided   原始 state    AntMaze giant 75±18        37~530 秒
+```
+🚨 掃描級誤報教訓（主人擺正）：「C-MCTD giant 100%」＝PointMaze 那格；「XDiffuser 98.5」
+＝Explore 非 Stitch。⛔ 摘要級聲稱一律細讀驗設置再信（insight 已存）。
+
+**我們的 claim 空間（五篇檢驗後全立）**：① latent 計畫語言＋head 可讀（R0 腿）— 五篇
+全在原始座標、零 latent；② 兩腿評估框架 — 唯一；③ 效率：毫秒 BFS＋8×8 token flow vs
+秒~分鐘級搜索迴圈；④ humanoidmaze-large-stitch＝五篇全空、baseline 28 的空地。
+⭐ TTGS limitation 自承「未來要用生成模型補中間 state」＝我們的 motivation 引言。
+同構鄰居另 8 篇（MCTD 2502.07202 等）在掃描報告；Hydra 引用鏈太新無收穫。
