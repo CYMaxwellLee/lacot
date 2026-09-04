@@ -91,10 +91,15 @@ class ARFlowBlock(nn.Module):
         nn.init.zeros_(self.to_params.bias)
 
     def _prefix(self, batch_size: int, cond: torch.Tensor | None, device: torch.device) -> torch.Tensor:
-        """The length-1 prefix token that seeds position 0's transform."""
+        """The conditioning prefix. 2D cond (B, C) -> length-1 prefix（原行為）；
+        3D cond (B, P, C) -> length-P prefix（per-token 條件，intent 接法 (ii) 用）。
+        Causal 結構下每個 u token 都看得到【全部】prefix —— per-token 的「對齊」是
+        位置擺放的歸納偏置（attention 相對位置），⛔ 不是資訊遮蔽。"""
         if cond is not None:
             if self.cond_proj is None:
                 raise ValueError("this block was built without cond_dim but received a cond tensor")
+            if cond.dim() == 3:
+                return self.cond_proj(cond)           # (B, P, H)
             return self.cond_proj(cond).unsqueeze(1)  # (B, 1, H)
         return self.start.to(device).view(1, 1, -1).expand(batch_size, 1, -1)
 
@@ -111,8 +116,12 @@ class ARFlowBlock(nn.Module):
         prefix = self._prefix(batch_size, cond, u.device)
         # Position t must see only u_{<t}: feed [prefix, u_0, ..., u_{K-2}] so
         # the causal output at t is a function of exactly u_{<t}.
-        inp = torch.cat([prefix, self.embed(u[:, :-1])], dim=1)  # (B, K, H)
+        inp = torch.cat([prefix, self.embed(u[:, :-1])], dim=1)  # (B, P+K-1, H)
+        # ⭐ prefix 長 P：token t 的參數在位置 P-1+t（看得到 prefix 全部＋u_{<t}）
+        #    ⇒ 取最後 K 個位置。P=1 時 [P-1:] = [0:] ＝ 歷史行為，golden 驗證鎖住。
+        P = prefix.shape[1]
         mu, alpha = self._params(inp)
+        mu, alpha = mu[:, P - 1:], alpha[:, P - 1:]
         z = (u - mu) * torch.exp(-alpha)
         logdet = -alpha.sum(dim=(1, 2))
         return z, logdet
@@ -177,12 +186,21 @@ class Flow(nn.Module):
         )
         self.perm = Permutation()
 
+    @staticmethod
+    def _cond_for_block(cond: torch.Tensor | None, i: int) -> torch.Tensor | None:
+        """3D（per-token）cond 要跟著 Permutation 的節奏走：block i 看到的 u 序列被
+        flip 過 i 次 ⇒ i 為奇數時 cond 也要 flip，錨段才對得上它負責的 token。
+        ⛔ 2D cond（全域向量）沒有順序，原樣透傳 —— 歷史行為不變。"""
+        if cond is None or cond.dim() != 3 or i % 2 == 0:
+            return cond
+        return torch.flip(cond, dims=(1,))
+
     def forward(self, u: torch.Tensor, cond: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
         """`u` -> (`z`, total `logdet`). The token order is flipped between blocks."""
         logdet = u.new_zeros(u.shape[0])
         z = u
         for i, block in enumerate(self.blocks):
-            z, ld = block(z, cond)
+            z, ld = block(z, self._cond_for_block(cond, i))
             logdet = logdet + ld
             if i < len(self.blocks) - 1:
                 z = self.perm(z)
@@ -215,5 +233,5 @@ class Flow(nn.Module):
         for i in reversed(range(len(self.blocks))):
             if i < len(self.blocks) - 1:
                 u = self.perm.inverse(u)
-            u = self.blocks[i].inverse(u, cond)
+            u = self.blocks[i].inverse(u, self._cond_for_block(cond, i))
         return u
