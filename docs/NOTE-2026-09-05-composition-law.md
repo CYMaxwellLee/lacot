@@ -56,8 +56,11 @@ _目標：一條主方程＋三個特例（=三條路）＋內化的 CFG 式寫�
 
 ## 四、待 Rei 磨嚴的點（ルナ標好的洞）
 
-1. (max,⊗) 選哪組 semiring 對應我們 flow 的 NLL 目標 — max-product 對 argmax 計畫、
-   sum-product 對抽樣計畫；我們 eval 是抽樣＋refine，嚴格版可能是 log-semiring。
+1. ✅〔9/5 晚已由理論甲解掉、ルナ驗收〕Lemma 1 判決：NLL 訓練＋抽樣 eval 住
+   **log-semiring（T=1）**；max-product＝溫度族 T→0 端（Lemma 2 給量化差距 ≤HT·logK）。
+   ⛔ paper 用語從「max-product 一般化」改成「溫度族合成律、BFS＝凍結極限」。
+   詳 THEORY-2026-09-05-composition-law-draft.md；殘留給 Rei 的是 (S1) 分佈版強度與
+   Conj 7 的 √δ 換算。原洞文字留底：
 2. 「quasimetric 約束加進 e_target」的具體 loss 形（對稱破缺怎麼保證）— 接 d 蒸餾資產。
 3. 內化度 gap 的正式定義（KL？成功率差？）與 idp 錶讀數的關係。
 4. 合成律定點存在唯一性的條件（有限 M、⊗ 單調即可？）。
