@@ -183,6 +183,27 @@ INTENT_DROP = float(os.environ.get("LACOT_INTENT_DROP", 0.0))  # ⭐ 內化錶�
 assert 0.0 <= INTENT_DROP < 1.0, f"⛔ LACOT_INTENT_DROP 要在 [0,1)，收到 {INTENT_DROP}"
 assert not (INTENT_DROP > 0 and INTENT != "embed"), \
     "⛔ INTENT_DROP 只定義在 embed 接法（intent 只經 ix 進 cond；anchor 走 per-token、residual 動 traj，drop 語義不同）"
+# ⭐ L_div hinge（內化藥第一帖、9/5）：訓練時直接【獎勵 cond 層的分支散度】——
+#    每個 batch 算 c_int=condvec(s,g,ix_未drop) 與 c_zero=condvec(s,g,None) 的相對差
+#    r = ‖c_int−c_zero‖/(‖c_zero‖+1e-8)，loss 加 DIV_W·mean(relu(DIV_M − r))。
+#    ⚠️ c_int 用【drop 前】的 ix ⇒ 被 INTENT_DROP 歸零的樣本照樣算得到散度
+#       （否則藥只作用在沒被 drop 的那些樣本上，而 drop 率越高藥越弱 —— 剛好反了）。
+#    ⛔ 用 hinge，⛔ 不用 cos：塌陷點（c_int≡c_zero）的次梯度必須非零 —— cos 在兩向量
+#       相同時梯度是零 ⇒ 已經塌掉的顆永遠爬不出來（藥在最需要它的地方失效）。
+#    ⚠️ margin 預設 0.3 ＝ f27n 實測 cond 層相對差 0.6046 的一半（probe_branch_divergence 9/5）。
+#    ⛔ DIV_W=0（預設）⇒ 這一項【連一個 op 都不進 graph】（訓練 loop 那邊 gate 住）。
+DIV_W = float(os.environ.get("LACOT_DIV_W", 0.0))
+DIV_M = float(os.environ.get("LACOT_DIV_M", 0.3))
+assert DIV_W >= 0.0, f"⛔ LACOT_DIV_W 不能是負的，收到 {DIV_W}"
+assert not (DIV_W > 0 and INTENT != "embed"), \
+    ("⛔ L_div 只定義在 embed 接法（intent 只經 ix 進 cond 尾巴 ⇒「拼零」才有唯一語義）。"
+     " 其他接法 c_int≡c_zero ⇒ hinge 恆等於 margin、梯度恆零 ⇒ 會拿到一張「藥沒用」的假表")
+# ⭐ 散度時間序列（LACOT_DIV_LOG_EVERY=N、9/5）：訓練 loop 內每 N 步用【當前 raw 權重】
+#    對當前 batch 抽 k=8 樣本量同一把尺（cond 層相對差 median、@no_grad）⇒ divlog_{tag}.jsonl。
+#    ⛔ 純觀測：不進 loss、不進檔名（診斷旋鈕慣例）、不動任何 RNG 流。0＝關。
+DIV_LOG_EVERY = int(os.environ.get("LACOT_DIV_LOG_EVERY", 0))
+DIV_LOG_K = 8            # 抽樣數（固定 8：夠算 median 又不影響 <1% 開銷的承諾）
+_DIVLOG = []             # ⭐ [{step, div_median}]；tag 要到檔尾才算得出來 ⇒ 先收記憶體、收工一次寫
 # ⭐ CFG 式 intent 引導（LACOT_INTENT_GUID_W、9/5）：INTENT_DROP 訓的顆把「帶 intent」與
 #    「intent 歸零」兩個條件模式練在同一顆 ⇒ eval 取樣時可以把 intent 方向【外插放大】，
 #    問「模型是不是看得懂 intent 但沒用力」。0.0＝關（⛔ 逐位元不動任何行為）、1.0＝normal、>1＝放大。
@@ -256,6 +277,12 @@ _FIN_COUNT = [0]   # ⭐ 終局接管的觸發次數 —— ⛔ 開關條件寫�
 #      是這個 repo 從 8/23 就有的浪費 —— 而且它讓「補一個對照」的成本高到我們不想補。
 #   ⚠️ 載入時會逐項比對 ckpt 的 cfg，對不上就停 —— ⛔ 形狀對得上不代表是同一個模型。
 LOAD_CKPT = os.environ.get("LACOT_LOAD_CKPT", "")
+# ⭐ CONT_TRAIN ── 續訓模式（warm-start 實驗、9/5）：LOAD_CKPT 不再強制「只評估」，
+#   載入後照 LACOT_STEPS2 繼續訓練，存到【新檔名】（_ct{步數}）。
+#   ⛔ 覆蓋來源那顆是不可逆的（原始權重沒有第二份）⇒ 存檔前有兩道 assert 擋。
+CONT_TRAIN = int(os.environ.get("LACOT_CONT_TRAIN", 0))
+assert not (CONT_TRAIN and not LOAD_CKPT), \
+    "⛔ LACOT_CONT_TRAIN=1 要配 LACOT_LOAD_CKPT —— 沒有起點就不叫續訓（要從頭訓就別設這個）"
 S1_FROM = os.environ.get("LACOT_S1_FROM", "")     # ⭐ 凍同一個 stage 1（9/2 夜）：從這個 ckpt 載 stage 1 模組、跳過 stage 1 訓練；SEED 只抽 stage 2
 assert not (INTENT == "residual" and S1_FROM), \
     "⛔ INTENT=residual 不能配 S1_FROM —— 凍的是【完整軌跡】語言，殘差語言必須重訓 stage 1"
@@ -1168,6 +1195,10 @@ def _intent_anchor_eval(s_xy, g_xy):
 mse = lambda p, a: (p - a).pow(2).mean()
 print("stage 2 flow+refine+action ...", flush=True)
 STEPS2 = 0 if LOAD_CKPT else int(os.environ.get("LACOT_STEPS2", 2000))
+# ⭐ 續訓的步數【不能】跑在這裡：權重要到下面 LOAD_CKPT 那一段才進來 ⇒ 在這裡跑等於訓練
+#    隨機初始化的權重（而它不會報錯、loss 曲線看起來完全正常）。⇒ 續訓的步數跑在載入【之後】。
+#    檔名因此長成 _st0 ＋ _ct{CONT_STEPS}：一眼看得出「不是從頭訓的、是從某顆續了幾步」。
+CONT_STEPS = int(os.environ.get("LACOT_STEPS2", 2000)) if CONT_TRAIN else 0
 # ═══ 權重 EMA（LACOT_EMA_W；「練穩」B 問題的藥之一，2026-08-31）══════════════
 # 訓練不變（影子不參與 forward/backward）；ckpt 多存一份 ema 權重；
 # eval 時 LACOT_LOAD_EMA=1 用影子 ⇒ 同一次訓練、兩種權重可對照（配對比較、seed 噪聲咬不到）。
@@ -1190,99 +1221,142 @@ if EMA_W > 0 and not LOAD_CKPT:
         _EMA_SHADOW[_n] = _sh
         _EMA_PAIRS.append((_sh, _m))
     print(f"  權重 EMA 開啟：m={EMA_W:g}（影子五模組，訓練行為不變）", flush=True)
-for stp in range(STEPS2):
-    traj, mask, s, g, act = make_batch(rng, teacher_mix=TEACHER_MIX)
-    anc = ix = None
-    if intent_ad is not None:                        # ⭐ F：三接法的錨都在這裡生一次
-        anc = intent_anchors_of(traj)
-        if INTENT == "residual":                     # ⛔ 殘差接法：et 也要吃殘差（跟 stage 1 同一種語言）
-            traj = intent_ad.target_fwd(traj, anc)
-        ix = _intent_cond(anc)                       # embed/residual＝[B,64]；anchor＝None
-        if INTENT_DROP > 0 and ix is not None:       # ⭐ 內化錶：intent 段獨立 drop（⛔ 跟 COND_DROP 的整組歸零是不同分佈 — zero 探針教訓）
-            _ikeep = (torch.rand(len(ix), 1, device=ix.device) >= INTENT_DROP).float()
-            ix = ix * _ikeep
-    with torch.no_grad():
-        et = etarget(traj, mask)
-    cond = condvec(s, g, ix)
-    # ⭐ 9/3 FSQ：z 空間版 flow 目標＝d 維 z（甲連續／乙格點+噪聲；滿秩無薄片病）；
-    #    u 空間版 dequant（⛔ 9/3 判負：目標塌 8 維薄片）留作歷史對照。
-    if fsq is not None and FSQ_SPACE == "z":
+
+
+def _stage2_loop(n_steps, step_off=0):
+    """stage 2 訓練迴圈。⭐ 抽成函式【只為了】讓續訓模式能在 ckpt 載入之後再跑一次【同一份】
+    code —— ⛔ 兩份會分岔的訓練迴圈是這個 repo 絕對不要的東西（同族東西混版本已經咬過三次）。
+
+    ⚠️ 迴圈體逐行原樣（只換縮排）⇒ 預設路徑逐位元不變：RNG 消耗順序、op 順序、更新順序全同。
+    ⚠️ step_off 只餵給 warmup 與 log 的步號；預設 0 ⇒ `step_off + stp` 就是原本的 `stp`。
+    """
+    for stp in range(n_steps):
+        _gstp = step_off + stp
+        traj, mask, s, g, act = make_batch(rng, teacher_mix=TEACHER_MIX)
+        anc = ix = ix_full = None
+        if intent_ad is not None:                        # ⭐ F：三接法的錨都在這裡生一次
+            anc = intent_anchors_of(traj)
+            if INTENT == "residual":                     # ⛔ 殘差接法：et 也要吃殘差（跟 stage 1 同一種語言）
+                traj = intent_ad.target_fwd(traj, anc)
+            ix = _intent_cond(anc)                       # embed/residual＝[B,64]；anchor＝None
+            ix_full = ix                                 # ⭐ drop【前】的 ix —— L_div 與 divlog 都要用這一份
+            if INTENT_DROP > 0 and ix is not None:       # ⭐ 內化錶：intent 段獨立 drop（⛔ 跟 COND_DROP 的整組歸零是不同分佈 — zero 探針教訓）
+                _ikeep = (torch.rand(len(ix), 1, device=ix.device) >= INTENT_DROP).float()
+                ix = ix * _ikeep
         with torch.no_grad():
-            _et_nf = fsq.dequant_z(et) if FSQ_TGT == "dequant" else fsq.z_of(et)
-        l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / (K * fsq.d)
-    else:
-        _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
-        l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / DIM
-    # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
-    #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
-    _rw = _REAL_W[0]
-    _wmse = lambda p, a: ((p - a).pow(2).reshape(len(p), -1).mean(1) * _rw).sum() / _rw.sum().clamp(min=1)
-    # ⭐ COND_DROP：l_anchor 這一路以 p 機率把整個 cond 歸零，逼 head 從 u 讀路徑。
-    #    ⛔ 只丟 cond、不丟 u —— 丟 u 會反過來教 head 繞開 u。
-    #    ⭐ F/intent：ix（錨的全域摘要）是 condvec 進 cond_head 前就拼進去的 ⇒ cond 歸零＝ix 一起歸零，
-    #       「drop＝什麼都不知道」自動成立。per-token 錨只走 flow 那一路（l_nf），⛔ 不在 l_anchor 上，
-    #       ⇒ 這裡沒有第二個東西要歸零（flow_cond 的補零走 anchors_t=None 那條）。
-    _ca = cond
-    if COND_DROP > 0:
-        _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
-        _ca = cond * _keep
-    # ⭐ VQ／FSQ：head 吃量化 u（與推論一致）；z 版顯式 snap（_q 對 z 版恆等——sample 端已字典化）
-    _u_head = fsq.snap(et) if (fsq is not None and FSQ_SPACE == "z") else _q(et)
-    l_anchor = _wmse(ahead(_ca, _u_head), act)
-    if LEARNED_REFINE:
-        u = flow.sample(B, flow_cond(cond, anc)).detach(); us = [u]
-        for _ in range(3):
-            u = refine(cond, u); us.append(u)
-        if CONS == "ema":
+            et = etarget(traj, mask)
+        cond = condvec(s, g, ix)
+        # ⭐ 9/3 FSQ：z 空間版 flow 目標＝d 維 z（甲連續／乙格點+噪聲；滿秩無薄片病）；
+        #    u 空間版 dequant（⛔ 9/3 判負：目標塌 8 維薄片）留作歷史對照。
+        if fsq is not None and FSQ_SPACE == "z":
             with torch.no_grad():
-                tgts = [refine_ema(cond, us[r]) for r in range(3)]
-            l_cons = sum((us[r + 1] - tgts[r]).pow(2).mean() for r in range(3)) / 3
+                _et_nf = fsq.dequant_z(et) if FSQ_TGT == "dequant" else fsq.z_of(et)
+            l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / (K * fsq.d)
         else:
-            l_cons = sum((us[r] - us[r + 1].detach()).pow(2).mean() for r in range(3)) / 3
-        l_refine = sum(mse(ahead(cond, us[r + 1]), act) for r in range(3)) / 3
-    else:
-        # 🚨 l_refine 拿 flow 隨機抽的 u（很可能是另一條路），卻要求 head 輸出資料那條路的動作
-        #    ⇒ 明文教 head 無視 u。ENC_OBJ 一改好它會立刻變成第二個 bypass ⇒ 同一輪拿掉。
-        l_cons = l_refine = torch.zeros((), device=device)
-    # ⭐ 誠實地板：只吃 cond，跟 u 完全無關。
-    # ⚠️ cond 要 detach —— 否則 l_bc 的梯度會流進 cond_enc/cond_head，
-    #    把 cond 訓練得更會單獨預測動作 ⇒ ① 主模型被這個 baseline 改動了、
-    #    ② 比較會系統性地偏向「u 沒必要」。detach 之後量的才是乾淨的問題：
-    #    「在【同一個】cond 表徵上，u 有沒有加值」。
-    l_bc = _wmse(bc_head(cond.detach()), act)
-    if BC_OWN:
-        # ⭐ 完全獨立的 backward（自己的 graph、自己的 clip）—— 對主模型零影響
-        l_bco = _wmse(bc_own_head(own_condvec(s, g)), act)
-        opt_bc_own.zero_grad(set_to_none=True)
-        l_bco.backward()
-        torch.nn.utils.clip_grad_norm_([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
-                                        for p in m.parameters()], 1.0)
-        opt_bc_own.step()
-    total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
-    _warm_lr(opt2, stp)
-    opt2.zero_grad(set_to_none=True)
-    if opt_bc is not None:
-        opt_bc.zero_grad(set_to_none=True)
-        (total + l_bc).backward()               # ⭐ 一次 backward，但兩組參數各自 clip / step
-        torch.nn.utils.clip_grad_norm_(bc_head.parameters(), 1.0)
-    else:
-        total.backward()
-    torch.nn.utils.clip_grad_norm_([p for m in f_mods for p in m.parameters()], 1.0); opt2.step()
-    if opt_bc is not None:
-        opt_bc.step()
-    if CONS == "ema" and LEARNED_REFINE:
-        with torch.no_grad():
-            for pe, pr in zip(refine_ema.parameters(), refine.parameters()):
-                pe.mul_(EMA_M).add_(pr, alpha=1 - EMA_M)
-    if _EMA_PAIRS:
-        with torch.no_grad():
-            for _me, _ml in _EMA_PAIRS:
-                for _pe, _pl in zip(_me.parameters(), _ml.parameters()):
-                    _pe.mul_(EMA_W).add_(_pl, alpha=1 - EMA_W)
-                for _be, _bl in zip(_me.buffers(), _ml.buffers()):
-                    _be.copy_(_bl)
-    if (stp + 1) % 1000 == 0:
-        print(f"  step {stp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}", flush=True)
+            _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
+            l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / DIM
+        # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
+        #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
+        _rw = _REAL_W[0]
+        _wmse = lambda p, a: ((p - a).pow(2).reshape(len(p), -1).mean(1) * _rw).sum() / _rw.sum().clamp(min=1)
+        # ⭐ COND_DROP：l_anchor 這一路以 p 機率把整個 cond 歸零，逼 head 從 u 讀路徑。
+        #    ⛔ 只丟 cond、不丟 u —— 丟 u 會反過來教 head 繞開 u。
+        #    ⭐ F/intent：ix（錨的全域摘要）是 condvec 進 cond_head 前就拼進去的 ⇒ cond 歸零＝ix 一起歸零，
+        #       「drop＝什麼都不知道」自動成立。per-token 錨只走 flow 那一路（l_nf），⛔ 不在 l_anchor 上，
+        #       ⇒ 這裡沒有第二個東西要歸零（flow_cond 的補零走 anchors_t=None 那條）。
+        _ca = cond
+        if COND_DROP > 0:
+            _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
+            _ca = cond * _keep
+        # ⭐ VQ／FSQ：head 吃量化 u（與推論一致）；z 版顯式 snap（_q 對 z 版恆等——sample 端已字典化）
+        _u_head = fsq.snap(et) if (fsq is not None and FSQ_SPACE == "z") else _q(et)
+        l_anchor = _wmse(ahead(_ca, _u_head), act)
+        if LEARNED_REFINE:
+            u = flow.sample(B, flow_cond(cond, anc)).detach(); us = [u]
+            for _ in range(3):
+                u = refine(cond, u); us.append(u)
+            if CONS == "ema":
+                with torch.no_grad():
+                    tgts = [refine_ema(cond, us[r]) for r in range(3)]
+                l_cons = sum((us[r + 1] - tgts[r]).pow(2).mean() for r in range(3)) / 3
+            else:
+                l_cons = sum((us[r] - us[r + 1].detach()).pow(2).mean() for r in range(3)) / 3
+            l_refine = sum(mse(ahead(cond, us[r + 1]), act) for r in range(3)) / 3
+        else:
+            # 🚨 l_refine 拿 flow 隨機抽的 u（很可能是另一條路），卻要求 head 輸出資料那條路的動作
+            #    ⇒ 明文教 head 無視 u。ENC_OBJ 一改好它會立刻變成第二個 bypass ⇒ 同一輪拿掉。
+            l_cons = l_refine = torch.zeros((), device=device)
+        # ⭐ 誠實地板：只吃 cond，跟 u 完全無關。
+        # ⚠️ cond 要 detach —— 否則 l_bc 的梯度會流進 cond_enc/cond_head，
+        #    把 cond 訓練得更會單獨預測動作 ⇒ ① 主模型被這個 baseline 改動了、
+        #    ② 比較會系統性地偏向「u 沒必要」。detach 之後量的才是乾淨的問題：
+        #    「在【同一個】cond 表徵上，u 有沒有加值」。
+        l_bc = _wmse(bc_head(cond.detach()), act)
+        if BC_OWN:
+            # ⭐ 完全獨立的 backward（自己的 graph、自己的 clip）—— 對主模型零影響
+            l_bco = _wmse(bc_own_head(own_condvec(s, g)), act)
+            opt_bc_own.zero_grad(set_to_none=True)
+            l_bco.backward()
+            torch.nn.utils.clip_grad_norm_([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
+                                            for p in m.parameters()], 1.0)
+            opt_bc_own.step()
+        total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
+        # ⭐ L_div hinge（LACOT_DIV_W>0）：⛔ 整段 gate 在 if 裡 —— DIV_W=0 時連 `+0*l_div`
+        #    這種「數學上無害」的 op 都不加，⇒ 預設路徑的 graph 與數值逐位元不變。
+        l_div = None
+        if DIV_W > 0:
+            _c_int = condvec(s, g, ix_full)              # ⛔ drop【前】的 ix（被 drop 的樣本也要算）
+            _c_zero = condvec(s, g, None)                # ⛔ ix=None ⇒ condvec 自己拼零（同 sample_plan 的定義）
+            # ⚠️ 用 sqrt(x + 1e-24) 而不是 .norm()：⛔ .norm() 在【剛好為零】的點反向吐 NaN，
+            #    而「剛好為零」正是這帖藥要治的狀態。⛔ 也不用 clamp_min(1e-12)：那會在
+            #    ‖d‖ < 1e-6 的整段變成【零梯度死區】—— 快塌的顆剛好落在那一段。
+            #    1e-24 純粹是 NaN 護欄：‖d‖²≥1e-14 時加它在 fp32 下逐位元無影響。
+            _rel = torch.sqrt((_c_int - _c_zero).pow(2).sum(-1) + 1e-24) \
+                / (torch.sqrt(_c_zero.pow(2).sum(-1) + 1e-24) + 1e-8)
+            l_div = torch.relu(DIV_M - _rel).mean()
+            total = total + DIV_W * l_div
+        _warm_lr(opt2, _gstp)
+        opt2.zero_grad(set_to_none=True)
+        if opt_bc is not None:
+            opt_bc.zero_grad(set_to_none=True)
+            (total + l_bc).backward()               # ⭐ 一次 backward，但兩組參數各自 clip / step
+            torch.nn.utils.clip_grad_norm_(bc_head.parameters(), 1.0)
+        else:
+            total.backward()
+        torch.nn.utils.clip_grad_norm_([p for m in f_mods for p in m.parameters()], 1.0); opt2.step()
+        if opt_bc is not None:
+            opt_bc.step()
+        if CONS == "ema" and LEARNED_REFINE:
+            with torch.no_grad():
+                for pe, pr in zip(refine_ema.parameters(), refine.parameters()):
+                    pe.mul_(EMA_M).add_(pr, alpha=1 - EMA_M)
+        if _EMA_PAIRS:
+            with torch.no_grad():
+                for _me, _ml in _EMA_PAIRS:
+                    for _pe, _pl in zip(_me.parameters(), _ml.parameters()):
+                        _pe.mul_(EMA_W).add_(_pl, alpha=1 - EMA_W)
+                    for _be, _bl in zip(_me.buffers(), _ml.buffers()):
+                        _be.copy_(_bl)
+        # ⭐ 散度時間序列（LACOT_DIV_LOG_EVERY>0）：量【這一步更新之後】的 raw 權重。
+        #    ⛔ @no_grad、不碰任何 RNG（純前傳兩次 cond 鏈）⇒ 訓練逐位元不變。
+        if DIV_LOG_EVERY > 0 and ix_full is not None and (_gstp + 1) % DIV_LOG_EVERY == 0:
+            with torch.no_grad():
+                _dk = min(DIV_LOG_K, len(s))
+                _di = condvec(s[:_dk], g[:_dk], ix_full[:_dk])
+                _dz = condvec(s[:_dk], g[:_dk], None)
+                _dr = torch.sqrt((_di - _dz).pow(2).sum(-1) + 1e-24) \
+                    / (torch.sqrt(_dz.pow(2).sum(-1) + 1e-24) + 1e-8)   # ⛔ 同 L_div／probe 的同一把尺
+                _dm = float(_dr.median())
+            _DIVLOG.append({"step": _gstp + 1, "div_median": _dm})
+            # ⛔ 也 print 一行：jsonl 要等 tag 算出來（檔尾）才寫得了 ⇒ 中途掛掉時 log 是唯一的備份
+            print(f"  divlog step {_gstp+1}  cond 相對差 median {_dm:.4f}"
+                  + (f"  l_div {l_div.item():.4f}" if l_div is not None else ""), flush=True)
+        if (_gstp + 1) % 1000 == 0:
+            print(f"  step {_gstp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}"
+                  + (f" l_div {l_div.item():.4f}" if l_div is not None else ""), flush=True)
+
+
+_stage2_loop(STEPS2)
 if INTENT and _N_SRC_FB[1] > 0:
     # ⭐ K：route 錨源生不出路 ⇒ 那個樣本退回 hindsight。率太高＝訓推同分佈這件事沒兌現到位。
     print(f"  ⭐ intent 錨源 src={INTENT_SRC}：處理 {_N_SRC_FB[1]} 個樣本，"
@@ -1354,9 +1428,59 @@ if LOAD_CKPT:
             print(f"  ⚠️ 檔名 seed 跟 ckpt 走：_s{TAG_SEED}（env LACOT_SEED={SEED} 只管噪聲流）", flush=True)
     if _cfg.get("EMA_W"):
         EMA_W = _cfg["EMA_W"]        # ⭐ 只進檔名（顆身份的一部分）；影子建立條件含 not LOAD_CKPT、不受影響
-    print(f"✅ 載入 {os.path.basename(_lp)}（跳過訓練，只跑評估）"
+    print(f"✅ 載入 {os.path.basename(_lp)}"
+          f"（{'續訓模式' if CONT_TRAIN else '跳過訓練，只跑評估'}）"
           f"  cfg={ {k: _cfg.get(k) for k in ('K','T_CAP','ENC_OBJ','LEARNED_REFINE','COND_DROP')} }",
           flush=True)
+
+# ═══ 續訓（LACOT_CONT_TRAIN=1、9/5 warm-start 實驗）═══════════════════════════
+# ⭐ 位置就是這裡：權重剛載完、f_mods 還沒 .eval()、_decoder_health 還沒量 ——
+#    ⛔ 放在上面那個 for 迴圈（L1224）等於訓練隨機初始化的權重。
+if CONT_TRAIN:
+    # ⛔ 來源檔名已經帶同一個 _ct{步數} ⇒ 這次算出來會是【同一個檔名】、把來源蓋掉。
+    #    這一格擋在【訓練之前】，⛔ 不要等跑完四千步才在存檔那一行才發現。
+    assert f"_ct{CONT_STEPS}" not in os.path.basename(_lp), (
+        f"⛔ 來源 ckpt 檔名已經帶 _ct{CONT_STEPS} ⇒ 這次續訓會算出同一個檔名、蓋掉來源。"
+        f" 換步數或換 LACOT_OUT_DIR：{os.path.basename(_lp)}")
+    # ⭐ EMA 影子：續訓要【繼續維護】它 —— ⛔ 否則存出來的 ckpt 帶一份停在載入時刻的影子，
+    #    而那份影子在數值上完全合理、eval 也不會報錯（同族「看不出來的錯」病史 3 次）。
+    if EMA_W > 0:
+        import copy as _cp2
+        _EMA_NAMED = ([("cond_enc", cond_enc), ("cond_head", cond_head), ("flow", getattr(flow, "inner", flow)),
+                       ("ahead", ahead), ("bc_head", bc_head)]
+                      + ([("intent_ad", intent_ad)] if intent_ad is not None else []))
+        _EMA_SHADOW = {}
+        for _n, _m in _EMA_NAMED:
+            _sh = _cp2.deepcopy(_m)
+            for _p in _sh.parameters():
+                _p.requires_grad_(False)
+            _EMA_SHADOW[_n] = _sh
+            _EMA_PAIRS.append((_sh, _m))
+        if "ema" in _ck and not LOAD_EMA:
+            for _n, _sd in _ck["ema"].items():
+                if _n in _EMA_SHADOW:
+                    _EMA_SHADOW[_n].load_state_dict(_sd)
+            print(f"  ⭐ 續訓：EMA 影子從 ckpt 的 ema 段接續（m={EMA_W:g}，{len(_EMA_SHADOW)} 模組）", flush=True)
+        else:
+            print(f"  ⚠️ 續訓：影子從【當前權重】重新起算（m={EMA_W:g}）——"
+                  + ("LOAD_EMA=1 ⇒ 主權重本來就是影子" if LOAD_EMA else "ckpt 沒有 ema 段"), flush=True)
+    # ⭐ optimizer：有存就接續、⛔ 沒存就 fresh ＋ 印明（Adam 的 m/v 造不出來，⛔ 不硬造）
+    if "opt2" in _ck:
+        opt2.load_state_dict(_ck["opt2"])
+        if opt_bc is not None and "opt_bc" in _ck:
+            opt_bc.load_state_dict(_ck["opt_bc"])
+        print("  ⭐ 續訓：optimizer 狀態已從 ckpt 接續（Adam m/v 連續）", flush=True)
+    else:
+        print("  ⚠️ 續訓：這顆 ckpt 沒存 optimizer 狀態 ⇒ 用 fresh Adam（lr=5e-4、m/v 從零起算）。"
+              " 前幾百步的有效步長會跟原訓練不同 —— ⛔ 不是 bug，但要記進判讀（WARMUP 也從 0 重數）", flush=True)
+    for _m in f_mods:
+        _m.train()
+    if BC_INDEP:
+        bc_head.train()
+    print(f"⭐ 續訓 {CONT_STEPS} 步（來源 {os.path.basename(_lp)}）"
+          f"  INTENT_DROP={INTENT_DROP:g} DIV_W={DIV_W:g} DIV_M={DIV_M:g}"
+          f" DIV_LOG_EVERY={DIV_LOG_EVERY}", flush=True)
+    _stage2_loop(CONT_STEPS)
 
 for m in f_mods:
     m.eval()
@@ -2058,6 +2182,9 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            intent=INTENT, intent_ta=INTENT_TA, intent_src=INTENT_SRC,
            # ⭐ 診斷旋鈕：⛔ 不進檔名（產物靠 OUT_DIR 分目錄）⇒ 收表時只有這一格認得出是哪個 w
            intent_drop=INTENT_DROP, intent_zero=INTENT_ZERO, guid_w=INTENT_GUID_W,
+           # ⭐ 續訓／L_div（9/5）：cont_steps 是【續了幾步】，steps2 在續訓模式恆 0
+           cont_train=CONT_TRAIN, cont_steps=CONT_STEPS,
+           div_w=DIV_W, div_m=DIV_M, div_log_every=DIV_LOG_EVERY,
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 out["rt_gate"] = RT_GATE
 out["flow_probe"] = FLOW_PROBE_OUT
@@ -2336,7 +2463,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
                SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START="",
-               S1_FROM="", FSQ_TAG="", INTENT_TAG="", INTENT_DROP=0.0):
+               S1_FROM="", FSQ_TAG="", INTENT_TAG="", INTENT_DROP=0.0,
+               CONT_TRAIN=0, STEPS2=2000, DIV_W=0.0, DIV_M=0.3):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -2379,6 +2507,10 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += INTENT_TAG
     if INTENT_DROP > 0:                              # ⭐ 內化錶（9/5；⛔ 不進檔名會蓋同 seed 無 drop 檔）
         x += f"_idp{INTENT_DROP:g}"
+    if CONT_TRAIN:                                   # ⭐ 續訓（9/5 warm-start；⛔ 不進檔名會蓋掉【來源那顆】）
+        x += f"_ct{STEPS2}"                          # ⚠️ 這裡的 STEPS2＝續訓步數（主 tag 的 _st 段是 0）
+    if DIV_W > 0:                                    # ⭐ L_div hinge（9/5 內化藥第一帖）
+        x += f"_dvw{DIV_W:g}" + (f"m{DIV_M:g}" if DIV_M != 0.3 else "")
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
@@ -2454,7 +2586,9 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                                               f"{'R' if INTENT_SRC == 'route' else ''}"
                                               f"{INTENT_TA if INTENT_TA != 32 else ''}"
                                               if INTENT else ""),
-                    INTENT_DROP=INTENT_DROP)
+                    INTENT_DROP=INTENT_DROP,
+                    # ⭐ 續訓／L_div（9/5）：STEPS2 這一格餵【續訓步數】⇒ 檔名長成 _st0..._ct4000
+                    CONT_TRAIN=CONT_TRAIN, STEPS2=CONT_STEPS, DIV_W=DIV_W, DIV_M=DIV_M)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -2494,15 +2628,33 @@ if DIAG_DUMP and DIAG_ROWS:
         json.dump(DIAG_ROWS, f)
     print(f"⭐ diag dump: {len(DIAG_ROWS)} rows -> {_ddst}", flush=True)
 print(f"寫入 {dst}", flush=True)
+# ⭐ 散度時間序列落地（LACOT_DIV_LOG_EVERY）：tag 要到這裡才算得出來 ⇒ 訓練時收在記憶體、
+#    這裡一次寫。⚠️ 每一筆在訓練當下就 print 過一行 ⇒ 中途掛掉時 slurm log 裡還讀得回來。
+if _DIVLOG:
+    _dvdst = os.path.join(os.path.dirname(dst), f"divlog_{tag}.jsonl")
+    with open(_dvdst, "w") as f:
+        for _row in _DIVLOG:
+            f.write(json.dumps(_row) + "\n")
+    print(f"⭐ 散度時間序列：{len(_DIVLOG)} 筆 -> {_dvdst}", flush=True)
+elif DIV_LOG_EVERY > 0:
+    print(f"🚨 LACOT_DIV_LOG_EVERY={DIV_LOG_EVERY} 但一筆都沒收到 —— "
+          "訓練步數 < N，或 INTENT 沒開（ix_full 恆 None）⇒ 這個旋鈕沒作用", flush=True)
 
 if FINISH_R > 0.0:
     print(f"  病二快篩：終局接管觸發 {_FIN_COUNT[0]} 次（⛔ 0 次＝開關沒作用，快篩白跑）", flush=True)
 # ⭐ 存 checkpoint：以後要換探針就不必重訓一次（今天為了換探針重訓了三輪）。
 ck = os.path.join(os.path.dirname(dst), f"ckpt_{tag}.pt")
-if LOAD_CKPT:
+if LOAD_CKPT and not CONT_TRAIN:
     # ⛔ 只評估模式不存 ckpt —— 會把來源蓋掉，而且存的是同一份權重
     print(f"（只評估模式：⛔ 不存 ckpt，來源是 {os.path.basename(LOAD_CKPT)}）", flush=True)
     raise SystemExit(0)
+if CONT_TRAIN:
+    # ⛔ 兩道背水線：覆蓋來源那顆是【不可逆】的（原始權重沒有第二份、重訓要好幾小時）。
+    assert os.path.abspath(ck) != os.path.abspath(_lp), \
+        f"⛔ 續訓的存檔路徑跟來源 ckpt 是同一個檔（{ck}）—— 拒絕覆蓋原 ckpt"
+    assert not os.path.exists(ck), \
+        (f"⛔ {ck} 已存在 —— 續訓拒絕覆蓋既有 ckpt（換 LACOT_OUT_DIR／LACOT_BOOT_TAG）。"
+         " ⚠️ rollout json 已經寫好了，⛔ 只有這顆 ckpt 沒存到")
 torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict(),
             "flow": flow.state_dict(), "refine": refine.state_dict(),
             "ahead": ahead.state_dict(), "bc_head": bc_head.state_dict(),
@@ -2519,9 +2671,17 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             # ⭐ 真獨立 GCBC 三模組（BC_OWN 時）
             **({"bc_own": {"enc": bc_own_enc.state_dict(), "ch": bc_own_ch.state_dict(),
                            "head": bc_own_head.state_dict()}} if BC_OWN else {}),
+            # ⭐ optimizer 狀態只在續訓模式存（⛔ 預設路徑的 ckpt 內容逐 key 不變）——
+            #    有它，下一次續訓的 Adam m/v 才接得下去（沒有就 fresh，見載入端的警告）
+            **({"opt2": opt2.state_dict(),
+                **({"opt_bc": opt_bc.state_dict()} if opt_bc is not None else {})} if CONT_TRAIN else {}),
             "cfg": dict(K=K, COND=COND, CHUNK=CHUNK, D_MODEL=D_MODEL, STEPS2=STEPS2, T_CAP=T_CAP,
                         GOAL_SAMPLING="uniform-official", EVAL_EPISODES=SEEDS,
                         CONS=CONS, EMA_M=EMA_M, SEED=SEED, EMA_W=EMA_W,
                         ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE,
-                        COND_DROP=COND_DROP, BC_INDEP=BC_INDEP)}, ck)
+                        COND_DROP=COND_DROP, BC_INDEP=BC_INDEP,
+                        # ⭐ 續訓血緣（⛔ 只在續訓模式進 cfg ⇒ 預設 ckpt 逐位元不變）
+                        **({"CONT_TRAIN": 1, "CONT_STEPS": CONT_STEPS,
+                            "SRC_CKPT": os.path.basename(_lp),
+                            "DIV_W": DIV_W, "DIV_M": DIV_M} if CONT_TRAIN else {}))}, ck)
 print(f"存 checkpoint {ck}", flush=True)
