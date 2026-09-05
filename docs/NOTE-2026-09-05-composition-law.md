@@ -43,6 +43,17 @@ _目標：一條主方程＋三個特例（=三條路）＋內化的 CFG 式寫�
 > search three instantiations of one operator, and the internalization gap is directly
 > measurable by intent-dropout.
 
+## 三'、理論定位（9/5 晚精讀後補）
+
+- **最近鄰定理**：OKBE（2506.09499）Thm 2.2 — 確定性＋有限覆蓋完整 option 庫＋模型已知
+  下，option 層 tree search＝最優且完備。引用帶限定詞、當旁證。
+- **我們的缺口主張**：把合成律用 semiring 語言顯式命名（OKBE 0 次提及）、字典改為
+  【學出來的】、加連續 flow 下層、落地導航＋量化、推廣向 stochastic — 五件 OKBE 都沒有。
+- 借件（NF-CoT）：exact likelihood 當 logπ 的 PG 形（Eq.3.4）＝將來 RL 微調 flow 的現成
+  公式；pass@k-vs-k 塌陷診斷的控制版；凍→全解凍 warm-up 配方（字典層施工用）。
+- 內化度量的方法學定位（SVA 核驗後）：SVA 的移除全在訓練期（w/o MCTS 還要重訓）；
+  我們 idp＝同一顆權重、推論期開關 ⇒ 因果讀數更乾淨 — 寫 paper 時明講這個對比。
+
 ## 四、待 Rei 磨嚴的點（ルナ標好的洞）
 
 1. (max,⊗) 選哪組 semiring 對應我們 flow 的 NLL 目標 — max-product 對 argmax 計畫、

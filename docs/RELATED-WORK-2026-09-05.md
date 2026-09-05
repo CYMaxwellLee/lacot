@@ -110,6 +110,22 @@ PILOT 2601.19917（LLM 內化 ablation 設計可借）【中】。
   （無 "stitch" 字樣、無 HIQL）、成本只報 FurnitureBench 88ms/step。差異表五軸素材齊
   （agent 報告原文）；待查：dim(Z)、split、標籤構造。
 
+**9/5 第二批精讀收件（④⑤＋SVA 核驗、全升【正】）**：
+- **OKBE【正】**：純理論框架、**無量化實驗**。Thm 2.2（§2.10）：確定性 CTMDP＋有限且
+  覆蓋完整的 option/STOK 庫（模型已知、DP 精確算）⇒ option 層 tree search＝最優 open-loop
+  ＋完備。⚠️ 引用必帶限定詞 — 是「同構定理存在」的旁證、不是我方正確性證明。
+  全文 0 次 semiring/max-product（「確定性下退化成 max-times semiring」是我方數學觀察、
+  不可寫成它自陳）。貢獻缺口四條已釘：學來的字典／連續 flow 下層／真導航＋量化／
+  顯式 semiring 命名並推廣到 stochastic。
+- **NF-CoT【正】**：TarFlow head 與文字同因果流、K=64 連續 thought、三段蒸餾自顯式 CoT
+  （目標固定＝VAE posterior mean）；exact NLL＝訓練 loss＋RL 的 logπ（Eq.3.4）、無 BoN／
+  無防塌機制（非塌陷是事後觀察）。語言殼會斷的四件已列。可借：logπ PG 公式形／
+  pass@k-vs-k 塌陷診斷（控制版＝同 (s,g) 多計畫多樣性）／凍骨幹先對齊再全解凍 warm-up。
+- **SVA 核驗【正】**：Table 9（App.H）逐字確認 56.11→50.83→43.33→39.17＝五 split 的 Avg
+  （EB-Navigation＝EmbodiedBench/AI2-THOR）；w/o MCTS 列是【重訓】非同權重開關、且其
+  「拿掉搜尋」全在訓練期。⇒ 我們 idp＝同一顆權重推論期開關＝更乾淨的因果讀數 —
+  引用時把這個區別寫明、反成我方方法學賣點。
+
 ## 使用說明
 
 - 引用前【讀】【掃】一律升級成【正】（正文級驗設置）— 9/4 誤報教訓入規。
