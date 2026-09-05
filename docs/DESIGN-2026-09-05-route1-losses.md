@@ -45,7 +45,28 @@ LACOT_S1_LEG_W；tag `_s1g<rev><rank><leg>` 進檔名。施工＝使魔＋opus �
 判讀與驗收ルナ；e_target 核心方程式的變動屬「跟 Rei 一起扛」範圍 → converge 後交接包裡
 這節要附完整 ablation。
 
-## 🚨 9/5 晚·對抗審查判決（opus 攻擊手；⛔ 本設計凍結、過 C-battery 才解凍）
+## 9/5 晚·對抗審查 — ルナ逐條複判版（⛔ 初版寫「凍結」是被攻擊手嚇到，主人糾正：
+## 逐條檢查→判斷→定參考價值。設計【不凍結】、修訂如下）
+
+**ルナ複判四級**：
+- N1（rev×rank 聯立矛盾）＝**採納、但一行可修**：rev 增強樣本逐出 triplet 池即解。
+  更好的結構解（v2 候選）：e 拆 [e_metric‖e_dir] 子空間 — L_rev 只作用 e_dir、rank 只
+  作用 e_metric ⇒ N1 與「時間箭頭捷徑」（④）同時結構性消滅。
+- N2（d_bfs 判準循環）＝**修訂採納**：非「必然無效」而是證據力弱 — 修法＝交叉形式評估
+  （d_time 訓→對 d_bfs 評；或 held-out 區域對）。協定級修正、不動設計。
+- N3（合法率平凡解）＝**降級**：既有階梯第 2 步（stage-2 subgoal/R0 不退步 gate）本來就
+  蓋住塌掉的 decoder — 攻擊手沒對上提供的階梯。採 C8（位移/路徑長欄）當便宜加固。
+- ③（density 病 vs ordering 藥）＝**高參考價值、當假設測**：強版（「metric 越好插值越糟
+  ＝預設結果」）過度宣稱 — 非凸性繼承假設低維等距嵌入，K×D 高維空間弦有空間貼流形。
+  測法＝C5（弦中點 k-NN vs Gaussian）。若證實 ⇒ v2 加 density 成分：**interp-consistency**
+  （用訊號三的 legality head 當可微場、把弦中點往高合法區推 — 訊號三升級成密度藥）。
+- C4＝**降級使用**：座標 lerp 本來就會穿牆 — 它是 baseline 樓地板（latent 目前有沒有
+  贏過天真平均），不是 falsifier。
+- d_time 偏差（②）＝**採納**：C2 量出 Δt 死點、只用短 Δt 段＋長程交給 d_bfs 臂。
+- C9（ictr 順序盲）＝**採納**（一次 grep 的事）。
+
+**修訂後前置檢查（跑這四支、CPU）**：C5（密度 vs 排序）、C1（rev 對現況）、C2（d_time
+效度）、C9（取樣器）；C4 當 baseline 欄一起出。過了再進 patch。
 
 **必然級三條（跑之前就判死的）**：
 - **N1（條件式必然）**：rev 對若進 triplet pool — d_time/d_bfs 對反轉皆近似不變 ⇒ rank 要
