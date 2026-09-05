@@ -179,6 +179,10 @@ assert INTENT_SRC in ("hindsight", "route"), \
     f"⛔ LACOT_INTENT_SRC 只能是 hindsight/route，收到 {INTENT_SRC}"
 INTENT_TAG = os.environ.get("LACOT_INTENT_TAG", "")   # 檔名 tag；通常不手設 —— 由 INTENT/SRC/TA 自動算（可覆蓋）
 INTENT_ZERO = int(os.environ.get("LACOT_INTENT_ZERO", 0))  # ⭐ 蒸餾探針：eval 錨恆零（只動 eval、不進檔名 — 產物用 OUT_DIR 分目錄）
+INTENT_DROP = float(os.environ.get("LACOT_INTENT_DROP", 0.0))  # ⭐ 內化錶（9/5 主人核）：訓練時 intent 段獨立歸零 p、s,g 保留 ⇒ eval 零 intent 在分佈內（zero 探針 OOD 的修正版）
+assert 0.0 <= INTENT_DROP < 1.0, f"⛔ LACOT_INTENT_DROP 要在 [0,1)，收到 {INTENT_DROP}"
+assert not (INTENT_DROP > 0 and INTENT != "embed"), \
+    "⛔ INTENT_DROP 只定義在 embed 接法（intent 只經 ix 進 cond；anchor 走 per-token、residual 動 traj，drop 語義不同）"
 _N_NOROUTE = [0]        # ⭐ eval 端 E 圖找不到路線的次數（那些次錨改用零向量）
 _N_SRC_FB = [0, 0]      # ⭐ [route 生不出路而 fallback 回 hindsight 的樣本數, 總樣本數]
 _intent_route_zn = None  # ⭐ 由 E 圖 helper 那段賦值（INTENT 非空才建）；⛔ 別在這裡推路徑
@@ -1119,6 +1123,9 @@ for stp in range(STEPS2):
         if INTENT == "residual":                     # ⛔ 殘差接法：et 也要吃殘差（跟 stage 1 同一種語言）
             traj = intent_ad.target_fwd(traj, anc)
         ix = _intent_cond(anc)                       # embed/residual＝[B,64]；anchor＝None
+        if INTENT_DROP > 0 and ix is not None:       # ⭐ 內化錶：intent 段獨立 drop（⛔ 跟 COND_DROP 的整組歸零是不同分佈 — zero 探針教訓）
+            _ikeep = (torch.rand(len(ix), 1, device=ix.device) >= INTENT_DROP).float()
+            ix = ix * _ikeep
     with torch.no_grad():
         et = etarget(traj, mask)
     cond = condvec(s, g, ix)
@@ -2252,7 +2259,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUB_MAX_ARC=0.0, BOOT_TAG="", EMA_W=0.0, LOAD_EMA=0, BC_OWN=0,
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
                SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START="",
-               S1_FROM="", FSQ_TAG="", INTENT_TAG=""):
+               S1_FROM="", FSQ_TAG="", INTENT_TAG="", INTENT_DROP=0.0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -2293,6 +2300,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += FSQ_TAG
     if INTENT_TAG:                                   # ⭐ intent 三接法（9/4；⛔ 不進檔名三個接法會互蓋）
         x += INTENT_TAG
+    if INTENT_DROP > 0:                              # ⭐ 內化錶（9/5；⛔ 不進檔名會蓋同 seed 無 drop 檔）
+        x += f"_idp{INTENT_DROP:g}"
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
@@ -2367,7 +2376,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     INTENT_TAG=INTENT_TAG or (f"_it{INTENT[0]}"
                                               f"{'R' if INTENT_SRC == 'route' else ''}"
                                               f"{INTENT_TA if INTENT_TA != 32 else ''}"
-                                              if INTENT else ""))
+                                              if INTENT else ""),
+                    INTENT_DROP=INTENT_DROP)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
