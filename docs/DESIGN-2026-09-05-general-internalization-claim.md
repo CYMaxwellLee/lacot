@@ -84,8 +84,16 @@ HIQL .28）④方法學附贈品（recon 好≠空間好學 2×2、判讀樹、�
 缺① 高維實證          → A0 ant（rail 通了就走）→ humanoidmaze-large-stitch 插旗
 缺② 主 claim 系統本體  → 路線二（intent 層小字典＋合成律 DP、B 階段）
 缺③ 內化數字立得住    → idp 錶（內化度讀數）＋R0 線；門檻按環境看
-                        （humanoid-large-stitch HIQL .28 ⇒ 內化線 .3~.5 即插旗）
+                        〔9/5 修正：humanoid-large-stitch 天花板已是 ECD 64±4（秒級
+                        搜索系）、非 HIQL 28 — 空地軸改寫見下〕
 ```
 
 式子美化軌：合成律 note（NOTE-2026-09-05-composition-law.md）＝一條主方程三取法＋
 CFG 式內化寫法；待 Rei 有空磨嚴（她忙完前ルナ先推、主人 9/5 裁）。
+
+〔9/5 晚·claim 四軸重排提案（ECD 精讀後、待主人裁）〕：
+④「humanoidmaze-large-stitch 空地」→「**內化度量軸**」：訓練查/推論免查＋idp 錶量殘留
+＋teacher-agnostic — 三隻 sweep 獨立確認此車道無先占；ECD/CD/CDGS/GSC 已把 humanoid
+stitch 打到 64±4（全是秒級推論期搜索/校正系）。humanoid 格重新定位：A0 之後用內化線
+誠實對標 64±4、同時亮毫秒 vs 秒的效率差 — 「同格、快 3~4 個數量級、免搜索」的敘事
+取代「沒人做過」的敘事。

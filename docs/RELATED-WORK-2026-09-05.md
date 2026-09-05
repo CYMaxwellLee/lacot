@@ -96,6 +96,20 @@ PILOT 2601.19917（LLM 內化 ablation 設計可借）【中】。
 
 **精讀隊列（序）**：①ECD ②TMD ③HDFlow ④OKBE ⑤NF-CoT（＋SVA 數字核驗）。
 
+**9/5 第一批精讀收件（①②③升【正】）**：
+- **ECD【正】**：🚨 humanoidmaze-large-stitch＝64±4（CD 59/GSC 58/CDGS 50/HIQL重跑 31）、
+  giant 49±1 ⇒ 空地軸過時（詳 FINDINGS-0905 ⑥）。energy 校正＝推論期、8~25 秒/plan、
+  無 latent 無內化 ⇒ 效率軸與內化車道完好。
+- **TMD【正】**：state/state-action 級端到端（無凍結+整形設定）；NCE＋MRN 架構級不對稱
+  （三角不等式 by construction）＋action/temporal invariance；距離→argmin policy、
+  無規劃無 decoder **零插值量測** ⇒ 路線一驗收靶無重疊。humanoidmaze_large_stitch 23.0±1.5。
+  可借：MRN 距離頭（訊號二 distance head 候選）、Bregman temporal invariance、baseline 群。
+  ⚠️ 它自文「33x」與表格不符（實 7.1x）— 引用自己重算。
+- **HDFlow【正】**：連續 RSSM latent（無 VQ）、hindsight 式 contrastive、EBM 需成功/失敗
+  標籤、無 search/teacher、全文無 internali/dropout；OGBench 有測但 **split 身份查不到**
+  （無 "stitch" 字樣、無 HIQL）、成本只報 FurnitureBench 88ms/step。差異表五軸素材齊
+  （agent 報告原文）；待查：dim(Z)、split、標籤構造。
+
 ## 使用說明
 
 - 引用前【讀】【掃】一律升級成【正】（正文級驗設置）— 9/4 誤報教訓入規。
