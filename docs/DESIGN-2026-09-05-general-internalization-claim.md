@@ -35,6 +35,9 @@ _✅ 9/5 早主人搬回 9/4 晚原話（第四次恢復記憶），三條路內
 - 理論錨：goal-conditioned value 的 Bellman 不動點＝最短路距離的變換；
   TD learning＝隨機化的 Bellman-Ford。
 - **可驗證預測（便宜、既有資產可量）**：兩點 z 插值 decode 出的路徑應合法 — 直接量。
+  〔9/5 施工中：probe_z_geodesic（使魔）。判讀先釘：這是「加 quasimetric 之前」的基線尺 —
+  真軌跡 decode 合法率高＋隨機 u 低＝儀器有效兩 gate；插值合法率與距離相關的絕對值
+  不設 pass/fail，是路線一之後要打敗的 before 錨。〕
 - 交接 Rei：形式化「intent＝geodesic 結構的充分統計量」＋ hindsight 在什麼條件下恢復
   quasimetric。資產：d 蒸餾（8/30 續帶）、往返尺、intent.py 弧長重採樣。
 - **⚠️ 要盯的張力（9/4 定）**：距離幾何壓進 z 會跟「z 表示路線形狀細節」搶容量 —
