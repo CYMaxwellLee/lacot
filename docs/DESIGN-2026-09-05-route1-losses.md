@@ -67,6 +67,29 @@ LACOT_S1_LEG_W；tag `_s1g<rev><rank><leg>` 進檔名。施工＝使魔＋opus �
 
 **修訂後前置檢查（跑這四支、CPU）**：C5（密度 vs 排序）、C1（rev 對現況）、C2（d_time
 效度）、C9（取樣器）；C4 當 baseline 欄一起出。過了再進 patch。
+〔9/5 晚收官：C1b 成立（rev 排池）、C2 兩判準不成立（d_time 堪用 rho .758）、C5 強版
+證偽（病在 decoder 對模式間輸入）、C4 樓地板 53.5%<63.8%、C9 無雷（ictr 本來就不用反轉
+增強）。⇒ **解凍、進 v2**。詳 FINDINGS-0905 ⑨。〕
+
+## v2 規格（C-battery 後定形；待主人過目）
+
+**結構**：e ∈ R^{K×D} 攤平後拆兩個子空間 — e_m（metric、前 D_m 維）與 e_d（direction、
+後 D_d 維，建議 D_d=16）。⛔ 拆分只在 loss 計算層、不動模組結構（zero-diff 契約可守）。
+
+1. **L_rev（訊號一、只作用 e_d）**：cos(e_d(τ), e_d(rev τ)) → −1。C1 證明現在方向整個
+   不存在（+0.99）— 只要求一個小子空間長出方向、不強迫整體翻轉。rev(τ) 照舊餵 recon。
+2. **L_rank（訊號二、只作用 e_m）**：三元組 hinge、d=d_time 主臂（C2 驗過 rho .758、
+   反向 13.4%）；⛔ rev 增強樣本排除於三元組池（C1b）。d_bfs 上界臂另跑、評估交叉形式
+   （d_time 訓→對 d_bfs held-out 對評，N2 解法）。margin 用距離分位數自適應（防 loss3
+   撐大範數讓 margin 失效）。
+3. **L_leg（訊號三、升級版）**：牆內擾動 negative＋legality head（BCE）；⭐ 加
+   **interp-consistency 項**：batch 內真 e 對的弦中點過 legality head、往 legal 推
+   （C5 證明病在模式間輸入 — 這項直接雕那裡）。⛔ C8 非退化欄（decode 位移/路徑長）
+   進探針報告、跑後必看。
+4. env：LACOT_S1_REV_W／RANK_W／LEG_W／INTERP_W（全 default 0＝零行為差）＋
+   LACOT_S1_DIR_DIM（default 0＝不拆）；tag `_s1g...` 進檔名。
+5. 階梯照舊：patch＋golden smoke → 單顆 stage1（before 尺量 after：插值合法率>.757、
+   rho 用交叉形式評、recon gate）→ 疊 stage2 單顆（subgoal/R0 gate）→ 八顆。
 
 **必然級三條（跑之前就判死的）**：
 - **N1（條件式必然）**：rev 對若進 triplet pool — d_time/d_bfs 對反轉皆近似不變 ⇒ rank 要
