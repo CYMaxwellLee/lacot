@@ -58,7 +58,46 @@ humanoidmaze-large-stitch 空地。每類末行＝我們與該類的差異軸。
   hindsight relabeling（HER 系譜）、amortized inference for planning。目前只有我們
   自己的 zero 探針教訓＋idp 錶。sweep 要補。
 
+## 9/5 sweep 收件（三隻使魔、2025-01~2026-08；全部【讀】級、威脅高者未驗前不進判斷）
+
+**⭐ 戰略三發現（甲乙丙交叉）**：
+1. **主 claim 車道查無先占**（兩隻獨立確認）：「訓練用 search/oracle、推論免查＋量化內化殘留」
+   在 GCRL/導航域查無直接命中；「字典搜索×導航×連續下層」交集也空。⇒ 內化消融＝賣點。
+2. **但 stitch 賽道已擁擠**：組合式 diffusion ≥6 篇同台（ECD/CompDiffuser/CDGS/ReRoll/RCD
+   ＋已知 ChronoForest/C-MCTD）⇒ 差異化不能靠「有做 stitch」，要靠內化＋latent 語言組合。
+3. **latent CoT for control 正在起浪**（2026 H1 三篇真機 VLA：LaST-R1/LaRA-VLA/LaST₀）
+   — 方向變熱的證據；皆操作域、無人量內化度。
+
+**A 類新件**：ECD 2606.21646【高：claim OGBench stitch SOTA＋近啟發式速度、ICML26；
+數字僅摘要級→正文隊列①】；CompDiffuser 2503.05153【中高：NeurIPS25 Spotlight、官方
+Stitch 資料集 4→30 block】；HDFlow 2605.04525【中：骨架最像（latent subgoal 序列＋低層
+rectified flow）但 navigate-only 無 stitch 無 search、連續非離散、88ms/step — reviewer
+必問差異→隊列③】；CDGS 2601.00126／TDP 2508.21800／ReRoll 2607.19919／RCD 2605.03075【低中】。
+
+**E 幾何 canon 補齊**：QRL 2304.01203／MRN 2208.08133／IQE 2211.15120／CRL 2206.07568／
+SoRB 1906.05253／HIQL 2307.11949。
+**E 新件**：TMD 2509.20478【高：Eysenbach/Levine 系、contrastive＋quasimetric 統一、claim
+stitching — 路線一 novelty 必切之鄰→隊列②】；ProQ 2506.18847【中高】；Eik-QRL 2512.12046
+／MAD 2506.09276【中】；LeFlow 2608.24855【高提醒：機制近「插值＝合法」但它自己
+不信插值、外掛 rollout 驗證 ⇒ 我們的合法性 loss（訊號三）正是把這個不信任變成訓練目標】；
+NFTR 2607.07855【中：HIQL subgoal 塌到不可達區的前車之鑑】。
+
+**F 攤銷新件**：SVA 2607.03751【高：唯一「拿掉搜尋量殘留」分層 ablation 前例（VLA 域）；
+數字二手→需核】；DAPD 2608.01735【中高：「privilege illusion」批評 — 我們 idp 零錨 eval
+正面回答它、該引】；2506.07822（diffusion→單步蒸餾）／HER×AlphaZero 2511.03405／
+PILOT 2601.19917（LLM 內化 ablation 設計可借）【中】。
+⭐ 2605.08732 兩面確認（誤差界＋GC-IDM 攤銷）→ 細讀優先度升。
+
+**B/D 類新件**：OKBE 2506.09499【高：唯一明講 option 序列 BFS＋等價定理；logic/生理域、
+無連續下層 — 理論最近鄰、差異要釘死→隊列④】；NF-CoT 2606.06447【高：TARFlow 引擎
+同構、language/code 域→隊列⑤】；LaST-R1 2604.28192／LaRA-VLA 2602.01166／LaST₀
+2601.05248【中：引、浪的證據】；DCWM 2503.00653／LAFM 2606.23420／CompACT 2603.05438
+【中低：discrete+control 但無字典空間搜索】；FRM 2606.29150【低】。
+
+**精讀隊列（序）**：①ECD ②TMD ③HDFlow ④OKBE ⑤NF-CoT（＋SVA 數字核驗）。
+
 ## 使用說明
 
 - 引用前【讀】【掃】一律升級成【正】（正文級驗設置）— 9/4 誤報教訓入規。
-- 缺口 E、F＝今日 sweep 使魔的主攻面；A、B、D 掃 2025.01~2026.08 新件。
+- ⚠️ 9/5 fan-out 教訓：已知清單要【全量】共享給每隻、不按題目裁切 — 裁切版害 TTGS
+  被乙重報一次（它 9/4 已正文讀過）。checklist④ 的正確用法。
