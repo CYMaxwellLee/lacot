@@ -72,7 +72,7 @@ _Sketch_：$L^2$ 投影唯一性＋條件獨立下條件期望塔性質。結構
 **Prop 2.3（鎖死＝穩定駐點集；A1–A4）**：
 (i) *一階平坦*：設 $\theta\in M\equiv\{\theta:v_\theta$ 對 $a$ 逐點常值$\}$ 且 $\varnothing$ 支已最優。任意參數方向 $h$，其輸出擾動 $\partial_h v$ 分解為 $a$-對稱與 $a$-反變（$\mathbb E_a$ 均值零）分量；A1 使 residual 對 $a$ 條件無關 ⇒ **反變分量與 residual 的期望內積為 0** ⇒ 打開 $a$-分辨的方向導數＝0。
 (ii) *無逃逸曲率*：$M\cap\{\text{最優}\}$ 由 Prop 2.1 是全域最優 ⇒ Hessian 半正定、無負曲率離開方向 ⇒ 弱穩定駐點集。
-(iii) *塌後不再分化*〔結構借 Cocos 轉引 2505.11123 Thm 1〕：A3 下兩支對共享參數的梯度差 $\le C\cdot\varepsilon$ ⇒ $\varepsilon\approx0$ 自我維持（self-reinforcing；期望梯度流下 $\varepsilon(0)=0\Rightarrow\varepsilon(t)=0$）。
+(iii) *塌後不再分化*〔結構借 Cocos 轉引 2505.11123 Thm 1；**9/5 審查修正：加前提**〕：**在 $\varnothing$ 支已最優的前提下**，A3 使兩支對共享參數的梯度差 $\le C\cdot\varepsilon$ ⇒ $\varepsilon\approx0$ 自我維持。⛔ 無此前提不成立（審查反例：adapter $M{=}0$、$\varnothing$ 支未收斂時 $\partial L/\partial M\ne0$、通路會復活 — 輸出差控制不了 Jacobian 差）；動力學的正確敘述是 R2.4 的賽跑。
 
 **Remark 2.4（賽跑機制 — 曝光稀釋的動力學形；線性化敘事）**：$a$ 通路的期望生長驅動 $\propto\|\mathbb E[a\otimes\delta]\|$，$\delta$＝residual。A1 ⇒ $\mathbb E[a\otimes\delta]=\mathbb E\big[\mathbb E[a|s,g]\otimes\mathbb E[\delta|s,g]\big]$ — 只剩 $\delta$ 的 $(s,g)$-可預測分量供能。$p>0$ 使 $\varnothing$ 支被迫自建 $(s,g)$ 通路；其收斂即令該分量 $\to0$ ⇒ **$a$ 通路的生長驅動隨 $\varnothing$ 支收斂而枯竭**。鎖死＝$a$ 通路生長 vs $\varnothing$ 支收斂的賽跑落敗（⑦ 曝光稀釋預言的機制形：8000 步 × 70% 曝光輸掉賽跑；f27n $p{=}0$ 無對手故長成 .6046）。
 

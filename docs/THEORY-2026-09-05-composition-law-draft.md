@@ -98,6 +98,7 @@ _證明梗概_：對 $t$ 歸納；經典 algebraic path problem〔Mohri 2002〕�
 (b) 全合成 $V \mapsto V \otimes V$（matrix squaring，倍增步）。冪等 $\oplus$ 下兩者**定點相同**
 （皆＝代數閉包／最短路），迭代軌跡不同。字典 DP／beam 用 (a) 或 (b) 皆可，
 但語意保證都掛在「從 $\bot$ 起算的最小定點」上（見 Prop 8 / R9）。
+**〔9/5 審查修正〕**：⛔ (b) squaring 形**不能**從 $\bot$ 起（$\bot\otimes\bot=\bot$ 永遠停在 $\bot$）— 正確初始化 $V_0=I\oplus E$（或映射改 $V\mapsto V_0\oplus E\oplus V\otimes V$）。「從 $\bot$ 起」只適用 (a) 單步展開形。
 
 **Remark R5（vs OKBE Thm 2.2〔arXiv:2506.09499, §2.10〕）**：OKBE 證的是：確定性 CTMDP
 ＋有限且覆蓋完整的 option 庫＋**模型已知（DP 精確算）** ⇒ option 層 tree search 最優
