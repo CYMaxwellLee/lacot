@@ -1,0 +1,97 @@
+
+==============================================================================
+0. 資料載入（切窗／正規化 file:line 出處）
+==============================================================================
+  env=pointmaze-large-stitch-v0  data_dir=/home/cymaxwelllee/data/ogbench  N_PAIRS=100  seed=0
+  直接讀 npz（不經 ogbench.make_env_and_datasets，不需要模擬器/渲染 —— 這支探針
+  只用 offline OBS 陣列＋凍結權重，不 step 環境）：
+    出處＝experiments/scratch_lacot_rollout.py:29（同款 np.load 用法）
+  OBS shape=(1005000, 2)  episodes=5000（每集長度 min/median/max=201/201/201）
+  mu=[18.227279663085938, 10.928874969482422]  sd=[11.593134880065918, 7.238654613494873]   出處=scratch_lacot_rollout.py:37-38
+
+==============================================================================
+1. 重建凍結模型（架構 file:line 出處 + state_dict 鍵驗證）
+==============================================================================
+  ckpt=/home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s27.pt
+  ckpt['cfg']={'K': 8, 'COND': 256, 'CHUNK': 4, 'D_MODEL': 256, 'STEPS2': 8000, 'T_CAP': 128, 'GOAL_SAMPLING': 'uniform-official', 'EVAL_EPISODES': 2, 'CONS': 'self', 'EMA_M': 0.996, 'SEED': 27, 'EMA_W': 0.999, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1, 'BC_INDEP': 1}   出處＝存檔格式見 scratch_lacot_rollout.py:2433-2438
+  ✓ ENC_OBJ=recon_ictr / 無 s_embed / 無 vq / 無 intent_ad ⇒ decode = 純 u_dec(u)，不需要輔助輸入
+    出處：_dec() 定義於 scratch_lacot_rollout.py:792-807；DEC_START!='hard' 分支（:795-796）只回傳 u_dec(u)；載入端在 :1258-1262 對『ckpt 有無 s_embed』與『DEC_START 設定』做一致性 assert，本探針用『ckpt 沒有 s_embed』反推 DEC_START≠hard，邏輯與 :1261-1262 那條 assert 相同方向。
+  traj_enc   load_state_dict  missing=[]  unexpected=[]  ✓ 全部對上
+  e_pooler   load_state_dict  missing=[]  unexpected=[]  ✓ 全部對上
+  u_dec      load_state_dict  missing=[]  unexpected=[]  ✓ 全部對上
+  出處：load_state_dict 呼叫方式對齊 scratch_lacot_rollout.py:1231-1232（traj_enc/e_pooler）與 :1257（u_dec）。
+
+==============================================================================
+2. 佔據圖 + BFS 工具（file:line 出處）
+==============================================================================
+  GeoEnergy(OBS, mu, sd, res=8)   出處：lacot/refine_grad.py:43-65（建圖邏輯）；res=8 是全 repo 唯一用法，precedent 見 scratch_lacot_rollout.py:294,328,1590
+  grid shape=(35, 37)  自由格覆蓋率=37.9%（free=491/1295）
+  GeoEnergy.health()（lacot/refine_grad.py:119-144，內建健康檢查，非本探針的兩個 gate）：ok=True  mapping_err=2.00e-06  wall_median_random=0.1151
+
+==============================================================================
+3. 抽 100 對真軌跡片段（T_CAP=128，CHUNK=4）
+==============================================================================
+  起點/終點抽法出處：scratch_lacot_rollout.py:452-465（make_batch，官方 GCBC 抽法：
+  同一條軌跡內、[r+1, 軌跡結尾] 均勻抽 goal；F6 修正＝越界 clamp 不重抽）。
+  固定 T_CAP 點的內插重採樣出處：scratch_lacot_rollout.py:484-489（F7 修正：一律線性內插
+  取 T_CAP 個點，⛔ 不是按索引取整數點 —— 避免長度資訊從點數/mask 洩漏）。
+  A/B 各抽到 100 段（CHUNK 篩掉重試次數：A=3, B=0）
+  片段長度（原始索引步數，gr-r）：A p50=36 B p50=34
+
+==============================================================================
+4. 三組合法率
+==============================================================================
+  設計選擇：『真軌跡直接 decode』＝真軌跡 encode(traj_enc→e_pooler)→decode(u_dec) 的
+  roundtrip 還原點（不是拿原始插值點本身 —— 那樣必然 100% 合法，測不出 decoder 的行為），
+  precedent＝roundtrip_gate()，scratch_lacot_rollout.py:704-722。
+  設計選擇：隨機 u 控制組＝與 et_A/et_B 逐維（K×D_MODEL）mean/std 匹配的高斯雜訊
+  （保留邊際尺度、打散跨 K/維度的結構相關），precedent＝experiments/probe_u.py:92,110-111
+  （U_MEAN/U_STD + torch.randn 的 'matched' 控制組寫法，同一個 repo 既有慣例）。
+
+  組別                               n_waypoints       合法率
+  真軌跡 direct-decode（控制組↑）                25600     98.0%
+  插值 decode（量測值）                         38400     70.5%
+  隨機 u decode（控制組↓）                      12800     75.7%
+
+  插值合法率按 t 拆開（附加資訊，非驗收必要）：
+    t=0.25   n= 12800   合法率=68.8%
+    t=0.50   n= 12800   合法率=63.8%
+    t=0.75   n= 12800   合法率=78.9%
+
+==============================================================================
+儀器 GATE 判定
+==============================================================================
+  gate 1  真軌跡合法率 98.0% ≥ 95% ？ PASS
+  gate 2  真軌跡−隨機u 合法率差 +22.4% ≥ 20% ？ PASS
+
+  ✓ 兩個 gate 都過，下面的插值合法率與相關數字視為可信。
+
+==============================================================================
+5. latent 距離 ‖et_A−et_B‖ vs 起點 BFS 距離
+==============================================================================
+  latent 距離：攤平 [K,D_MODEL] 成一個向量後取歐氏距離 —— 任務規格寫的就是 ‖et_A−et_B‖
+  這個記法本身（非 file:line 出處）；『攤平 K×D_MODEL 當一個向量』這個處理方式沿用
+  scratch_lacot_rollout.py:893 的 et.reshape(B,-1) 用法（precedent，⛔ 該行另外做了
+  F.normalize 算 cosine，本探針按規格【不】做 normalize，是純 L2 距離）。
+
+  BFS 距離：兩軌跡『起點』（片段第 0 點，即 traj[:,0]，正規化座標，數值上＝軌跡片段的
+  真實起始狀態 s＝(OBS[r]-mu)/sd）在佔據圖上的 4-鄰 BFS 步距。
+  出處：grid_bfs()＝lacot/subgoal.py:35-52；intent.py 對 BFS 的唯一來源聲明＝lacot/intent.py:8。
+  起點落牆格需要 snap 的次數：0/200（理論上應為 0——起點是真實資料點，本來就在建圖時被算進自由格；非 0 要明講，不能沉默蓋過）
+  BFS 不連通的對數：0/100（無）
+
+  n=100   Spearman rho=0.212   p=0.03459
+  latent 距離：mean=63.851 std=8.693
+  BFS 距離（格）：mean=22.3 p50=22.0 max=54
+
+==============================================================================
+彙總簡表
+==============================================================================
+  INSTRUMENT_VALID = True
+  組別                                       n       合法率
+  真軌跡 direct-decode                    25600     98.0%
+  插值 decode（t=.25/.5/.75 合併）           38400     70.5%
+  隨機 u decode                          12800     75.7%
+  latent-vs-BFS Spearman rho=0.212  n=100  p=0.03459
+
+耗時 0.5s
