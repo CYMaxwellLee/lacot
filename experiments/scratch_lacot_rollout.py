@@ -183,6 +183,19 @@ INTENT_DROP = float(os.environ.get("LACOT_INTENT_DROP", 0.0))  # ⭐ 內化錶�
 assert 0.0 <= INTENT_DROP < 1.0, f"⛔ LACOT_INTENT_DROP 要在 [0,1)，收到 {INTENT_DROP}"
 assert not (INTENT_DROP > 0 and INTENT != "embed"), \
     "⛔ INTENT_DROP 只定義在 embed 接法（intent 只經 ix 進 cond；anchor 走 per-token、residual 動 traj，drop 語義不同）"
+# ⭐ CFG 式 intent 引導（LACOT_INTENT_GUID_W、9/5）：INTENT_DROP 訓的顆把「帶 intent」與
+#    「intent 歸零」兩個條件模式練在同一顆 ⇒ eval 取樣時可以把 intent 方向【外插放大】，
+#    問「模型是不是看得懂 intent 但沒用力」。0.0＝關（⛔ 逐位元不動任何行為）、1.0＝normal、>1＝放大。
+#    ⛔ 只動 eval 取樣，訓練路徑一行都不碰；⛔ 不進檔名（診斷旋鈕）⇒ 產物請用 OUT_DIR 分目錄，
+#    辨識靠 json 的 guid_w 欄位（同 INTENT_ZERO 的作法）。
+INTENT_GUID_W = float(os.environ.get("LACOT_INTENT_GUID_W", 0.0))
+assert INTENT_GUID_W >= 0.0, f"⛔ LACOT_INTENT_GUID_W 不能是負的，收到 {INTENT_GUID_W}"
+assert not (INTENT_GUID_W > 0 and INTENT != "embed"), \
+    "⛔ INTENT_GUID_W 只定義在 embed 接法（intent 只經 ix 進 cond 尾巴 ⇒ 「拼零」才有唯一語義）"
+# 🚨 INTENT_ZERO=1 ⇒ eval 錨恆為 None ⇒ 帶 intent 的 cond 跟拼零版【一模一樣】⇒ 引導方向恆為零
+#    ⇒ 開了 w 也完全沒作用，而且【不會報錯】：跑完會拿到一張「引導無效」的假表。⛔ 擋在這裡。
+assert not (INTENT_GUID_W > 0 and INTENT_ZERO), \
+    "⛔ INTENT_GUID_W 與 INTENT_ZERO 不能同開（錨恆零 ⇒ 兩份 cond 相同 ⇒ 引導是無聲的 no-op）"
 _N_NOROUTE = [0]        # ⭐ eval 端 E 圖找不到路線的次數（那些次錨改用零向量）
 _N_SRC_FB = [0, 0]      # ⭐ [route 生不出路而 fallback 回 hindsight 的樣本數, 總樣本數]
 _intent_route_zn = None  # ⭐ 由 E 圖 helper 那段賦值（INTENT 非空才建）；⛔ 別在這裡推路徑
@@ -1063,6 +1076,68 @@ def flow_cond(cv, anchors_t=None):
     return torch.cat([cv.unsqueeze(1).expand(-1, K, -1), pt], -1)
 
 
+# ═══ CFG 式 intent 引導的取樣（LACOT_INTENT_GUID_W；⛔ eval only）═══
+# TARFlow 的「每步速度場」＝每個 token 的仿射參數 (mu_t, alpha_t)：sample 方向是
+#   u_t = z_t * exp(alpha_t) + mu_t，而 (mu_t, alpha_t) 是【同一段 u_{<t}】＋ cond 算出來的。
+# ⇒ CFG 外插就落在這一格：同一狀態（同 u_{<t}）、同一時間步（同 t），拿兩份 cond 各算一次，
+#   然後 p = p_zero + w (p_int − p_zero)。
+# ⭐ 實作用等價的重排式 p = p_int + (w−1)(p_int − p_zero)：代數上完全一樣，但 w=1.0 時
+#   (w−1)=0.0【精確】為零 ⇒ 逐位元回到正常取樣，⛔ 不吃 (a−b)+b 的捨入誤差
+#   （而那個誤差會被 exp(alpha) 放大 —— alpha 貼到 ±max_log_scale 時放大千倍）。
+# ⛔ 這裡【不】自己 flip cond —— Permutation 的同步用 flow 自己的 _cond_for_block，
+#   跟 Flow.sample 走同一條規則（nf_head.py 的註解講明由 Flow 內部處理）。
+# ⛔ 不改 lacot/nf_head.py：本函式只是 Flow.sample 的外掛複本（同樣的 z、同樣的逆序）。
+_GUID_A_CAP = 60.0   # exp(60)≈1e26 仍是有限的 fp32；純溢位護欄，w≤4（max_log_scale=7）咬不到
+
+
+def _block_inverse_guided(blk, z, cond_int, cond_zero, w):
+    """ARFlowBlock.inverse 的引導版：逐 token 混合兩份 cond 算出的 (mu, alpha)。"""
+    batch_size, seq_len, _ = z.shape
+    pre_i = blk._prefix(batch_size, cond_int, z.device)
+    pre_0 = blk._prefix(batch_size, cond_zero, z.device)
+    u = torch.zeros_like(z)
+    for t in range(seq_len):
+        if t == 0:
+            seq_i, seq_0 = pre_i, pre_0
+        else:
+            e = blk.embed(u[:, :t])                     # ⭐ 同一段前綴餵兩邊＝「同一狀態」
+            seq_i = torch.cat([pre_i, e], dim=1)
+            seq_0 = torch.cat([pre_0, e], dim=1)
+        mu_i, al_i = blk._params(seq_i)
+        mu_0, al_0 = blk._params(seq_0)
+        mu = mu_i[:, -1] + (w - 1.0) * (mu_i[:, -1] - mu_0[:, -1])
+        al = al_i[:, -1] + (w - 1.0) * (al_i[:, -1] - al_0[:, -1])
+        u[:, t] = z[:, t] * torch.exp(al.clamp(-_GUID_A_CAP, _GUID_A_CAP)) + mu
+    return u
+
+
+@torch.no_grad()
+def _flow_sample_guided(n, cond_int, cond_zero, w, generator=None):
+    """Flow.sample 的引導版：z 的抽法／block 逆序／perm 全部照抄，只換掉每步的仿射參數。"""
+    z = torch.randn(n, flow.seq_len, flow.token_dim, device=device, generator=generator)
+    u = z
+    for i in reversed(range(len(flow.blocks))):
+        if i < len(flow.blocks) - 1:
+            u = flow.perm.inverse(u)
+        u = _block_inverse_guided(flow.blocks[i], u,
+                                  flow._cond_for_block(cond_int, i),
+                                  flow._cond_for_block(cond_zero, i), w)
+    return u
+
+
+def sample_plan(n, cond, anc, s=None, g=None):
+    """eval 取樣計畫的唯一入口。
+    ⭐ INTENT_GUID_W==0（預設）⇒ 這裡就是原本那一行 flow.sample(...)，⛔ 逐位元、連亂數流都不變。
+    ⭐ >0 ⇒ 拿 (s,g) 再算一份【intent 段拼零】的 cond（＝condvec 的 ix=None 路徑，
+       語義同 _intent_cond(None) 的 new_zeros），兩份 cond 做 CFG 外插。"""
+    if INTENT_GUID_W <= 0.0:
+        return flow.sample(n, flow_cond(cond, anc))
+    cond0 = condvec(s, g, None)                          # ⛔ ix=None ⇒ condvec 自己拼零
+    if cond0.shape[0] == 1 and cond.shape[0] != 1:
+        cond0 = cond0.expand(cond.shape[0], -1)
+    return _flow_sample_guided(n, flow_cond(cond, anc), flow_cond(cond0, anc), INTENT_GUID_W)
+
+
 def _intent_inv(pts_n, anc):
     """⭐ H(4)：residual 接法 decode 出來的是【殘差】⇒ 加回錨輪廓才是座標序列。其餘接法恆等。
     ⛔ 只在「要當座標用」（選點／E_geo／診斷）之前呼叫 —— encoder 往返投影要留在殘差空間。
@@ -1506,7 +1581,7 @@ def policy_chunk(obs, goal, R, use_u):
     if use_u:
         u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
         if u is None:
-            u = flow.sample(1, flow_cond(cond, _anc))
+            u = sample_plan(1, cond, _anc, s, g)          # ⭐ GUID_W=0 ⇒ 就是 flow.sample(1, ...)
         if GRAD_REFINE:
             # ⭐ 主人 8/22 的更新式取代 learned refine。
             # ⚠️ 這一層是 @torch.no_grad()，而 grad_refine 內部自己開 enable_grad
@@ -1525,7 +1600,7 @@ def policy_chunk(obs, goal, R, use_u):
                 # ⭐ energy-guided selection（主人 8/29 晚核准的中間站一）：
                 #    抽 N 份、E 打分、挑最低 —— 挑出來的永遠是 flow 原生樣本（殼上的點）
                 #    ⇒ 零方言病，E 的幾何品味直接兌現。⛔ 不碰快取（每 chunk fresh 選）。
-                cand = flow.sample(SEL_N, flow_cond(cond.expand(SEL_N, -1), _anc))
+                cand = sample_plan(SEL_N, cond.expand(SEL_N, -1), _anc, s, g)
                 with torch.no_grad():
                     # ⭐ H(4)：residual 接法解出來的是殘差 ⇒ 進 E_geo 之前先加回錨輪廓
                     _e = GEO(_intent_inv(_dec(_q(cand), s), _anc),
@@ -1751,7 +1826,7 @@ def make_subgoal_policy(R, use_u):
             if box.get("u_long") is not None and GRAD_R_WARM > 0:
                 u_l, _st = box["u_long"], GRAD_R_WARM    # 長程計畫也是接續修，⛔ 不重想
             else:
-                u_l, _st = flow.sample(1, flow_cond(cond_l, _anc)).detach(), GRAD_R
+                u_l, _st = sample_plan(1, cond_l, _anc, s_n, g_n).detach(), GRAD_R
             u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO, s_n, g_n,
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
@@ -1771,7 +1846,7 @@ def make_subgoal_policy(R, use_u):
             if box.get("u_long") is not None and GRAD_R_WARM > 0:
                 u_l, _st = box["u_long"], GRAD_R_WARM    # M 份一起接續修
             else:
-                u_l, _st = flow.sample(SUB_M, flow_cond(cond_l, _anc)).detach(), GRAD_R
+                u_l, _st = sample_plan(SUB_M, cond_l, _anc, s_n, g_n).detach(), GRAD_R
             u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO,
                               s_n.expand(SUB_M, -1), g_n.expand(SUB_M, -1),
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
@@ -1792,7 +1867,7 @@ def make_subgoal_policy(R, use_u):
             cond_l = condvec(s_n, g_n, _intent_cond(_anc)).expand(_NS, -1)
             u_l = _oracle_u(obs, box["goal"], _NS) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
             if u_l is None:
-                u_l = flow.sample(_NS, flow_cond(cond_l, _anc)).detach()
+                u_l = sample_plan(_NS, cond_l, _anc, s_n, g_n).detach()
             u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO,
                               s_n.expand(_NS, -1), g_n.expand(_NS, -1),
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
@@ -1981,6 +2056,8 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK, dec_anchor=DEC_ANCHOR,
            teacher_mix=TEACHER_MIX,
            intent=INTENT, intent_ta=INTENT_TA, intent_src=INTENT_SRC,
+           # ⭐ 診斷旋鈕：⛔ 不進檔名（產物靠 OUT_DIR 分目錄）⇒ 收表時只有這一格認得出是哪個 w
+           intent_drop=INTENT_DROP, intent_zero=INTENT_ZERO, guid_w=INTENT_GUID_W,
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 out["rt_gate"] = RT_GATE
 out["flow_probe"] = FLOW_PROBE_OUT
