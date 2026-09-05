@@ -2474,6 +2474,18 @@ if INTENT:
 if SUB_HEADGUARD > 0:
     out["n_headguard"] = SUB_DIAG.get("n_headguard", 0)          # 黏住模式 replan 總數
     out["n_headguard_ep"] = SUB_DIAG.get("n_headguard_ep", 0)    # 觸發黏住的集數（開火率的分子）
+# ⭐ 互蓋守門（9/5 稽核修法①）：同名檔身份欄不同＝OUT_DIR 用錯 ⇒ 炸掉、拒絕無聲蓋（同類病史 3 次）
+if os.path.exists(dst):
+    try:
+        with open(dst) as _f:
+            _old = json.load(_f)
+    except Exception:
+        _old = None
+    if _old is not None:
+        for _k in ("guid_w", "intent_zero", "intent_drop"):
+            _ov, _nv = _old.get(_k), out.get(_k)
+            assert _ov is None or _ov == _nv, \
+                f"⛔ {dst} 已存在且身份欄不同（{_k}: 舊={_ov} 新={_nv}）— OUT_DIR 用錯了，拒絕覆蓋"
 with open(dst, "w") as f:
     json.dump(out, f, indent=1)
 if DIAG_DUMP and DIAG_ROWS:
