@@ -1,0 +1,121 @@
+
+==============================================================================
+0. 資料與佔據圖（config 行 —— 每個數字的機器與設定）
+==============================================================================
+  host=zeldajr  device=cpu  torch_threads=8
+  env=pointmaze-large-stitch-v0  N_PAIRS=64  G=16  sg_seed=0  flow_seed=20260906  calib_n=256 (seed 12345)  w=(1/3,1/3,1/3)
+  模式：intent-on eval cond（route 錨）、EMA 權重、無 refine、decode=u_dec
+  OBS(1005000, 2)  episodes=5000
+  佔據圖 (35, 37)  free=491/1295  CELL_NORM=0.12844  health ok=True
+
+==============================================================================
+1. 重建模型並載入 EMA 權重（eval 語意）
+==============================================================================
+/home/cymaxwelllee/venvs/lacot-rocm/lib/python3.12/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+  ✓ f27n s40 (st8000): base+EMA 覆蓋 ['cond_enc', 'cond_head', 'flow', 'intent_ad']、u_dec/traj_enc/e_pooler plain、T_A=32
+    stage-1 權重指紋 traj_enc/e_pooler/u_dec = 62e2c109f0/644d10783e/1cee668399   flow(ema)=5af2e087cd   (ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_btf27n_emw0.999_wu500_s1from_ite_dssoft_norf_cd0.1_bci_s40.pt)
+  ✓ idpxm s40 (st11429, idp0.3): base+EMA 覆蓋 ['cond_enc', 'cond_head', 'flow', 'intent_ad']、u_dec/traj_enc/e_pooler plain、T_A=32
+    stage-1 權重指紋 traj_enc/e_pooler/u_dec = 62e2c109f0/644d10783e/1cee668399   flow(ema)=fca924cbeb   (ckpt_large-stitch_self_K8_c256_ch4_st11429_T128_ep2_gu_eorecon_ictr_tch0.5_btidpxm_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_s40.pt)
+  ✓ f27nL s40 (st11429): base+EMA 覆蓋 ['cond_enc', 'cond_head', 'flow', 'intent_ad']、u_dec/traj_enc/e_pooler plain、T_A=32
+    stage-1 權重指紋 traj_enc/e_pooler/u_dec = 62e2c109f0/644d10783e/1cee668399   flow(ema)=b4d77d4ca7   (ckpt_large-stitch_self_K8_c256_ch4_st11429_T128_ep2_gu_eorecon_ictr_tch0.5_btf27nL_emw0.999_wu500_s1from_ite_dssoft_norf_cd0.1_bci_s40.pt)
+
+==============================================================================
+2. 題集（量測 64 題＝probe 底座；校準 256 窗獨立）
+==============================================================================
+  量測集：64 題（snap 0、不連通剔 0）  L_BFS 格數 p25/p50/p75=[0. 1. 6.]  同格 L=0 佔 47%  非平凡（L≥3）28 題
+  校準集：256 窗（snap 0、不連通 0、同格 L=0 佔 48%）
+  【raw 插值空間、對照用】arclen/L_BFS p5=0.869  逐窗 max 步 p95=0.0328（⛔ 不進閘 —— smoke 實測用它會閘掉 100% 的 decode 產物、含真軌跡 roundtrip，見檔頭）
+
+==============================================================================
+3. 【f27n s40 (st8000)】 C8 校準 → 儀器 gate → headroom
+==============================================================================
+  ★ 校準值（roundtrip decode 真分佈、進報告）：ρ_len = 2.595（arclen/L_BFS p5、n=132）  δ_step = 0.1040（逐窗 max 步 p95、n=256）
+    分佈：ratio p5/p50/p95=[ 2.59  6.09 26.82]  max步 p50/p95=[0.0666 0.104 ]  （raw 空間對照：ratio p5=0.869、max步 p95=0.0328 —— 差 3.2×）
+  U1 常數計畫 r==0（9 題）：PASS   例：legal=1.00 raw=0.333 → r=0.0（arclen 0.000 < 門檻 3.666）
+  U2 teleport r==0（9 題）：PASS   例：legal=1.00 hit=1 raw=1.000 → r=0.0（max_step=1.005 > δ=0.104）
+  U3 route 假想計畫三項本體 mean raw=1.000 ≥ 0.9 且 hit 全 1（32 題、⛔ 不過閘 —— 閘定義域=decode 空間）：PASS
+  U4 真軌跡 roundtrip：C8 通過率=92.6% ≥ 85%（n=256）：PASS   診斷：mean r=0.721、roundtrip hit=82.8%（＝decoder 端點保真度 ⇒ pass@* 讀數的天花板之一）
+  U5 判別力 mean r(roundtrip 真)−mean r(隨機u)=0.721−0.000=+0.721 ≥ 0.3：PASS
+  ✓ U1–U5 全過 —— 這把尺對這顆、當天、在這台是活的。
+
+  headroom（n=64 題×G=16；route 無路 fallback 拼零 0 題；2s）
+    reward 版： mean r@1=0.734   mean max r@G=0.899   headroom=0.165 ± 0.027
+    成功率版（raw hit）：  pass@1=0.771   pass@G=0.953   headroom=0.183 ± 0.036
+    成功率版（gated hit）：pass@1=0.738   pass@G=0.938   headroom=0.199 ± 0.039
+    ── 非平凡題切片（L_BFS≥3、n=28；診斷列⛔不進判準）：
+       raw hit  pass@1=0.527  pass@G=0.893  headroom=0.366 ± 0.064
+       reward   r@1=0.611  max r@G=0.889  headroom=0.277
+    C8 閘（§2.2 偵測欄）：閘掉 5.6%（只 arclen 2.9%／只 step 2.3%／雙閘 0.3%）  平均合法率=95.2%
+       樣本 arclen/L_BFS 比值 p5/p50=[2.58 4.19]（floor=2.59）  樣本 max 步 p50/p95=[0.067 0.097]（cap=0.104）
+    退化群（G 條 r 全同 ⇒ Â≡0 零梯度）：29.7%（其中全 0 群 0.0%）
+
+==============================================================================
+3. 【idpxm s40 (st11429, idp0.3)】 C8 校準 → 儀器 gate → headroom
+==============================================================================
+  ★ 校準值（roundtrip decode 真分佈、進報告）：ρ_len = 2.595（arclen/L_BFS p5、n=132）  δ_step = 0.1040（逐窗 max 步 p95、n=256）
+    分佈：ratio p5/p50/p95=[ 2.59  6.09 26.82]  max步 p50/p95=[0.0666 0.104 ]  （raw 空間對照：ratio p5=0.869、max步 p95=0.0328 —— 差 3.2×）
+  U1 常數計畫 r==0（9 題）：PASS   例：legal=1.00 raw=0.333 → r=0.0（arclen 0.000 < 門檻 3.666）
+  U2 teleport r==0（9 題）：PASS   例：legal=1.00 hit=1 raw=1.000 → r=0.0（max_step=1.005 > δ=0.104）
+  U3 route 假想計畫三項本體 mean raw=1.000 ≥ 0.9 且 hit 全 1（32 題、⛔ 不過閘 —— 閘定義域=decode 空間）：PASS
+  U4 真軌跡 roundtrip：C8 通過率=92.6% ≥ 85%（n=256）：PASS   診斷：mean r=0.721、roundtrip hit=82.8%（＝decoder 端點保真度 ⇒ pass@* 讀數的天花板之一）
+  U5 判別力 mean r(roundtrip 真)−mean r(隨機u)=0.721−0.000=+0.721 ≥ 0.3：PASS
+  ✓ U1–U5 全過 —— 這把尺對這顆、當天、在這台是活的。
+
+  headroom（n=64 題×G=16；route 無路 fallback 拼零 0 題；2s）
+    reward 版： mean r@1=0.733   mean max r@G=0.904   headroom=0.170 ± 0.027
+    成功率版（raw hit）：  pass@1=0.761   pass@G=0.953   headroom=0.192 ± 0.036
+    成功率版（gated hit）：pass@1=0.738   pass@G=0.953   headroom=0.215 ± 0.039
+    ── 非平凡題切片（L_BFS≥3、n=28；診斷列⛔不進判準）：
+       raw hit  pass@1=0.511  pass@G=0.893  headroom=0.382 ± 0.064
+       reward   r@1=0.622  max r@G=0.910  headroom=0.289
+    C8 閘（§2.2 偵測欄）：閘掉 5.9%（只 arclen 2.8%／只 step 2.8%／雙閘 0.2%）  平均合法率=95.7%
+       樣本 arclen/L_BFS 比值 p5/p50=[2.58 4.28]（floor=2.59）  樣本 max 步 p50/p95=[0.067 0.099]（cap=0.104）
+    退化群（G 條 r 全同 ⇒ Â≡0 零梯度）：34.4%（其中全 0 群 0.0%）
+
+==============================================================================
+3. 【f27nL s40 (st11429)】 C8 校準 → 儀器 gate → headroom
+==============================================================================
+  ★ 校準值（roundtrip decode 真分佈、進報告）：ρ_len = 2.595（arclen/L_BFS p5、n=132）  δ_step = 0.1040（逐窗 max 步 p95、n=256）
+    分佈：ratio p5/p50/p95=[ 2.59  6.09 26.82]  max步 p50/p95=[0.0666 0.104 ]  （raw 空間對照：ratio p5=0.869、max步 p95=0.0328 —— 差 3.2×）
+  U1 常數計畫 r==0（9 題）：PASS   例：legal=1.00 raw=0.333 → r=0.0（arclen 0.000 < 門檻 3.666）
+  U2 teleport r==0（9 題）：PASS   例：legal=1.00 hit=1 raw=1.000 → r=0.0（max_step=1.005 > δ=0.104）
+  U3 route 假想計畫三項本體 mean raw=1.000 ≥ 0.9 且 hit 全 1（32 題、⛔ 不過閘 —— 閘定義域=decode 空間）：PASS
+  U4 真軌跡 roundtrip：C8 通過率=92.6% ≥ 85%（n=256）：PASS   診斷：mean r=0.721、roundtrip hit=82.8%（＝decoder 端點保真度 ⇒ pass@* 讀數的天花板之一）
+  U5 判別力 mean r(roundtrip 真)−mean r(隨機u)=0.721−0.000=+0.721 ≥ 0.3：PASS
+  ✓ U1–U5 全過 —— 這把尺對這顆、當天、在這台是活的。
+
+  headroom（n=64 題×G=16；route 無路 fallback 拼零 0 題；2s）
+    reward 版： mean r@1=0.726   mean max r@G=0.886   headroom=0.160 ± 0.025
+    成功率版（raw hit）：  pass@1=0.769   pass@G=0.938   headroom=0.169 ± 0.034
+    成功率版（gated hit）：pass@1=0.733   pass@G=0.906   headroom=0.173 ± 0.036
+    ── 非平凡題切片（L_BFS≥3、n=28；診斷列⛔不進判準）：
+       raw hit  pass@1=0.529  pass@G=0.857  headroom=0.328 ± 0.062
+       reward   r@1=0.604  max r@G=0.871  headroom=0.267
+    C8 閘（§2.2 偵測欄）：閘掉 6.5%（只 arclen 3.2%／只 step 3.1%／雙閘 0.2%）  平均合法率=95.1%
+       樣本 arclen/L_BFS 比值 p5/p50=[2.56 4.26]（floor=2.59）  樣本 max 步 p50/p95=[0.068 0.1  ]（cap=0.104）
+    退化群（G 條 r 全同 ⇒ Â≡0 零梯度）：34.4%（其中全 0 群 0.0%）
+
+==============================================================================
+4. C8 閘有效性 —— 「短計畫刷分」被閘實例
+==============================================================================
+  來源：f27n s40 (st8000)、題 #0、樣本 #7（模型自己抽出來的 z，⛔ 非手造）
+  形狀：短計畫刷分形狀（hit=0、貼自由格拿 legal 分）
+    合法率=1.00  reach=0.82  hit=0  末點距 g=2格  ⇒ 未閘分數 raw=0.606
+    但 arclen=3.475 < ρ_len×L_BFS_norm＝2.595×11格×0.1284＝3.666
+    ⇒ N(z)=0、閘後 r=0.000 —— C8 整包歸零、一分不給（設計卡 §2.1 的 N3 教訓）
+
+==============================================================================
+5. 判準（預釘於檔頭、照抄輸出）
+==============================================================================
+  尺＝成功率版 headroom（raw hit）＝ pass@G − pass@1；≥ 0.15 ⇒「獎品夠大、rung 1 值得開」；< 0.05 ⇒「獎品太小、這條臂降級」；其間＝邊際
+  f27n s40 (st8000)              headroom=0.183 ⇒ 「獎品夠大、rung 1 值得開」（gated 版同判）
+  idpxm s40 (st11429, idp0.3)    headroom=0.192 ⇒ 「獎品夠大、rung 1 值得開」（gated 版同判）
+  f27nL s40 (st11429)            headroom=0.169 ⇒ 「獎品夠大、rung 1 值得開」（gated 版同判）
+
+  附註：本量測＝intent-on eval cond、in-distribution 同軌窗題集（probe 底座）。
+  題集 47% 為同格（L=0）平凡題 —— 會稀釋 headroom，
+  非平凡切片已另列。設計卡 §5.1 風險 3 的藥（stitch/teleport 難題集）是後續格，
+  本探針不外推到那裡。
+
+耗時 7.2s
