@@ -68,3 +68,21 @@ A0（ant）      rail 一通就走（口徑五件套已入 DESIGN-0904）
 
 高維標準（9/5 主人定調）：**分數是搖籃裡的，能帶走的只有內化那條線** —
 所有零件（teacher／subgoal 腿／字典）一律用「在高維還存在嗎」判去留。
+
+## ICLR 定位（9/5 主人核「記錄這幾個大方向，來推」）
+
+有相的四點：①可歸因的內化框架（BFS 儀器→兩腿歸因乾淨）②效率軸（毫秒級 vs 競品
+diffusion 規劃 37~530 秒/query）③空地插旗（humanoidmaze-large-stitch 五篇競品全沒碰、
+HIQL .28）④方法學附贈品（recon 好≠空間好學 2×2、判讀樹、儀器無效判定）。
+
+缺的三塊＝路線圖的三個目的地（⛔ 缺一塊就從 ICLR 掉回 maze study）：
+
+```
+缺① 高維實證          → A0 ant（rail 通了就走）→ humanoidmaze-large-stitch 插旗
+缺② 主 claim 系統本體  → 路線二（intent 層小字典＋合成律 DP、B 階段）
+缺③ 內化數字立得住    → idp 錶（內化度讀數）＋R0 線；門檻按環境看
+                        （humanoid-large-stitch HIQL .28 ⇒ 內化線 .3~.5 即插旗）
+```
+
+式子美化軌：合成律 note（NOTE-2026-09-05-composition-law.md）＝一條主方程三取法＋
+CFG 式內化寫法；待 Rei 有空磨嚴（她忙完前ルナ先推、主人 9/5 裁）。
