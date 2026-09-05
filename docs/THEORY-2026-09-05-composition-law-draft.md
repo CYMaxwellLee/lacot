@@ -67,7 +67,7 @@ _證明梗概_：(i) NLL＝KL＋常數，(S2) 下唯一極小＝$p^*$；(S1) 取
 **引理 2（凍結極限，BFS 是 $T \to 0$）**：對 $x \in \mathbb R^K$：
 $\max_i x_i \le T \log \sum_i e^{x_i / T} \le \max_i x_i + T \log K$。
 故 $\oplus_T \to \max$ 一致收斂、速率 $T \log K$；且 LSE 對 sup-norm nonexpansive
-（$\nabla$＝softmax、$L_1$ 範數 1），巢狀 $H$ 層合成的總偏差 $\le H \cdot T \log K$。
+（$\nabla$＝softmax、$L_1$ 範數 1），巢狀合成的總偏差 $\le H \cdot T \log K$，**$H$＝horizon（路徑段數）**〔9/5 數值驗算釘死：讀成「⊕ 施用次數」時 squaring 形有常數矩陣反例、精確飽和 $(2^\ell-1)T\log K$；讀 horizon 則 peel/squaring 兩形皆成立、0 違例〕。
 **⇒ 有限小字典（$K$ 小）× 有限 horizon 下，log-semiring 的 (CL) 與 tropical 的 (CL)
 差距受 $H T \log K$ 控制 — 「BFS 包在合成律裡」由此從敘事升為量化陳述。**
 _證明梗概_：上界＝每項 $\le e^{\max/T}$ 共 $K$ 項；下界＝丟掉其餘項。傳播＝nonexpansive 疊加。∎
