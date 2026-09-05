@@ -60,6 +60,33 @@ _✅ 9/5 早主人搬回 9/4 晚原話（第四次恢復記憶），三條路內
 - **一×二＝連續體**：幾何做得越好、推論期搜索越少 — 「幾何買多少、搜索補多少」的分帳。
 - **三×二＝同一推理的兩種付費時點**：攤銷（訓練期壓進權重）vs 顯式（推論期真搜）。
 
+## 路線三藥方架（9/5 晚三路情報收齊；全【讀】級、用前升【正】）
+
+**內化機制候選（若 guidance 掃描證實「知識在、沒被強迫用」）**：
+1. **Context Distillation**（2112.00861、Anthropic 經典）：KL(p(plan|s,g,intent)‖p_θ(plan|s,g))
+   把帶錨行為蒸進免錨模式 — 配方已驗證；⚠️ 配 **PDM 修正**（2607.24731：天真蒸 CFG 合成
+   teacher 會負分支不對稱互打、要分開督導正向與 guidance 方向）。
+2. **π-Distill/OPSD 雙模式聯合訓練**（2602.04942）：同顆模型 teacher(帶錨)/student(免錨)
+   reverse-KL on-policy 互蒸 — 「訓練期就強迫用」最對症；token→continuous flow 要改造。
+3. **ReGuide 迭代重訓**（2606.28939、robotics 已驗）：guidance 修正的 rollout 收回訓練集
+   重練 — 不動 loss/架構、風險最低的後備。
+- 診斷升級：**ReSteer CMI**（2603.17300）— 逐 (s,g) 量輸出對 intent 的敏感度、比整體 gap
+  更能定位「哪裡沒在用」。蒸後必檢：**Privileged-but-Biased**（2608.04794）— 拿掉 intent
+  單測、確認不是換方式死背單一軌跡分佈。
+- CCUA（2507.09052）條件/無條件對齊 loss、MG（2502.12154）免 CFG 目標＝備案概念。
+
+**端到端腿校準（乙路）**：平政策王座仍是 QRL 84±15（pointmaze-large-stitch、2024）—
+2025-26 無人超越；⭐ 最強平政策=quasimetric 法＝路線一的理論鄰居（幾何線與 R0 腿同源）。
+可搬機制 top-2：**SCoTS 資料縫合增強**（2506.00895；GCIQL 21→79、正交於管線、還能餵
+長路線給 intent 學）；**SAW 階層蒸平**（2505.14975、NeurIPS25 Spotlight）— 拿自家 .855
+規劃管線當 teacher AWR 蒸進 flat head。⚠️ GC-SSCP 證明單換架構無用（large-stitch 7±5）。
+
+**A0 資料卡點（丙路）**：再生腳本存在（data_gen_scripts/generate_locomaze.py＋commands.sh
+原指令）但 experts.tar.gz 同 host 卡死；快取四台查過＝只有 pointmaze＋visual-antmaze-
+navigate。活路：①問實驗室其他人（frieren 有人跑 HIQL）②自訓 expert（main_sac
+online-ant-xy、同分佈不同位元、要主人裁）③低頻監控 rail ④issue #49 +1 ⑤Berkeley IT。
+套件 URL 寫死無備援（monkeypatch 可行但無處可指）。
+
 ## 順序與分工
 
 ```
