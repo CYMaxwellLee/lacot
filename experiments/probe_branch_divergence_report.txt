@@ -1,0 +1,60 @@
+
+==============================================================================
+0. 資料（切窗／正規化 file:line 出處）
+==============================================================================
+  env=pointmaze-large-stitch-v0  OBS(1005000, 2)  episodes=5000  N_SAMP=64  seed=0
+  ckpt cfg：K=8 COND=256 D_MODEL=256 T_CAP=128 CHUNK=4  ENC_OBJ=recon_ictr  EMA_W=0.999
+  窗長（步）p25/p50/p75 = [13. 38. 76.]
+  佔據圖 (np.int64(35), np.int64(37))、錨 T_A=32、anchors(64, 32, 2)   swap 對象＝roll(1)（⛔ 不重抽，配對可比）
+
+==============================================================================
+1. 重建模型並載入 EMA 權重
+==============================================================================
+/home/cymaxwelllee/venvs/lacot-rocm/lib/python3.12/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+  A f27n (無 dropout): 載入 4 模組 + ema 覆蓋 ['cond_enc', 'cond_head', 'flow', 'intent_ad']   (ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_btf27n_emw0.999_wu500_s1from_ite_dssoft_norf_cd0.1_bci_s40.pt)
+  B idp0.3 (p=0.3): 載入 4 模組 + ema 覆蓋 ['cond_enc', 'cond_head', 'flow', 'intent_ad']   (ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_btidp1_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_s40.pt)
+
+==============================================================================
+2. 逐 block×token 步的分支散度
+==============================================================================
+
+  【A f27n (無 dropout)】 steps=32（4 blocks × 8 tokens）× 64 樣本
+    cond 層  ‖cond_int−cond_zero‖/‖cond_zero‖  中位 0.6046   (p25/p75 0.4067/0.7878)
+    d_zero  intent→拼零   中位 0.08612   p25/p75 0.03568/0.18009   max 1.58770
+    d_swap  換別人的錨  中位 0.08762   p25/p75 0.03987/0.19149   max 1.75227
+    d_sg    換整組(s,g)   中位 0.24732   p25/p75 0.12602/0.46882   max 3.11236
+    逐 block（取樣逆序 3→0；括號＝該 block 的 d_zero / d_swap / d_sg 中位）：
+      block 3:  0.02682 / 0.02747 / 0.08434
+      block 2:  0.07917 / 0.09083 / 0.21818
+      block 1:  0.11016 / 0.10511 / 0.27743
+      block 0:  0.16397 / 0.17808 / 0.48019
+
+  【B idp0.3 (p=0.3)】 steps=32（4 blocks × 8 tokens）× 64 樣本
+    cond 層  ‖cond_int−cond_zero‖/‖cond_zero‖  中位 0.0109   (p25/p75 0.0077/0.0141)
+    d_zero  intent→拼零   中位 0.00094   p25/p75 0.00040/0.00197   max 0.02378
+    d_swap  換別人的錨  中位 0.00269   p25/p75 0.00124/0.00488   max 0.04597
+    d_sg    換整組(s,g)   中位 0.24020   p25/p75 0.12261/0.43383   max 2.93834
+    逐 block（取樣逆序 3→0；括號＝該 block 的 d_zero / d_swap / d_sg 中位）：
+      block 3:  0.00036 / 0.00087 / 0.08146
+      block 2:  0.00117 / 0.00281 / 0.22149
+      block 1:  0.00104 / 0.00318 / 0.26946
+      block 0:  0.00136 / 0.00414 / 0.45276
+
+==============================================================================
+3. 判準（預釘於腳本頂端，數值照抄）
+==============================================================================
+  gate（儀器活性）d_sg 中位 ≥ 0.05：A f27n (無 dropout) 0.24732 通過   |   B idp0.3 (p=0.3) 0.24020 通過
+
+  判準①  d_zero 中位比值 B/A < 0.3
+          A=0.08612   B=0.00094   比值 0.0109   ⇒ 符合（B 兩支已幾乎重合）
+  判準②  d_swap 中位 < 0.01 ⇒ 判「對換錨沒有反應」
+          A=0.08762 不符合   |   B=0.00269 符合
+
+  結論（只陳述量到的）：judgement = ①成立；B 的 intent 分支散度為 A 的 1.1%；B 對換錨的反應中位 0.00269（A 0.08762）。
+
+  cond 層 vs 參數層（塌在哪一段）：
+    A f27n (無 dropout):  cond 相對差 0.6046  →  參數相對差 0.08612   （比值 0.1424）
+    B idp0.3 (p=0.3):  cond 相對差 0.0109  →  參數相對差 0.00094   （比值 0.0862）
+
+耗時 0.8s
