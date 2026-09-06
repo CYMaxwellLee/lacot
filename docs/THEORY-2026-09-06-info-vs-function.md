@@ -133,7 +133,7 @@ $V_2$ 的肌肉。**中間態＝非退化的 decay profile**（不是二值）�
 | **攤銷 BFS**（一般化內化 claim ⓪） | persistent **function** 的宣稱 | 「內化＝攤銷任意 teacher 的**計算**」（【一般化】原話）＝主張搬進 θ 的是算子不是 bits — **核心 claim 本來就是 function claim，本檔明寫這個對接** | ER route≈hindsight .918＝teacher-agnostic（另一軸、已證）；stitch＝$V_1$ 支持「本圖上的組合算子」；**$V_2$（environment-generic）一格證據都還沒有** — F-frame 第一次把這半句變可證偽（F5） |
 | 特定 maze 的 route 記憶 | persistent **info** | Def F2；⑰ 的 ~2.5 bits/題＝它的 per-query 面值（轉引） | $m{=}1$ 下隱形（Remark F1.5）— 與攤銷 BFS 住同顆 θ、現讀數分不開 |
 | **e_target 幾何** | function 的**載體** | 幾何是算子跑的資料結構（合成律 DP 的度量底座；路線一「z 走直線＝環境走最短路」）。⚠️ 拆兩半：「**一張圖的幾何**」＝info；「**圖→幾何的 encoder 算子**」＝function — 載體宣稱指後者 | encoder 在 fresh 圖上現算幾何、且距離仍追該圖 BFS 距離＝載體遷移（FP-3）；未測 |
-| **u 的計算／結構價值**（分解、frontier 疊加） | function 的**執行痕跡** | 帳本 Thm L5 四格全是程序執行：分解＝跑 (CL) 的 DP；提取＝serial depth 兌現 θ 存量；前沿疊加＝平行 BFS 的工作記憶（Zhu+ 2505.12514、沿分類[驗]）；查詢規劃＝acquisition function 的計算（F3.2） | ⑬ P-swap／P-resample 儀器現成（分類 §4.3）＝執行痕跡 vs 資訊的操作型分辨器 |
+| **u 的計算／結構價值**（分解、frontier 疊加） | function 的**執行痕跡** | 帳本 Thm L5 四格全是程序執行：分解＝跑 **(CL-w)** 的 DP〔9/6 深審 M8 後：主方程的統計版是**帶權形**、裸 (CL) 明文「形狀不合、不是我們的實例」⇒ 引用一律用 (CL-w)；合成律 Lemma 1(i)＋(S1′)〕；提取＝serial depth 兌現 θ 存量；前沿疊加＝平行 BFS 的工作記憶（Zhu+ 2505.12514、沿分類[驗]）；查詢規劃＝acquisition function 的計算（F3.2） | ⑬ P-swap／P-resample 儀器現成（分類 §4.3）＝執行痕跡 vs 資訊的操作型分辨器 |
 | verifier $M_V$ | info 油箱 **兼** function 老師 | 雙身份：帳本 (iii) 供 bits；F3.1 教「檢查」算子 | L4.5 已把幫浦輸出拆兩份＝雙身份的既有實錘 |
 | GRPO 幫浦 | **雙列搬運工** | F3.3 | 設計卡 rung 0–4 未跑 |
 
@@ -363,7 +363,7 @@ $\varphi(s,g)$ 平移、訓練軌跡應逐位元不變 — Prop F5 的直接檢�
 家內：Thm CT-1／Cor CT-2／Cor CT-3、三源表、C1–C4、P-ent/P-swap/P-resample（【分類】）；
 Prop L0–L4、Thm L5、Remark L4.5、§4–6（【帳本】）；Prop 2.1/2.3、Prop 3.7、Def 1.4、
 C-i~iii（【內化】＋【多路線】§1）；C-ii′、$\mathrm{Int}^*=\eta/(\eta+p\lambda)$（【postA1】）；
-Lemma 1/2、(S1)、(CL)（【合成律】）；§1.2/§3.3/§3.4、⑱' 鐵則（【設計卡】）；
+Lemma 1/2、(S1)/(S1′)、**(CL-w)**（【合成律】；⛔ 9/6 深審 M8 後不引裸 (CL)）；§1.2/§3.3/§3.4、⑱' 鐵則（【設計卡】）；
 ⑰ ~2.5 bits、⑬ 1.1%（轉引 FINDINGS-0905、沿上游標記）。
 外部（攜帶級照抄）：2412.01951 Sharpening、2504.13837 RLVR、2505.20561 BARL、
 2509.06861 compute-only TTS【皆隊友正文級@帳本】；2505.12514 Zhu+ superposition、

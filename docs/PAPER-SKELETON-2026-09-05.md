@@ -97,7 +97,7 @@ _v2 改動理由：v1 的順序在「度量」之後直接跳「歸因框架」�
 ### §3 Method
 
 - **3.1 Setup: two-stage latent planner**：stage1 表徵（凍結）＋stage2 conditional rectified flow head；錨 a=A(τ,O)；訓練 INTENT_DROP p、推論同權重雙部署（帶查 map／免查）〔⑤'' eval 語義：⛔ 不寫 oracle、寫「帶查(map) vs 免查」〕。
-- **3.2 The composition law and its temperature family**：主方程 (CL)＋對應表（Boolean/tropical/Viterbi/log/T-族）〔THEORY-comp §1.2–1.3〕；「我們的訓練目標與 eval 語意住 T=1」判決句。
+- **3.2 The composition law and its temperature family**：主方程 (CL-w)（帶權版、9/6 M8 後）＋對應表（Boolean/tropical/Viterbi/log/T-族）〔THEORY-comp §1.2–1.3〕；「我們的訓練目標與 eval 語意住 T=1」判決句。
 - **3.3 Internalization, formally**：四候選 (a)–(d)＋簡併問題＋Def 1.4（Int 三點校準、分母 ≥ κ·SE 定義域條款）＋(Int,ε) 診斷對〔THEORY-int §1〕。
 - **3.4 The idp meter: protocol**：⑤'' 協定內建（內化只在 R0 報、subgoal 內化欄 undefined＝定義的形式推論；配對差主指標；8v8 分佈對照）。
 - **3.5 Remedies with provable division of labor**〔**v2 改寫：主藥換人**〕：三藥打三層 — 退火 p（動力學路徑）／L_div floor（結構在場、Def 3.3 margin 錨 `[.6046@⑬@0905]`）／資料破冗餘（資訊供給、C-i~iii）〔THEORY-int §3、⑭@0905〕。**v2 排序**：

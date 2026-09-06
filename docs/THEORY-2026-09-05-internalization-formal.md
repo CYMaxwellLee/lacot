@@ -156,7 +156,8 @@ $\mathrm{Int}^*=\eta/(\eta+p\lambda)$，且趨近速率為慢模 $\kappa$（「�
 
 **Remark 2.5（資訊價值 ≠ 計算價值；v2：兩分量並立）**：f27n 的 $+.133$ 在 v0（A1 敘事）下只能全記「計算捷徑」（讀 $A(s,g)$ 比從 $(s,g)$ 重算便宜〔轉引 Autoguidance 2406.02507 §3〕）；⑰ 後其組成＝**資訊分量（Prop 1.3 正折扣、上限 ~2.5 bits 過匯率後的兌現）＋計算分量（捷徑）**並立、比例未拆 — 分辨儀器＝P-resample 三臂（oracle−resampled＝資訊、resampled−zero＝計算；CT §4.3、半套已在）。捷徑的動力學句保留：$p>0$ 強迫自算通路建成後、捷徑邊際價值歸零 ⇒ 塌。⇒ 本檔所有 population 命題仍須配有限容量註腳讀。
 
-**Conj 2.6（$p$ 劑量曲線；v2 改述 — toy 內已閉式、真網路仍開放）**：v0 問「臨界值 $p^*$」；toy 解析已判（丁 Prop LT-1/LT-2；⑮ 機器精度驗訖）：**線性高斯內無 sharp 相變** — $\mathrm{Int}^*(p)=\eta/(\eta+p\lambda)$ 是平滑深度 crossover、半衰位置 $p_{1/2}=\eta_{\rm eff}/\lambda\approx0.003$（遠左於任何實際劑量）。仍 Conj 的：真網路（非凸 basin）是否存在 sharp 臨界值；有限 $T$ transient 修正的幅度 $A$（postA1 §4.3、Conj 級）。⛔ 劑量曲線的可證偽預測**以 postA1 §4 的 pre-registered 版為準**（四點平坦點估／比值封頂 $\mathrm{Int}(p_1)/\mathrm{Int}(p_2)\le p_2/p_1$／單調＋凸＋$\mathrm{Int}(.05)$ 單點分版；git 時戳先於資料）— 本檔不另立、不改寫。初讀狀態（⑱⑱'）：$p$ 軸平衡版全對（idp01 增益未回、與四點平坦一致）；$T$ 軸大效應**歸因未定** —「劑量不足枝亮（曝光/總步數未拆、該臂兩者 100% 共線）」、⛔「病=曝光量」與「輾過」皆撤回（⑱'）、首要嫌疑＝generic 訓練長度（l_nf 未收斂實錘）、拆解等 f27nL／N5L／idpxm×8。文獻空白照舊：影像圈 $p\in[0.1,0.2]$ 慣例僅驗樣品品質、未驗條件遵從。
+**Conj 2.6（$p$ 劑量曲線；v2 改述 — toy 內已閉式、真網路仍開放）**：v0 問「臨界值 $p^*$」；toy 解析已判（丁 Prop LT-1/LT-2；⑮ 機器精度驗訖）：**線性高斯內無 sharp 相變** — $\mathrm{Int}^*(p)=\eta/(\eta+p\lambda)$ 是平滑深度 crossover、半衰位置 $p_{1/2}=\eta_{\rm eff}/\lambda\approx0.003$（遠左於任何實際劑量）。仍 Conj 的：真網路（非凸 basin）是否存在 sharp 臨界值；有限 $T$ transient 修正的幅度 $A$（postA1 §4.3、Conj 級）。⛔ 劑量曲線的可證偽預測**以 postA1 §4 的 pre-registered 版為準**（四點平坦點估／比值封頂 $\mathrm{Int}(p_1)/\mathrm{Int}(p_2)\le p_2/p_1$／單調＋凸＋$\mathrm{Int}(.05)$ 單點分版；git 時戳先於資料）— 本檔不另立、不改寫。初讀狀態（⑱⑱'；⛔ **已被 9/6 開獎推翻 — 見本條末**）：$p$ 軸平衡版全對（idp01 增益未回、與四點平坦一致）；$T$ 軸大效應**歸因未定** —「劑量不足枝亮（曝光/總步數未拆、該臂兩者 100% 共線）」、⛔「病=曝光量」與「輾過」皆撤回（⑱'）、首要嫌疑＝generic 訓練長度（l_nf 未收斂實錘）、拆解等 f27nL／N5L／idpxm×8。文獻空白照舊：影像圈 $p\in[0.1,0.2]$ 慣例僅驗樣品品質、未驗條件遵從。
+⭐ **〔9/6 開獎〕**（FINDINGS-0906 ④⑤⑧⑨；正式登錄＝postA1〔追加勘誤 **E6**〕）：**$p$ 軸平衡版四點全反號** — 8000 步家族（Def 1.4、base=ep200_base .317／ref=f27n .454／分母 .137）實測 $\mathrm{Int}(.05/.1/.3)=-.26/-.35/-.05$，四點**全在 postA1 §4.1 預測區間外且全部反號**（機制＝殘廢效應：zero 全低於無 intent 基線）⇒ **平衡版點估證偽**（E6.1）；比值封頂（Prop 4.2′）在負 $\mathrm{Int}$ 下**定義域失效、非被推翻**（E6.2）；單調性倒、⛔ $\mathrm{Int}(.05)=-.26$ 字面落「平衡版活」格**不可如此讀**（樹是為 $\mathrm{Int}>0$ 寫的、$-.26$ 在樹外；E6.3）。**判別器由 $T$ 軸分離、transient／慢動力學版勝出**（同 $p{=}.3$ 練到 11429 步：zero 超額 $-.007\to+.086$、批級 R0 $+.105$~1.5σ；step-matched `[單顆 s40]` Int(idpxm)=1.10／Int(idp01L)=0.88，正式讀數等 f27nL／N5L 擴八顆）（E6.4）— ⛔ 但 postA1 §4.3 的 $\kappa T$ 校準標疑（E4）**不撤**：勝出的是讀法、不是那組數字。$T$ 軸歸因同步收斂：⑧ 判掉「generic 步數紅利」（$p{=}0$／無 intent 臂多練方向混雜、`[單顆]` 2σ 內），步數作用**集中在 dropout 臂**＝慢收斂補課。⇒ 本 Conj 的真網路開放項改讀：主問題不再是「是否有 sharp 臨界值」，而是**慢動力學的時間尺度**（$p$ 讓它可能〔③：$p{=}0$ 則 zero 恆崩〕、$T$ 讓它發生〔⑤⑧⑨〕）。
 
 ## 3. 藥方的理論形（v2 權重：退火 $p$＋$L_{\rm div}$ 主、破冗餘輔）
 
@@ -167,11 +168,20 @@ $>0$、「供給」不再是第一瓶頸，其角色轉向 C-iii 效用可讀性
 
 ### 3.1 退火 $p$＝warm-start（吸子語言）
 
+⚠️ **〔9/6 開獎 — 退火 $p$ 的理論基礎需重建〕**（FINDINGS-0906 ④⑨；登錄 postA1 E6.5/E6.6）：
+④ 直接量到兩臂 divlog 斜率比 **0.990**（vs 預釘帶 $[2.21,3.31]$）⇒ 散度衰減是 **$p$ 無關的
+generic 過程**、toy 的「$p$ 驅動衰減」在此格證偽 ⇒ **退火 $p$ 的 toy 動力學理由不再成立**
+（⑨ 原話：「退火 $p$ 的理論基礎（toy 動力學）需重建」）。⛔ 引用退火藥時只能以**實驗排程**
+身分講，⛔ 不得掛 toy 動力學當理由。⭐ 下面 Prop 3.1 的屏障論證是**另一條腿** — 損失屏障、
+不依賴 $\mu_-$ 比也不依賴 postA1 §4 點估，未被 ④ 觸動（其自身限制照舊：只擋「先塌後修」、
+且 $p{=}0.3$ 在證明範圍外）。⇒ 目前退火藥最強的實測腿是 **WS 續訓療程**（⑥）、不是 toy。
+
 **Prop 3.1（屏障擋「先塌後修」；A2＋門檻 $p\lesssim\tfrac14$（丙 B10 顯式化）；A1 不需）**：設 $\theta_A$（f27n 形：$a$ 支誤差 $\delta_a$ 小、$\varnothing$ 支誤差 $\delta_\varnothing$ 大）。任何先達 $\{\varepsilon=0,\ \varnothing\text{ 支誤差}\ge\delta_\varnothing/2\}$ 再修的連續路徑，中途損失 $\ge(1-p)(\delta_\varnothing/2)^2$ 級；屏障嚴格正（路點損失 $>$ 出發點損失）需
 $$p\;<\;\tfrac14-(1-p)\,(\delta_a/\delta_\varnothing)^2\qquad(\Rightarrow p\lesssim\tfrac14),$$
 ⛔ **實際運行值 $p{=}0.3$ 在證明範圍外**（$\delta_a{=}0$ 都救不回；丙 B10）— 門檻顯式化恰成退火主張的定量依據：**小 $p$ 段有屏障、$0.3$ 沒有**。梯度流損失單調不增 ⇒（門檻內）從 $\theta_A$ 出發**不走「先塌後修」**；局部主梯度為修 $\varnothing$ 支（$\propto p\,\delta_\varnothing$），塌方向一階增益 $\approx0$（$a$ 支已近最優；實測 $I>0$ 下塌另付 Prop 1.3 正折扣 — $O(\eta_{\rm eff})$ 級、方向上更黏）⇒ 短期黏住。
 **限制（誠實、即 ⑭「單獨不保險」的幾何形）**：「**同步塌修**」路徑（邊修 $\varnothing$ 邊縮 $a$-反變分量）可損失（近乎）單調直達 invariant 解 — A1-lim 下它是全域最優、實測 $I>0$ 下只差 $O(\eta_{\rm eff})$ 級上坡尾段（SGD 噪音尺度下無擋）— 屏障擋不住它。He+19 lagging-encoder〔驗 1901.05534〕同構：初期弱 posterior 引發塌、warm-start 改初值不改地貌；Cyclical-Annealing〔驗 1903.10145〕的「升回目標 $p$ 仍塌」＝此路徑實測存在的旁證。
 **Conj 3.2（長時黏性未保證；v2 修 basin 高差）**：A1-lim 下兩 basin population 損失恰同高；實測 $I>0$ 下 invariant basin 高出 $O(\eta_{\rm eff})$ 級折扣（$\eta_{\rm eff}/\lambda\sim3\times10^{-3}$；postA1 §3.2）— **高差微小、SGD 噪音尺度下 v0 敘事近似保留**：長期佔據仍由 basin 體積/平坦度＋噪音主導（invariant 解疑更平坦 ⇒ 偏塌）、微小高差只給極長時間尺度的定向偏壓。判決實驗＝⑭ warm-start 測（黏住 ⇔ 塌回；WS 批已灑、產物在 day_0906/ — 收表掃描要含（⑰'））；判讀尺＝slaved 域斜率比 $\mu_-=2.759\pm20\%$ 帶（⑮ 收緊①；⛔ 不用 2.3 定值）。
+⚠️ **〔9/6 開獎 — 此尺已斷〕**：④ 實測 divlog 斜率比 **0.990**（idp0.1 $-2.112\times10^{-4}$/step vs idp0.3 $-2.133\times10^{-4}$/step）**落在 $[2.21,3.31]$ 帶外**，且預釘樹兩岔（「斜率 0」「比值對上」）皆未中 — 落第三態：衰減在、$p$ 不驅動。⛔ **別再拿這把尺判 WS 療程八顆**；**療程判讀改用配對差（on−zero）與 zero 水位** — ⑥ 的續訓格即此讀法（f27n@8000 起 $+p{=}.3$ 續 4000 步 ⇒ zero .552／on .556、配對差 .004，`[單顆 s40]`；對照純續訓 zero 全崩＝③）。〔登錄：postA1 E6.5；FINDINGS-0906 ④⑥〕
 
 ### 3.2 cond 層散度 floor
 
@@ -214,9 +224,9 @@ hindsight 錨（$a$ 為 $\tau$ 的決定函數）下自動成立；**C-ii′（$
 | Cor 2.2 | **Prop（前提改實測 $\varepsilon$、與 A1 無關）** | ⑬ 實測＋A3 | —（v2 後地基最穩的一塊） |
 | Prop 2.3 | (i)(ii)＝A1-lim 極限錨；(iii)＝條件式 Prop（丙 B7 限定詞全收） | (i)(ii)：A1-lim＋A2–A4；(iii)：$\varnothing$ 支最優＋$\varepsilon_{\rm cond}{=}0$＋A4、adapter 排除 | (i) 量詞丙檢畢（weak union 寫法即嚴）；讀 Cocos 原件；$I>0$ 版＝postA1 2.3′ |
 | Remark 2.4 賽跑 | **Remark→主敘事**（丁 LT-6 定理背書、⑮ 驗訖） | 線性化；toy→真網路＝量級指引 | $\kappa T$ 校準（⑱' 標疑）＝中途 ckpt 散度曲線判 |
-| Conj 2.6 劑量曲線 | **Conj**（v2 改述：toy 已閉式、無相變；真網路開放） | 預測以 postA1 §4 pre-registered 為準 | f27nL／N5L／idpxm×8 拆 generic-$T$；$\mathrm{Int}(.05)$ 分版點無臂（待裁） |
+| Conj 2.6 劑量曲線 | **Conj**（v2 改述：toy 已閉式、無相變；真網路開放） | 預測以 postA1 §4 pre-registered 為準 | ⭐ **9/6 已開獎**：$p$ 軸四點全反號（$-.26/-.35/-.05$）⇒ 平衡版證偽、$T$ 軸 transient 勝出〔postA1 **E6**、F⑤⑧⑨〕；⛔ 舊句「$\mathrm{Int}(.05)$ 分版點無臂（待裁）」作廢 — idp005 臂已收（⑤）；剩 f27nL／N5L 擴八顆釘正式讀數 |
 | Prop 3.1 | Prop（限定範圍＋門檻 $p\lesssim\tfrac14$、丙 B10 落） | 只擋「先塌後修」；$p{=}0.3$ 範圍外 | — |
-| Conj 3.2 黏性 | **Conj**（v2：basin 高差 $O(\eta_{\rm eff})$ 級微小） | basin 幾何未知 | WS 批已灑（day_0906/）— 判讀尺 $\mu_-=2.759\pm20\%$（⑮） |
+| Conj 3.2 黏性 | **Conj**（v2：basin 高差 $O(\eta_{\rm eff})$ 級微小） | basin 幾何未知 | WS 批已灑（day_0906/）— ⚠️ **判讀尺 $\mu_-=2.759\pm20\%$ 已斷**（④ 實測比 0.990、帶外；postA1 **E6.5**）⇒ ⛔ 別拿它判 WS 療程八顆，療程判讀用**配對差與 zero 水位**（⑥） |
 | Prop 3.4／R3.5 | Prop（v2 權重註：主藥之二） | A2' | $\varepsilon_{\text{cond}}\ge m$ 下游是否真被用＝實驗題（idp+div 臂） |
 | Prop 3.7 | Prop（前提改 C-i＋C-ii′、丙 B15 落；v2 地位＝診斷＋輔藥） | DPI＋轉引恆等式＋C-ii′ | C-iii 的 eval 改造（route 可分判準）尚無設計；$\eta_{\rm eff}$ 半邊＝e_target 度量工作 |
 | Prop 4.1／Cor 4.1' | **Prop（構造性、嚴格）** | A5 | 能量譜探針**已量**（⑰ Z2）：$\dim_{\rm eff}(\varphi_-)@90\%{=}29$ ⇒ $D_d$ 上修（R4.2）落 DESIGN |

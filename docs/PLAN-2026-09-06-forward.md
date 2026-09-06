@@ -48,7 +48,8 @@ T5   幾何表（路線一）：before(.705/.212)→after、三 loss ablation、
 ### 1.3 理論節定理清單（兩份 THEORY 已有 v0、Rei 磨嚴）
 
 - 合成律：Lemma 1/2（log-semiring T=1、BFS＝T→0 凍結極限、量化差距 ≤HT·logK）＋Prop 3（定點迭代＝BFS）＋ D1–D3 假設×可量代理 ＋ Prop 6／Conj 7（字典 DP 恢復最優／學到字典的近似版）。⛔「generalizes BFS」只准按定理級／Conjecture 級／Open 三層拆開陳述。
-- 內化：Def 1.4（Int＋(Int,ε) 診斷對）＋Prop 1.1–1.3（ε→W₂→Δsucc 望遠鏡＋預算恆等式）＋Prop 2.1／Cor 2.2／Prop 2.3（鎖死＝合法全域最優＋guidance 無效＋穩定駐點）＋Conj 2.6（p 臨界值）＋Prop 3.1/3.4/3.7（三藥打三層：動力學／結構在場／資訊供給）。
+- 內化：Def 1.4（Int＋(Int,ε) 診斷對）＋Prop 1.1–1.3（ε→W₂→Δsucc 望遠鏡＋預算恆等式）＋**Prop 2.1′/2.2′/2.3′（鎖死＝動力學陷阱**：不是被困在非法駐點，而是**以慢速率 $\kappa$ 合法收斂到一個被 ridge 壓扁的小目標** — 目的地小（$\mathrm{Int}^*\approx\eta_{\rm eff}/(p\lambda)\approx1\%$ 級）＋走得慢（$\sim12\times$ 時間尺度分離）；invariant 流形**不是駐點集**，adapter 驅動 $O(\sqrt{\eta_{\rm eff}})\ne0$〔postA1 §2.1–2.3〕）＋Cor 2.2（guidance 無效；**前提改實測 $\varepsilon$**、與 A1 真偽無關）＋Conj 2.6（劑量曲線；**toy 內無 sharp 相變**、是平滑深度 crossover）＋Prop 3.1/3.4/3.7（三藥打三層：動力學／結構在場／資訊供給）。
+  ⛔ **舊句「鎖死＝合法全域最優＋穩定駐點」已倒**（A1 被 ⑰ 實測證偽、$I\approx2.5$ bits）— ⛔ 別抄進 paper 理論節。⚠️ 再降一級〔9/6 收表〕：動力學陷阱的**靜態閉式**（$\mathrm{Int}^*=\eta/(\eta+p\lambda)$）在兩格 pre-registered 對決被證偽（④ 斜率比 0.990 vs 帶 [2.21,3.31]；⑤ 劑量四點全反號）⇒ 理論節**只留 transient／慢動力學讀法**、閉式降極限錨〔postA1 **E6**；FINDINGS-0906 ④⑤⑨〕；退火 $p$ 只能以**實驗排程**身分出現、⛔ 不得掛 toy 動力學當理由。
 - 差異化引用已釘：OKBE 帶限定詞當旁證；TMD 零插值量測、無重疊；HDFlow 五軸差異表；DAPD「privilege illusion」由 idp 零錨 eval 正面回答。
 
 ### 1.4 三缺 → 最小達標線
