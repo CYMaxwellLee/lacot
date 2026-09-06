@@ -8,7 +8,11 @@ _理論使魔（Fable 級、主人睡前指定；兩並行之「formulation」�
 ⛔ 分級鐵則：**定理級＝證明在檔（多為一行 DPI）或逐字引已證件；Conj＝未證；Remark＝解讀；
 啟發式＝量級粗估**。外部文獻三級：[驗]＝沿上游攜帶；【隊友正文級】＝前例調研使魔本夜查證
 過正文（附 section）；【訓練記憶】＝未覆核（本使魔 web search 額度歸零）、承重前補驗。
-本檔所有承重命題皆自帶證明、外部件只作錨與站位。_
+本檔所有承重命題皆自帶證明、外部件只作錨與站位。
+**〔9/6 午後追加〕§L6 續章**（權重通道的縱切：info vs function）＝ THEORY-0906-info-vs-function
+的帳本側接口 — 導覽＋對接，本體仍在該檔；同批做了三處帳本口徑修（Def L1 的 $W$＝單環境切片、
+$H(M_V)$ 帽多環境按環境數乘、L5.1 的 (CL)→(CL-w)）。深審 22 條的帳本側修檔（F1／F2／M1／M7
+＋S1／S2／S4／S11）已在正文內就地標記。_
 
 > **主人定調（2026-09-05 23:39、原話逐字，已對 closing 檔）**：「這樣我可以理解為訓練的過程中 Verifier其實是在教model東西，然後存在weights裡面，要inference的時候，則是從weights裡面提取肌肉經驗成u，然後拿來生答案？」
 > — 帳本座標：Verifier 教＝(iii)；存 weights＝幫浦入 (i)（Prop L4）；提取肌肉經驗成 u＝
@@ -45,6 +49,10 @@ $T\to0$ 的合法住戶是 BFS（凍結極限、Lemma 2）與 refine/BoN 的部�
 
 記號沿 CT-1：查詢 $(s,g)$；world 變數 $W$＝環境／episode 資料側任何變數（佔據圖 $E$、BFS
 距離場 $D$、真 route 皆是）；除註明外全程條件在固定 $\theta$ 上（部署期帳本）。
+⚠️ **$W$ 是單環境切片**〔9/6 §L6 接口修、沿【F】接口注意 1〕：本檔全程固定一個環境
+（$m{=}1$ 的 maze），故 $W$ 不帶環境索引。環境 ensemble 版＝外加 $e\sim\rho$ 的期望、
+(i) 的帽升級為 per-family 加總版（Prop F7(i)）— **是延伸、不是矛盾**；見 §L6.1／L6.5。
+⛔ 單環境下 info/function 之刀在數學上不存在（Remark F1.5）— 別拿本檔的帳去判攤銷 vs 記憶。
 
 - **(i) 權重通道**：$\theta=\mathrm{Alg}(\mathcal D,R)$ ⇒ 鏈 $W-\mathcal D-\theta$ ⇒
   $I(W;\theta)\le I(W;\mathcal D)$〔定理級一行；框架＝Xu–Raginsky 1705.07809【訓練記憶】〕。
@@ -146,6 +154,10 @@ $|\mathcal R|=k$、advantage $\hat A=h(r_{1:B_gG})$、$\theta_{t+1}=U(\theta_t,Q
 - **(iii) 終身帽**：$\theta_T=F(\theta_0,\{Q_t\},\{\varepsilon_t\},M_V)$ ⇒
   $I(W;\theta_T\mid\theta_0,\{Q_t\})\le I(W;M_V\mid\{Q_t\})\le H(M_V)$ — 幫浦一輩子打進 θ 的
   不超過驗證器資源存量（把地圖搬進權重的上限）；同時 $\le\sum_t$(i)。_證_：同 L2(ii)。∎
+  ⚠️ **多環境口徑**〔9/6 §L6 接口修、沿【F】接口注意 2〕：$M_V$ 是**每圖各自**的（佔據圖＋
+  BFS 場按環境建）⇒ 訓練跨 $m$ 個環境時終身帽為 $\le\sum_{j\le m}H(M_V^{(e_j)})$、按環境數
+  **乘**（各 $M_V^{(e_j)}$ 互獨時取加總，見 Prop F7(i) 的超加性）。⛔ 別把單圖的 ≤961 bits
+  直接當多圖總帽用。GRPO 卡若隨 multiroute／teleport 落地，此口徑要同步改。
 - **(iv) Conj L4.4（有效注入 ≪ 上界）**：可兌現成行為改善的量另有匯率 — bits 以 NLL 計價、
   CFM/PG 以變異計價（C-ii′、postA1 §3），且 (i) 粗估（$16\times8\times\log_2k\approx1400$
   bits/update〔啟發式〕）遠超實際學習量。**有效流量未定量**；rung 0 的 pass@G−pass@1 gap
@@ -189,8 +201,10 @@ $|\mathcal R|=k$、advantage $\hat A=h(r_{1:B_gG})$、$\theta_{t+1}=U(\theta_t,Q
 
 **陳述**：CT-1 régime 下，自生 thinking 的全部合法價值＝Prop L0 赤字欄；合法標的四格 —
 
-1. **分解（decomposition）**：u 實體化合成律 (CL) 中繼點 $m$、思考空間跑 $\bigoplus_m$ 的
-   DP — 難分佈拆兩段簡單因子（Lemma 1 log-semiring；(S1)）。⚠️「因子各自簡單」仍猜測級
+1. **分解（decomposition）**：u 實體化合成律 **(CL-w)**〔9/6 深審 M8 後：主方程的統計版是
+   **帶權**形，裸 (CL) 缺 $\log w^*(m\mid s,g)$ 項、且裸 LSE 迭代在 log-prob 值域不封閉 —
+   引用時一律用 (CL-w)〕中繼點 $m$、思考空間跑 $\bigoplus_m$ 的
+   DP — 難分佈拆兩段簡單因子（Lemma 1 log-semiring；(S1)／(S1′)）。⚠️「因子各自簡單」仍猜測級
    （taxonomy §4.2）— 分解合法、增益待驗。
 2. **提取（extraction）**：θ 存量（地圖／路線知識）展開成顯式計畫 — serial depth 貨幣
    （CoT 三件、沿上游[驗]），要件 C1–C3（迭代或離散瓶頸、serial 類、密集監督）。
@@ -215,7 +229,7 @@ off-manifold 探索 — 定義上 on-manifold（taxonomy §4.1）。
 |---|---|---|---|---|---|
 | 佔據圖＋BFS 檢查（免費 reward） | (iii) 的 $M_V$ | 儀器現成（`_EOCC`＋dist 場；rung 0 可直接做） | **部署期 BoN 臂未建**：eval 抽 $G$ 條、免費驗證器選 1 — (iii) 最便宜消費者、零訓練 | 每候選 reward ≤ $\log k\approx$10–13 bits；BoN 選擇 ≤ $\log G$（$G{=}8$⇒3 bits） | pass@G−pass@1 gap（rung 0）＝這條臂的**價值錶**；對幫浦輸入只是**單向訊號**（gap>0 ⇒ 有輸入；gap=0 在 dense reward 下**不判死**、看退化群錶）—「一魚兩吃」只在 reward 二值時兩錶重合〔9/6 深審 M1〕 |
 | route 查圖 eval（idp on-mode） | (ii) 部署版 | 已建（⑤'' 帶查(map) 語意） | 部署時 route-ix 可得性（訓練圖之外） | ~2.5 bits/題（⑰；走廊 ~1、⑰'） | (ii) 是唯一「免搜索直給」的 instance 通道；增益上限＝地板下移 ≤ I |
-| GRPO 卡 | (iii)→(i) 幫浦 | 設計 v0；rung 0–4 未跑；前提＝base 收斂（⑱'） | 有效流量（Conj L4.4）；退化群頻寬實測 | ≤ $B_gG\log k$/update；終身 ≤ $H(M_V)$（≤961 bits 級） | 退化群錶＝頻寬錶；$G$ 選型＝容量對齊；**雙錶紀律**〔9/6 深審 M1〕：**退化群比例＝1 ⇒ 幫浦零輸入**（L4(ii) 字面義、定理級）；pass@G−pass@1 gap＝0 **不是**零輸入的定理（dense reward 下群內 reward 仍可有變異 ⇒ $\hat A\ne0$）⇒ ⛔ 別按單錶砍臂 |
+| GRPO 卡 | (iii)→(i) 幫浦 | 設計 v0；rung 0–4 未跑；前提＝base 收斂（⑱'） | 有效流量（Conj L4.4）；退化群頻寬實測 | ≤ $B_gG\log k$/update；終身 ≤ $H(M_V)$（≤961 bits 級 — ⚠️ **單環境口徑**；多環境按環境數乘 $\sum_j H(M_V^{(e_j)})$〔§L6 接口修、【F】接口注意 2〕） | 退化群錶＝頻寬錶；$G$ 選型＝容量對齊；**雙錶紀律**〔9/6 深審 M1〕：**退化群比例＝1 ⇒ 幫浦零輸入**（L4(ii) 字面義、定理級）；pass@G−pass@1 gap＝0 **不是**零輸入的定理（dense reward 下群內 reward 仍可有變異 ⇒ $\hat A\ne0$）⇒ ⛔ 別按單錶砍臂 |
 | 閉環 replan | (iv) | **未建** | 全部 | 碰撞位元 1 bit/步（確定性⇒取等）；patch ≤8 bits/步 | 最便宜 (iv)＝replan-on-collision；閉環 92% vs 開環 73%（2605.08732、沿上游）＝實證錨、理論帽＝T&L Thm 2 |
 | oracle 錨→內化（主線） | (ii)@train→(i) | 已建（遷移鏈本體） | 內化 gap 定量（另線） | 2.5 bits/episode × 資料量、帽＝$I(W;\mathcal D)$ | 帳本收遷移鏈為特例：資訊建通道、權重存、計算駛 — **驗證器與環境續帳、RL 入帳** |
 
@@ -276,6 +290,139 @@ Novelty 站位【隊友正文級 gap 判定】：「flow-latent 探索＋佔據�
 5. **接口**：不動合成律、不動內化 gap 定義；只需一致於「(ii)@train 建通道、帳本為其進帳
    計價」。GRPO 卡呈裁點不變；本檔為 rung 0 添讀法（headroom＝幫浦輸入頻寬）、不加新工。
 
+## §L6. 權重通道的縱切：info vs function（續章、9/6 午後追加）
+
+_本體＝`THEORY-2026-09-06-info-vs-function.md`（下稱【F】；節號 F0–F7、承重命題自帶證明）。
+⛔ 本章**不複製 F 檔正文** — 它是帳本側的正式接口：核心定義／承重命題的**摘要＋級別**、
+與 L0–L5 的**對接表**、以及帳本自身需要的口徑修正。每一條都指回 F 節號，**引用一律引 F 檔**。
+分級鐵則照帳本原制（定理級＝證在檔或逐字引已證件；命題級＝列明假設下證梗概；【推測級】＝未證）。_
+
+### L6.0 這把刀切在哪〔導覽〕
+
+帳本 §1 的四通道是**橫軸**：「bits 從哪個通道進來」。L6 補**縱軸**：「進到權重裡的東西是什麼」。
+
+- **陳述性 info**＝與特定環境變數的互資訊。以 bits 計價、按環境數**線性**耗權重通道預算、
+  換環境重抽即蒸發。
+- **程序性 function**＝條件分佈核／算子本身。住 **Prop L0 的提取赤字欄**、**不耗 W-bits 預算**、
+  fresh 環境上仍在；其定理級後果＝在新環境把**活通道**的 bits 兌現成表現的能力。
+
+⇒ 通道 (i) 是唯一**兩種都存**的通道；而帳本 §1–§2 只按 $I(W;\theta)$ 記帳 ⇒ **只看得見 info
+那一份**。function 那份住在每一次未來部署的赤字欄裡，四通道記帳對它**天生失明**。這就是
+「帳本沒切的那一刀」的形式位置。〔【F】F0〕
+
+**2×2 座標（content × 存放）**：帳本四通道全在 info 列記帳；function 列在帳本裡只有赤字欄
+一個影子。GRPO 幫浦＝同時在兩列搬東西的搬運工 — **Remark L4.5 把每次 update 拆成
+world-bits（搬運）＋sharpening（0 bits、模式銳化）兩份，那正是這把刀在帳本裡的既有切口**。
+〔【F】F0 表、F3.3〕
+
+### L6.1 核心定義（摘要級；完整式子與良定義性討論在【F】F1.1／F1.3）
+
+- **Def F2（info content）**〔定義級〕：$\theta$ 的 instance 級 info＝$I(W_{e_j};\theta)$；
+  family 級 info＝$I(\tilde\rho;\theta)$（$\rho$ 固定則此級以「對常數的知識」存在、任何 MI 帳
+  都看不見）。以 bits 計價、受權重通道帽（帳本 (i)）。⇒ **family 級正是【分類】§2.2(a) 行
+  「task 識別 bits」的正式身份**（兩檔可互引）〔【F】接口注意 4〕。
+- **Def F3（function content）**〔定義級〕：$\Phi_C(\theta)$＝**fresh 環境上的提取赤字**
+  （對 $W_{e'}\mid s,g,c$ 邊際化的 Bayes 預測與 $q_\theta$ 的期望 KL）。低＝function 多。
+  不以 W-bits 計價、計價貨幣＝計算／描述長度。
+  ⭐ **它不是**把 function 定義成「會在新環境 re-derive info」— 那是它的**定理級後果**
+  （Cor F1.4）；定義本身是「$q_\theta$ 作為固定 kernel 在環境重抽下的赤字」，好處是
+  $\Phi_\varnothing$ 也良定義（純邊際提取力）。
+- **Def F4（value profile／重抽階梯）**〔定義級〕：$V_0$ 見過的查詢／$V_1$ 同環境 fresh
+  $(s,g)$（＝stitch）／$V_2$ 同 family fresh 環境／$V_3$ fresh family。
+  **純 info＝值集中 $V_0$；$k$ 級 function＝值平到 $V_k$**；中間態＝非退化的 **decay profile**
+  （不是二值標籤）。主人句裡的「肌肉記憶」由此拆：背下的路線＝$V_0$–$V_1$、攤銷的搜索反射
+  ＝宣稱到 $V_2$。
+
+### L6.2 ⛔ 帳本現版對這刀失明 — 而那不是疏漏（Remark F1.5）
+
+**Remark F1.5（單環境退化）〔定理級（定義性）〕**：$m{=}1$ ⇒ $W_{e_1}$ 是常數 ⇒
+「這張圖的 info」以對常數的知識形式併入 effective-$\rho$，**任何 MI 帳都看不見它**
+（MI 對常數恆 0）⇒ **info/function 之刀在數學上只在環境重抽存在時存在**。三個後果：
+
+1. 帳本現版沒切這刀不是疏漏 — **單圖 régime 下刀無處落**；帶環境 ensemble、刀才隨之誕生。
+2. ⛔ 現有 Int／idp 讀數**天生不分**「攤銷 BFS vs 背路線」— 兩者在單圖上住同一顆 $\theta$、
+   行為可完全重合。**只有 $V_2$ 級測試（新圖）分得開，而 $V_2$ 一格證據都還沒有。**
+3. ⚠️ 但 $V_1$（同圖新 $(s,g)$ 組合＝stitch 本義）**已部分可分**：查詢級重抽下查表死、
+   組合算子活 — 這是現有證據真正站的台階。
+
+⇒ **本章對帳本讀者的第一條紀律**：⛔ 別拿 L0–L5 的單環境帳去判「我們內化的是算子還是路線表」。
+帳本能判的是 bits 從哪來、能兌現多少；判不了進 θ 的是哪一列。
+
+### L6.3 承重命題摘要（級別照抄【F】F6 分級總表；證明全在 F 檔、⛔ 不重抄）
+
+| 命題 | 一句話 | 級別 | F 節號 |
+|---|---|---|---|
+| **Prop F1** fresh 零資訊＝地板不可動 | F-A1 ⇒ $I(W_{e'};\theta)=0$；且 $\mathbb E[-\log q_\theta]=\{H_\rho(\tau\mid s,g)-I(\tau;c\mid s,g)\}+\Phi_C(\theta)$，$\theta$ 只出現在 $\Phi_C$ ⇒ **fresh 環境的資訊地板由 $\rho$ 與部署時活著的通道決定，θ 裡存了什麼都動不了它** | **定理級**（一行、證在檔） | F1.2 |
+| **Prop F2** 記憶化缺口恆等式 | $\mathrm{NLL}_{\rm fresh}-\mathrm{NLL}_{\rm train}=\underbrace{I(\tau;\theta\mid s,g,c)}_{\text{info 項}}+\underbrace{[\Phi_C-\Phi^{\rm train}]}_{\text{function 漂移}}$ — generalization gap **恰好**拆成兩項；「info＝訓練環境上被融資、且恰好是換環境時蒸發的那部分」是**恆等式不是比喻** | **定理級**（證在檔） | F1.2 |
+| **Prop F3** 通道兌現效率 $\xi$ ＋ **Cor F1.4** | $\xi_C:=\frac{\mathrm{NLL}(\varnothing)-\mathrm{NLL}(C)}{I(\tau;c\mid s,g)}=1+\frac{\Phi_\varnothing-\Phi_C}{I}$；fresh 價值分解＝（當場通道供給 bits）×（兌現效率）⇒ **「在新環境 re-derive info」＝$\xi_C\to1$ 對 family 一致成立**，是定義的後果 | 定理級 identity＋命題級量程 | F1.2 |
+| **Prop F5** centering 對比性 | group advantage 對任何 $(s,g,e)$-可測 reward 平移**不變** ⇒ GRPO 幫浦物理上打不進「對這題／這圖的常數事實」、只打得進**同題候選之間的對比結構** ⇒ 這是「教程序」的**必要**形狀（⚠️ 非充分：$m{=}1$ 下對比資訊仍可壓成 route 選擇表） | **定理級**（一行、證在檔） | F3.3 |
+| **Prop F7(i)(ii)** 預算算術 | iid 環境 ⇒ $\sum_j I(W_{e_j};\theta)\le I(W_{1:m};\theta)\le\min(H(\theta),I(\mathcal D;\theta))$；記憶 $m$ 個環境、每個買 $\beta$ bits 地板 ⇒ 至少耗 $m\beta$ bits 權重預算 — **info 融資按環境線性計費** | **定理級**（證在檔） | F4.2 |
+| **Prop F7(iii)＋Cor** crossover | 環境通用算子成本＝固定描述長度、對 $m$ **常數**（可表示性錨＝Zhu+ 2505.12514 平行 BFS、CoT-DP 2305.15408，沿【分類】[驗]）⇒ $m\beta\gtrsim$ 預算時 function 化是唯一蓋得住全族的（近）最優解 | 命題級 | F4.2 |
+| **Remark F1.5** 單環境失明 | 見 §L6.2 | 定理級（定義性） | F1.1 |
+
+⚠️ **匯率 caveat（環境級版，整條沿 C-ii′ 進口）**：F4 全部是「**最優／可行性在哪**」的陳述、
+**不是**「SGD 找不找得到」。bits 上不可負擔 $\ne$ CFM 的變異度量下有梯度壓力 —
+postA1 的匯率斷裂在環境級同樣適用；動力學面【推測級】。〔【F】F4.2 caveat〕
+
+### L6.4 與 L0–L5 的對接表
+
+| 帳本條目 | 縱軸對接 | F 節號 | 性質 |
+|---|---|---|---|
+| **Prop L0** 帳本恆等式（地板＋赤字） | Prop F1 是它的**環境級同款**：把 $W$ 換成 fresh $W_{e'}$，$\theta$ 就只出現在赤字欄 ⇒ 「function 住赤字欄」不是比喻、是 L0 在環境重抽下的字面讀法 | F1.2 | 定理級延伸 |
+| **Prop L1**（自生 u 恆 0、聯合零）＋**Cor CT-3** | **u＝function 的 scratchpad**：工作記憶的定義性質就是不含外界資訊（會漏 bits 進來的就不是 scratchpad、是通道）。⇒ 帳本語氣裡的「壞消息」（不合法期待 x1–x5）在縱軸上是**本義**。Cor CT-3 的縱軸讀法＝**function 鑄造不了 info**（自生配對建不了通道＝「程序不能無中生 bits」的訓練側定理） | F2 末段 | Remark（定理背書、無新主張） |
+| **Prop L2(i)(ii)** 選擇界 | 內化「check 算子」後部署期可自營 proposal-check 迴圈，**但 map bits 仍要當場從外面來** — 每選擇 $\le\log N$、存量帽變成 $I(W;\text{活通道})$。學到的是**消費能力（function）、不是 bits** | F3.1(a) | 帳目定理級；可學性命題級 |
+| **Prop L2(iii)** 自驗證＝0 新 bits | 縱軸讀法＝內化 check-function **只買赤字欄、買不到地板**；與 sharpening（2412.01951）的對接就在這一格 | F3.1(b) | 帳目定理級（逐字）；對接命題級 |
+| **Prop L2(vi)** 驗證器分離 | 縱軸不動它 — 仍是**兩側佐證、非雙向夾**〔深審 M7〕；F 檔未新增主張 | — | 不變 |
+| **Prop L3** 閉環觀測＋EIG Remark | 「學會預設獲取資訊的能力」＝acquisition function $\pi_q$（belief → 該問什麼）。**可學條件三條**：Q1 訓練分佈要含不確定性（$m{=}1$ ⇒ belief 退化成點質量 ⇒ EIG 泛函恆 0 ⇒ 對「查詢品質」的梯度恆 0；外錨＝BARL Thm 4.1，沿帳本【隊友正文級】）／Q2 query 要有 reward 訊號／Q3 通道要在訓練迴圈裡開著（最便宜上車位＝replan-on-collision，＝§4 表 (iv) 行） | F3.2 | Q1 命題級（退化證梗概）；Q2/Q3 命題級→實證級／架構事實 |
+| **Prop L4(i)(ii)** 幫浦界 | **Prop F5** 加一層：advantage centering 使幫浦**天生濾掉題級常數事實**、只保對比結構。與 L4(ii)「advantage＝後處理只降不升」相容 — L4(ii) 說**總量**、F5 說**哪一種被濾掉** | F3.3 | 定理級 |
+| **Remark L4.5** 防火牆 | 縱軸上這正是「幫浦輸出天生有 info 份與 function 份」的既有切口；指紋（大 $k$ 反超＝純 sharpening 簽名）照用、判別力前提仍掛條件 $\theta$ 版〔深審 F2〕 | F0、F3.3 | 不變、只換讀法 |
+| **Thm L5** 四格 | 四格**全部是程序執行**：分解＝跑 (CL-w) 的 DP；提取＝serial depth 兌現 θ 存量；前沿疊加＝平行 BFS 的工作記憶；查詢規劃＝acquisition function 的計算（F3.2）。⇒ 對 u 的正確期待從此不在 bits 軸上：**問 u 的問題不是「它知道什麼」、是「它替哪個算子跑了哪一段」**（L5 四格＝合法選單） | F2 表 u 行 | Remark（L5 的縱軸重讀） |
+| **§4 對應表** | F 檔 F2 給了系統各部件的縱軸歸類＋**誠實的證據現況**：攤銷 BFS＝persistent function 的**宣稱**（ER route .918 teacher-agnostic 已證＝另一軸；stitch＝$V_1$；**$V_2$ 零證據**）／特定 maze route 記憶＝persistent info（$m{=}1$ 下隱形）／e_target 幾何＝function 的**載體**（⚠️ 拆兩半：「一張圖的幾何」＝info、「圖→幾何的 encoder 算子」＝function）／verifier＝info 油箱**兼** function 老師／GRPO＝雙列搬運工 | F2 | 定義級套用＋狀態陳述 |
+| **§6 誠實邊界 2**（兩道匯率） | F 檔逐字進口：⛔ 凡落在成功率上的預測都是**形狀**預測、非點估 | F6 邊界 1 | 不變 |
+
+**核心 claim 的對接（一句話）**：一般化內化 claim ⓪「內化＝攤銷任意 teacher 的**計算**」
+＝主張搬進 θ 的是**算子不是 bits** ⇒ **核心 claim 本來就是 function claim**。L6 明寫這個對接，
+而 F-frame 是第一次把那半句變**可證偽**的（判別器＝【F】F5 的 FP-1/FP-2/FP-3）。
+⚠️ 但【一般化】⓪ 的「general」混了兩軸 — teacher-agnostic（已證）與 environment-generic
+（$V_2$、未測）；**建議 claim 敘事拆軸重述**〔【F】接口注意 3；⛔ 不在帳本管區、呈裁〕。
+
+### L6.5 帳本側的接口修正（本章就地吸收【F】接口注意 1／2／8）
+
+1. **〔已修〕Def L1 的 $W$ 是單環境切片** — §1 已補註：環境 ensemble 版＝外加 $e\sim\rho$ 期望、
+   (i) 的帽升級為 per-family 加總版（Prop F7(i)）。**是延伸、不是矛盾。**
+2. **〔已修〕終身帽 $\le H(M_V)$ 的多環境口徑** — §2.4 L4(iii)＋§4 表 GRPO 行已補：$M_V$ 是
+   每圖各自的 ⇒ 多環境時 $\le\sum_{j\le m}H(M_V^{(e_j)})$、按環境數乘。⛔ 別把單圖的
+   ≤961 bits 當多圖總帽。
+8. **〔本章落點〕§5「探索是油門、驗證器才是油箱」的接續句**：
+   > **油箱裝的是 bits、引擎本身是 function — 訓練能把引擎造好（攤銷），永遠造不出油。**
+
+   〔前半＝Prop L2/L3 的既有帳；後半＝Prop F1 的字面義（fresh 環境上 θ 動不了地板）。
+   ⇒ 主人句「沒有外界資訊的 icl 其實怎麼樣也不會得到更多資訊」在環境級的定理形。〕
+
+**不屬帳本、列而不動**（留給各自管區）：接口 3（【一般化】⓪ 拆軸）／接口 4（【分類】§2.2(a)
+與 Def F2 family 級互引，本章已單向引妥）／接口 5（teleport 破確定性 — Prop F1/F2 不受影響、
+但凡引 (S1)／合成律處沿其原限定）／接口 6（u-scratchpad 與【敘事】§0 油門比喻一致、無衝突）／
+接口 7（C-ii′ 進口環境級，postA1 不需改；$\xi$ 錶若落地位置在【分類】§4.3 P-ent 家族旁）。
+
+### L6.6 L6 自身的誠實邊界
+
+1. **本章零新主張、零新數字** — 全部是【F】的摘要與帳本側口徑對齊；承重命題的證明一律在 F 檔。
+2. **$m{=}1$ 現況**：F1.5／F2 表對現有讀數的再詮釋是**狀態陳述**；$V_2$ 實驗一格都還沒有。
+3. **FP-1/FP-2 需要「多圖訓練」臂＝新資料軸**，與多路線軸**正交** — multiroute 檔的 (a)–(e)
+   選項都不自動供給它（teleport 仍是單圖）。此軸的資料構造未設計 ⇒ 呈裁。
+4. **family 級（$V_3$）全檔只佔位**；跨 family 遷移零主張。
+5. **外部件不承重**：F 檔承重命題全數一行／短證在檔、引文全沿 repo 攜帶、無新增 ID；
+   本章亦無新增 ID。
+
+### L6.7 呈裁點（沿【F】、帳本側複述）
+
+① FP-1/FP-2 要的「多圖訓練」臂要不要開、怎麼開（多 maze 生成 vs OGBench 家族併集）；
+② $\xi$ 錶（訓練圖上今天就可算：idp on/zero 雙腿＝$\mathrm{NLL}(C)/\mathrm{NLL}(\varnothing)$
+現成、$I\approx2.5$ bits/題＝⑰ 轉引）要不要進儀器清單；
+③「攤銷 BFS」claim 是否按 L6.4 末段拆軸重述。
+
+---
+
 ## 7. 引用清單
 
 【隊友正文級・附 section】：2401.01879（BoN KL Thm 3.1、§3.1–3.2）、2404.01730（可達 §4.2
@@ -286,8 +433,14 @@ Thm 4.1）、2412.01951（Sharpening）、2504.13837（RLVR 批評）；gap：25
 2605.08732（開環誤差）；2209.15189（context distillation）。
 【訓練記憶・引前補驗】：1705.07809、2001.07203、Lindley 1956。教科書級：DPI、鏈式、$H$ 上界。
 家內：NOTE-0906-context-taxonomy（CT-1/2/3、三源表、C1–C4、P-swap）、THEORY-0906-postA1
-（C-ii′）、THEORY-0905-composition-law（Lemma 1/2、(S1)）、DESIGN-0906-grpo-thoughts、
+（C-ii′）、THEORY-0905-composition-law（Lemma 1/2、(CL-w)、(S1)/(S1′)）、DESIGN-0906-grpo-thoughts、
 FINDINGS ⑤''⑬⑰⑰'⑱'；luna-2026-09-05-closing.md（主人 23:39 定調原話、已逐字對）。
+**§L6 續章專屬**：THEORY-0906-info-vs-function（【F】F0–F7；Def F1–F4、Prop F1/F2/F3/F5/F6/F7、
+Cor F1.4、Remark F1.5、FP-1~5）— **L6 的一切承重內容以該檔為準**、本章只作導覽與對接。
+L6 引用的外部件全部沿 F 檔攜帶（2505.12514 Zhu+、2305.15408 CoT-DP、2404.15758 filler tokens
+〔皆[驗]@分類〕；2412.01951 Sharpening、2505.20561 BARL Thm 4.1〔【隊友正文級】@本檔〕）—
+**L6 無新增 ID**。
 
-_帳本完。呈裁點：①部署期 BoN 臂要不要排（rung 0 儀器順手可量）②Conj L4.4 分辨實驗掛
-GRPO rung 0/2 還是另立 ③【訓練記憶】餘三件補驗排程。_
+_帳本完（§0–§7＋§L6 續章）。呈裁點：①部署期 BoN 臂要不要排（rung 0 儀器順手可量）
+②Conj L4.4 分辨實驗掛 GRPO rung 0/2 還是另立 ③【訓練記憶】餘三件補驗排程；
+④⑤⑥＝§L6.7 三條（多圖訓練臂／$\xi$ 錶／攤銷 BFS claim 拆軸）。_
