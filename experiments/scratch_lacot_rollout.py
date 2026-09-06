@@ -5,7 +5,7 @@ then ROLL OUT in the pointmaze env and measure success rate, comparing:
   * LaCoT refine R = 0/1/3/5/8                        [test-time scaling]
 Success = the env's own info['success']. Receding-horizon CHUNK execution.
 """
-import os, sys, json, numpy as np, torch
+import os, sys, json, contextlib, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # lacot repo root
@@ -180,7 +180,10 @@ assert INTENT_SRC in ("hindsight", "route"), \
 INTENT_TAG = os.environ.get("LACOT_INTENT_TAG", "")   # 檔名 tag；通常不手設 —— 由 INTENT/SRC/TA 自動算（可覆蓋）
 INTENT_ZERO = int(os.environ.get("LACOT_INTENT_ZERO", 0))  # ⭐ 蒸餾探針：eval 錨恆零（只動 eval、不進檔名 — 產物用 OUT_DIR 分目錄）
 INTENT_DROP = float(os.environ.get("LACOT_INTENT_DROP", 0.0))  # ⭐ 內化錶（9/5 主人核）：訓練時 intent 段獨立歸零 p、s,g 保留 ⇒ eval 零 intent 在分佈內（zero 探針 OOD 的修正版）
-assert 0.0 <= INTENT_DROP < 1.0, f"⛔ LACOT_INTENT_DROP 要在 [0,1)，收到 {INTENT_DROP}"
+# ⭐ 9/6 修：上界【含】1.0。drop 機制是 `torch.rand(...) >= INTENT_DROP`，而 rand 取值在 [0,1)
+#    ⇒ p=1.0 時 keep 恆 False＝數學上乾淨的「全抽」（p=1 對照臂要的正是這個真空白；
+#    ⛔ 用 0.99 代替會洩漏 1% 的曝光 ⇒ 那條臂就不是「完全沒看過 intent」了）。
+assert 0.0 <= INTENT_DROP <= 1.0, f"⛔ LACOT_INTENT_DROP 要在 [0,1]，收到 {INTENT_DROP}"
 assert not (INTENT_DROP > 0 and INTENT != "embed"), \
     "⛔ INTENT_DROP 只定義在 embed 接法（intent 只經 ix 進 cond；anchor 走 per-token、residual 動 traj，drop 語義不同）"
 # ⭐ L_div hinge（內化藥第一帖、9/5）：訓練時直接【獎勵 cond 層的分支散度】——
@@ -225,6 +228,26 @@ assert GRPO_W == 0 or GRPO_G >= 2, f"⛔ LACOT_GRPO_G 至少 2（group baseline 
 assert GRPO_W == 0 or (GRPO_EVERY >= 1 and GRPO_BQ >= 1 and GRPO_WARM >= 0), \
     f"⛔ LACOT_GRPO_EVERY/_BQ 要 ≥1、_WARM 要 ≥0，收到 {GRPO_EVERY}/{GRPO_BQ}/{GRPO_WARM}"
 _GRPOLOG = []            # ⭐ [{step, r_mean, …}＋calib/halve 事件]；同 _DIVLOG 慣例：檔尾寫 grpolog_{tag}.jsonl
+# ═══ 訓練側加速（LACOT_AMP / LACOT_COMPILE、9/6）═══════════════════════════════
+# ⭐ 兩個開關【只動 stage 2 訓練路徑】—— eval 一行都不碰（zeldajr 的 ROCm eval 正在跑，
+#    ⛔ 那邊的數字不准動一根寒毛）。預設全 0 ⇒ 逐位元不變（golden：同一顆 ckpt SHA256）。
+# ⚠️ 這是 flow 模型（NLL 帶 log-det／exp）：⛔ 不手動 cast log-det/exp 類項 ——
+#    autocast 的 fp32 白名單（exp/pow/log…）本來就會把它們拉回 fp32，手動插 cast 只會
+#    製造第二套規則。但 GradScaler 的 inf/nan skip【每次都印一行】：
+#    靜默跳步＝這一步沒更新而沒人知道，跟「檢查通過因為它壞了」同一種病。
+# ⛔ Turing（lady/moana）不支援 bf16 ⇒ 固定 fp16。
+AMP = int(os.environ.get("LACOT_AMP", 0))
+COMPILE = int(os.environ.get("LACOT_COMPILE", 0))
+# ⭐ 訓練 loss 的印點間隔（⛔ 純 print：不碰任何 tensor、不動 RNG、不進檔名）。
+#    為什麼要它：短跑（STEPS2=300，例如 AMP 對照）在 1000 這個間隔下【一行都不印】
+#    ⇒ 拿到兩顆 ckpt 卻沒有曲線可比 —— 而「跑完沒炸」不等於「收斂一樣」。
+LOG_EVERY = max(1, int(os.environ.get("LACOT_LOG_EVERY", 1000)))
+assert not (AMP and device != "cuda"), \
+    "⛔ LACOT_AMP=1 但 device 不是 cuda（沒有 GPU）—— ⛔ 不靜默降級成 fp32：那會跑出一張假的加速表"
+assert not (AMP and GRPO_W > 0), (
+    "⛔ LACOT_AMP=1 × LACOT_GRPO_W>0 未驗證：β 定標那格對 l_nf／l_grpo 做的是【裸】"
+    "autograd.grad（沒過 scaler）⇒ fp16 下梯度會 underflow 成 0 ⇒ β_target 定歪，"
+    "而且【不會報錯】。要跑 AMP 的 GRPO 臂請先把定標段接上 scaler 再解這道鎖。")
 # ⭐ CFG 式 intent 引導（LACOT_INTENT_GUID_W、9/5）：INTENT_DROP 訓的顆把「帶 intent」與
 #    「intent 歸零」兩個條件模式練在同一顆 ⇒ eval 取樣時可以把 intent 方向【外插放大】，
 #    問「模型是不是看得懂 intent 但沒用力」。0.0＝關（⛔ 逐位元不動任何行為）、1.0＝normal、>1＝放大。
@@ -1343,6 +1366,115 @@ if GRPO_W > 0:
           f"  閘 ρ_len={_GRPO_RHO} δ_step={_GRPO_DSTEP:.4f}（正規化單位）", flush=True)
 
 
+# ═══ 推論期 BoN（LACOT_BON_N；rung 0.5 設計卡 §1 的 c 格＝R0 錶、9/6）═══════════
+# ⭐ 機制＝experiments/probe_bon_rung05.py 逐段搬：每次【規劃】抽 N 條 u → decode →
+#    GrpoReward 三項乘法閘打分（r_legal / r_reach / r_hit 等權；C8 閘
+#    N(z)=1[arclen ≥ ρ_len·L_BFS]·1[max 鄰步 ≤ δ_step]）→ 分數最高的進後續執行。
+# ⛔ BON_N=0（預設）＝整段不建、一個 op 都不跑、檔名一個字不加 ⇒ eval 逐位元不變。
+# ⚠️ 這是【推論期】旋鈕：訓練路徑一行都不碰（同 INTENT_ZERO／GUID_W 的分界）。
+BON_N = int(os.environ.get("LACOT_BON_N", 0))
+BON_MODE = os.environ.get("LACOT_BON_MODE", "plan")
+assert BON_N >= 0, f"⛔ LACOT_BON_N 不能是負的，收到 {BON_N}"
+assert BON_MODE == "plan", (
+    f"⛔ LACOT_BON_MODE 目前只實作 plan（每次規劃選一次＝設計卡 c 格的定義），收到 {BON_MODE}。"
+    " ⛔ 不靜默退回 plan —— 那會跑出一張標著別的 mode 的假表。")
+if BON_N > 1:
+    # ── 前提 gate：⛔ 不支援的組合【開跑前】就擋（同 GRPO rung1 的紀律）
+    assert u_dec is not None, (
+        "⛔ BoN 要 decode 計畫才打得了分（ENC_OBJ=recon*）—— 沒 decoder 就沒座標可打分")
+    assert fsq is None and vq is None, (
+        "⛔ BoN 未驗證 FSQ／VQ 臂：探針沒實作 snap，而閘的校準空間（roundtrip-decode）"
+        "在量化之後不是同一個分佈 ⇒ 門檻會歪，而且不會報錯")
+    assert INTENT != "residual", (
+        "⛔ BoN 未驗證 residual 接法（decode 出來是殘差、逐題輪廓反演未定）")
+    assert SUBGOAL in ("", "conf2", "bfs", "ebfs"), (
+        f"⛔ BoN 的規劃接點只接了 policy_chunk 與 conf2；SUBGOAL={SUBGOAL} 的長程層會"
+        "【安靜地】不吃 BoN（跑完拿到一張標著 bon_n>0 但其實沒選過的表）⇒ 拒絕開跑")
+elif BON_N == 1:
+    print("  ⚠️ LACOT_BON_N=1：一條候選＝沒得選 ⇒ 行為等同不開 BoN"
+          "（⛔ 檔名仍帶 _bon1，別跟 BON_N=0 的產物混讀）", flush=True)
+
+
+# ═══ AMP／compile 的執行期零件（⛔ 全部只被 stage 2 訓練迴圈呼叫）═══════════════
+# ⛔ AMP=0／COMPILE=0 時每一個 helper 都是【原樣直通】（scaler is None ⇒ loss.backward()、
+#    opt.step()；_flow_nll ⇒ flow.nll 本人）⇒ 預設路徑逐位元不變。
+_SCALER = None
+if AMP:
+    try:
+        _SCALER = torch.amp.GradScaler("cuda")       # torch ≥2.4 的寫法
+    except (AttributeError, TypeError):
+        # ⚠️ 各節點的 venv 版本不一定一樣（/archive 是機器本地的）⇒ 舊 torch 也要起得來，
+        #    ⛔ 不准因為 API 換名就讓整個 job 死在第一行。
+        _SCALER = torch.cuda.amp.GradScaler()
+_AMP_ST = {"steps": 0, "skip": 0}
+
+
+def _amp_ctx():
+    """訓練 forward 的 autocast 區。⛔ AMP=0 ⇒ nullcontext（連 dtype 都沒人碰）。"""
+    return (torch.autocast(device_type="cuda", dtype=torch.float16)
+            if AMP else contextlib.nullcontext())
+
+
+def _amp_backward(loss):
+    (_SCALER.scale(loss) if _SCALER is not None else loss).backward()
+
+
+def _amp_unscale(opt):
+    """clip 之前一定要 unscale —— ⛔ 少了它 clip 的門檻會被 scale 倍數帶著跑（1.0 的 clip
+    在 scale=65536 下等於幾乎不 clip）⇒ 訓練會安靜地跟 fp32 臂長不一樣。"""
+    if _SCALER is not None:
+        _SCALER.unscale_(opt)
+
+
+def _amp_step(opt):
+    if _SCALER is not None:
+        _SCALER.step(opt)          # ⚠️ 這一步可能被 scaler 跳過（grad 有 inf/nan）
+    else:
+        opt.step()
+
+
+def _amp_update(step_no):
+    """scaler.update()＋skip 事件。⭐ 判 skip 的公開作法：update() 前後的 scale 變小
+    ⇒ 這一輪抓到 inf/nan、optimizer.step 被吃掉。⛔ 靜默跳步是不能接受的。"""
+    if _SCALER is None:
+        return
+    _s0 = _SCALER.get_scale()
+    _SCALER.update()
+    _AMP_ST["steps"] += 1
+    _s1 = _SCALER.get_scale()
+    if _s1 < _s0:
+        _AMP_ST["skip"] += 1
+        print(f"  ⚠️ AMP skip step {step_no + 1}：GradScaler 抓到 inf/nan ⇒ 這一步【沒有更新】"
+              f"（scale {_s0:g} → {_s1:g}；累計 {_AMP_ST['skip']}/{_AMP_ST['steps']}）", flush=True)
+
+
+# ⭐ COMPILE：包的是 flow.nll（訓練的大戶＝TARFlow 4 塊 transformer 的前傳＋反傳）。
+#    ⛔ 不包 flow 這個 module 本身 —— nll/log_prob 不走 __call__ ⇒ 包了也編不到，
+#    而且 flow.sample 是 eval 路徑（⛔ 不准動）。
+# ⚠️ torch.compile 是 lazy 的：錯誤在【第一次呼叫】才炸 ⇒ fallback 必須守在呼叫點，
+#    ⛔ 不能只在建構時 try（那道 try 幾乎永遠會過，然後 job 死在第一步）。
+_NLL_C = {"fn": None}
+if COMPILE:
+    try:
+        _NLL_C["fn"] = torch.compile(flow.nll)
+        print("  ⭐ LACOT_COMPILE=1：flow.nll 已包 torch.compile（⛔ 只有訓練路徑）", flush=True)
+    except Exception as _ce:      # noqa: BLE001（compile 的失敗型別隨後端變，⛔ 不預設它是哪一種）
+        print(f"  ⚠️ torch.compile 建構失敗 ⇒ fallback 回 eager（{type(_ce).__name__}: {_ce}）", flush=True)
+
+
+def _flow_nll(u, cond):
+    """訓練用 NLL。COMPILE=0 ⇒ 就是 flow.nll 本人（同一個物件、同一組 op）。"""
+    _fn = _NLL_C["fn"]
+    if _fn is not None:
+        try:
+            return _fn(u, cond)
+        except Exception as _ce:  # noqa: BLE001
+            _NLL_C["fn"] = None   # ⛔ 一次失敗就整輪退回 eager（別每步再試一次、別讓 job 死在這）
+            print(f"  ⚠️ compile 版 flow.nll 執行失敗 ⇒ 本輪之後全走 eager"
+                  f"（{type(_ce).__name__}: {_ce}）", flush=True)
+    return flow.nll(u, cond)
+
+
 def _stage2_loop(n_steps, step_off=0):
     """stage 2 訓練迴圈。⭐ 抽成函式【只為了】讓續訓模式能在 ckpt 載入之後再跑一次【同一份】
     code —— ⛔ 兩份會分岔的訓練迴圈是這個 repo 絕對不要的東西（同族東西混版本已經咬過三次）。
@@ -1352,89 +1484,97 @@ def _stage2_loop(n_steps, step_off=0):
     """
     for stp in range(n_steps):
         _gstp = step_off + stp
-        traj, mask, s, g, act = make_batch(rng, teacher_mix=TEACHER_MIX)
-        anc = ix = ix_full = None
-        if intent_ad is not None:                        # ⭐ F：三接法的錨都在這裡生一次
-            anc = intent_anchors_of(traj)
-            if INTENT == "residual":                     # ⛔ 殘差接法：et 也要吃殘差（跟 stage 1 同一種語言）
-                traj = intent_ad.target_fwd(traj, anc)
-            ix = _intent_cond(anc)                       # embed/residual＝[B,64]；anchor＝None
-            ix_full = ix                                 # ⭐ drop【前】的 ix —— L_div 與 divlog 都要用這一份
-            if INTENT_DROP > 0 and ix is not None:       # ⭐ 內化錶：intent 段獨立 drop（⛔ 跟 COND_DROP 的整組歸零是不同分佈 — zero 探針教訓）
-                _ikeep = (torch.rand(len(ix), 1, device=ix.device) >= INTENT_DROP).float()
-                ix = ix * _ikeep
-        with torch.no_grad():
-            et = etarget(traj, mask)
-        cond = condvec(s, g, ix)
-        # ⭐ 9/3 FSQ：z 空間版 flow 目標＝d 維 z（甲連續／乙格點+噪聲；滿秩無薄片病）；
-        #    u 空間版 dequant（⛔ 9/3 判負：目標塌 8 維薄片）留作歷史對照。
-        if fsq is not None and FSQ_SPACE == "z":
+        # ⭐ AMP（LACOT_AMP=1）：整段 forward＋loss 在 autocast 裡；⛔ AMP=0 ⇒ nullcontext ⇒ 逐位元不變。
+        #    ⚠️ GRPO 那段【故意留在外面】跑 fp32（β 定標要裸 autograd.grad）—— 兩者互斥的 assert 在檔頭。
+        with _amp_ctx():
+            traj, mask, s, g, act = make_batch(rng, teacher_mix=TEACHER_MIX)
+            anc = ix = ix_full = None
+            if intent_ad is not None:                        # ⭐ F：三接法的錨都在這裡生一次
+                anc = intent_anchors_of(traj)
+                if INTENT == "residual":                     # ⛔ 殘差接法：et 也要吃殘差（跟 stage 1 同一種語言）
+                    traj = intent_ad.target_fwd(traj, anc)
+                ix = _intent_cond(anc)                       # embed/residual＝[B,64]；anchor＝None
+                ix_full = ix                                 # ⭐ drop【前】的 ix —— L_div 與 divlog 都要用這一份
+                if INTENT_DROP > 0 and ix is not None:       # ⭐ 內化錶：intent 段獨立 drop（⛔ 跟 COND_DROP 的整組歸零是不同分佈 — zero 探針教訓）
+                    _ikeep = (torch.rand(len(ix), 1, device=ix.device) >= INTENT_DROP).float()
+                    ix = ix * _ikeep
             with torch.no_grad():
-                _et_nf = fsq.dequant_z(et) if FSQ_TGT == "dequant" else fsq.z_of(et)
-            l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / (K * fsq.d)
-        else:
-            _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
-            l_nf = flow.nll(_et_nf, flow_cond(cond, anc)) / DIM
-        # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
-        #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
-        _rw = _REAL_W[0]
-        _wmse = lambda p, a: ((p - a).pow(2).reshape(len(p), -1).mean(1) * _rw).sum() / _rw.sum().clamp(min=1)
-        # ⭐ COND_DROP：l_anchor 這一路以 p 機率把整個 cond 歸零，逼 head 從 u 讀路徑。
-        #    ⛔ 只丟 cond、不丟 u —— 丟 u 會反過來教 head 繞開 u。
-        #    ⭐ F/intent：ix（錨的全域摘要）是 condvec 進 cond_head 前就拼進去的 ⇒ cond 歸零＝ix 一起歸零，
-        #       「drop＝什麼都不知道」自動成立。per-token 錨只走 flow 那一路（l_nf），⛔ 不在 l_anchor 上，
-        #       ⇒ 這裡沒有第二個東西要歸零（flow_cond 的補零走 anchors_t=None 那條）。
-        _ca = cond
-        if COND_DROP > 0:
-            _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
-            _ca = cond * _keep
-        # ⭐ VQ／FSQ：head 吃量化 u（與推論一致）；z 版顯式 snap（_q 對 z 版恆等——sample 端已字典化）
-        _u_head = fsq.snap(et) if (fsq is not None and FSQ_SPACE == "z") else _q(et)
-        l_anchor = _wmse(ahead(_ca, _u_head), act)
-        if LEARNED_REFINE:
-            u = flow.sample(B, flow_cond(cond, anc)).detach(); us = [u]
-            for _ in range(3):
-                u = refine(cond, u); us.append(u)
-            if CONS == "ema":
+                et = etarget(traj, mask)
+            cond = condvec(s, g, ix)
+            # ⭐ 9/3 FSQ：z 空間版 flow 目標＝d 維 z（甲連續／乙格點+噪聲；滿秩無薄片病）；
+            #    u 空間版 dequant（⛔ 9/3 判負：目標塌 8 維薄片）留作歷史對照。
+            if fsq is not None and FSQ_SPACE == "z":
                 with torch.no_grad():
-                    tgts = [refine_ema(cond, us[r]) for r in range(3)]
-                l_cons = sum((us[r + 1] - tgts[r]).pow(2).mean() for r in range(3)) / 3
+                    _et_nf = fsq.dequant_z(et) if FSQ_TGT == "dequant" else fsq.z_of(et)
+                l_nf = _flow_nll(_et_nf, flow_cond(cond, anc)) / (K * fsq.d)
             else:
-                l_cons = sum((us[r] - us[r + 1].detach()).pow(2).mean() for r in range(3)) / 3
-            l_refine = sum(mse(ahead(cond, us[r + 1]), act) for r in range(3)) / 3
-        else:
-            # 🚨 l_refine 拿 flow 隨機抽的 u（很可能是另一條路），卻要求 head 輸出資料那條路的動作
-            #    ⇒ 明文教 head 無視 u。ENC_OBJ 一改好它會立刻變成第二個 bypass ⇒ 同一輪拿掉。
-            l_cons = l_refine = torch.zeros((), device=device)
-        # ⭐ 誠實地板：只吃 cond，跟 u 完全無關。
-        # ⚠️ cond 要 detach —— 否則 l_bc 的梯度會流進 cond_enc/cond_head，
-        #    把 cond 訓練得更會單獨預測動作 ⇒ ① 主模型被這個 baseline 改動了、
-        #    ② 比較會系統性地偏向「u 沒必要」。detach 之後量的才是乾淨的問題：
-        #    「在【同一個】cond 表徵上，u 有沒有加值」。
-        l_bc = _wmse(bc_head(cond.detach()), act)
-        if BC_OWN:
-            # ⭐ 完全獨立的 backward（自己的 graph、自己的 clip）—— 對主模型零影響
-            l_bco = _wmse(bc_own_head(own_condvec(s, g)), act)
-            opt_bc_own.zero_grad(set_to_none=True)
-            l_bco.backward()
-            torch.nn.utils.clip_grad_norm_([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
-                                            for p in m.parameters()], 1.0)
-            opt_bc_own.step()
-        total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
-        # ⭐ L_div hinge（LACOT_DIV_W>0）：⛔ 整段 gate 在 if 裡 —— DIV_W=0 時連 `+0*l_div`
-        #    這種「數學上無害」的 op 都不加，⇒ 預設路徑的 graph 與數值逐位元不變。
-        l_div = None
-        if DIV_W > 0:
-            _c_int = condvec(s, g, ix_full)              # ⛔ drop【前】的 ix（被 drop 的樣本也要算）
-            _c_zero = condvec(s, g, None)                # ⛔ ix=None ⇒ condvec 自己拼零（同 sample_plan 的定義）
-            # ⚠️ 用 sqrt(x + 1e-24) 而不是 .norm()：⛔ .norm() 在【剛好為零】的點反向吐 NaN，
-            #    而「剛好為零」正是這帖藥要治的狀態。⛔ 也不用 clamp_min(1e-12)：那會在
-            #    ‖d‖ < 1e-6 的整段變成【零梯度死區】—— 快塌的顆剛好落在那一段。
-            #    1e-24 純粹是 NaN 護欄：‖d‖²≥1e-14 時加它在 fp32 下逐位元無影響。
-            _rel = torch.sqrt((_c_int - _c_zero).pow(2).sum(-1) + 1e-24) \
-                / (torch.sqrt(_c_zero.pow(2).sum(-1) + 1e-24) + 1e-8)
-            l_div = torch.relu(DIV_M - _rel).mean()
-            total = total + DIV_W * l_div
+                _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
+                l_nf = _flow_nll(_et_nf, flow_cond(cond, anc)) / DIM
+            # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
+            #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
+            _rw = _REAL_W[0]
+            _wmse = lambda p, a: ((p - a).pow(2).reshape(len(p), -1).mean(1) * _rw).sum() / _rw.sum().clamp(min=1)
+            # ⭐ COND_DROP：l_anchor 這一路以 p 機率把整個 cond 歸零，逼 head 從 u 讀路徑。
+            #    ⛔ 只丟 cond、不丟 u —— 丟 u 會反過來教 head 繞開 u。
+            #    ⭐ F/intent：ix（錨的全域摘要）是 condvec 進 cond_head 前就拼進去的 ⇒ cond 歸零＝ix 一起歸零，
+            #       「drop＝什麼都不知道」自動成立。per-token 錨只走 flow 那一路（l_nf），⛔ 不在 l_anchor 上，
+            #       ⇒ 這裡沒有第二個東西要歸零（flow_cond 的補零走 anchors_t=None 那條）。
+            _ca = cond
+            if COND_DROP > 0:
+                _keep = (torch.rand(len(cond), 1, device=cond.device) >= COND_DROP).float()
+                _ca = cond * _keep
+            # ⭐ VQ／FSQ：head 吃量化 u（與推論一致）；z 版顯式 snap（_q 對 z 版恆等——sample 端已字典化）
+            _u_head = fsq.snap(et) if (fsq is not None and FSQ_SPACE == "z") else _q(et)
+            l_anchor = _wmse(ahead(_ca, _u_head), act)
+            if LEARNED_REFINE:
+                u = flow.sample(B, flow_cond(cond, anc)).detach(); us = [u]
+                for _ in range(3):
+                    u = refine(cond, u); us.append(u)
+                if CONS == "ema":
+                    with torch.no_grad():
+                        tgts = [refine_ema(cond, us[r]) for r in range(3)]
+                    l_cons = sum((us[r + 1] - tgts[r]).pow(2).mean() for r in range(3)) / 3
+                else:
+                    l_cons = sum((us[r] - us[r + 1].detach()).pow(2).mean() for r in range(3)) / 3
+                l_refine = sum(mse(ahead(cond, us[r + 1]), act) for r in range(3)) / 3
+            else:
+                # 🚨 l_refine 拿 flow 隨機抽的 u（很可能是另一條路），卻要求 head 輸出資料那條路的動作
+                #    ⇒ 明文教 head 無視 u。ENC_OBJ 一改好它會立刻變成第二個 bypass ⇒ 同一輪拿掉。
+                l_cons = l_refine = torch.zeros((), device=device)
+            # ⭐ 誠實地板：只吃 cond，跟 u 完全無關。
+            # ⚠️ cond 要 detach —— 否則 l_bc 的梯度會流進 cond_enc/cond_head，
+            #    把 cond 訓練得更會單獨預測動作 ⇒ ① 主模型被這個 baseline 改動了、
+            #    ② 比較會系統性地偏向「u 沒必要」。detach 之後量的才是乾淨的問題：
+            #    「在【同一個】cond 表徵上，u 有沒有加值」。
+            l_bc = _wmse(bc_head(cond.detach()), act)
+            if BC_OWN:
+                # ⭐ 完全獨立的 backward（自己的 graph、自己的 clip）—— 對主模型零影響
+                l_bco = _wmse(bc_own_head(own_condvec(s, g)), act)
+                opt_bc_own.zero_grad(set_to_none=True)
+                _amp_backward(l_bco)          # ⛔ AMP=0 ⇒ 就是 l_bco.backward()
+                _amp_unscale(opt_bc_own)      # ⭐ clip 前先 unscale（AMP=0 ⇒ no-op）
+                torch.nn.utils.clip_grad_norm_([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
+                                                for p in m.parameters()], 1.0)
+                _amp_step(opt_bc_own)
+            total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
+            # ⭐ L_div hinge（LACOT_DIV_W>0）：⛔ 整段 gate 在 if 裡 —— DIV_W=0 時連 `+0*l_div`
+            #    這種「數學上無害」的 op 都不加，⇒ 預設路徑的 graph 與數值逐位元不變。
+            l_div = None
+            if DIV_W > 0:
+                _c_int = condvec(s, g, ix_full)              # ⛔ drop【前】的 ix（被 drop 的樣本也要算）
+                _c_zero = condvec(s, g, None)                # ⛔ ix=None ⇒ condvec 自己拼零（同 sample_plan 的定義）
+                # ⚠️ 用 sqrt(x + 1e-24) 而不是 .norm()：⛔ .norm() 在【剛好為零】的點反向吐 NaN，
+                #    而「剛好為零」正是這帖藥要治的狀態。⛔ 也不用 clamp_min(1e-12)：那會在
+                #    ‖d‖ < 1e-6 的整段變成【零梯度死區】—— 快塌的顆剛好落在那一段。
+                #    1e-24 純粹是 NaN 護欄：‖d‖²≥1e-14 時加它在 fp32 下逐位元無影響。
+                # ⭐ AMP：這把尺的 1e-24／1e-8 護欄是【fp32 假設】—— fp16 最小正規數才 6e-5，
+                #    autocast 下 cond 出來是 half ⇒ 平方和會先 underflow 成 0、護欄失效。
+                #    ⇒ 這一段顯式吃 fp32。⛔ AMP=0 時 .float() 對 fp32 tensor 回自己 ⇒ 逐位元不變。
+                _c_int, _c_zero = _c_int.float(), _c_zero.float()
+                _rel = torch.sqrt((_c_int - _c_zero).pow(2).sum(-1) + 1e-24) \
+                    / (torch.sqrt(_c_zero.pow(2).sum(-1) + 1e-24) + 1e-8)
+                l_div = torch.relu(DIV_M - _rel).mean()
+                total = total + DIV_W * l_div
         # ⭐ GRPO-on-thoughts（LACOT_GRPO_W>0；設計卡 §1–§2）：⛔ 同 DIV_W 慣例 —— 預設整段跳過，
         #    graph／RNG／數值逐位元不變；開著時抽樣走專用 generator ⇒ data 流跟純 FM 臂照樣成對。
         if GRPO_W > 0:
@@ -1536,16 +1676,22 @@ def _stage2_loop(n_steps, step_off=0):
                     print(f"  grpo step {_gstp + 1}  r {_grw.mean():.3f}±{_grw.std():.3f} gate {_ggate.mean():.2f}"
                           f" degen {_gdg}/{GRPO_BQ} β {_gbeta:.3e} l_grpo {l_grpo.item():+.4f}", flush=True)
         _warm_lr(opt2, _gstp)
+        # ⭐ AMP：backward／clip／step 一律走 helper —— AMP=0 時逐字等於原本那三行
+        #    （scaler is None ⇒ loss.backward()、no-op、opt.step()）。
+        #    ⚠️ 兩個 optimizer 的參數集合互斥（BC_INDEP：bc_head vs f_mods）⇒ 各自 unscale_ 安全。
         opt2.zero_grad(set_to_none=True)
         if opt_bc is not None:
             opt_bc.zero_grad(set_to_none=True)
-            (total + l_bc).backward()               # ⭐ 一次 backward，但兩組參數各自 clip / step
+            _amp_backward(total + l_bc)             # ⭐ 一次 backward，但兩組參數各自 clip / step
+            _amp_unscale(opt_bc)
             torch.nn.utils.clip_grad_norm_(bc_head.parameters(), 1.0)
         else:
-            total.backward()
-        torch.nn.utils.clip_grad_norm_([p for m in f_mods for p in m.parameters()], 1.0); opt2.step()
+            _amp_backward(total)
+        _amp_unscale(opt2)
+        torch.nn.utils.clip_grad_norm_([p for m in f_mods for p in m.parameters()], 1.0); _amp_step(opt2)
         if opt_bc is not None:
-            opt_bc.step()
+            _amp_step(opt_bc)
+        _amp_update(_gstp)                          # ⭐ scaler.update()＋skip 事件印一行（AMP=0 ⇒ 直接回）
         if CONS == "ema" and LEARNED_REFINE:
             with torch.no_grad():
                 for pe, pr in zip(refine_ema.parameters(), refine.parameters()):
@@ -1571,12 +1717,21 @@ def _stage2_loop(n_steps, step_off=0):
             # ⛔ 也 print 一行：jsonl 要等 tag 算出來（檔尾）才寫得了 ⇒ 中途掛掉時 log 是唯一的備份
             print(f"  divlog step {_gstp+1}  cond 相對差 median {_dm:.4f}"
                   + (f"  l_div {l_div.item():.4f}" if l_div is not None else ""), flush=True)
-        if (_gstp + 1) % 1000 == 0:
+        if (_gstp + 1) % LOG_EVERY == 0:      # ⭐ 預設 1000 ⇒ 既有 log 逐行不變
             print(f"  step {_gstp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}"
                   + (f" l_div {l_div.item():.4f}" if l_div is not None else ""), flush=True)
 
 
 _stage2_loop(STEPS2)
+if AMP and _AMP_ST["steps"]:
+    # ⭐ 收工把 skip 率印出來：⛔ 「跑完沒炸」不等於「每一步都更新了」——
+    #    skip 率高＝這顆的有效步數比 AMP=0 那顆少，收斂比對要先看這個數字。
+    print(f"  ⭐ AMP(fp16)：{_AMP_ST['steps']} 步裡 GradScaler 跳過 {_AMP_ST['skip']} 步"
+          f"（{_AMP_ST['skip'] / _AMP_ST['steps']:.4f}；⚠️ 起步幾步跳是正常的——scale 在探上界）"
+          f"  最終 scale {_SCALER.get_scale():g}", flush=True)
+if COMPILE:
+    print(f"  ⭐ LACOT_COMPILE=1：flow.nll "
+          + ("跑的是編譯版" if _NLL_C["fn"] is not None else "⚠️ 已 fallback 回 eager（見上面的警告）"), flush=True)
 if INTENT and _N_SRC_FB[1] > 0:
     # ⭐ K：route 錨源生不出路 ⇒ 那個樣本退回 hindsight。率太高＝訓推同分佈這件事沒兌現到位。
     print(f"  ⭐ intent 錨源 src={INTENT_SRC}：處理 {_N_SRC_FB[1]} 個樣本，"
@@ -1895,6 +2050,65 @@ def _foreign_u(R):
     return _apply_refine(c2, u, R)
 
 
+# ═══ intent 三腿（9/6；流形假說判別）══════════════════════════════════════════
+# ⭐ 主臂 R0 之外再跑兩腿，⛔ 動的是【intent embedding】，⛔ 不是 u（那是既有的 shuf 腿）：
+#     intent_swap ＝ 別人的小抄：換成【另一組 (s,g) 的真錨】的 embedding
+#                   ⇒ 分布內、內容錯（batch 裡「roll 1」的單集版 —— eval 一次只有一題，
+#                     所以錯位改用「跟 shuf 同一套抽法」從資料集抽鄰居，clamp 逐字相同）。
+#     intent_noise＝ 純噪音：randn_like(ix) ⇒ 出分佈、連「合法向量」都不是。
+# ⭐ 判讀【先釘死】（⛔ 跑完才想判準就會變成挑故事）：
+#     流形假說（「在場紅利」來自 cond 落在訓練看過的流形上、跟內容無關）預測
+#       intent_swap ≈ R0（在場即可）、intent_noise 崩（掉出流形）。
+#     若 intent_noise ≈ R0 ⇒ 連「合法性」都不需要 ⇒ 在場紅利純粹是訓練期產物
+#       （模型根本沒在讀那一段，只是訓練時有它才長成這樣）。
+#     若 intent_swap 明顯 < R0 ⇒ 內容【有】被讀 ⇒ 流形假說在這顆上不成立。
+# ⛔ 只定義在 embed 接法：anchor 走 per-token、residual 動 traj 目標，
+#    「換掉 ix」在那兩個接法不是同一件事（同 INTENT_DROP／DIV_W／GUID_W 的既有分界）。
+_INTENT_ARM = [None]          # None＝主臂（⛔ 預設；逐位元不動）／"swap"／"noise"
+_ARM_FB = [0]                 # 抽不到【有路】的外來錨、只好退回自己那一份的次數（⛔ 不准靜默）
+# ⭐ 噪音腿走【專用】generator（同 GRPO 的作法）：⛔ 不用 randn_like —— 那會吃主 torch 流，
+#    把這一腿的 flow.sample 序列跟 R0 錯開 ⇒ 差值裡混進取樣噪聲，配對就鬆了。
+_ARM_GEN = torch.Generator(device=device)
+_ARM_GEN.manual_seed(20260906)
+
+
+@torch.no_grad()
+def _foreign_intent():
+    """別人的小抄：抽一組 (s,g)（⛔ 抽法與 clamp 跟 _foreign_u／make_batch 逐字相同）→
+    它的 BFS 錨 → embedding。抽不到有路的就回 None（呼叫端退回自己的、⛔ 並計數）。
+    ⚠️ 走 _intent_route_zn 而不是 _intent_anchor_eval —— ⛔ 別讓對照腿的抽樣去污染
+       n_intent_noroute 那個主臂診斷欄。"""
+    for _ in range(16):        # 16 次還抽不到有路的＝這張圖本身有問題 ⇒ 讓計數器叫出來
+        while True:
+            r = int(_shuf_rng.integers(0, N)); te = int(traj_end[r])
+            if te - r >= CHUNK:
+                break
+        _d = _shuf_rng.random()
+        gr = int(round(min(r + 1, te) * _d + te * (1 - _d)))
+        gr = max(gr, min(r + CHUNK, te))
+        a = _intent_route_zn(OBS[r], OBS[gr])
+        if a is not None:
+            return _intent_cond(a)
+    return None
+
+
+def _intent_cond_arm(anc):
+    """eval 的 intent 尾巴：主臂＝原樣（⛔ _INTENT_ARM 是 None 時逐位元等於 _intent_cond）；
+    swap／noise 腿才動手。
+    ⚠️ 只在【主臂本來就有 ix】時才換 —— 本題無路（ix is None）的樣本三腿一致走零 fallback，
+       ⛔ 否則對照腿會在無路樣本上偷偷比主臂多一份 intent，配對就毀了。"""
+    ix = _intent_cond(anc)
+    if _INTENT_ARM[0] is None or ix is None:
+        return ix
+    if _INTENT_ARM[0] == "noise":            # ⭐ 出分佈：形狀對，但不是訓練過的那種向量
+        return torch.empty_like(ix).normal_(generator=_ARM_GEN)   # ＝randn_like，只是不吃主流
+    fx = _foreign_intent()                   # "swap"
+    if fx is None:
+        _ARM_FB[0] += 1                      # ⛔ 退回自己的＝這一格其實是主臂 ⇒ 一定要有出口
+        return ix
+    return fx
+
+
 @torch.no_grad()
 def policy_chunk(obs, goal, R, use_u):
     # ⭐ 病二快篩（主人 8/29）：終局讓 u 退位 —— 離目標 < FINISH_R 就換獨立 bc head 收尾。
@@ -1912,7 +2126,8 @@ def policy_chunk(obs, goal, R, use_u):
     # ⭐ H(3)：規劃時生錨（現在位置 → 這一層的目標；分段模式傳進來的 goal 就是 subgoal）。
     #    無路 ⇒ None ⇒ condvec 拼零、flow_cond 補零（n_intent_noroute 計數）。
     _anc = _intent_anchor_eval(obs, goal)
-    s = normstate(obs); g = normstate(goal); cond = condvec(s, g, _intent_cond(_anc))
+    # ⭐ 9/6 三腿：_intent_cond_arm ＝ 主臂原樣、swap/noise 腿才換 ix（⛔ 其餘一行不動）
+    s = normstate(obs); g = normstate(goal); cond = condvec(s, g, _intent_cond_arm(_anc))
     if use_u == "bc":                              # ⭐ 誠實地板，走另一顆 head
         if BC_OWN:                                 # ⭐ 真獨立 GCBC：全鏈自有權重（8/31）
             a = bc_own_head(own_condvec(s, g))[0].cpu().numpy()
@@ -1925,7 +2140,9 @@ def policy_chunk(obs, goal, R, use_u):
     if use_u:
         u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
         if u is None:
-            u = sample_plan(1, cond, _anc, s, g)          # ⭐ GUID_W=0 ⇒ 就是 flow.sample(1, ...)
+            # ⭐ 9/6 BoN：BON_N≤1 ⇒ _bon_plan 就是 sample_plan 本人（逐位元、連 RNG 都不變）；
+            #    >1 ⇒ 抽 N 條、三項乘法閘打分、argmax ⇒ ⭐ 這一格就是設計卡 c 格的 R0 錶。
+            u = _bon_plan(1, cond, _anc, s, g)            # ⭐ GUID_W=0 ⇒ 就是 flow.sample(1, ...)
         if GRAD_REFINE:
             # ⭐ 主人 8/22 的更新式取代 learned refine。
             # ⚠️ 這一層是 @torch.no_grad()，而 grad_refine 內部自己開 enable_grad
@@ -2115,6 +2332,178 @@ if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0 or INTENT:   # ⭐ 9/2：S
           f"E 格寬≈{_E_CELL_XY:.2f}，subgoal 隔 {_E_DELTA_CELLS} 格", flush=True)
 
 
+# ═══ 推論期 BoN 的儀器（設計卡 §1.1／§2.1；⛔ 只在 BON_N>1 時建）═════════════════
+# ⭐ 全部在【正規化】座標空間（＝探針 probe_bon_rung05.py 的空間；⛔ 別跟 raw 混）。
+# ⭐ 統計欄位：⛔ 不是裝飾 —— 「BoN 開著卻從來沒換過計畫」跟「BoN 有效」在成功率上
+#    可能長得一樣（都是小差），只有 changed／degen 這兩格分得開。
+_BON_ST = {"plans": 0, "cands": 0, "changed": 0, "degen": 0, "nolink": 0,
+           "sum_best": 0.0, "sum_first": 0.0, "sum_gate": 0.0,
+           "sum_g_arc": 0.0, "sum_g_stp": 0.0, "sum_L": 0.0, "n_L": 0,
+           "sum_arc": 0.0, "sum_need": 0.0, "sum_mstep": 0.0, "sum_raw": 0.0}
+_BON_RHO = _BON_DSTEP = None
+if BON_N > 1:
+    from lacot.refine_grad import GeoEnergy as _BonGeo
+    from lacot.subgoal import grid_bfs as _bon_bfs
+    # ── 打分的眼睛：獨立一份資料佔據圖（⛔ 不依賴 SUBGOAL／INTENT 開不開 —— _ig/_tg/_gg 前例）
+    _bg = _BonGeo(OBS, mu, sd, res=8, device="cpu")
+    _BOCC = (_bg.dist[0, 0].numpy() == 0.0)
+    _BFREE = np.argwhere(_BOCC)
+    _B_LO = np.asarray(_bg.lo, np.float64)
+    _B_SPAN = np.asarray(_bg.hi - _bg.lo, np.float64)
+    _B_SHAPE = np.asarray(_bg.shape, np.int64)
+    _B_CELL = float(np.mean(_B_SPAN / (_B_SHAPE - 1)))    # 一格的正規化尺寸（＝探針 CELL_NORM）
+    _BON_DMAPS = {}
+
+    def _b_cells_of(pts):
+        """[...,2] 正規化 → 格 index（round+clip、⛔ 不 snap；探針 cells_of 逐字）。
+        ⛔ 不 snap 是刻意的：r_legal 的合法性判定要誠實（掉牆裡＝掉牆裡）。"""
+        idx = np.rint((np.asarray(pts, np.float64) - _B_LO) / _B_SPAN * (_B_SHAPE - 1)).astype(np.int64)
+        return np.clip(idx, 0, _B_SHAPE - 1)
+
+    def _b_cell_snap(p):
+        """端點 → 格；落牆格 snap 最近自由格（探針 cell_one_snap 同款；⛔ 只給 s/g 端點用）。"""
+        c = tuple(int(v) for v in _b_cells_of(np.asarray(p, np.float64)[None])[0])
+        if _BOCC[c]:
+            return c
+        return tuple(int(v) for v in _BFREE[int(np.abs(_BFREE - np.asarray(c)).sum(1).argmin())])
+
+    def _b_dist_from(gc):
+        """goal 格 → 全圖 BFS 步距 dict（per-goal 快取；圖只有 ~1.3k 格 ⇒ 一次幾乎免費）。"""
+        if gc not in _BON_DMAPS:
+            if len(_BON_DMAPS) > 100000:
+                _BON_DMAPS.clear()
+            _BON_DMAPS[gc] = _bon_bfs(_BOCC, gc)
+        return _BON_DMAPS[gc]
+
+    # ── C8 校準（⛔ 在【roundtrip-decode 空間】—— 探針 §1 步 1 逐段搬）：
+    #    真軌跡 encode→decode 之後的 arclen/L_BFS p5 ＝ρ_len、逐窗 max 鄰步 p95 ＝δ_step。
+    # 🚨 eval 開始【算一次】，⛔ 不准每步重算：門檻跟著當下樣本漂的話，
+    #    「閘在動」跟「計畫在變好」在數字上長得一模一樣，而且不會報錯。
+    # ⚠️ 校準集走專用 rng（seed 12345＝探針 CALIB_SEED）⇒ ⛔ 不碰主資料流／env 流。
+    _BCAL_N = int(os.environ.get("LACOT_BON_CALIB_N", 256))
+    _bcal = np.random.default_rng(12345)
+    _brows, _bgoals = [], []
+    while len(_brows) < _BCAL_N:                          # ＝探針 sample_windows（rollout.py:465-478 同款）
+        _r = int(_bcal.integers(0, N)); _te = int(traj_end[_r])
+        if _te - _r < CHUNK:
+            continue
+        _d = _bcal.random()
+        _gr = int(round(min(_r + 1, _te) * _d + _te * (1 - _d)))
+        _brows.append(_r); _bgoals.append(max(_gr, min(_r + CHUNK, _te)))
+    _brows = np.asarray(_brows); _bgoals = np.asarray(_bgoals)
+    _bf = np.linspace(_brows[:, None].astype(np.float64), _bgoals[:, None].astype(np.float64),
+                      T_CAP, axis=1).reshape(_BCAL_N, T_CAP)                 # ＝探針 build_traj
+    _blo_i = np.floor(_bf).astype(np.int64)
+    _bhi_i = np.minimum(_blo_i + 1, _bgoals[:, None])
+    _bw = (_bf - _blo_i)[..., None]
+    _btraj = ((OBS[_blo_i] * (1.0 - _bw) + OBS[_bhi_i] * _bw - mu) / sd).astype(np.float32)
+    _bt = torch.from_numpy(_btraj).to(device)
+    with torch.no_grad():
+        _bet = etarget(_bt, torch.zeros(_BCAL_N, T_CAP, dtype=torch.bool, device=device))
+        _brt = torch.cat([_dec(_bet[_a0:_a0 + 256], _bt[_a0:_a0 + 256, 0])
+                          for _a0 in range(0, _BCAL_N, 256)], 0).cpu().numpy().astype(np.float64)
+    _bseg = np.linalg.norm(np.diff(_brt, axis=1), axis=-1)
+    _bL = np.empty(_BCAL_N, np.float64)
+    for _i in range(_BCAL_N):                             # 每窗的 L_BFS（端點 snap；不連通 ⇒ nan）
+        _v = _b_dist_from(_b_cell_snap(_btraj[_i, -1])).get(_b_cell_snap(_btraj[_i, 0]), None)
+        _bL[_i] = np.nan if _v is None else float(_v)
+    _bpos = ~np.isnan(_bL) & (_bL > 0)                    # ⛔ L=0（同格）進不了 arclen 比值
+    assert _bpos.sum() >= 16, (
+        f"⛔ BoN 校準集只有 {int(_bpos.sum())} 窗有正的 L_BFS ⇒ ρ_len 的 p5 沒有意義。"
+        " 這通常代表 CHUNK 太小或佔據圖蓋歪了 —— ⛔ 不准帶著一把亂定的尺往下跑")
+    _BON_RHO = float(np.percentile(_bseg.sum(1)[_bpos] / (_bL[_bpos] * _B_CELL), 5))
+    _BON_DSTEP = float(np.percentile(_bseg.max(1), 95))
+    print(f"⭐ BoN：N={BON_N} mode={BON_MODE}  佔據圖 {tuple(_bg.shape)}（覆蓋 {_bg.coverage:.1%}）"
+          f"  ★ C8 校準（roundtrip-decode 空間、{_BCAL_N} 窗、⛔ 只算這一次）："
+          f"ρ_len={_BON_RHO:.3f}（p5、n={int(_bpos.sum())}） δ_step={_BON_DSTEP:.4f}（p95）", flush=True)
+
+    def _bon_score(pts, s_zn, g_zn):
+        """[B,T,2] 正規化計畫 → (r[B]＝閘後分數, gate[B], nolink＝這題端點不連通)。
+        ⛔ 逐項與門檻語義全部照探針 GrpoReward.score（w=(1/3,1/3,1/3)、乘法閘）。"""
+        pts = np.asarray(pts, np.float64)
+        B = pts.shape[0]
+        idx = _b_cells_of(pts)
+        r_legal = _BOCC[idx[..., 0], idx[..., 1]].mean(1)
+        dmap = _b_dist_from(_b_cell_snap(g_zn))
+        D_s = dmap.get(_b_cell_snap(s_zn), None)
+        d_end = np.array([dmap.get((int(idx[b, -1, 0]), int(idx[b, -1, 1])), np.inf)
+                          for b in range(B)], np.float64)   # 末點⛔不 snap：掉牆／不連通＝到不了
+        if D_s is None:                                     # 題目端點在圖上不連通
+            r_reach = np.zeros(B)
+        elif D_s == 0:
+            r_reach = (d_end == 0).astype(np.float64)
+        else:
+            r_reach = np.where(np.isinf(d_end), 0.0, 1.0 - np.minimum(d_end / max(D_s, 1), 1.0))
+        r_hit = (d_end <= 1).astype(np.float64)
+        raw = (r_legal + r_reach + r_hit) / 3.0
+        seg = np.linalg.norm(np.diff(pts, axis=1), axis=-1)
+        _Ln = 0.0 if D_s is None else float(D_s) * _B_CELL
+        g_arc = seg.sum(1) >= _BON_RHO * _Ln
+        g_stp = seg.max(1) <= _BON_DSTEP
+        gate = (g_arc & g_stp).astype(np.float64)
+        # 🚨 兩道閘【分開】回報：合起來的 gate≈0 講不出是哪一道在咬，而這兩道在長程題上
+        #    是【互相衝突】的（要夠長 vs 每步要夠小，而點數 T_CAP 是固定的）——
+        #    ⛔ 沒有這個分解，一張「BoN 沒有增益」的表會被讀成「BoN 沒用」，
+        #      而真正的原因是尺套錯了尺度。needed/arclen 也一起落地，讓人一眼看到差幾倍。
+        return (gate * raw, gate, (D_s is None),
+                dict(g_arc=float(g_arc.mean()), g_stp=float(g_stp.mean()),
+                     L=(np.nan if D_s is None else float(D_s)),
+                     arc=float(seg.sum(1).mean()), need=float(_BON_RHO * _Ln),
+                     mstep=float(seg.max(1).mean()), raw=float(raw.mean())))
+
+
+def _bon_plan(n, cond, anc, s, g):
+    """eval 規劃的唯一入口（⭐ sample_plan 的呼叫點全部改走這裡）。
+
+    ⛔ BON_N ≤ 1 ⇒ 就是 sample_plan 本人（同一個物件、同一組 op、同一條亂數流）
+       ⇒ 逐位元、連 RNG 序列都不變（golden 的立足點）。
+    BON_N > 1 ⇒ 抽 max(n, BON_N) 條 → decode → 三項乘法閘打分 → 取分數最高的 n 條。
+      n=1（flat R{k} 臂）＝設計卡 §1.1 的 argmax，⭐ 這格就是 c 格要的那個讀數。
+      n>1（conf2 長程層要 M 份做共識）＝同一把尺取【前 n 名】——
+        ⛔ 不能塌成 1 份：farthest_confident_subgoal 靠 M 份之間的分散度判信心，
+           只餵 1 份時 spread 恆 0 ⇒ 它會永遠說「有信心、直取終點」，⛔ 而且不會報錯。
+    ⚠️ 平手（含全 0 的退化群）用【穩定排序】⇒ 取到的是抽樣序最前的那條 ＝ 不開 BoN 的那條。
+       探針用均勻亂數挑；兩者在分佈上等價（N 條是 iid，平手集內可交換），
+       但穩定排序是【可重現】的 ⇒ ⛔ 這裡不另開一條 tie-break 亂數流。
+    """
+    if BON_N <= 1:
+        # ⛔ 這一行【不】包 no_grad、不動任何 grad 模式 —— golden 的立足點是「什麼都沒發生」。
+        return sample_plan(n, cond, anc, s, g)
+    # ⛔ 候選池是【共用】的 ⇒ n 個位置的 cond 必須是同一個（conf2 是 expand 出來的、成立）。
+    #    不成立就炸：拿別題的 cond 去共用一個池，錯得很安靜。
+    assert cond.shape[0] == 1 or bool(torch.equal(cond, cond[:1].expand_as(cond))), \
+        "⛔ _bon_plan 收到逐列不同的 cond ⇒ 候選池不能共用（每個位置要自己的池）"
+    assert s.shape[0] == 1 and g.shape[0] == 1, \
+        f"⛔ _bon_plan 只支援單題 (s,g)（收到 s={tuple(s.shape)} g={tuple(g.shape)}）"
+    NC = max(n, BON_N)
+    with torch.no_grad():          # ⭐ 候選只拿來打分 ⇒ ⛔ 不留 graph（NC 份的圖會吃掉記憶體）
+        u_all = sample_plan(NC, cond[:1].expand(NC, -1), anc, s, g)
+        pts_n = _intent_inv(_dec(_q(u_all), s), anc)          # [NC, T_CAP, 2] 正規化
+        r, gate, _nolink, _dg = _bon_score(pts_n.cpu().numpy(),
+                                           s[0].cpu().numpy(), g[0].cpu().numpy())
+    order = np.argsort(-r, kind="stable")                     # ⭐ stable ⇒ 平手取抽樣序最前
+    keep = np.sort(order[:n])
+    _BON_ST["plans"] += 1
+    _BON_ST["cands"] += NC
+    _BON_ST["sum_best"] += float(r[order[0]])
+    _BON_ST["sum_first"] += float(r[0])
+    _BON_ST["sum_gate"] += float(gate.mean())
+    _BON_ST["nolink"] += int(_nolink)
+    _BON_ST["sum_g_arc"] += _dg["g_arc"]
+    _BON_ST["sum_g_stp"] += _dg["g_stp"]
+    _BON_ST["sum_arc"] += _dg["arc"]
+    _BON_ST["sum_need"] += _dg["need"]
+    _BON_ST["sum_mstep"] += _dg["mstep"]
+    _BON_ST["sum_raw"] += _dg["raw"]
+    if not np.isnan(_dg["L"]):
+        _BON_ST["sum_L"] += _dg["L"]; _BON_ST["n_L"] += 1
+    if float(r.max()) == float(r.min()):
+        _BON_ST["degen"] += 1                                 # N 條全同分 ⇒ 這一次其實沒得選
+    if int(order[0]) != 0:
+        _BON_ST["changed"] += 1                               # 選到的不是第 0 條 ⇒ BoN 真的換了計畫
+    return u_all[torch.as_tensor(keep, device=u_all.device, dtype=torch.long)]
+
+
 # ⭐ #11/#12 診斷（2026-08-28）。⛔ 只記錄、不改行為。
 #  d0   ‖decode 出來那條路的第 0 點 − 現在位置‖
 #       🚨 arc_subgoal 從【路徑】上取點，卻【沒有】檢查那條路是不是從現在這裡出發。
@@ -2208,10 +2597,14 @@ def make_subgoal_policy(R, use_u):
         elif SUBGOAL == "conf2":
             # ⭐ 主人 8/29 統一版：fresh M 份（⛔ 不 warm，治計畫殘骸）→ 修 → 判信心。
             _NS = SUB_ESEL if SUB_ESEL > SUB_M else SUB_M       # ⭐ 9/2 E 選計畫：先抽 N 份
-            cond_l = condvec(s_n, g_n, _intent_cond(_anc)).expand(_NS, -1)
+            # ⭐ 9/6 三腿：分段規劃這一層也走 arm 版 —— ⛔ 少了它，之後有人把三腿跑在分段臂上時
+            #    長程層會偷偷用【沒被換過的】intent，而那不會報錯（主臂 arm=None ⇒ 逐位元不變）。
+            cond_l = condvec(s_n, g_n, _intent_cond_arm(_anc)).expand(_NS, -1)
             u_l = _oracle_u(obs, box["goal"], _NS) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
             if u_l is None:
-                u_l = sample_plan(_NS, cond_l, _anc, s_n, g_n).detach()
+                # ⭐ 9/6 BoN：BON_N≤1 ⇒ 逐位元等於 sample_plan；>1 ⇒ 抽 max(_NS, N) 條、
+                #    三項乘法閘打分、留【前 _NS 名】（⛔ 不塌成 1 份 —— 共識層要 M 份分散度）
+                u_l = _bon_plan(_NS, cond_l, _anc, s_n, g_n).detach()
             u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO,
                               s_n.expand(_NS, -1), g_n.expand(_NS, -1),
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
@@ -2408,6 +2801,13 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            # ⭐ GRPO（9/6）：⛔ 只在開著時進 json ⇒ 預設輸出逐 key 不變
            **({"grpo_w": GRPO_W, "grpo_g": GRPO_G, "grpo_every": GRPO_EVERY, "grpo_bq": GRPO_BQ,
                "grpo_warm": GRPO_WARM, "grpo_stdnorm": GRPO_STDNORM} if GRPO_W > 0 else {}),
+           # ⭐ 推論期 BoN（9/6）：⛔ 同 GRPO 慣例 —— 只在開著時進 json ⇒ 預設輸出逐 key 不變。
+           #    ⭐ bon_n 是身份欄（跟 _bon{N} 檔名段同一件事）；bon 那包是統計，在 rollout 之後補。
+           **({"bon_n": BON_N, "bon_mode": BON_MODE} if BON_N > 0 else {}),
+           # ⭐ 訓練側加速（9/6）：⛔ 同 GRPO 慣例 —— 只在開著時進 json ⇒ 預設輸出逐 key 不變。
+           #    amp_skip/steps 是收斂比對的第一格：跳掉的步＝沒更新的步。
+           **({"amp": AMP, "amp_skip": _AMP_ST["skip"], "amp_steps": _AMP_ST["steps"]} if AMP else {}),
+           **({"compile": COMPILE, "compile_active": int(_NLL_C["fn"] is not None)} if COMPILE else {}),
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 out["rt_gate"] = RT_GATE
 out["flow_probe"] = FLOW_PROBE_OUT
@@ -2627,6 +3027,30 @@ out["rates"]["null_u"] = rollout(0, False, "u 歸零（⚠️ OOD 探針，不�
 out["rates"]["shuf"] = rollout(3, "shuf", "別人的 u（分布對、內容錯）")
 for R in RS:
     out["rates"][f"R{R}"] = rollout(R, True, f"LaCoT refine R={R}")
+# ⭐ intent 三腿（9/6、流形假說判別）：跟 R{min(RS)} 主臂【同一支 policy_chunk、同一個 R、
+#    同一組 env seed】，⛔ 只有 intent embedding 這一件事不同 ⇒ 三個數字並排讀就是判別。
+#    判讀在 _INTENT_ARM 那段【先釘死】了。⛔ 不加檔名段（同一次 eval 的附加腿、跟 bc/null_u
+#    同地位）；舊 json 沒這兩欄 ⇒ ⛔ 不改 collect，容錯交給讀表端。
+#    ⚠️ LACOT_INTENT_ARMS=0 可關（兩腿＝多兩輪 250 集；診斷旋鈕慣例：⛔ 不進檔名）。
+if INTENT == "embed" and not INTENT_ZERO and int(os.environ.get("LACOT_INTENT_ARMS", 1)):
+    _R_INT = min(RS)
+    for _arm, _lbl in (("swap", "別人的 intent（分布內、內容錯）"),
+                       ("noise", "噪音 intent（出分佈）")):
+        _INTENT_ARM[0] = _arm
+        try:
+            out["rates"][f"intent_{_arm}"] = rollout(_R_INT, True,
+                                                     f"intent_{_arm} R={_R_INT}｜{_lbl}")
+        finally:
+            _INTENT_ARM[0] = None   # ⛔ 一定要還原：漏一次，後面每一腿都被汙染而且【不會報錯】
+    # ⛔ 0 也要落地（同 n_intent_noroute 慣例）：讀表的人要看得到「這腿有幾格其實是主臂」
+    out["n_intent_arm_fallback"] = _ARM_FB[0]
+    if _ARM_FB[0]:
+        print(f"  ⚠️ intent_swap 有 {_ARM_FB[0]} 次抽不到【有路】的外來錨 ⇒ 那幾次退回自己的 intent"
+              f"（那幾格其實是主臂）", flush=True)
+elif INTENT and INTENT != "embed":
+    print(f"  ⚠️ INTENT={INTENT}：intent 三腿只定義在 embed 接法 ⇒ 跳過（⛔ 不是失敗，是不適用）", flush=True)
+elif INTENT_ZERO:
+    print("  ⚠️ INTENT_ZERO=1：eval 端的錨恆為 None ⇒ swap/noise 沒有作用點 ⇒ 跳過三腿", flush=True)
 if SUBGOAL:
     # ⭐ 2026-08-30 補：官方協定的【分段】臂 —— 沒有這格，主打配置（分段供點）就永遠
     #    只有 dev 尺數字、上不了對標表。policy 與 dev 那條同一支（make_subgoal_policy），
@@ -2688,7 +3112,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START="",
                S1_FROM="", FSQ_TAG="", INTENT_TAG="", INTENT_DROP=0.0,
                CONT_TRAIN=0, STEPS2=2000, DIV_W=0.0, DIV_M=0.3,
-               GRPO_W=0.0, GRPO_G=8, GRPO_EVERY=1, GRPO_BQ=4, GRPO_WARM=500, GRPO_STDNORM=1):
+               GRPO_W=0.0, GRPO_G=8, GRPO_EVERY=1, GRPO_BQ=4, GRPO_WARM=500, GRPO_STDNORM=1,
+               AMP=0, COMPILE=0, BON_N=0):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -2795,6 +3220,19 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_fin{FINISH_R:g}" + ("rs" if FINISH_MODE == "resample" else "")
     if DEV_TIERS:                                # 只跑部分 tier 的結果 ⛔ 不可跟全 tier 混
         x += "_dt" + DEV_TIERS.replace(",", "")
+    # 🚨 BoN 一定要進檔名（防互蓋鐵則）：同一顆 ckpt、同一組 eval 參數，開不開 BoN／開幾條
+    #    跑出來的檔名會【一模一樣】而互相覆蓋 —— 被蓋掉的那份在數值上完全合理、看不出來
+    #    （本 repo 被同款病咬過三次）。⭐ 只有非預設（>0）才加 ⇒ 既有檔名一個字不變。
+    if BON_N:
+        x += f"_bon{BON_N}"
+    # 🚨 AMP／COMPILE 一定要進檔名：fp16 訓出來的是【不同的權重】，⛔ 少了這一段，
+    #    同 seed 同步數的 AMP=1 與 AMP=0 會產生完全相同的檔名而互相覆蓋 ——
+    #    而被覆蓋的那顆在數值上完全合理、看不出來（本 repo 已被這個咬過三次）。
+    #    ⭐ 只有非預設（=1）才加 ⇒ 既有檔名一個字都不變。
+    if AMP:
+        x += "_amp"
+    if COMPILE:
+        x += "_cmp"
     return x
 
 
@@ -2826,7 +3264,8 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     # ⭐ 續訓／L_div（9/5）：STEPS2 這一格餵【續訓步數】⇒ 檔名長成 _st0..._ct4000
                     CONT_TRAIN=CONT_TRAIN, STEPS2=CONT_STEPS, DIV_W=DIV_W, DIV_M=DIV_M,
                     GRPO_W=GRPO_W, GRPO_G=GRPO_G, GRPO_EVERY=GRPO_EVERY, GRPO_BQ=GRPO_BQ,
-                    GRPO_WARM=GRPO_WARM, GRPO_STDNORM=GRPO_STDNORM)
+                    GRPO_WARM=GRPO_WARM, GRPO_STDNORM=GRPO_STDNORM,
+                    AMP=AMP, COMPILE=COMPILE, BON_N=BON_N)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -2843,6 +3282,39 @@ os.makedirs(os.path.dirname(dst), exist_ok=True)
 out["n_intent_noroute"] = _N_NOROUTE[0]
 if INTENT:
     out["n_intent_src_fallback"] = _N_SRC_FB[0]
+# ⭐ BoN 統計（9/6）：⛔ 0 也要落地 —— 「開著但一次都沒換過計畫」必須看得見。
+#    changed／degen 是判讀的第一格：degen 高＝閘把 N 條全打成同分（多半全 0）⇒ 沒得選；
+#    changed 低而成功率有動＝那個動不是 BoN 帶來的，要先懷疑別的東西。
+if BON_N > 1:
+    _bp = max(_BON_ST["plans"], 1)
+    out["bon"] = dict(n=BON_N, mode=BON_MODE, rho_len=_BON_RHO, dstep=_BON_DSTEP,
+                      calib_n=_BCAL_N, plans=_BON_ST["plans"], cands=_BON_ST["cands"],
+                      changed=_BON_ST["changed"], changed_frac=_BON_ST["changed"] / _bp,
+                      degen=_BON_ST["degen"], degen_frac=_BON_ST["degen"] / _bp,
+                      nolink=_BON_ST["nolink"],
+                      mean_best_r=_BON_ST["sum_best"] / _bp,
+                      mean_first_r=_BON_ST["sum_first"] / _bp,
+                      mean_gate=_BON_ST["sum_gate"] / _bp,
+                      # 🚨 兩道閘分開 —— 見 _bon_score 的註解（合起來的 gate 講不出誰在咬）
+                      mean_gate_arclen=_BON_ST["sum_g_arc"] / _bp,
+                      mean_gate_step=_BON_ST["sum_g_stp"] / _bp,
+                      mean_raw_r=_BON_ST["sum_raw"] / _bp,
+                      mean_L_bfs=_BON_ST["sum_L"] / max(_BON_ST["n_L"], 1),
+                      mean_arclen=_BON_ST["sum_arc"] / _bp,
+                      mean_arclen_needed=_BON_ST["sum_need"] / _bp,
+                      mean_max_step=_BON_ST["sum_mstep"] / _bp)
+    print(f"⭐ BoN 統計：規劃 {_BON_ST['plans']} 次 × {BON_N} 條 ⇒ 換過計畫 "
+          f"{out['bon']['changed_frac']:.1%}、退化（全同分）{out['bon']['degen_frac']:.1%}、"
+          f"平均閘過率 {out['bon']['mean_gate']:.2f}"
+          f"（arclen 那道 {out['bon']['mean_gate_arclen']:.2f}／步長那道 {out['bon']['mean_gate_step']:.2f}）、"
+          f"分數 第0條 {out['bon']['mean_first_r']:.3f} → 選中 {out['bon']['mean_best_r']:.3f}"
+          f"（未過閘的 raw {out['bon']['mean_raw_r']:.3f}）", flush=True)
+    print(f"   規劃題的尺度：L_BFS 平均 {out['bon']['mean_L_bfs']:.1f} 格 ⇒ arclen 門檻 "
+          f"{out['bon']['mean_arclen_needed']:.2f}，實際 {out['bon']['mean_arclen']:.2f}"
+          f"（max 鄰步 {out['bon']['mean_max_step']:.4f} vs δ={_BON_DSTEP:.4f}）"
+          + ("  🚨 arclen 那道幾乎全咬 ⇒ 這把尺是在【短窗】上校準的，"
+             "套到 rollout 的【長程】規劃題就恆為 0 ⇒ ⛔ 別把「沒有增益」讀成「BoN 沒用」"
+             if out["bon"]["mean_gate_arclen"] < 0.1 else ""), flush=True)
 if SUB_HEADGUARD > 0:
     out["n_headguard"] = SUB_DIAG.get("n_headguard", 0)          # 黏住模式 replan 總數
     out["n_headguard_ep"] = SUB_DIAG.get("n_headguard_ep", 0)    # 觸發黏住的集數（開火率的分子）
@@ -2854,7 +3326,7 @@ if os.path.exists(dst):
     except Exception:
         _old = None
     if _old is not None:
-        for _k in ("guid_w", "intent_zero", "intent_drop"):
+        for _k in ("guid_w", "intent_zero", "intent_drop", "bon_n"):
             _ov, _nv = _old.get(_k), out.get(_k)
             assert _ov is None or _ov == _nv, \
                 f"⛔ {dst} 已存在且身份欄不同（{_k}: 舊={_ov} 新={_nv}）— OUT_DIR 用錯了，拒絕覆蓋"
@@ -2939,5 +3411,10 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
                         # ⭐ GRPO 血緣（9/6；⛔ 只在開著時進 cfg ⇒ 預設 ckpt 逐位元不變）
                         **({"GRPO_W": GRPO_W, "GRPO_G": GRPO_G, "GRPO_EVERY": GRPO_EVERY,
                             "GRPO_BQ": GRPO_BQ, "GRPO_WARM": GRPO_WARM,
-                            "GRPO_STDNORM": GRPO_STDNORM} if GRPO_W > 0 else {}))}, ck)
+                            "GRPO_STDNORM": GRPO_STDNORM} if GRPO_W > 0 else {}),
+                        # ⭐ 加速血緣（9/6；⛔ 只在開著時進 cfg ⇒ 預設 ckpt 逐位元不變）——
+                        #    這顆是不是 fp16 訓的、跳過幾步，⛔ 要能從 ckpt 本身讀出來
+                        **({"AMP": AMP, "AMP_SKIP": _AMP_ST["skip"],
+                            "AMP_STEPS": _AMP_ST["steps"]} if AMP else {}),
+                        **({"COMPILE": COMPILE} if COMPILE else {}))}, ck)
 print(f"存 checkpoint {ck}", flush=True)
