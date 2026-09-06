@@ -137,7 +137,7 @@ buffer 9/20–25  humanoid 收尾（誠實欄）｜rebuttal 素材｜9/25 full �
 
 ## 3. 風險與對沖（每主線一條「爛掉怎麼辦」）
 
-- **A 內化線：p 掃全爛**（A1 三枝走到「皆不回」＋A2 塌回）⇒ 藥梯順序：**L_div 先上**（結構藥、patch 最小、正中 ⑬ 量到的 cond 層塌格、Prop 3.4 保「可喚醒性」）→ 若 ε 保住而 Int 仍 0 ⇒ A1 假設（資訊冗餘）實錘 ⇒ **重心整個移 A5 多路線設定**——maze 冗餘本身升格為 finding（Prop 1.3 的實測版＋兩個文獻空白），Int 數字改在多路線／stitch 設定立。備援蒸餾梯（訓練期強迫用）：Context Distillation＋PDM 修正 → π-Distill 雙模式 → ReGuide。缺③不死、換地基。
+- **A 內化線：p 掃全爛**（A1 三枝走到「皆不回」＋A2 塌回）⇒ 藥梯順序：**L_div 先上**（結構藥、patch 最小、正中 ⑬ 量到的 cond 層塌格、Prop 3.4 保「可喚醒性」）→ 若 ε 保住而 Int 仍 0 ⇒ **C-ii′ 實錘（bits 在、z-度量權重歸零）**〔**9/6 postA1-patch：此枝原寫「⇒ A1 假設（資訊冗餘）實錘」是死枝** — A1 已被 ⑰ **直接量測**證偽（$I\approx2.5$ bits），下游的 Int 讀數**不可能**把它翻回來〕⇒ **藥移 z-度量／e_target 側**（打 $\eta_{\rm eff}$、不打「造 $I$」）；並可視情況把重心移 A5 多路線設定——**匯率斷裂**本身升格為 finding（$I>0$ 但 $\eta_{\rm eff}\ll p\lambda$、兩個數量級落差＋兩個文獻空白），Int 數字改在多路線／stitch 設定立。備援蒸餾梯（訓練期強迫用）：Context Distillation＋PDM 修正 → π-Distill 雙模式 → ReGuide。缺③不死、換地基。
 - **B 路線一：階梯 gate 掛**（幾何傷 recon 或 R0）⇒ 降級為 negative-result ablation＋before 尺方法學（「latent 空間今天沒有測地線結構」本身是乾淨量測）；theory §4 留 conjecture；⛔不硬調權重、不擋其他線——paper 主幹不押它。
 - **C 字典：intent 層字典也毒** ⇒ 退守「字典的科學」：D1–D3 驗收關＋2×2 失敗解剖＋per-token vs intent 層的層級選擇證據；claim 重心移「溫度族合成律＋內化度量」。⚠️ 這會把缺②弱化成方法學貢獻——**是否仍夠 ICLR 是主人的戰略裁決**，D6 判決日當場提。
 - **D A0：rail 一直死＋lab 無人有** ⇒ 自訓 expert 是唯一保底、故 **D1 裁、當夜開**（長桿先開）；成本【猜測：單卡 1~2 天/env，SAC online】、同分佈不同位元要在 paper 揭露。最壞情境：高維只有 ant-medium ⇒ humanoid 降 discussion＋效率外推，缺①半殘——**全計畫最大單點風險**，對沖＝三管齊發＋最早開跑＋D7 檢查點強制攤牌。

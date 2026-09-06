@@ -31,7 +31,13 @@ _證_：交叉熵分解＋ $H(\tau\mid s,g,C)=H(\tau\mid s,g)-I(\tau;C\mid s,g)$
 **「計算買提取效率、不買 bits」正式陳述**：任何不注入互資訊的操作（更深的 $f_\theta$、更多
 自生樣本、自驗證搜索）只能動第二項；地板的每一分移動恰以注入的 $I$ 計價。自生 $u$：
 $I(\tau;u\mid s,g)=0$（CT-1 取 $W:=\tau$）⇒ 地板不動 — Cor CT-2 的帳本座標。
-⚠️ 地板以 NLL（$T{=}1$）計價；R0 是 $T\to0$ 泛函 — 換算屬 Lemma 1/2 與匯率斷裂管區（§6-2）。
+⚠️ 地板以 NLL（$T{=}1$）計價；R0 是**支撐敏感、質量不敏感**的成功率泛函（對 route 邊際化
+線性、對等價 route 間的質量重分佈不變＝succ 的 **route-invariance**）—〔9/6 深審 F1 修正：
+原寫「R0 是 $T\to0$ 泛函」，但 R0 eval 裡沒有任何 argmax，與合成律 Lemma 1(ii)(iii)
+「我們的 eval 讀數住 sum-product／log-semiring、不 eval argmax 計畫」的判決直接矛盾；
+$T\to0$ 的合法住戶是 BFS（凍結極限、Lemma 2）與 refine/BoN 的部署極限方向（R2）〕。
+換算分工：**Lemma 1 釘 eval 語意、C-ii′ 管 bits→變異（§6-2）；NLL→R0 的正式橋目前
+沒有、標 open**。
 
 ---
 
@@ -61,7 +67,10 @@ $I(\tau;u\mid s,g)=0$（CT-1 取 $W:=\tau$）⇒ 地板不動 — Cor CT-2 的�
 (a) $I(W;u\mid s,g,\theta)=0$〔＝Thm CT-1 逐字，引用〕。
 (b) **聯合零**：任何自足思考程序 — $u_k=f_\theta(s,g,u_{<k},\varepsilon_k)$、
 $\varepsilon_{1:N}\perp W\mid(s,g)$、無外部呼叫 — 對任意 $N$、任意深度／拓撲（迭代、
-Coconut 形回饋、樹狀自我展開）：$I\big(W;u_{1:N}\mid s,g\big)=0$。
+Coconut 形回饋、樹狀自我展開）：$I\big(W;u_{1:N}\mid s,g,\theta\big)=0$
+〔$\theta$ 明寫一次：本檔 §1 有「除註明外全程條件在固定 $\theta$」的全域約定，但本式常被
+敘事檔／設計卡單條摘引、約定不隨行 — 脫離約定後字面為偽（不條件 $\theta$ 時 $u$ 經
+$\theta$ 攜帶 $W$ 資訊）。深審 S11 防漂。〕
 _證_：歸納 — $u_{1:N}$ 是 $\sigma(s,g,\varepsilon_{1:N})$-可測、$\varepsilon_{1:N}\perp W\mid(s,g)$。∎
 ⇒ 把「多想幾條、想深一點就會多知道路」正式殺死：計算規模不是資訊變數；迭代買的是 serial
 depth（taxonomy C1/C2、CoT 三件），記赤字欄。（訓練側對偶＝Cor CT-3，引用不重證。）
@@ -74,15 +83,19 @@ App H）＝L1 的 TTS 版、且附帶 bits→accuracy 單向匯率模板（收�
 設候選 $u_i=f_\theta(s,g,\varepsilon_i)$、$i=1..N$、$\varepsilon_{1:N}\perp(W,M_V)\mid(s,g)$；
 評分 $v_i=V(u_i;s,g,M_V)$；選擇 $J=\arg\max_i v_i$（平手用獨立噪音）；輸出 $u^*=u_J$。則：
 
-- **(i) 選擇預算**：$I(W;u^*\mid s,g)\;\le\;H(J\mid s,g)\;\le\;\log N$。
+- **(i) 選擇預算**：$I(W;u^*\mid s,g,\theta)\;\le\;H(J\mid s,g,\theta)\;\le\;\log N$
+  （$\theta$ 固定 — 深審 S11：摘引時務必帶著，見 L1(b) 註）。
   _證_：$u^*$ 是 $(u_{1:N},J)$ 的函數 ⇒ DPI；鏈式
   $I(W;u_{1:N},J\mid s,g)=\underbrace{I(W;u_{1:N}\mid s,g)}_{=0\ (\text{L1b})}+I(W;J\mid u_{1:N},s,g)\le H(J\mid\cdot)\le\log N$。∎
 - **(ii) 驗證器存量帽**：$I(W;u^*\mid s,g)\;\le\;I(W;M_V\mid s,g)$。
   _證_：$(u_{1:N},J)$ 是 $\sigma(s,g,\varepsilon_{1:N},M_V)$-可測、$\varepsilon\perp(W,M_V)\mid(s,g)$
   ⇒ $I(W;u^*\mid s,g)\le I(W;\varepsilon,M_V\mid s,g)=I(W;M_V\mid s,g)$。∎
   — 從驗證器擠不出驗證器自己沒有的東西。
-- **(iii) 自驗證＝0 新 bits**：$M_V\perp W\mid(s,g)$（例：critic 是 $\theta$-可測、同資料訓的）
-  ⇒ $I(W;u^*\mid s,g,\theta)=0$。self-BoN／self-consistency 仍可能**有用** — 但收益全記
+- **(iii) 自驗證＝0 新 bits**：$M_V\perp W\mid(s,g,\theta)$（例：critic 是 $\theta$-可測）
+  ⇒ $I(W;u^*\mid s,g,\theta)=0$。〔9/6 深審 F2 修正：原前提寫不條件 $\theta$ 的
+  $M_V\perp W\mid(s,g)$ 而舉「同資料訓的 critic」為例 — 該例**不**滿足字面前提（critic 從
+  $\mathcal D$ 訓、$\mathcal D$ 與 $W$ 相關 ⇒ 不條件 $\theta$ 時 $M_V\not\perp W$）；它真正
+  滿足的是條件 $\theta$ 版（$\theta$-可測 ⇒ 給定 $\theta$ 為常數），與結論的條件變數一致。〕self-BoN／self-consistency 仍可能**有用** — 但收益全記
   赤字欄（改善對 $\theta$ 存量的提取），零新進帳。⛔ 兩帳欄不准混。
 - **(iv) 搜索推廣**：任何「唯一 world 存取＝驗證器呼叫」的程序（beam、MCTS、迭代
   refine-with-check），選擇轉錄 $J_{1:K}$：$I(W;\text{output}\mid s,g)\le\sum_k\log|\mathcal J_k|$
@@ -95,7 +108,11 @@ App H）＝L1 的 TTS 版、且附帶 bits→accuracy 單向匯率模板（收�
 - **(vi) Remark（分離定理：驗證器是資訊來源、不是比喻）【隊友正文級】**：verifier-free TTS
   有 $\Omega(H/\sqrt n)$ 下界、verifier-based 達 $O(1)$（2502.12118 §5.2 Thm 5.4/5.7/5.8；
   假設＝heterogeneity＋anti-concentration）— (ii)(iii) 的正向錨：沒 $M_V$ 可證地虧、
-  有 $M_V$ 可證地贏；與 L2 上界組合成雙向夾。
+  有 $M_V$ 可證地贏。⚠️ 與 L2 上界的關係是**兩側佐證、不是雙向夾**〔9/6 深審 M7 修正〕：
+  資訊上界（我方、**bits**）與性能分離（外部、**accuracy 標度**）**量綱不同**，中間隔著
+  §6-2 自己宣告斷裂的匯率（增益方向 bits↛accuracy）；經 Fano 只有帽方向可換算。
+  〔需回原文抽驗：2502.12118 Thm 5.4/5.7/5.8 的目標量與其 heterogeneity＋anti-concentration
+  假設是否適用我們的 reward 分佈。〕
 
 ### 2.3 Prop L3 — 閉環觀測：每步 ≤ H(obs|belief)、確定性世界取等〔定理級〕
 
@@ -132,18 +149,39 @@ $|\mathcal R|=k$、advantage $\hat A=h(r_{1:B_gG})$、$\theta_{t+1}=U(\theta_t,Q
 - **(iv) Conj L4.4（有效注入 ≪ 上界）**：可兌現成行為改善的量另有匯率 — bits 以 NLL 計價、
   CFM/PG 以變異計價（C-ii′、postA1 §3），且 (i) 粗估（$16\times8\times\log_2k\approx1400$
   bits/update〔啟發式〕）遠超實際學習量。**有效流量未定量**；rung 0 的 pass@G−pass@1 gap
-  是它的操作型輸入量測（設計卡 §3.4）。降 Conj、分辨實驗已在設計卡 rung 0/2。
+  是它的操作型輸入量測（設計卡 §3.4；⚠️ 單向訊號，見上表 M1 雙錶紀律）。降 Conj、分辨
+  實驗已在設計卡 rung 0/2。
+  ⚠️ **根源註〔9/6 深審 S2〕**：我們的 $M_V$（$E$-圖＋BFS 場）**由訓練資料建**（⑤''）⇒
+  $I(W;M_V)\le I(W;\mathcal D)$ — 油箱是資料的另一種蒸餾、不大於權重通道的上游。
+  「有效注入 ≪ 上界」的一個**結構性**原因正是 $\theta_0$ 已（部分）吸收同源資訊 ⇒ 有效
+  流量的正確對象是 $I(W;M_V\mid s,g,\theta_0)$（與 L4.5 防火牆同軸）。
+  ⛔ 別讀成「verifier 帶來資料之外的新東西」。
 - **Remark L4.5（⭐ 防火牆：sharpening ≠ 注入）【錨隊友正文級】**：GRPO 對 θ 的改動分兩份 —
   reward 攜帶的 world-bits（搬運、本命題管）與純模式銳化（$z$ 自身隨機性、0 bits＝溫度族往
   $T\to0$ 壓）。外部批評打後者：self-improvement＝靠 verification-generation gap **提取**、
   不能創造（Sharpening 2412.01951）；RLVR 只提升取樣效率、大 $k$ 時 base pass@k 反超
-  （2504.13837）。**防火牆＝L2(iii) vs (ii) 分家**：自驗證 RLVR 的 $M_V\perp W\mid(s,g)$ ⇒
-  注入恰 0（純 sharpening、批評成立）；我們的 $M_V=E$-圖＋BFS 場、$I(W;M_V\mid s,g)>0$ ⇒
-  真 (iii) 注入、批評不適用。可測指紋〔啟發式〕：sharpening 簽名＝大 $k$ 反超 base；外部注入
-  預測＝中等 $k$ 段不反超（NF 全支撐、$k\to\infty$ 同飽和）；加 §3.3 指紋＋P-swap、三器分辨。
-- **Remark（容量對齊）〔啟發式〕**：$G=8$ ⇒ 每群選擇預算 $\log_28=3$ bits ≥ ⑰ 實測
-  instance 級 route 資訊 ~2.5 bits — 一群頻寬剛好夠指定一條 route；$G$ 的資訊論選型論證
-  （要更強訊號→加 $G$＝加頻寬，與設計卡藥單順序一致）。
+  （2504.13837）。**分家判準〔9/6 深審 F2 修正 — 原句以 $I(W;M_V\mid s,g)>0$ 判「批評不適用」、
+  並把 2504.13837 歸為自驗證，兩者皆錯〕**：批評的適用條件＝$I(W;M_V\mid s,g,\theta)\approx0$
+  （verifier 對**權重已存之外**無新資訊 — 自驗證是充分情形、真值 verifier 配吸飽的 $\theta$
+  亦然）。⛔ RLVR＝RL with **Verifiable** Rewards，字面即外部可驗 reward、**不是自驗證**；
+  2504.13837 的教訓正是「$I(W;M_V\mid s,g)>0$ **不足以**擋 sharpening 判定」。我方防火牆
+  **主張**＝$E$-圖是近無損的地圖存儲、$\theta$ 是有損壓縮 ⇒ $I(W;M_V\mid s,g,\theta)>0$
+  仍嚴格正；⚠️ 這是**假設、不是定理**（我們的 $E$-圖＋BFS 場也由訓練資料建、與 $\theta$
+  同源 — ⑤''），其操作型量測就是 rung 0 headroom〔9/6 早 rung0/0.5 實測：headroom
+  $.13\sim.19$ 全過 ⇒ 條件 $\theta$ 後的注入空間實測為正、與該假設同向〕。
+  ⇒ **批評的適用性由 rung 0 實測判、不由 $I(W;M_V\mid s,g)>0$ 判。**
+  可測指紋〔啟發式〕：sharpening 簽名＝大 $k$ 反超 base；外部注入預測＝中等 $k$ 段不反超
+  （NF 全支撐、$k\to\infty$ 同飽和）— ⚠️ 指紋照跑，但其**判別力前提**改掛條件 $\theta$ 版
+  ＋上面的存量論證（若批評文獻在同樣 $I(W;M_V|s,g)>0$ 的設定下量到反超，舊根據即壞）；
+  加 §3.3 指紋＋P-swap、三器分辨。
+- **Remark（容量對齊）〔啟發式；9/6 深審 S1 修正：兩種頻寬並陳、⛔ 不列可證偽預測清單〕**：
+  兩個讀法量級差 25×，別混 — **(BoN 選 1 讀法、L2(i))**：$G=8$ ⇒ 每群選擇預算
+  $\log_28=3$ bits；**(GRPO reward 向量讀法、L4(i))**：每群 $G\log k\approx8\times10=80$
+  bits 級。對照 ⑰ 實測 instance 級 route 資訊 ~2.5 bits（⑰' 引用紀律：路線級 ~0.93 bits
+  ⇒ 選 1 讀法是 **3 倍餘裕**、不是「剛好夠」）。$G$ 的資訊論選型論證（要更強訊號→加 $G$
+  ＝加頻寬，與設計卡藥單順序一致）在兩讀法下同向、量級不同。
+  ⚠️「3 ≥ 2.5 剛好夠」**無任何觀測能證偽**（$G$ 不夠時可歸因排序／可達性）⇒ 它是 Remark、
+  不是預測；配套的可測件是**退化群比例錶**（L4(ii)、定理級）。
 
 ---
 
@@ -175,9 +213,9 @@ off-manifold 探索 — 定義上 on-manifold（taxonomy §4.1）。
 
 | 系統件 | 通道 | 現況 | 缺格 | bits 粗估〔啟發式〕 | 設計含義 |
 |---|---|---|---|---|---|
-| 佔據圖＋BFS 檢查（免費 reward） | (iii) 的 $M_V$ | 儀器現成（`_EOCC`＋dist 場；rung 0 可直接做） | **部署期 BoN 臂未建**：eval 抽 $G$ 條、免費驗證器選 1 — (iii) 最便宜消費者、零訓練 | 每候選 reward ≤ $\log k\approx$10–13 bits；BoN 選擇 ≤ $\log G$（$G{=}8$⇒3 bits） | pass@G−pass@1 gap（rung 0）＝這條臂的價值量測**兼**幫浦輸入量測 — 一魚兩吃 |
+| 佔據圖＋BFS 檢查（免費 reward） | (iii) 的 $M_V$ | 儀器現成（`_EOCC`＋dist 場；rung 0 可直接做） | **部署期 BoN 臂未建**：eval 抽 $G$ 條、免費驗證器選 1 — (iii) 最便宜消費者、零訓練 | 每候選 reward ≤ $\log k\approx$10–13 bits；BoN 選擇 ≤ $\log G$（$G{=}8$⇒3 bits） | pass@G−pass@1 gap（rung 0）＝這條臂的**價值錶**；對幫浦輸入只是**單向訊號**（gap>0 ⇒ 有輸入；gap=0 在 dense reward 下**不判死**、看退化群錶）—「一魚兩吃」只在 reward 二值時兩錶重合〔9/6 深審 M1〕 |
 | route 查圖 eval（idp on-mode） | (ii) 部署版 | 已建（⑤'' 帶查(map) 語意） | 部署時 route-ix 可得性（訓練圖之外） | ~2.5 bits/題（⑰；走廊 ~1、⑰'） | (ii) 是唯一「免搜索直給」的 instance 通道；增益上限＝地板下移 ≤ I |
-| GRPO 卡 | (iii)→(i) 幫浦 | 設計 v0；rung 0–4 未跑；前提＝base 收斂（⑱'） | 有效流量（Conj L4.4）；退化群頻寬實測 | ≤ $B_gG\log k$/update；終身 ≤ $H(M_V)$（≤961 bits 級） | 退化群錶＝頻寬錶；$G$ 選型＝容量對齊；「rung 0 無 headroom ⇒ 幫浦無輸入」是定理不是比喻 |
+| GRPO 卡 | (iii)→(i) 幫浦 | 設計 v0；rung 0–4 未跑；前提＝base 收斂（⑱'） | 有效流量（Conj L4.4）；退化群頻寬實測 | ≤ $B_gG\log k$/update；終身 ≤ $H(M_V)$（≤961 bits 級） | 退化群錶＝頻寬錶；$G$ 選型＝容量對齊；**雙錶紀律**〔9/6 深審 M1〕：**退化群比例＝1 ⇒ 幫浦零輸入**（L4(ii) 字面義、定理級）；pass@G−pass@1 gap＝0 **不是**零輸入的定理（dense reward 下群內 reward 仍可有變異 ⇒ $\hat A\ne0$）⇒ ⛔ 別按單錶砍臂 |
 | 閉環 replan | (iv) | **未建** | 全部 | 碰撞位元 1 bit/步（確定性⇒取等）；patch ≤8 bits/步 | 最便宜 (iv)＝replan-on-collision；閉環 92% vs 開環 73%（2605.08732、沿上游）＝實證錨、理論帽＝T&L Thm 2 |
 | oracle 錨→內化（主線） | (ii)@train→(i) | 已建（遷移鏈本體） | 內化 gap 定量（另線） | 2.5 bits/episode × 資料量、帽＝$I(W;\mathcal D)$ | 帳本收遷移鏈為特例：資訊建通道、權重存、計算駛 — **驗證器與環境續帳、RL 入帳** |
 
@@ -198,7 +236,10 @@ Novelty 站位【隊友正文級 gap 判定】：「flow-latent 探索＋佔據�
 - **「跟 GRPO 的結合？」** ＝幫浦定理 L4：同一批 (iii)/(iv) bits 兩條出路 — 推論期當場消費
   （transient、免訓練：BoN／replan）或經 GRPO 打進 θ（persistent、amortized）。兩問＝
   同組命題兩半（ルナ候選圖成立；本檔升為 L1–L4）。守恆句：**GRPO 不創造 bits、只把
-  驗證器的地圖搬進權重** — rung 0 無 headroom ⇒ 幫浦無輸入（設計卡 §5.2 的帳本身份）；
+  驗證器的地圖搬進權重** — 零輸入的**定理級**判準是「退化群比例＝1（群內 reward 全同
+  ⇒ $\hat A\equiv0$）」；rung 0 的 pass@G−pass@1 gap 是它的**單向訊號**（gap>0 ⇒ 有輸入；
+  gap=0 在 dense reward 下不判死）〔9/6 深審 M1 雙錶修正；設計卡 §4 rung 0 gate 原本就
+  寫「兩錶至少一個顯著>0」— 是帳本這裡把雙錶壓成單錶又升格成定理〕；
   且「搬運 vs 銳化」有防火牆與指紋（L4.5）。
 
 ---
@@ -210,19 +251,21 @@ Novelty 站位【隊友正文級 gap 判定】：「flow-latent 探索＋佔據�
 | Prop L0 帳本恆等式 | 定理級（恆等式） | 交叉熵分解；NLL 貨幣 |
 | L1(a)(b) 純自生聯合零 | 定理級（引 CT-1＋一行歸納） | 外部孿生 2509.06861【隊友正文級】 |
 | L2(i)–(iv) 選擇界 | 定理級（證在檔） | $W$-bits 可達性仍啟發式；傾斜側定理＋可達（2401/2404） |
-| L2(vi) 驗證器分離 | 引用級【隊友正文級】 | 2502.12118；與上界組成雙向夾 |
+| L2(vi) 驗證器分離 | 引用級【隊友正文級】 | 2502.12118；與 L2 上界＝**兩側佐證**（bits vs accuracy 標度、量綱不同）⛔ 非雙向夾〔深審 M7〕 |
 | L3 閉環界＋取等 | 定理級（證在檔） | 取等＝觀測確定性；祖版 chao-dyn/9905039 |
 | L4(i)(ii)(iii) 幫浦界 | 定理級（證在檔） | 計 world-bits、非總行為改變 |
 | Conj L4.4 有效注入 | **Conj** | 匯率斷裂 C-ii′ 承接；分辨＝rung 0/2＋指紋 |
 | Remark L4.5 防火牆 | Remark＋指紋〔啟發式〕 | 2412.01951/2504.13837 對 L2(iii)/(ii) 分家 |
-| Thm L5 合法四格 | 定理級框架＋各格承上游分級 | L5.1 增益半句猜測級；L5.4 依 EIG【訓練記憶】 |
+| Thm L5 合法四格 | **定理級（價值歸屬：全部合法價值＝L0 赤字欄，由 L0＋CT-1）＋taxonomy（「恰為四格」＝分類敘事、不可證偽）**〔深審 S4：⛔「框架」二字會被引為已證窮舉〕；各格承上游分級 | L5.1 增益半句猜測級；L5.4 依 EIG【訓練記憶】 |
 | 容量對齊 3 vs 2.5、表內 bits 粗估 | 啟發式 | 全部上界方向、未扣結構冗餘 |
 
 **誠實邊界**：
 1. **嚴的**：L0（恆等式）、L1（恰 0）、L3 在確定性域（等式）。**只上界的**：L2 的 $\log N$
    （$W$-側可達性要覆蓋＋排序對）、L4 計數界（gross bits；有效流量＝Conj L4.4）。
-2. **貨幣**：帳本以 NLL/bits 計價；R0 是 $T\to0$ 泛函 — bits 進帳後要過兩道匯率（bits→變異
-   ＝C-ii′；$T{=}1\to T\to0$＝Lemma 1/2、P2 解耦）。⛔ 別把「注入 ≤ x bits」讀成 R0 界。
+2. **貨幣**：帳本以 NLL/bits 計價；R0 是**支撐敏感、質量不敏感**的成功率泛函（succ 對 route
+   標籤不變 — sharpening 塌到單一合法 route ⇒ NLL 變差、R0 不動＝解耦例）、⛔ 非 $T\to0$
+   泛函〔9/6 深審 F1〕。bits 進帳後要過兩道匯率（bits→變異＝C-ii′；NLL→R0＝Lemma 1 釘
+   eval 語意、**正式橋 open**、P2 解耦是它的可測面）。⛔ 別把「注入 ≤ x bits」讀成 R0 界。
    單向例外：資訊不足→accuracy 上限的 Fano 方向有外部模板（2509.06861）— 帽方向可換算、
    增益方向仍斷。
 3. **(iv) 的界鬆**：$H(o_t\mid\cdot)$ 是通道容量、非 task-relevant 量；task 相關那份（route 級

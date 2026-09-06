@@ -143,6 +143,10 @@ thought token 的**內容**可以不含資訊（filler tokens 也行、對受限
   **one-shot 連續自生 u 數學上可被吸收成 flow 的額外 source 噪音維**，表達力增益
   只在（i）$f_\theta$ 每參數買到的串行深度高於把同參數加進 flow、（ii）$u$ 迭代
   （rounds×depth）、或（iii）$u$ 過離散瓶頸／搜索（DP＝適應性深度）時存在。
+  ⚠️〔9/6 深審 S3〕「可吸收」是 **population／表達力**語意，**不排除優化紅利**：有限訓練下
+  $f_\theta$ 自帶預訓練結構，把 $\varepsilon$ 直接餵 flow 要它重學該變換 — 增益可經
+  **優化難度差**為正（＝R2.5「計算捷徑」的形狀）。例外 (i) 講的是串行深度，**蓋不住這個
+  軸**；⇒ 「增益 ≈0」要另加隱含假設「**優化紅利歸零**」才成立。
 - **C2（問題要在 serial 類）〔定理級邊界、轉引〕**：增益只對 inherently serial／DP／
   reachability 類存在（2402.12875 的類）— 我們的 stitch／多步規劃在類內（合成律＝DP）。
 - **C3（可學性要密集監督）〔實證級、跨三件一致〕**：filler tokens「難學、要密集監督
@@ -173,8 +177,12 @@ $\mathrm{supp}\,p_\theta(u\mid s,g)=\overline{f_\theta(s,g,\mathrm{supp}\,\varep
   $$\underbrace{\mathbb E\|v^*-\bar v_{s,g}\|^2}_{\text{無 u 的迴歸 floor}}
   =\underbrace{\mathbb E\|v^*-\bar v_{s,g,u}\|^2}_{\text{有 u 的 floor}}
   +\underbrace{\mathbb E\|\bar v_{s,g,u}-\bar v_{s,g}\|^2}_{\text{route 間能量}}$$
-  conditioning 把「route 間」項從迴歸 floor 裡拿掉 — 這一項就是 ⑬ 量的 cond 層分支
-  散度能量、也是 C-ii′ 的 $\eta_{\rm eff}$ 住的地方（bits→變異橋的迷你版）。
+  conditioning 把「route 間」項從迴歸 floor 裡拿掉 — 這一項是 **⑬ 探針所量對象的
+  $v$-場層對應**（cond 端塌 ⇒ 此項塌、A4）。⚠️〔9/6 深審 S8 修正：原寫「這一項就是 ⑬ 量的
+  cond 層分支散度能量」— 層錯位。total-variance 拆分的「route 間」項住 **$v$ 場層**；
+  ⑬ 的主讀數（.6046→.0109、比 1.1%）量在 **cond 生成端**（A4：塌在上游），$v$ 場層另有
+  d_zero 等。且 $\eta_{\rm eff}$（C-ii′）定義在 **e_target 度量**、不是 $v$ 場 — 這裡只是
+  bits→變異橋的迷你版**同形物**，不是同一個量。〕
   ⚠️ 但由 Cor CT-3：**這項 $>0$ 需要訓練配對相關** — 自生 u 在訓練期拿不到它。
 - **經驗半〔猜測級、可測〕**：「拆出來的兩個因子各自**簡單**（低熵／單模／小 flow
   學得動）」— 這不是定理、是問題結構命題；它跟**合成律的中繼點語義同構**：
@@ -224,13 +232,23 @@ paper 裡標 future／design implication，⛔ 別寫成已建。
   控制臂的精確理論。
 - **P2〔類比級→可測〕**：內化後 zero-mode 增益上限由**計算**不由**資訊**定：
   攤銷天花板（§二：組合沒見過的長路攤不到）的殘差只能用顯式合成（route 2 DP）買。
-  **T→0 連接**：R0/成功率是 max 型（T→0）泛函、NLL 是 T=1 泛函；oracle 的
-  route-diversity bits 定價在 NLL、不定價在 R0（argmax route 可產即滿分）⇒
-  預測 **NLL-gap 與 R0-gap 解耦、R0-gap 先閉**（idp 儀器現成：兩個 gap 分開畫）。
-  溫度族合成律（Lemma 1/2）給了這兩種貨幣的正式座標：內化存在 T=1、消費在 T→0。
-- **P3〔命題級設計指引〕**：one-shot 連續自生 u（從 $(s,g)$-prior 抽一次）增益 ≈0
-  （C1 吸收論證）⇒ rung 3 要嘛**迭代**（rounds＝depth、Coconut 形）要嘛**離散字典
-  搜索**（route 2、DP 形）— ⛔ 別蓋 one-shot 連續版，理論上它就是幾維噪音。
+  **泛函連接〔9/6 深審 F1 修正：原寫「R0/成功率是 max 型（T→0）泛函」— R0 eval 裡沒有
+  任何 argmax（不取最大機率計畫、不做 max over routes），與合成律 Lemma 1(ii)(iii)
+  「我們不 eval argmax」的判決直接矛盾〕**：R0/成功率是**支撐泛函** — 只問「抽到的計畫
+  是否合法達標」，對質量在等價 route 間怎麼重分佈不敏感（＝succ 的 **route-invariance**、
+  泛函對某子 σ-代數的不變性）；NLL 是 T=1 的分佈泛函。oracle 的 route-diversity bits
+  定價在 NLL、不定價在 R0（sharpening 塌到單一合法 route ⇒ NLL 變差、R0 不動＝解耦的
+  乾淨例）⇒ 預測 **NLL-gap 與 R0-gap 解耦、R0-gap 先閉**（idp 儀器現成：兩個 gap 分開畫）。
+  兩種貨幣的座標：儲存與內化住 T=1（log-semiring、Lemma 1）；⛔ R0 **不**住 T→0 —
+  T→0 的合法住戶是 BFS（凍結極限、Lemma 2）與 refine/BoN 把部署有效溫度往 0 壓的方向（R2）。
+  ⚠️ 本預測的可測內容（兩 gap 解耦、R0-gap 先閉）**不受此修正影響**，倒的只是機制標籤。
+- **P3〔命題級設計指引；**population／表達力語意**〕**：one-shot 連續自生 u（從
+  $(s,g)$-prior 抽一次）**表達力**增益 ≈0（C1 吸收論證）⇒ rung 3 要嘛**迭代**
+  （rounds＝depth、Coconut 形）要嘛**離散字典搜索**（route 2、DP 形）— ⛔ 別蓋 one-shot
+  連續版，理論上它就是幾維噪音。
+  ⚠️ **隱含假設〔9/6 深審 S3〕：優化紅利歸零。** 吸收論證是 population 級；有限訓練下的
+  優化難度差（重學 $f_\theta$ 已有的變換）可讓實測增益為正而**不推翻**本命題 —
+  ⇒ 量到正增益時先判它是表達力還是優化紅利（同 R2.5 計算捷徑），⛔ 別直接讀成 P3 證偽。
 - **P4〔定理級簽名〕**：任何自生 top-up 的增益必 swap-insensitive（對 data-pairing）—
   oracle 臂反之。儀器現成（⑬）。
 

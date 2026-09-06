@@ -58,9 +58,13 @@ intent 分支散度只剩 f27n 的 1.1%、塌在 cond 生成端（d_sg 兩顆都
 【F⑬】；⑰ 又量到 $I(\tau;a|s,g)\approx2.5$ bits $\ne0$（A1 證偽；引用紀律：路線多樣性
 敘事只能講走廊級 ~1 bit【F⑰'】）。⇒ 錢是真的、通道物理也在，倒的是**匯率**：bits 以
 NLL 計價、CFM 以變異計價（C-ii′ 匯率斷裂）【postA1 §1、§3.1】；route 錢經 e_target 度量
-重計價後變異佔比只剩 ~0.4% ⇒ $\eta_{\rm eff}\approx0.003\lambda\ll p\lambda$ ⇒
-$\mathrm{Int}^*(0.3)\approx1\%$ — 與 ⑬ 的 1.1% 對上〔量級論證、兩獨立 z-估計吻合 10%〕
-【postA1 §3.2】。動力學面：系統不是被困在非法駐點，而是**以慢速率 $\kappa$ 合法收斂到
+重計價後變異佔比只剩 ~0.4%（**⑰ Z2 直接量**）— 與由 ⑬ 散度**反推**的值**獨立吻合到 10%**
+（同為 $3{\sim}4\times10^{-3}$、兩個互相獨立的 z-空間儀器）⇒
+$\eta_{\rm eff}\approx0.003\lambda\ll p\lambda$、深入 crossover 尾部〔量級論證〕
+【postA1 §3.2】。〔9/6 深審 M5 修正：原句作「⇒ $\mathrm{Int}^*(0.3)\approx1\%$ — 與 ⑬ 的
+1.1% 對上」是**循環表述** — (b) 的 $\eta/\lambda\approx0.0033$ 本來就是由 ⑬ 的
+$\varepsilon_{\rm rel}=1.1\%$ 反推的，代回去恆真、零證據力；真正非平凡的吻合是 (b)(c)
+兩個獨立儀器那一組（postA1 原文寫法正確，是本檔壓縮時把循環的半句放到了主位）。〕動力學面：系統不是被困在非法駐點，而是**以慢速率 $\kappa$ 合法收斂到
 被 ridge 壓扁的小目標**（$12\times$ 時間尺度分離＋overshoot 賽跑）〔Prop（LT 內）＋
 Remark 升格〕【postA1 §2.2 Prop 2.3′、Remark 2.4′】—「動力學陷阱」。⚠️ ⑱' 補：κT
 校準句（「債已還完」）已標疑，活路＝重校準假說（8000 步或在 overshoot 峰前、l_nf 未收斂
@@ -81,17 +85,22 @@ C-iii 可讀性與 z-度量權重（C-ii′ 後半）— 打的是 $\eta_{\rm ef
 幫浦輸入頻寬錶（字面義）**【帳本 §2.4 Prop L4】。幫浦不創造、只搬運＋降溫（world-bits
 vs 模式銳化兩份、指紋可分）【帳本 L4 Remark；設計卡 §3.3】。GRPO 買的東西一句話：
 「把 pass@G 裡已存在但低機率的成功搬進 pass@1」— 獎品大小訓練前就可量【設計卡 §3.4】；
-「rung 0 無 headroom ⇒ 幫浦無輸入」在帳本裡是定理不是比喻【帳本 §4 表、§5】。
+「退化群比例＝1 ⇒ 幫浦零輸入」是定理級；pass@G−pass@1 gap 只是單向訊號（gap>0 ⇒ 有輸入；gap=0 在 dense reward 下看退化群錶）【帳本 §4 表、§5 — 9/6 深審 M1 雙錶版】。
 有效流量另有匯率（gross bits ≫ 實際學習量）〔Conj L4.4〕【帳本 §2.4】。前提：base 收斂
 （⑱' 硬前提）＋step-matched FM 對照鐵則【設計卡 §3.1】。這是「reward 通道也能內化」
 的第二攤銷通道【設計卡 ⓪】— 主人句前半的正式身份。
 
-**(7) 溫度族給「存在哪、消費在哪」的正式座標。** 訓練目標與 NLL 住 log-semiring
-（$T{=}1$）、argmax／成功率是 $T\to0$ 泛函、BFS＝凍結極限（偏差 $\le H\,T\log K$、
-$H$＝horizon〔⑮ 釘死〕）〔Lemma 1/2〕【合成律 §1.2–1.3】；refine/BoN＝把有效溫度往 0 壓
-〔R2 定性〕。⇒ **內化存在 $T{=}1$、消費在 $T\to0$**；bits 進了帳、R0 動不動要過兩道匯率
-（bits→變異 C-ii′；$T{=}1\to T\to0$）【postA1 §6 誠實邊界 2；帳本 §6】⇒ NLL-gap 與
-R0-gap 可解耦、R0-gap 先閉〔類比級→可測〕【分類 §5.2 P2】。
+**(7) 兩種貨幣的正式座標（存在哪、消費在哪）。** 訓練目標與 NLL 住 log-semiring
+（$T{=}1$）；argmax 計畫對應 Viterbi — **我們不 eval 這個**；BFS＝$T\to0$ 凍結極限
+（偏差 $\le H\,T\log K$、$H$＝horizon〔⑮ 釘死〕）〔Lemma 1/2〕【合成律 §1.2–1.3】；
+refine/BoN＝把**部署有效溫度**往 0 壓〔R2 定性〕。成功率／R0 則是**支撐敏感、質量不敏感**
+的泛函：對 route 邊際化線性、對等價 route 間的質量重分佈不變（succ 的 route-invariance）
+〔9/6 深審 F1 修正：原句寫「argmax／成功率是 $T\to0$ 泛函」「消費在 $T\to0$」— R0 eval
+裡沒有任何 argmax，與 Lemma 1(ii)(iii) 判決直接矛盾；標籤錯、下游直覺不倒〕。
+⇒ **內化與儲存住 $T{=}1$、消費住支撐泛函那一側**；bits 進了帳、R0 動不動要過兩道匯率
+（bits→變異 C-ii′；NLL→R0＝Lemma 1 釘 eval 語意、正式橋 open）
+【postA1 §3.3；帳本 §6 邊界 2】〔9/6 深審 S6 節號修正：postA1 §6 是分級總表、無誠實邊界節〕
+⇒ NLL-gap 與 R0-gap 可解耦、R0-gap 先閉〔類比級→可測〕【分類 §5.2 P2】。
 
 **(8) 搬了多少＝內化率 Int。** 三點校準（從未曝光 base／全曝光 ref／被測 $\theta$）拆開
 「完美內化／鎖死／無物可內化」三重簡併，配診斷對 $(\mathrm{Int},\varepsilon)$
@@ -118,8 +127,10 @@ ref／分母改用長訓家族（f27nL／N5L）、一切增益只准對 step-mat
 > between a never-exposed baseline and a fully-exposed reference, reports how much of the
 > teacher's information actually moved into the weights, while a temperature-family
 > composition law fixes the two currencies involved — storage is priced at $T{=}1$ in
-> log-likelihood, consumption happens at $T\to0$ in success rate — predicting that the
-> two corresponding gaps need not close together.
+> log-likelihood, whereas consumption is read out by a success-rate functional that is
+> sensitive to the *support* of the plan distribution but invariant to how probability
+> mass is redistributed among equivalent routes — predicting that the two corresponding
+> gaps need not close together.
 
 > 訓練時 verifier 是老師，而它教的東西可以記帳：每一次外部選擇至多注入 $\log N$ bits 的
 > world 資訊、每個 GRPO update 至多把 $B_gG\log k$ bits 打進權重 — 終身總量不超過
@@ -129,12 +140,15 @@ ref／分母改用長訓家族（f27nL／N5L）、一切增益只准對 step-mat
 > 定價的那種 serial-depth 貨幣。latent thinking 因此是沿 context 來源鏈的一次遷移 —
 > **資訊建通道、權重存、計算駛** — 且遷移可量：內化率 Int 以「從未曝光的基線」與「全曝光
 > 的參考」兩端校準，報告老師的資訊實際搬進權重多少；溫度族合成律則釘死兩種貨幣的座標 —
-> 儲存以 $T{=}1$ 的 log-likelihood 計價、消費發生在 $T\to0$ 的成功率 — 並預測兩個對應的
-> gap 不必同時閉合。
+> 儲存以 $T{=}1$ 的 log-likelihood 計價，消費則由一個**支撐敏感、質量不敏感**的成功率
+> 泛函讀出（對等價 route 間的質量重分佈不變）— 並預測兩個對應的 gap 不必同時閉合。
 
 （英中兩段每一句都有來源：選擇界【帳本 L2】、幫浦界【帳本 L4】、零資訊【分類 CT-1】、
-serial depth【分類 §3】、遷移鏈【分類 §5.3】、Int【內化 Def 1.4】、溫度座標【合成律
-Lemma 1/2；分類 P2】。⛔ 無新增主張。）
+serial depth【分類 §3】、遷移鏈【分類 §5.3】、Int【內化 Def 1.4】、貨幣座標【合成律
+Lemma 1/2；分類 P2】。⛔ 無新增主張。
+〔9/6 深審 F1 修正已套用於兩段末句：原寫 "consumption happens at $T\to0$ in success rate"／
+「消費發生在 $T\to0$ 的成功率」— 該標籤與合成律 Lemma 1 自家判決（我們不 eval argmax）
+矛盾，reviewer 可拿它自家互戳；改成支撐敏感／質量不敏感的泛函描述，可測預測不變。〕）
 
 ---
 
@@ -153,9 +167,14 @@ Lemma 1/2；分類 P2】。⛔ 無新增主張。）
    ⑱' 補判別：中途 ckpt 散度曲線（重校準假說 vs 平衡）【F⑱'】。
 4. **NLL-gap 與 R0-gap 解耦、R0-gap 先閉**（idp 儀器現成、兩 gap 分開畫）
    〔類比級→可測〕【分類 §5.2 P2；座標＝合成律 Lemma 1/2】。
-5. **G=8 ↔ 2.5 bits 容量對齊**：每群選擇預算 $\log_2 8=3$ bits ≥ ⑰ 實測 route 資訊
-   ~2.5 bits —「一群頻寬剛好夠指定一條 route」；reward 訊號不夠多樣 → 加 $G$＝加頻寬
-   〔啟發式；配套頻寬錶＝退化群比例、L4(ii) 定理級〕【帳本 §2.4 Remark 容量對齊】。
+5. ⛔ **〔9/6 深審 S1：本條移出可證偽清單、降回帳本 Remark〕G=8 ↔ 2.5 bits 容量對齊**
+   — 理由二件：(a)「3 ≥ 2.5 剛好夠」**沒有任何觀測能證偽**（$G$ 不夠時可歸因排序／
+   可達性）⇒ 列在「可證偽預測」裡是分類錯誤；(b) 兩種頻寬讀法錯位 — $\log_2 G=3$ bits 是
+   **BoN 選 1** 語意（L2(i)），GRPO 每群經 reward 向量注入的是 $G\log k\approx80$ bits 級
+   （L4(i)），兩者差 25×，「加 $G$＝加頻寬」在兩讀法下量級完全不同；且 ⑰' 後路線級
+   ~0.93 bits ⇒「剛好夠」實為 **3 倍餘裕**。⇒ 內容改住【帳本 §2.4 Remark 容量對齊】
+   （已同步改為雙頻寬並陳）；本清單留號不留預測，**可測的配套件是退化群比例錶**
+   （L4(ii)、定理級）。〔號碼保留 — 6/7/11 已被他檔引用，⛔ 不重編號。〕
 6. **rung 0 headroom 判準**：stitch 題集上 pass@G − pass@1 gap 與 reward headroom 至少
    一個顯著 $>0$，否則 GRPO 無物可放大、整臂降級（幫浦無輸入＝帳本內定理；門檻【猜測】）
    【設計卡 §3.4、§4 rung 0；帳本 §4–5】。
@@ -171,6 +190,10 @@ Lemma 1/2；分類 P2】。⛔ 無新增主張。）
     vs 計算」的操作型分辨器、⑬ 儀器現成〔定理級簽名〕【分類 §5.2 P4、§4.3 P-swap】。
 11. **GRPO 內化指紋（預註冊）**：RL-經-prior ⇒ zero 漲多於 on、gap 收窄；on/zero 齊漲
     ⇒ generic-T 混淆未對照乾淨（⑱' 實測齊漲 74% 為其錨）【設計卡 §3.3；F⑱'】。
+    ⚠️〔9/6 深審 S9〕上面的**二分**判讀樹缺「兩者並存」格 — 真內化＋generic 同時發生時
+    會**齊漲且 gap 也收窄**，二分樹會把它硬塞進單一格。⇒ 判讀改**連續量**：主讀數＝
+    step-matched 對照**扣除 generic 後**的 gap 變化（設計卡 §3.3 的 zero−FM對照 已是此形，
+    指紋段與之對齊即可）。
 
 ---
 
@@ -187,7 +210,12 @@ Lemma 1/2；分類 P2】。⛔ 無新增主張。）
 
 另兩支免費探針（不佔 GPU、待主人點頭）：rung 0 headroom（§3 預測 6 的輸入；設計卡
 rung 0 免訓練）；$I(z;a|s,g)$ 直接量測（⑰ 儀器換 $z$ 輸入 — postA1 Prop 2.1′ 前提補完
-＋Conj 2.5′ 分辨）。缺口誠實列：$\mathrm{Int}(.05)$ 分版點（§3 預測 3）目前無臂、屬待裁。
+＋Conj 2.5′ 分辨）。
+⚠️〔9/6 深審 M6 更正 — 本句原作「缺口誠實列：$\mathrm{Int}(.05)$ 分版點（§3 預測 3）目前
+無臂、屬待裁」，**是錯的**〕：**idp005 臂實際已在跑**（IDP005-s4x log 在；夜審 §5 早已記錄，
+本檔 23:52 晚於夜審 21:40 卻報無臂）；9/6 早已 `ls` 對帳確認、劑量表已收。⇒ 收表時
+**不可**按舊句漏掉這格 — 預測 3 的分版點正是 $\mathrm{Int}(.05)$，漏掉＝兩版理論的關鍵
+判別格空轉一天。⚠️ 其判讀先過 κT 重校準關（夜審 §5；postA1 文末〔追加勘誤註記〕S5）。
 
 _織完。本檔無任何新理論主張；所有分級（定理級／Prop／Conj／啟發式／類比級→可測／
 【猜測】）照抄來源檔，衝突時以來源檔為準。_

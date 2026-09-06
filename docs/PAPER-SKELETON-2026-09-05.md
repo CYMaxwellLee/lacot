@@ -24,7 +24,7 @@ _時鐘：abstract **9/18**、full **9/25 AoE**〔PLAN §0，web 查證過〕。
 **T-C（度量＋機制合體、偏 findings 敘事）**
 > *Why Your Planner Ignores Its Oracle: Conditioning Collapse, a Measurable Fix, and a Composition Law*
 
-一句賣點：CFG 式 dropout 在條件冗餘下必然鎖死（合法全域最優＋自我維持；散度 1.1% 實錘）〔THEORY-int Prop 2.1–2.3、FINDINGS ⑬⑭〕，配三藥各打一層的理論分工＋兩個文獻空白（dropout p 臨界值、條件冗餘 vs 使用率）。
+一句賣點〔**9/6 postA1-patch**〕：CFG 式 dropout 造成**實效鎖死＝動力學陷阱** — $I>0$ 但 $\eta_{\rm eff}\ll p\lambda$ 時 ridge 把目的地壓扁（$\mathrm{Int}^*\approx\eta_{\rm eff}/(p\lambda)$）＋12× 慢時間尺度分離；散度 1.1% 實錘〔THEORY-postA1 §2.1–2.3（Prop 2.1′/2.2′/2.3′）、FINDINGS ⑬⑭⑰〕，配三藥各打一層的理論分工＋兩個文獻空白（dropout p 臨界值、條件冗餘 vs 使用率）。⛔ 舊句「在**條件冗餘**下**必然鎖死**（**合法全域最優**＋**自我維持**）」四個零件全已倒：「條件冗餘」前提被 ⑰ 證偽（$I\approx2.5$ bits）、「必然/合法全域最優」被 postA1 §2 改判為動力學陷阱（無 sharp 相變、是深度 crossover）、「自我維持」對應丙 B7 打掉的 Prop 2.3(iii) 無條件版。
 
 _取捨註：T-A 對應 claim 重排後主軸（⑥ 提案：④空地→內化度量軸，**待主人裁**）；T-B 理論最重、實驗端依賴 C 線字典（缺②）落地；T-C 在 A 線藥方臂全爛時仍成立（PLAN §3 風險 A 的退路敘事）。_
 
@@ -36,7 +36,7 @@ _取捨註：T-A 對應 claim 重排後主軸（⑥ 提案：④空地→內化�
 
 > Inference-time search makes planners accurate but slow: recent compositional diffusion planners spend 8–530 seconds per plan [ECD Table 6; C-MCTD — FINDINGS ⑥, RELATED-WORK A]. We study the converse regime: route knowledge queryable at training time — a shortest-path oracle over the occupancy map, or free hindsight summaries — is compressed into an intent latent that conditions a rectified-flow plan generator, and the query interface is removed at inference. We formalize *internalization* as Int, a three-point-calibrated ratio whose diagnostic pair (Int, ε) provably separates "perfectly internalized" from "locked out" and "nothing to internalize" — a degeneracy naive dependence probes cannot resolve [THEORY-int Def 1.4]. On OGBench stitch tasks, anchor conditioning lifts end-to-end success from [.321@f27n-base, FINDINGS ①] to [.454@f27n, FINDINGS ①] at [ms/plan@F3 待跑] per plan, and internalization is teacher-agnostic: oracle routes and hindsight anchors match ([.918/.928@ER, PLAN §1.2 T1]). The meter further isolates a conditioning-collapse failure of classifier-free-style dropout (branch divergence [1.1%@⑬]) and prescribes remedies with provable division of labor. Post-remedy: Int = [Int@A4 待跑], ε = [ε@A4 待跑]. We position internalization as a measurable axis orthogonal to score leaderboards.
 
-_（~190 字。⚠️ 依賴 A3/A4 藥方臂成功 — 若走 PLAN §3 風險 A 退路，末兩句改為「maze 冗餘使 Int→0 本身是 finding」敘事。）_
+_（~190 字。⚠️ 依賴 A3/A4 藥方臂成功 — 若走 PLAN §3 風險 A 退路，末兩句改為「**匯率斷裂**使 Int→0 本身是 finding」敘事〔9/6 postA1-patch：⛔ 原寫「maze 冗餘使 Int→0」— ⑰ 已證偽冗餘前提；正確語言＝「$I>0$（2.5 bits）但 z-度量壓縮使 $\eta_{\rm eff}\ll p\lambda$」＝C-ii′〕。）_
 
 ### 2B — 主打溫度族合成律（配 T-B）
 
@@ -80,8 +80,8 @@ _四軸 v2＝DESIGN「ICLR 定位」四點經 ⑥ 重排提案（④空地→內
 
 _分級鐵則照搬：Prop=列明假設下可證；Conj=未證；⛔「dictionary search generalizes BFS」只准按定理級/Conjecture 級/Open 三層拆開陳述〔THEORY-comp §2〕。_
 
-- **4.1 正文（合成律側）**：Lemma 1（log-semiring 身份）＋Lemma 2（凍結極限、HT·logK 界）＋Prop 3（定點迭代=BFS）＋D1–D3 假設×可量代理表〔THEORY-comp §1–3〕。
-- **4.2 正文（內化側）**：Def 1.4＋Prop 1.3（預算恆等式=「梯度上沒錢可賺」嚴格版）＋Prop 2.1/Cor 2.2（鎖死=合法全域最優、guidance 無效一行證）＋Prop 3.7（破冗餘同拆兩支柱）〔THEORY-int §1–3〕。
+- **4.1 正文（合成律側）**：Lemma 1（log-semiring 身份、帶權 (CL-w) 版 — 9/6 深審 M8 後）＋Lemma 2（凍結極限、HT·logK 界）＋Prop 3（定點迭代=BFS）＋D1–D4 假設×可量代理表（D4=原子忠實、9/6 補）〔THEORY-comp §1–3〕。
+- **4.2 正文（內化側）**〔**9/6 postA1-patch**〕：Def 1.4＋Prop 1.3（預算恆等式；⛔ 舊寫法「＝『梯度上**沒錢可賺**』嚴格版」＝⑫ 機制 1，postA1 §0 明文「**倒了**」— 現讀作「NLL 可兌現額**恰等於**注入的 $I$」，而 ⑰ 實測 $I\approx2.5$ bits $>0$）＋**Prop 2.1′/Cor 2.2**（鎖死＝**動力學陷阱**：合法但被 ridge 壓扁的小目標＋12× 慢時間尺度，⛔ 非「合法全域最優」；Cor 2.2 guidance 無效一行證只依賴 $\varepsilon\approx0$ 實測、與 A1 真偽無關 ✓ 保留）＋Prop 3.7（破冗餘同拆兩支柱；⑰ 後其角色從「造 $I$」轉向 C-iii 可讀性與 **z-度量權重**＝C-ii′ 後半）〔THEORY-postA1 §1–2；THEORY-int §1–3〕。
 - **4.3 附錄**：Prop 6/Conj 7（字典 DP 精確/近似正確性）；Prop 8/9＋R4/R9（定點存在唯一、lfp 語意-初始化警告）；Prop 1.1/1.2（ε→W₂→Δsucc 望遠鏡）；Prop 2.3（駐點三件）＋Remark 2.4（賽跑）＋Conj 2.6（p 臨界值）；Prop 3.1/Conj 3.2/Prop 3.4（藥方形式化）；Prop 4.1/4.2（幾何線相容性）；誠實邊界表〔THEORY-int §5〕。
 - **4.4 雙層誠實寫法**：population 定理＋有限容量 remark（f27n +.133＝計算捷徑價值，資訊冗餘≠計算冗餘）〔THEORY-int R2.5、全域註腳〕。
 
@@ -102,7 +102,7 @@ _分級鐵則照搬：Prop=列明假設下可證；Conj=未證；⛔「dictionar
 
 ### §6 Discussion — 誠實邊界（⛔ 這節不是裝飾，是 claim 的定義域）
 
-- **6.1 Maze redundancy**：I(τ;a|s,g)≈0 使搖籃本身壓低 intent 價值〔⑫⭐〕— 同時是 finding（Prop 1.3 實測版＋兩文獻空白：dropout p 臨界值無人分析、條件冗餘 vs 使用率無系統實驗〔⑭〕）；多路線 (s,g) 設定＝根治方向、與 stitch 本義合流 `[A5 待設計]`。
+- **6.1 匯率斷裂（原「Maze redundancy」）**〔**9/6 postA1-patch — 全 repo 對 A1 舊敘事最重的一句現況陳述，⛔ 進 paper 即被 ⑰ 一戳即破**〕：⛔ 舊句「I(τ;a|s,g)≈0 使搖籃本身壓低 intent 價值〔⑫⭐〕」與**直接量測正面矛盾** — ⑰ 量到 **I(τ;a|s,g)≈2.5 bits（路線級 ~0.93 bits、⑰' 紀律）$\ne0$**。**改寫**：錢是真的、倒的是**匯率** — route 資訊在 e_target 的 **z-度量**下重新計價後變異佔比只剩 **0.4%** ⇒ $\eta_{\rm eff}\approx0.003\lambda\ll p\lambda$，**bits 說有沒有錢、變異說挖錢成本**（C-ii′、兩個數量級落差）〔THEORY-postA1 §3〕— **匯率斷裂本身成為 finding**（＋兩文獻空白：dropout p 臨界值無人分析、條件冗餘 vs 使用率無系統實驗〔⑭〕）；多路線 (s,g) 設定＝根治方向、與 stitch 本義合流 `[A5 待設計]`。
 - **6.2 Population-level theorems**：全部 Prop 是 population 級；有限容量效應（f27n `+.133`）證明 population 敘事單獨不完整〔THEORY-int 全域註腳〕。
 - **6.3 Stochastic transitions open**：(A1) 確定性假設；開環合成 ≠ 閉環最優（閉環 92% vs 開環 73%〔THEORY-comp §5.1 引 2605.08732〕）；升級路徑點名（options 語意或弱陳述）。
 - **6.4 Learned dictionary is a goal, not yet a property**：D1 未驗（N1 無檔）、D2 有被毒死前科（f27n）、D3 實測是破的（C5）— 三個錶＝升級門票〔THEORY-comp §5.3〕。
@@ -119,7 +119,7 @@ _分級鐵則照搬：Prop=列明假設下可證；Conj=未證；⛔「dictionar
 | C1 | 錨條件化把路徑知識帶進 policy 本體（R0 腿） | f27n R0 .321→.454（+.133、≈2.7 SE）〔①〕 | **已定讞** |
 | C2 | O-agnostic：teacher 換源不掉分 | ER route .918 ≈ hindsight .928〔DESIGN ⓪、PLAN T1〕；劣化 teacher 第三點 | 已定讞（兩點）；第三點 `[A6 待跑]` |
 | C3 | 內化度量 (Int,ε) 拆得開三種零、儀器有效 | Def 1.4 三點校準〔THEORY-int §1.4〕；idp8 錶有效判定＋落 (0,0) 鎖死格〔⑦〕 | 定義已定讞；正式數字 `[A4 待跑]` |
-| C4 | p=0.3 dropout 在條件冗餘下鎖死（機制） | Prop 2.1/Cor 2.2〔THEORY-int §2〕＋散度 B/A=1.1%＋塌在 cond 生成端〔⑬〕＋guidance 無效 w=2 .344〔⑪〕＋小抄可讀 R².999〔⑩〕 | **已定讞**（population 命題＋三方實錘） |
+| C4 | p=0.3 dropout **實效鎖死＝動力學陷阱**（機制）〔9/6 postA1-patch；⛔ 舊 claim「在**條件冗餘下**鎖死」前提已被 ⑰ 證偽〕 | **Prop 2.1′/2.2′/2.3′**（動力學陷阱：$\mathrm{Int}^*\approx\eta_{\rm eff}/(p\lambda)$ 小目標＋12× 慢模）〔THEORY-postA1 §2〕＋散度 B/A=1.1%＋塌在 cond 生成端〔⑬〕＋guidance 無效 w=2 .344〔⑪〕＋小抄可讀 R².999〔⑩〕 | **「定讞」須撤**：三方實錘之一（⑫ 機制 1「沒錢可賺」）已倒〔postA1 §0〕、原前提已偽 ⇒ 降為**現象已定讞（散度 1.1% 直接量）＋機制改判動力學陷阱**；κT 校準疑點見 postA1〔追加勘誤 E4〕 |
 | C5 | 鎖死可解：三藥各打一層 | Prop 3.1/3.4/3.7〔THEORY-int §3〕；劑量二臂 `[A1 在跑]`；warm-start `[A2 裁示中]`；藥方臂 `[A3 待跑]` | 理論已定讞；實驗 **在跑/待跑** |
 | C6 | 合成律：訓練/eval 住 T=1、BFS=T→0、差距 ≤HT·logK | Lemma 1/2＋Prop 3〔THEORY-comp §1–2〕 | 草稿定理（Rei 磨嚴中）；Conj 7/stochastic **open 明標** |
 | C7 | 字典搜索一般化 BFS（實驗級） | 字典 DP vs 連續臂＋沒見過的長路直接證據 | `[C1–C3 待設計→待跑]`（缺②唯一通道） |
@@ -141,10 +141,10 @@ _分級鐵則照搬：Prop=列明假設下可證；Conj=未證；⛔「dictionar
 | R1 | 「分數沒贏 ECD 64±4，humanoid 憑什麼收？」 | 不同欄競爭：ECD/CD/CDGS/GSC 全是秒級推論期搜索/校正系、無 latent 無內化、Int/ε 對它們無定義〔⑥〕；同格誠實並列＋Pareto（score×latency×search-free）＋內化車道三隻 sweep 查無先占〔RELATED-WORK sweep 發現 1；PLAN §3 E/D4 風險條敘事整段可搬〕。⛔ 不 claim 分數 SOTA。 |
 | R2 | 「訓練用 privileged oracle 不公平／部署假設不現實」 | DAPD「privilege illusion」正面回答〔RELATED-WORK F〕：idp=同顆權重推論期開關（vs SVA w/o MCTS 是重訓〔SVA 核驗〕）；帶查模式=資料建佔據圖＋(s,g) 本來就知=合法部署形態、⛔ 不寫 oracle〔⑤''〕；hindsight teacher 完全免 privileged〔C2 行〕。 |
 | R3 | 「HDFlow 已有 latent 階層＋flow；Hydra 已有字典＋flow — novelty？」 | HDFlow 五軸差異表（navigate-only 無 stitch 無 search、連續無字典、無內化度量、成本只報 FurnitureBench）〔RELATED-WORK 精讀③〕；B 類差異句（字典管 skill/landmark vs 路線拓撲＋合成律理論位置＋idp 錶）〔RELATED-WORK B〕；OKBE 差異五件＋限定詞引用〔THEORY-comp R5〕。 |
-| R4 | 「你們自己的錶在自己的環境讀出 Int≈0 — 度量還立得住？」 | 這正是度量的賣點：(0,0) 落格=鎖死診斷、非儀器失效〔⑦ 儀器判定有效＋Def 1.4 四理由〕；機制三方定讞（⑫⑬⑭）＋藥方=可證分工〔THEORY-int §3〕；maze 冗餘升格 finding＋兩文獻空白〔⑭〕；A5 多路線設定=Int 立漂亮的正道〔⑫⭐〕。分母 undefined 條款把「不可讀」變形式推論〔Def 1.4 理由④〕。 |
+| R4 | 「你們自己的錶在自己的環境讀出 Int≈0 — 度量還立得住？」 | 這正是度量的賣點：(0,0) 落格=鎖死診斷、非儀器失效〔⑦ 儀器判定有效＋Def 1.4 四理由〕；機制**兩方實錘＋一方已倒**〔9/6 postA1-patch：⛔ 舊寫「三方定讞（⑫⑬⑭）」— ⑫ 機制 1「沒錢可賺」已倒（postA1 §0），現為 ⑬⑭ 兩方＋機制改判**動力學陷阱**〕＋藥方=可證分工〔THEORY-int §3〕；**匯率斷裂**升格 finding（⛔ 不再說「maze 冗餘」— ⑰ 量到 I≈2.5 bits）＋兩文獻空白〔⑭⑰〕；A5 多路線設定=Int 立漂亮的正道。分母 undefined 條款把「不可讀」變形式推論〔Def 1.4 理由④〕。 |
 | R5 | 「BFS 特例定理是 trivial／OKBE 已證；stochastic 呢？」 | 三層拆開陳述鐵則（定理級/Conj/Open）〔THEORY-comp §2〕；R5 五件差異（semiring 命名=我方觀察⛔不可寫成 OKBE 自陳；字典學出來 vs 給定；連續下層；T=1 vs exact-DP；落地量化）；stochastic 誠實 open＋開環 92 vs 73 引用〔§5.1〕；lfp 初始化警告=理論有牙齒的證據〔R9〕。 |
 
-_後備（骨架不佔正文）：R6「maze 冗餘 ⇒ 換環境結論會變」→ 6.1＋A5＋D 線；R7「離散化毒是你們實作爛」→ ③ 全變體帳（壓縮免費、round 付稅、u 空間慘一個量級）＋C 類共識引用。_
+_後備（骨架不佔正文）：R6「**z-度量把 route 錢壓到 0.4%** ⇒ 換環境結論會變」〔9/6 postA1-patch：⛔ 原寫「maze 冗餘」— 改用 C-ii′ 語言，$I>0$ 但 $\eta_{\rm eff}\ll p\lambda$〕→ 6.1＋A5＋D 線；R7「離散化毒是你們實作爛」→ ③ 全變體帳（壓縮免費、round 付稅、u 空間慘一個量級）＋C 類共識引用。_
 
 ---
 
@@ -157,6 +157,15 @@ _後備（骨架不佔正文）：R6「maze 冗餘 ⇒ 換環境結論會變」�
 5. **引用前升【正】**：任何【讀】【掃】級文獻進稿前升級成正文級驗設置〔RELATED-WORK 使用說明、9/4 誤報教訓〕。
 6. **subgoal 格內化欄 undefined**：⑤'' 裁決=Def 1.4 分母條款的形式推論 — 表格照此渲染，⛔ 不算負殘留。
 7. **per-seed 全表進附錄、災難 seed 不剔除**〔⑦〕；效率數字必須自測（F3）才上 T2。
+8. **「A1」三重命名衝突 — paper 化前必須改名**〔9/6 深審 S10〕。同一個符號現在指三件不同的事、且已在本檔同頁共存（§4.3 的 (A1) 確定性 vs §4 表／§5 的 A1 實驗線）：
+
+   | 現用 | 出處 | 意思 | 建議新名 |
+   |---|---|---|---|
+   | A1 | 內化檔／postA1 | **條件冗餘假設**（$I_{\rm data}=0$；⑰ 已證偽、降為 A1-lim 極限錨） | **H-red** |
+   | (A1) | 合成律檔 §1.1 | **確定性轉移**（$P$ 是函數） | **(D-env)** |
+   | A1 | PLAN／FINDINGS／本檔 | **內化線實驗編號**（劑量二臂） | 保留（實驗編號欄） |
+
+   ⛔ 三者不得在正文共用 "A1"；改名前的骨架階段，引用時一律帶限定詞（「A1 冗餘假設」／「(A1) 確定性」／「A1 實驗臂」）。
 
 ---
 

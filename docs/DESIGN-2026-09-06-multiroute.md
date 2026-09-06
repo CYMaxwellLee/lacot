@@ -25,8 +25,18 @@ $\eta \gtrsim p\lambda$（p=0.3 時新資訊變異要到冗餘變異的三成級
 
 ## 1. 要買什麼（形式目標、一段收攏）
 
-病根（⑫⑭＋Prop 2.1）：現行 pointmaze-large-stitch 上 $a\approx A(s,g)$（A1 冗餘）⇒ 忽略
-intent 是合法全域最優 ⇒ 鎖死（⑬ 實測 ε_rel=1.1%、⑦ Int≈0）。要拆它需三條件（§3.3）：
+病根〔**9/6 postA1-patch — ⑰ 自己就點名「DESIGN-multiroute 的病根敘事段待修」，本次補上**〕：
+⛔ 舊敘事「現行 pointmaze-large-stitch 上 $a\approx A(s,g)$（A1 冗餘）⇒ 忽略 intent 是**合法
+全域最優** ⇒ 鎖死（⑫⑭＋Prop 2.1）」**兩截都已被直接量測推翻**：(1) ⑰ 量到
+$I(\tau;a\mid s,g)\approx2.5$ bits $\ne0$（路線級 ~0.93 bits、⑰' 紀律）⇒ **A1 冗餘前提為偽**；
+且 ⑰ 量到 modal 路線佔比中位 **.286**，直接否掉 $\rho_{\rm route}<1\%$ 的幾何預言。
+(2) 「合法全域最優」被 postA1 §2.1 改判 — invariant 解在 $I>0$ 下**不再是**全域最優。
+**改寫（C-ii′ 語言）**：病根＝**匯率斷裂／動力學陷阱** — route bits 是真的（$I>0$），但那份
+資訊在 e_target 的 **z-度量**下重新計價後變異佔比只剩 ~0.4% ⇒ $\eta_{\rm eff}\approx0.003\lambda
+\ll p\lambda$，population 終點被 ridge 壓扁到 $\mathrm{Int}^*\approx\eta_{\rm eff}/(p\lambda)\approx1\%$
+＋12× 慢時間尺度 ⇒ **實效鎖死**（⑬ 實測 ε_rel=1.1%、⑦ Int≈0 兩個現況讀數不變）
+〔THEORY-postA1 §2–3、C-ii′〕。⇒ **藥要打 $\eta_{\rm eff}$（z-度量權重／e_target 側），
+不是打「造 $I$」。** 要拆它需三條件（§3.3）：
 
 - **C-i（多路線）**：$H(R|s,g)\ge h>0$ 於正測度 (s,g)，$R=f(\tau)$＝路線變數；
 - **C-ii（錨資訊性）**：$I(R;a|s,g)\ge\delta$ — 我們的 hindsight 錨＝軌跡 cell 序列的 32 點

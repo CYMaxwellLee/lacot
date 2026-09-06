@@ -54,7 +54,21 @@ $T = 1$ ＝ log-semiring；$T \to 0^+$ ＝ max-plus（tropical 的 max 版）。
 **引理 1（目標函數的 semiring 身份）**：在 (S1)(S2) 下：
 (i) population NLL 最小化恢復 $p^*$，且 log 域上
 $\log p^*(z \mid s,g) = \mathrm{LSE}_{m \in M}\big[\log w^*(m \mid s,g) + \log p^*(z_{\mathrm{pre}} \mid s,m) + \log p^*(z_{\mathrm{post}} \mid m,g)\big]$
-— 即 (CL) 在 **log-semiring**（$\oplus = \mathrm{LSE}$、$\otimes = +$）的實例，值＝log-機率。
+— 即 (CL) 的**帶權版**在 **log-semiring**（$\oplus = \mathrm{LSE}$、$\otimes = +$）的實例，
+值＝log-機率。
+**〔9/6 深審修正（丙 A1 落實、M8）〕**：⛔ 上式**不是**裸 (CL) 的實例 — LSE 恆等式裡有
+$\log w^*(m\mid s,g)$ 這一項，而 (CL) $V(s,g)=\bigoplus_m V(s,m)\otimes V(m,g)$ **沒有**；
+$w^*$ 同時依賴 $(s,g,m)$，吸不進 $V(s,m)$ 也吸不進 $V(m,g)$（左式另多一個 $z$ 引數、型別
+也不合）。⇒ 本檔**採帶權形**為主方程的統計版：
+$$V(s,g) \;=\; \bigoplus_{m \in M}\big[\,W(m\mid s,g)\otimes V(s,m)\otimes V(m,g)\,\big]. \tag{CL-w}$$
+（丙給的另一條修法：$M$ 為「每條路恰穿一次的 cut」時可用 partition-function 寫法
+$Z(s,g)=\sum_m Z(s,m)Z(m,g)$ 無權重成立、$w^*=Z(s,m)Z(m,g)/Z(s,g)$ 成導出量 — 較漂亮但要
+加 cut 假設，本檔不採、留 v1 選項。）
+**同時補 (S1) 缺的假設 — $z$ 的切分**：(S1) 預設 $z\mapsto(z_{\rm pre},z_{\rm post})$ 是良
+定義的可測切分；若切分點依 $m$ 而變（waypoint 位置不同、前段長度不同），「乘積密度＝拼接
+變數的密度」還需要**拼接映射對每個 $m$ 是雙射**（或把切分點納入 latent）。⇒ **(S1′)**：
+固定切分約定，或 per-$m$ 切分＋測度一致性。⚠️ (CL-w) 也是 A8 覆蓋缺口（§5-6）的修法那一面
+—— 裸 LSE 迭代在 log-prob 值域不封閉、帶權/歸一化版才封閉，兩者是同一個病。
 (ii) eval 讀數 $\mathbb E_{z \sim p_\theta}[\mathrm{succ}(D(z), g)]$ 是對 $m$ **邊際化後**的期望
 — sum-product 語意的泛函，與 (i) 經 $\log$ 同構等價；它不評任何 argmax 計畫。
 (iii) argmax 計畫對應 Viterbi（max-product）＝ 不同的 semiring；三者由溫度族 $\oplus_T$ 連接，
@@ -142,11 +156,34 @@ open-loop 且完備。與我們的差異五件：
     之間輸入的行為」＝ (D3)(ii) 現在實測是**破的**；C4 給 before 錨（latent lerp 合法率
     .638 vs 座標 .535）。
 
-**命題 6（精確版正確性）**：(A1)＋(D1, $\varepsilon{=}0$)＋(D3, $\gamma{=}0$)＋min-plus 下，
-字典空間 DP 的定點 $\hat V$ 滿足 $\hat V(s,g) = V^*(s,g)$（原空間最短路）對覆蓋支撐內全部 $(s,g)$。
-_證明梗概_：$\hat V \ge V^*$ 由每次合成對應一條可行拼接路（(D3) 保證 decode 合法）；
-$\hat V \le V^*$ 由最優路的中繼點都在 $M$ 內（(D1)）、最優子結構逐段收緊。∎
+**命題 6（精確版正確性）**：(A1)＋(D1, $\varepsilon{=}0$)＋**(D3, $\gamma{=}0$)＋(D4, 原子忠實)**
+＋min-plus 下，字典空間 DP 的定點 $\hat V$ 滿足 $\hat V(s,g) = V^*(s,g)$（原空間最短路）對
+覆蓋支撐內全部 $(s,g)$。
+_證明梗概_：$\hat V \ge V^*$ 由每次合成對應一條可行拼接路（(D3) 保證 decode 合法、
+**(D4) soundness 保證段值＝該路實際代價**）；
+$\hat V \le V^*$ 由最優路的中繼點都在 $M$ 內（(D1)）、**(D4) completeness 保證每段的最優
+可被 decoder 實現**、最優子結構逐段收緊。∎
 （本質＝OKBE 型結果的 semiring 重述；novelty 在框架不在此證明。）
+
+**〔9/6 深審修正（丙 A6 落實、M8）— 補 (D4)＋兩個量詞縫〕**：原假設清單**不足**，照原樣
+陳述比證明強。三件：
+
+- **(D4) 原子忠實（atomic faithfulness）〔新增、最大的洞〕**：「字典空間 DP」的 base case —
+  $V(s,m)$ 的**原子數值從哪來** — 原稿全檔未定義，而 (D3) 只保 decode **合法**、不保
+  decode **最優**。⇒ 需要 (i) **soundness**：段值＝decode 出的路徑**實際**代價；
+  (ii) **completeness**：decoder 能實現該段的最優路。
+  **反例（原假設全滿足、結論破）**：格圖、$M$＝全頂點（(D1) $\varepsilon{=}0$ ✓）、decoder
+  每段都輸出**合法但繞路 $+2$ 步**的路徑（(D3) $\gamma{=}0$ ✓）⇒
+  $\hat V(s,g)\ge V^*+2\cdot(\text{段數})>V^*$。
+  **可量測代理**：decode 段長 vs BFS 段長比（⇒ (D4) 有操作對應、可進 B 階段驗收錶）。
+- **(D1) 的量詞縫**：(D1) 只對「eval 分佈支撐內的 $(s,g)$」宣告，但遞迴中出現的中間對
+  $(m,g)$、$(m,m')$ 不必在 eval 支撐內 ⇒ **(D1) 須對遞迴閉包成立（支撐閉包版）**。
+- **(D1) 的 $V$ 指涉須釘死**：讀成真 $V^*$（覆蓋條件）或讀成 DP 自己的 $\hat V$（半循環）
+  結論路徑不同 — 本檔一律讀 **$V^*$**。
+
+⇒ 加上 (D4)＋閉包後兩夾閉合、Prop 級可保。連帶：**Conj 7 的誤差源要加第四項**
+（decoder **次優性** $\beta$，與 $\gamma$ 合法性是不同的量）— 現行 $(\varepsilon+\delta+\gamma)$
+少一個軸〔丙 A7〕。
 
 **Conjecture 7（近似合成界）**：(A1)＋(D1)–(D3)（$\varepsilon, \delta, \gamma > 0$）＋horizon $H$ 下，
 $\big|\hat V(s,g) - V^*(s,g)\big| \le C \cdot H \cdot (\varepsilon + \delta + \gamma)$（線性疊加形）。
@@ -198,7 +235,14 @@ BFS 從 $\bot$（只有 $g$ 自身）起迭代正是 lfp 構造。字典 DP／be
 4. **有限樣本與 optimization error**：引理 1 是 (S2)（population＋realizable）下的陳述；
    有限樣本 NLL 與 flow 訓練誤差到 (CL) 偏差的換算未定量。
 5. **refine 溫度**（R2）：定性。$N$–$T$ 的定量對應（order statistics of log-probs）未推。
-6. **接口聲明**：quasimetric 行（$V = -d$、三角不等式取緊）在對應表佔位但本檔不展開
+6. **$T{=}1$ 無折扣的定點：本檔沒有任何結果覆蓋（open）〔9/6 深審補、丙 A8 落實、M8〕**：
+   Prop 8 限定 $\oplus\in\{\sup,\max\}$ ⇒ **排除了 LSE**；Prop 9(a) 只蓋「**有折扣**」的
+   LSE（soft value iteration 的收縮性）。⇒ **我們自己住的 $T{=}1$ 無折扣情形，§4 沒有存在
+   或唯一性結果**。而且純 (CL) 的裸 LSE 迭代在 log-prob 值域**不封閉**（$K$ 項 LSE 每步最多
+   抬 $T\log K$、值可跑出 $[-\infty,0]$）— 這與 §1.3 補的 $w^*$ 缺項是**同一個病**：
+   **帶權／歸一化版 (CL-w) 才封閉**。⇒ 引 Lemma 1/2＋Prop 8/9 進 paper 時必須帶這句；
+   ⛔ 別讓「定點理論已備」的印象覆蓋到我們實際的 $T{=}1$ 無折扣設定。
+7. **接口聲明**：quasimetric 行（$V = -d$、三角不等式取緊）在對應表佔位但本檔不展開
    — 幾何線的形式化（含對稱破缺 loss、第 2 洞）歸另一線；內化 gap 的正式定義（第 3 洞）
    同。兩線只需一致於：內化品質只影響 $p_\theta \to p^*$ 的逼近（(S2) 的鬆動），
    不改變 (CL) 的 semiring 身份。
