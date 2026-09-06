@@ -204,6 +204,27 @@ assert not (DIV_W > 0 and INTENT != "embed"), \
 DIV_LOG_EVERY = int(os.environ.get("LACOT_DIV_LOG_EVERY", 0))
 DIV_LOG_K = 8            # 抽樣數（固定 8：夠算 median 又不影響 <1% 開銷的承諾）
 _DIVLOG = []             # ⭐ [{step, div_median}]；tag 要到檔尾才算得出來 ⇒ 先收記憶體、收工一次寫
+# ═══ GRPO-on-thoughts（LACOT_GRPO_*、9/6 rung 1；規格＝docs/DESIGN-2026-09-06-grpo-thoughts.md §1–§2）═══
+# ⭐ 把 stage-2 flow 當 policy：每題 (s,g) 抽 G 條 latent 計畫 z、零模擬器 reward（資料佔據圖＋BFS）
+#    打分、group-normalized advantage × 【exact】flow logπ（A 路 Flow.log_prob、無 SDE 稅）做
+#    on-policy policy gradient（μ=1、無 clip）。L_total += GRPO_W·β(t)·L_GRPO；L_FM 常駐不衰減
+#    （LaDiR 錨）。β(t)＝前 WARM 步 0（FM 回穩）→ 線性升到 β_target（首個有訊號的生效步用
+#    『∇L_FM／∇L_GRPO 梯度範數比』自動定標）；l_nf(data) EMA 相對 RL 起點漂 > +0.10 nat/dim
+#    ⇒ β 減半（calib／halve 事件全進 grpolog_{tag}.jsonl）。
+# ⛔ GRPO_W=0.0（預設）＝整段連一個 op 都不進 graph（DIV_W 慣例）；GRPO 自己的抽樣走【專用】
+#    torch.Generator＋numpy rng ⇒ 開著時 data batch 的 RNG 流也跟純 FM 臂逐位元相同
+#    （設計卡 §3.1 加固：step-matched FM 對照到 batch 級成對）。
+GRPO_W = float(os.environ.get("LACOT_GRPO_W", 0.0))          # 總開關兼使用者側倍率（乘在 β(t) 外）
+GRPO_G = int(os.environ.get("LACOT_GRPO_G", 8))              # 每題抽幾條計畫（group size）
+GRPO_EVERY = int(os.environ.get("LACOT_GRPO_EVERY", 1))      # 每幾個訓練步做一次 GRPO
+GRPO_BQ = int(os.environ.get("LACOT_GRPO_BQ", 4))            # 每次抽幾題 (s,g)
+GRPO_WARM = int(os.environ.get("LACOT_GRPO_WARM", 500))      # β(t)：前 W 步 0 → 再 W 步線性升滿（W=500【猜測】）
+GRPO_STDNORM = int(os.environ.get("LACOT_GRPO_STDNORM", 1))  # 1＝GRPO 標準 (r−mean)/(σ+ε)；0＝Dr.GRPO 去 σ（§1.2）
+assert GRPO_W >= 0.0, f"⛔ LACOT_GRPO_W 不能是負的，收到 {GRPO_W}"
+assert GRPO_W == 0 or GRPO_G >= 2, f"⛔ LACOT_GRPO_G 至少 2（group baseline 要有隊友），收到 {GRPO_G}"
+assert GRPO_W == 0 or (GRPO_EVERY >= 1 and GRPO_BQ >= 1 and GRPO_WARM >= 0), \
+    f"⛔ LACOT_GRPO_EVERY/_BQ 要 ≥1、_WARM 要 ≥0，收到 {GRPO_EVERY}/{GRPO_BQ}/{GRPO_WARM}"
+_GRPOLOG = []            # ⭐ [{step, r_mean, …}＋calib/halve 事件]；同 _DIVLOG 慣例：檔尾寫 grpolog_{tag}.jsonl
 # ⭐ CFG 式 intent 引導（LACOT_INTENT_GUID_W、9/5）：INTENT_DROP 訓的顆把「帶 intent」與
 #    「intent 歸零」兩個條件模式練在同一顆 ⇒ eval 取樣時可以把 intent 方向【外插放大】，
 #    問「模型是不是看得懂 intent 但沒用力」。0.0＝關（⛔ 逐位元不動任何行為）、1.0＝normal、>1＝放大。
@@ -1222,6 +1243,105 @@ if EMA_W > 0 and not LOAD_CKPT:
         _EMA_PAIRS.append((_sh, _m))
     print(f"  權重 EMA 開啟：m={EMA_W:g}（影子五模組，訓練行為不變）", flush=True)
 
+# ═══ GRPO-on-thoughts：RL 分支的儀器（設計卡 §2–§3；⛔ GRPO_W=0 整段不建、一個 op 都不跑）═══
+if GRPO_W > 0:
+    from lacot.refine_grad import GeoEnergy as _GrpoGeo
+    from lacot.subgoal import grid_bfs as _grpo_bfs
+    # ── 前提 gate：rung 1 只支援現行標準配方 —— 不支援的組合【開跑前】就擋，⛔ 不靜默走錯路
+    assert u_dec is not None, "⛔ GRPO 的 reward 要 decode 計畫（ENC_OBJ=recon*）—— 沒 decoder 就沒座標可打分"
+    assert fsq is None and vq is None, "⛔ GRPO rung 1 不支援 FSQ／VQ 臂（logπ 與 sample 的空間語義要另訂）"
+    assert INTENT != "residual", "⛔ GRPO rung 1 不支援 residual 接法（decode 出殘差、逐題 contour 反演未定）"
+    # ── reward 的眼睛：資料佔據圖 —— 跟 eval E 圖同款建構 GeoEnergy(OBS,mu,sd,res=8)、獨立一份
+    #    ⇒ ⛔ 不依賴 SUBGOAL/INTENT 開不開（_ig/_tg 前例）。這一段全在【正規化】空間。
+    _gg = _GrpoGeo(OBS, mu, sd, res=8, device="cpu")
+    _GOCC = (_gg.dist[0, 0].numpy() == 0.0)
+    _GFREE = np.argwhere(_GOCC)
+    _G_LO = np.asarray(_gg.lo, np.float64)
+    _G_SPAN = np.asarray(_gg.hi - _gg.lo, np.float64)
+    _G_SHAPE = np.asarray(_gg.shape, np.int64)
+    _G_CELL = float(np.mean(_G_SPAN / (_G_SHAPE - 1)))   # 一格的正規化尺寸（BFS 格數→長度）
+
+    def _g_cells_of(pts):
+        """[T,2] 正規化 → [T,2] 格 index。⛔ 不 snap —— r_legal 的合法性判定要誠實（掉牆裡＝掉牆裡）。"""
+        idx = np.rint((np.asarray(pts, np.float64) - _G_LO) / _G_SPAN * (_G_SHAPE - 1)).astype(int)
+        return np.clip(idx, 0, _G_SHAPE - 1)
+
+    def _g_cell_snap(p):
+        """端點 → 格；落牆格 snap 最近自由格（同 _e_xy_to_cell 保底寫法；⛔ 只給 s/g 端點用）。"""
+        c = tuple(_g_cells_of(np.asarray(p)[None])[0])
+        if _GOCC[c]:
+            return c
+        return tuple(_GFREE[int(np.abs(_GFREE - np.asarray(c)).sum(1).argmin())])
+
+    _GRPO_DMAPS = {}
+
+    def _g_dist_from(gc):
+        """goal cell → 全圖 BFS 步距 dict（per-goal 快取；_INTENT_ROUTE_CACHE 同款、攤到 G 條近乎免費）。"""
+        if gc not in _GRPO_DMAPS:
+            if len(_GRPO_DMAPS) > 100000:
+                _GRPO_DMAPS.clear()
+            _GRPO_DMAPS[gc] = _grpo_bfs(_GOCC, gc)
+        return _GRPO_DMAPS[gc]
+
+    # ── C8 閘門檻（§2.1、皆【猜測】待 rung 0 校準）：ρ_len=0.5；δ_step＝資料計畫鄰步距 p95×1.5。
+    #    校準樣本＝make_batch 同款內插軌跡（固定 seed 專用 rng ⇒ ⛔ 不碰主資料流）。
+    _GRPO_RHO = 0.5
+    _gcal = np.random.default_rng(20260906)
+    _gseg = []
+    while len(_gseg) < 256:
+        _r0 = int(_gcal.integers(0, N)); _te0 = int(traj_end[_r0])
+        if _te0 - _r0 < CHUNK:
+            continue
+        _f0 = np.linspace(float(_r0), float(_te0), T_CAP)
+        _lo0 = np.floor(_f0).astype(np.int64)
+        _hi0 = np.minimum(_lo0 + 1, _te0)
+        _w0 = (_f0 - _lo0)[:, None]
+        _t0 = (OBS[_lo0] * (1.0 - _w0) + OBS[_hi0] * _w0 - mu) / sd
+        _gseg.append(np.linalg.norm(np.diff(_t0, axis=0), axis=1))
+    _GRPO_DSTEP = float(np.percentile(np.concatenate(_gseg), 95) * 1.5)
+
+    def _grpo_reward(pts, s_n, g_n):
+        """一條 decode 計畫 [T,2]（正規化）→ (r∈[0,1], gate∈{0,1})。§2.1 三項＋C8 乘法閘、零模擬器。
+        r_legal＝分數合法率（密梯度）；r_reach＝1−D(p_T)/D(s)（∞→0、按題目難度歸一）；
+        r_hit＝1[D(p_T)≤1 格]；N(z)＝1[arclen≥ρ·L_BFS]·1[max 鄰步≤δ]（防塌短刷分／teleport 跳牆）。"""
+        pts = np.asarray(pts, np.float64)
+        cells = _g_cells_of(pts)
+        r_legal = float(_GOCC[cells[:, 0], cells[:, 1]].mean())
+        dmap = _g_dist_from(_g_cell_snap(g_n))
+        d_s = dmap.get(_g_cell_snap(s_n))
+        if d_s is None:                                   # 題目端點在圖上不連通（資料對理論上不會；0 分保底）
+            return 0.0, 0.0
+        d_T = dmap.get(tuple(cells[-1]))                  # 末點⛔不 snap：掉牆／不連通＝到不了（∞）
+        r_reach = 1.0 - min((d_T / max(d_s, 1)) if d_T is not None else 1.0, 1.0)
+        r_hit = 1.0 if (d_T is not None and d_T <= 1) else 0.0
+        steps = np.linalg.norm(np.diff(pts, axis=0), axis=1)
+        gate = float((steps.sum() >= _GRPO_RHO * d_s * _G_CELL) and (steps.max() <= _GRPO_DSTEP))
+        return gate * (0.25 * r_legal + 0.50 * r_reach + 0.25 * r_hit), gate
+
+    if intent_ad is not None:
+        _GRPO_RCACHE = {}
+
+        def _grpo_eval_anchor(s_zn, g_zn):
+            """eval 語意錨：資料佔據圖 s→g 最短路 → [T_A,2] 正規化；無路 None（→拼零＋計數）。
+            與 eval 端 _intent_route_zn 同語義（route_intent＋同款圖）；吃正規化座標（訓練側 _i_* 現成）。"""
+            _k = (_i_zn_to_cell(s_zn), _i_zn_to_cell(g_zn))
+            if _k not in _GRPO_RCACHE:
+                if len(_GRPO_RCACHE) > 200000:
+                    _GRPO_RCACHE.clear()
+                _GRPO_RCACHE[_k] = route_intent(_iocc, s_zn, g_zn, _i_zn_to_cell, _i_cell_to_zn, INTENT_TA)
+            return _GRPO_RCACHE[_k]
+
+    # ── 專用 RNG（§3.1 加固：⛔ 不碰全域 torch 流／主 rng）＋狀態
+    _GRPO_TGEN = torch.Generator(device=device)
+    _GRPO_TGEN.manual_seed(20260906 + SEED)
+    _GRPO_QRNG = np.random.default_rng(20260906 + SEED)
+    _GRPO_RATIO = 0.2        # β 定標目標比 ‖β∇L_GRPO‖/‖∇L_FM‖（§1.4 的 0.1~0.3 取中【猜測】）
+    _GRPO_ST = {"t": 0, "beta": None, "ref": None, "ema": None, "cool": 0,
+                "fired": 0, "degen": 0, "groups": 0, "noroute": 0, "gate": 0.0}
+    print(f"⭐ GRPO：W={GRPO_W:g} G={GRPO_G} every={GRPO_EVERY} B_q={GRPO_BQ} warm={GRPO_WARM}"
+          f" stdnorm={GRPO_STDNORM}  佔據圖 {tuple(_gg.shape)}（覆蓋 {_gg.coverage:.1%}）"
+          f"  閘 ρ_len={_GRPO_RHO} δ_step={_GRPO_DSTEP:.4f}（正規化單位）", flush=True)
+
 
 def _stage2_loop(n_steps, step_off=0):
     """stage 2 訓練迴圈。⭐ 抽成函式【只為了】讓續訓模式能在 ckpt 載入之後再跑一次【同一份】
@@ -1315,6 +1435,106 @@ def _stage2_loop(n_steps, step_off=0):
                 / (torch.sqrt(_c_zero.pow(2).sum(-1) + 1e-24) + 1e-8)
             l_div = torch.relu(DIV_M - _rel).mean()
             total = total + DIV_W * l_div
+        # ⭐ GRPO-on-thoughts（LACOT_GRPO_W>0；設計卡 §1–§2）：⛔ 同 DIV_W 慣例 —— 預設整段跳過，
+        #    graph／RNG／數值逐位元不變；開著時抽樣走專用 generator ⇒ data 流跟純 FM 臂照樣成對。
+        if GRPO_W > 0:
+            _gtrl = _GRPO_ST["t"]
+            _GRPO_ST["t"] += 1
+            # l_nf 漂移錶：每步都記（EMA、純 float）—— β 減半護欄的判據
+            _lnf_now = float(l_nf.item())
+            _GRPO_ST["ema"] = _lnf_now if _GRPO_ST["ema"] is None else 0.98 * _GRPO_ST["ema"] + 0.02 * _lnf_now
+            _gbfrac = 0.0 if _gtrl < GRPO_WARM else min(1.0, (_gtrl - GRPO_WARM + 1) / max(GRPO_WARM, 1))
+            if _gtrl % GRPO_EVERY == 0 and _gbfrac > 0.0:
+                if _GRPO_ST["ref"] is None:
+                    _GRPO_ST["ref"] = _GRPO_ST["ema"]     # RL 生效起點的 l_nf ＝ 漂移原點
+                    assert fsq is None and vq is None, "⛔ GRPO：這輪帶起了 FSQ/VQ（載入端）—— rung 1 不支援"
+                # ① 抽 B_q 題 (s,g)：官方 make_batch 同款抽法、⛔ 專用 numpy rng（不碰主資料流）
+                _grows, _ggoals = [], []
+                while len(_grows) < GRPO_BQ:
+                    _qr = int(_GRPO_QRNG.integers(0, N)); _qe = int(traj_end[_qr])
+                    if _qe - _qr < CHUNK:
+                        continue
+                    _qd = _GRPO_QRNG.random()
+                    _qg = int(round(min(_qr + 1, _qe) * _qd + _qe * (1 - _qd)))
+                    _grows.append(_qr); _ggoals.append(max(_qg, min(_qr + CHUNK, _qe)))
+                _gsqn = (OBS[np.array(_grows)] - mu) / sd
+                _ggqn = (OBS[np.array(_ggoals)] - mu) / sd
+                _gsq = torch.tensor(_gsqn, dtype=torch.float32, device=device)
+                _ggq = torch.tensor(_ggqn, dtype=torch.float32, device=device)
+                # ② eval 語意 cond（帶 intent：route 錨；無路→拼零＋計數 —— 同 eval fallback）
+                if intent_ad is not None:
+                    _gal = [_grpo_eval_anchor(_gsqn[_j], _ggqn[_j]) for _j in range(GRPO_BQ)]
+                    _grm = np.array([_a is not None for _a in _gal])
+                    _GRPO_ST["noroute"] += int((~_grm).sum())
+                    _ganc = torch.tensor(np.stack([(_a if _a is not None else np.zeros((INTENT_TA, 2)))
+                                                   for _a in _gal]).astype(np.float32), device=device)
+                    _gixq = _intent_cond(_ganc)           # embed＝[B_q,64]；anchor＝None
+                    if _gixq is not None:
+                        _gixq = _gixq * torch.tensor(_grm, dtype=torch.float32, device=device)[:, None]
+                    _gcq = condvec(_gsq, _ggq, _gixq)
+                    _gcf = flow_cond(_gcq, _ganc)
+                    if INTENT == "anchor" and not bool(_grm.all()):
+                        _gcf = torch.where(torch.tensor(_grm, device=device)[:, None, None],
+                                           _gcf, flow_cond(_gcq, None))
+                    _garep = _ganc.repeat_interleave(GRPO_G, 0)
+                else:
+                    _gcf = condvec(_gsq, _ggq)
+                    _garep = None
+                # ③ 每題 G 條 z ~ π_θ̄（Flow.sample 本身 @no_grad ＝ 抽樣無梯度，正確；專用 generator）
+                _gcrep = _gcf.repeat_interleave(GRPO_G, 0)
+                _gzq = flow.sample(GRPO_BQ * GRPO_G, _gcrep, generator=_GRPO_TGEN)
+                # ④ decode→reward（乘法閘版、零模擬器、@no_grad —— reward 是 REINFORCE 的常數）
+                with torch.no_grad():
+                    _gpn = _intent_inv(_dec(_q(_gzq), _gsq.repeat_interleave(GRPO_G, 0)), _garep).cpu().numpy()
+                _grw = np.zeros(GRPO_BQ * GRPO_G); _ggate = np.zeros(GRPO_BQ * GRPO_G)
+                for _j in range(GRPO_BQ * GRPO_G):
+                    _grw[_j], _ggate[_j] = _grpo_reward(_gpn[_j], _gsqn[_j // GRPO_G], _ggqn[_j // GRPO_G])
+                # ⑤ group advantage（§1.2；退化群 Â≡0＝零梯度＝正確行為、計數進錶）
+                _grg = _grw.reshape(GRPO_BQ, GRPO_G)
+                _gadv = _grg - _grg.mean(1, keepdims=True)
+                if GRPO_STDNORM:
+                    _gadv = _gadv / (_grg.std(1, keepdims=True) + 1e-6)
+                _gdg = int((_grg.std(1) == 0.0).sum())
+                _GRPO_ST["degen"] += _gdg; _GRPO_ST["groups"] += GRPO_BQ; _GRPO_ST["gate"] += float(_ggate.mean())
+                # ⑥ exact logπ（A 路：同一顆 flow 的 log_prob 重算、帶梯度）→ L_GRPO（/(K·d)＝l_nf 同一把尺）
+                _glogp = flow.log_prob(_gzq, _gcrep)
+                l_grpo = -(torch.tensor(_gadv.reshape(-1), dtype=torch.float32, device=device) * _glogp).mean() / DIM
+                # ⑦ β 定標（首個【有訊號】的生效步；全退化群就順延）：β_target＝RATIO·‖∇flow L_FM‖／‖∇flow L_GRPO‖
+                if _GRPO_ST["beta"] is None and _gdg < GRPO_BQ:
+                    _gfp = [p for p in flow.parameters() if p.requires_grad]
+                    _gn_fm = torch.sqrt(sum(_gd.pow(2).sum() for _gd in
+                                            torch.autograd.grad(l_nf, _gfp, retain_graph=True, allow_unused=True)
+                                            if _gd is not None)).item()
+                    _gn_gr = torch.sqrt(sum(_gd.pow(2).sum() for _gd in
+                                            torch.autograd.grad(l_grpo, _gfp, retain_graph=True, allow_unused=True)
+                                            if _gd is not None)).item()
+                    if _gn_gr > 1e-12:
+                        _GRPO_ST["beta"] = _GRPO_RATIO * _gn_fm / _gn_gr
+                        print(f"  ⭐ grpo β 定標 step {_gstp + 1}：‖∇L_FM‖={_gn_fm:.3e} ‖∇L_GRPO‖={_gn_gr:.3e}"
+                              f" ⇒ β_target={_GRPO_ST['beta']:.3e}（目標比 {_GRPO_RATIO}）", flush=True)
+                        _GRPOLOG.append({"step": _gstp + 1, "event": "calib", "gn_fm": _gn_fm,
+                                         "gn_grpo": _gn_gr, "beta_target": _GRPO_ST["beta"]})
+                # ⑧ 漂移護欄：l_nf EMA 相對 RL 起點漂 > +0.10 nat/dim ⇒ β 減半（冷卻 100 次開火再判）
+                if _GRPO_ST["beta"] is not None:
+                    if _GRPO_ST["ema"] - _GRPO_ST["ref"] > 0.10 and _GRPO_ST["cool"] <= 0:
+                        _GRPO_ST["beta"] *= 0.5; _GRPO_ST["cool"] = 100
+                        print(f"  🚨 grpo β 減半 step {_gstp + 1}：l_nf EMA {_GRPO_ST['ema']:.3f} 相對起點"
+                              f" {_GRPO_ST['ref']:.3f} 漂 > +0.10 ⇒ β_target={_GRPO_ST['beta']:.3e}", flush=True)
+                        _GRPOLOG.append({"step": _gstp + 1, "event": "halve", "lnf_ema": _GRPO_ST["ema"],
+                                         "lnf_ref": _GRPO_ST["ref"], "beta_target": _GRPO_ST["beta"]})
+                    _GRPO_ST["cool"] -= 1
+                    _gbeta = _GRPO_ST["beta"] * _gbfrac
+                    total = total + GRPO_W * _gbeta * l_grpo
+                else:
+                    _gbeta = 0.0                          # 定不了標（全退化群、Â≡0 零梯度）⇒ 這步只記錶
+                _GRPO_ST["fired"] += 1
+                _GRPOLOG.append({"step": _gstp + 1, "r_mean": float(_grw.mean()), "r_std": float(_grw.std()),
+                                 "gate_rate": float(_ggate.mean()), "degen_frac": _gdg / GRPO_BQ,
+                                 "beta": _gbeta, "l_grpo": float(l_grpo.item()),
+                                 "logp_mean": float(_glogp.mean().item())})
+                if _GRPO_ST["fired"] == 1 or (_gstp + 1) % 1000 == 0:
+                    print(f"  grpo step {_gstp + 1}  r {_grw.mean():.3f}±{_grw.std():.3f} gate {_ggate.mean():.2f}"
+                          f" degen {_gdg}/{GRPO_BQ} β {_gbeta:.3e} l_grpo {l_grpo.item():+.4f}", flush=True)
         _warm_lr(opt2, _gstp)
         opt2.zero_grad(set_to_none=True)
         if opt_bc is not None:
@@ -2185,6 +2405,9 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            # ⭐ 續訓／L_div（9/5）：cont_steps 是【續了幾步】，steps2 在續訓模式恆 0
            cont_train=CONT_TRAIN, cont_steps=CONT_STEPS,
            div_w=DIV_W, div_m=DIV_M, div_log_every=DIV_LOG_EVERY,
+           # ⭐ GRPO（9/6）：⛔ 只在開著時進 json ⇒ 預設輸出逐 key 不變
+           **({"grpo_w": GRPO_W, "grpo_g": GRPO_G, "grpo_every": GRPO_EVERY, "grpo_bq": GRPO_BQ,
+               "grpo_warm": GRPO_WARM, "grpo_stdnorm": GRPO_STDNORM} if GRPO_W > 0 else {}),
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 out["rt_gate"] = RT_GATE
 out["flow_probe"] = FLOW_PROBE_OUT
@@ -2464,7 +2687,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                WARMUP=0, DATA_RESAMPLE=0, DATA_SEED=-1, LR_SCALE=1.0, BOOT_SEED=-1,
                SUB_ESEL=0, U_SOURCE="flow", VQ=0, STEPS1=1500, VQ_SOFT=0, SUB_SNAP=0, SUB_HEADGUARD=0.0, DEC_START="",
                S1_FROM="", FSQ_TAG="", INTENT_TAG="", INTENT_DROP=0.0,
-               CONT_TRAIN=0, STEPS2=2000, DIV_W=0.0, DIV_M=0.3):
+               CONT_TRAIN=0, STEPS2=2000, DIV_W=0.0, DIV_M=0.3,
+               GRPO_W=0.0, GRPO_G=8, GRPO_EVERY=1, GRPO_BQ=4, GRPO_WARM=500, GRPO_STDNORM=1):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -2511,6 +2735,18 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += f"_ct{STEPS2}"                          # ⚠️ 這裡的 STEPS2＝續訓步數（主 tag 的 _st 段是 0）
     if DIV_W > 0:                                    # ⭐ L_div hinge（9/5 內化藥第一帖）
         x += f"_dvw{DIV_W:g}" + (f"m{DIV_M:g}" if DIV_M != 0.3 else "")
+    if GRPO_W > 0:                                   # ⭐ GRPO-on-thoughts（9/6；⛔ 不進檔名會蓋掉純 FM 對照）
+        x += f"_grpo{GRPO_W:g}"
+        if GRPO_G != 8:
+            x += f"g{GRPO_G}"
+        if GRPO_EVERY != 1:
+            x += f"e{GRPO_EVERY}"
+        if GRPO_BQ != 4:
+            x += f"q{GRPO_BQ}"
+        if GRPO_WARM != 500:
+            x += f"w{GRPO_WARM}"
+        if not GRPO_STDNORM:
+            x += "ns"
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
@@ -2588,7 +2824,9 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                                               if INTENT else ""),
                     INTENT_DROP=INTENT_DROP,
                     # ⭐ 續訓／L_div（9/5）：STEPS2 這一格餵【續訓步數】⇒ 檔名長成 _st0..._ct4000
-                    CONT_TRAIN=CONT_TRAIN, STEPS2=CONT_STEPS, DIV_W=DIV_W, DIV_M=DIV_M)
+                    CONT_TRAIN=CONT_TRAIN, STEPS2=CONT_STEPS, DIV_W=DIV_W, DIV_M=DIV_M,
+                    GRPO_W=GRPO_W, GRPO_G=GRPO_G, GRPO_EVERY=GRPO_EVERY, GRPO_BQ=GRPO_BQ,
+                    GRPO_WARM=GRPO_WARM, GRPO_STDNORM=GRPO_STDNORM)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -2639,6 +2877,20 @@ if _DIVLOG:
 elif DIV_LOG_EVERY > 0:
     print(f"🚨 LACOT_DIV_LOG_EVERY={DIV_LOG_EVERY} 但一筆都沒收到 —— "
           "訓練步數 < N，或 INTENT 沒開（ix_full 恆 None）⇒ 這個旋鈕沒作用", flush=True)
+# ⭐ GRPO 時間序列＋事件（LACOT_GRPO_W>0）：同 divlog 慣例 —— 訓練時收記憶體、這裡一次寫。
+if _GRPOLOG:
+    _ggdst = os.path.join(os.path.dirname(dst), f"grpolog_{tag}.jsonl")
+    with open(_ggdst, "w") as f:
+        for _row in _GRPOLOG:
+            f.write(json.dumps(_row) + "\n")
+    print(f"⭐ grpo 時間序列：{len(_GRPOLOG)} 筆 -> {_ggdst}   "
+          f"退化群 {_GRPO_ST['degen']}/{_GRPO_ST['groups']}"
+          f"（{_GRPO_ST['degen'] / max(_GRPO_ST['groups'], 1):.3f}）"
+          f" 閘通過率 {_GRPO_ST['gate'] / max(_GRPO_ST['fired'], 1):.3f}"
+          f" 無路錨 {_GRPO_ST['noroute']}", flush=True)
+elif GRPO_W > 0:
+    print(f"🚨 LACOT_GRPO_W={GRPO_W:g} 但一步 GRPO 都沒開火 —— 訓練步數 ≤ warmup（{GRPO_WARM}）？"
+          "⇒ 這顆跟純 FM 逐位元同、⛔ 別當 RL 臂收表", flush=True)
 
 if FINISH_R > 0.0:
     print(f"  病二快篩：終局接管觸發 {_FIN_COUNT[0]} 次（⛔ 0 次＝開關沒作用，快篩白跑）", flush=True)
@@ -2683,5 +2935,9 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
                         # ⭐ 續訓血緣（⛔ 只在續訓模式進 cfg ⇒ 預設 ckpt 逐位元不變）
                         **({"CONT_TRAIN": 1, "CONT_STEPS": CONT_STEPS,
                             "SRC_CKPT": os.path.basename(_lp),
-                            "DIV_W": DIV_W, "DIV_M": DIV_M} if CONT_TRAIN else {}))}, ck)
+                            "DIV_W": DIV_W, "DIV_M": DIV_M} if CONT_TRAIN else {}),
+                        # ⭐ GRPO 血緣（9/6；⛔ 只在開著時進 cfg ⇒ 預設 ckpt 逐位元不變）
+                        **({"GRPO_W": GRPO_W, "GRPO_G": GRPO_G, "GRPO_EVERY": GRPO_EVERY,
+                            "GRPO_BQ": GRPO_BQ, "GRPO_WARM": GRPO_WARM,
+                            "GRPO_STDNORM": GRPO_STDNORM} if GRPO_W > 0 else {}))}, ck)
 print(f"存 checkpoint {ck}", flush=True)
