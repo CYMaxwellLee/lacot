@@ -333,7 +333,29 @@ SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
 #   回答 0.750 的 +4 是短程 u 的功勞、還是分段結構本身的功勞。⛔ 只影響分段 arm。
 SUB_POLICY = os.environ.get("LACOT_SUB_POLICY", "")
-assert SUB_POLICY in ("", "bc"), f"⛔ LACOT_SUB_POLICY 只能是空/bc，收到 {SUB_POLICY}"
+assert SUB_POLICY in ("", "bc", "lo"), f"⛔ LACOT_SUB_POLICY 只能是空/bc/lo，收到 {SUB_POLICY}"
+# ═══ B 案：ant 階層低層 π_lo（docs/DESIGN-2026-09-07-ant-lowlevel-B.md）═══════════
+# ⭐ 為什麼要有它：計畫棧在 ant 上已驗活（pilot 25436 幾何全綠），死的是【動作端】——
+#    「遠程模仿」（8 維步態 × 遠 goal、訊號稀）學不起來。低層化＝把它拆成【短程模仿】：
+#    每一段實走都是稠密教材。文獻錨：同地圖 HIQL 94±1 vs flat GCBC 45±11。
+#    π_lo(a | s_full, w_xy)：吃【完整 obs】＋【路標 xy】（獨立小 encoder 直吃，
+#    ⛔ 不走 goal_to_obs 補 mu 那套 —— 低層是新頭、乾淨直給）。
+# ⛔ LACOT_LO_W=0（預設）⇒ 模組不建、graph 不進、RNG 不碰 ⇒ 既有路徑逐位元不變。
+LO_W = float(os.environ.get("LACOT_LO_W", 0.0))
+# ⭐ 短程配對 k ~ U[KMIN, KMAX]（整數步）。一手量測（9/7 val）：ant 每步位移 p50 0.133
+#   ⇒ k∈[10,60] ≈ 1.3~8 單位路程，而 conf2 現行 subgoal 間距 ≈ 7.8 單位 ≈ 59 步
+#   ⇒ ⭐ 訓練分佈與 eval leg 長度【必須重疊】，這組預設就是照那個量測定的。
+LO_KMIN = int(os.environ.get("LACOT_LO_KMIN", 10))
+LO_KMAX = int(os.environ.get("LACOT_LO_KMAX", 60))
+assert 1 <= LO_KMIN <= LO_KMAX, f"⛔ LO_KMIN/KMAX 不合法：{LO_KMIN}/{LO_KMAX}"
+# ⭐ 梯級一（設計檔「可分離」）：advantage 加權 BC。w = exp(β·(v−v̄)/v̄)，
+#   v ＝該段「朝路標的位移／步數」、v̄ ＝全資料該量的中位數 ⇒ ⭐ 原地掙扎 60 步的段權重低。
+#   ⛔ 預設 0＝純 BC ⇒ 沒開時 π_lo 就是乾淨的短程模仿，兩級可各自判生死。
+LO_ADV = int(os.environ.get("LACOT_LO_ADV", 0))
+LO_ADV_BETA = float(os.environ.get("LACOT_LO_ADV_BETA", 1.0))
+LO_ADV_WMAX = 5.0        # ⛔ w 上限（防爆）。⚠️ 不做成旋鈕：它是護欄，不是實驗變數
+# ⭐ 低層要在場的條件：訓練它（LO_W>0），或 eval 要用它（SUB_POLICY=lo，權重從 ckpt 載）。
+LO_ON = (LO_W > 0.0) or (SUB_POLICY == "lo")
 # ⭐ DEC_ANCHOR ── eval-time 平移錨定（P1a 前哨、2026-08-30 調研引出）：把長程解碼路徑
 #   整條平移到「第 0 點＝當前位置」再取 subgoal。⛔ 只影響 latent/conf/conf2 的供點解碼，
 #   不碰爬坡的 E 評分、不碰 head 的 u。
@@ -1183,6 +1205,87 @@ if BC_OWN:
     def own_condvec(s, g):
         return bc_own_ch(torch.cat([bc_own_enc(s), bc_own_enc(g)], 1))
     print("  真獨立 GCBC 開啟（own encoder/head、零共用、只吃真資料；fork_rng 隔離）", flush=True)
+# ═══ π_lo：ant 階層低層的短程路標到達頭（B 案；LACOT_LO_W>0 或 LACOT_SUB_POLICY=lo）═══
+# 架構＝bc_own 那條鏈的【同構版】（同容量、同 512 級）：只把「goal 端 encoder」換成
+#   ⭐【路標 xy 的獨立小 encoder】。⛔ 不共用 cond_enc、⛔ 不吃 u —— 低層只管走路。
+lo_s_enc = lo_w_enc = lo_ch = lo_head = None
+if LO_ON:
+    assert LO_W > 0.0 or LOAD_CKPT, (
+        "⛔ LACOT_SUB_POLICY=lo 但既沒有 LACOT_LO_W>0（訓它）也沒有 LACOT_LOAD_CKPT（載它）"
+        " ⇒ π_lo 會是隨機初始化的權重，而它【不會報錯】—— 那一輪的到達率是垃圾")
+    # 🚨 同 bc_own 的 2026-08-31 R3 教訓：建構包 fork_rng ⇒ ⛔ 不消耗全域 RNG 流。
+    #    少了它，LO_W>0 那顆的【主模型】初始化整個變掉 ⇒ 跟 LO_W=0 那顆不再配對，
+    #    而它不會報錯（差值會被讀成「低層害的」）。fork 內用自己的確定性 seed。
+    with torch.random.fork_rng(devices=[device] if str(device) != "cpu" else []):
+        torch.manual_seed(20260907 + SEED)
+        lo_s_enc = sota_mlp(OBS_DIM, 512, 512).to(device)    # ⭐ 決策端：完整 obs（姿態在這裡）
+        lo_w_enc = sota_mlp(XY_DIM, 512, 512).to(device)     # ⭐ 路標 xy 直吃（⛔ 不補 mu）
+        lo_ch = sota_mlp(1024, 512, COND).to(device)
+        lo_head = CondOnlyMLP().to(device)
+
+    def lo_act(s, w):
+        """s＝正規化【完整 obs】[n,OBS_DIM]；w＝正規化【路標 xy】[n,XY_DIM] ⇒ [n,CHUNK,ADIM]。"""
+        return lo_head(lo_ch(torch.cat([lo_s_enc(s), lo_w_enc(w)], 1)))
+    print(f"  ⭐ π_lo 低層頭建立（obs {OBS_DIM} ⊕ 路標 xy {XY_DIM} → {CHUNK}×{ADIM}；"
+          f"LO_W={LO_W:g}  k∈[{LO_KMIN},{LO_KMAX}]  adv={LO_ADV}）", flush=True)
+
+# ⭐ 專用抽樣流：⛔ 不碰主資料 rng ⇒ LO_W>0 那顆的主模型跟 LO_W=0 那顆逐位元相同
+#    （同 GRPO `_GRPO_QRNG` 的紀律）。
+_LO_RNG = np.random.default_rng(20260907 + SEED)
+_LO_ST = {"vbar": None, "logged": False}
+
+
+def _lo_pairs(rng, n):
+    """短程 hindsight 配對：同一條軌跡內 (s_t, xy(s_{t+k}))、k ~ U[KMIN,KMAX]（整數）。
+    ⛔ 不跨 episode 邊界：t+k 夾到 traj_end —— ⭐ 用 clamp ⛔ 不用 continue 重抽
+       （同 make_batch F6：重抽會把靠近軌跡結尾的起點系統性丟掉，而它不會報錯）。
+    回 (rows, tgts)：起點與路標的 index；動作目標＝ACT[r : r+CHUNK]。"""
+    rows = np.empty(n, np.int64)
+    tgts = np.empty(n, np.int64)
+    f = 0
+    while f < n:
+        r = rng.integers(0, N, n - f)
+        r = r[(traj_end[r] - r) >= CHUNK]           # ⛔ 要有 CHUNK 步真動作可以模仿
+        if len(r) == 0:
+            continue
+        k = rng.integers(LO_KMIN, LO_KMAX + 1, len(r))
+        rows[f:f + len(r)] = r
+        tgts[f:f + len(r)] = np.minimum(r + k, traj_end[r])
+        f += len(r)
+    return rows, tgts
+
+
+def _lo_speed(rows, tgts):
+    """v ＝這一段【朝路標的位移／步數】（原始座標單位／步）。
+    ⭐ 路標就是 s_{t+k} 本人 ⇒「朝它的位移」＝這一段的淨位移 ⇒ 原地掙扎的段 v 低。"""
+    d = np.linalg.norm(OBS_XY[tgts].astype(np.float64) - OBS_XY[rows].astype(np.float64), axis=1)
+    return d / np.maximum(tgts - rows, 1)
+
+
+if LO_W > 0.0 and LO_ADV:
+    # v̄ 定標：同一把抽法抽一大票配對取中位。⛔ 定標流跟訓練流分開、⛔ 不吃 SEED
+    #   ⇒ 各 seed 用【同一把尺】（否則跨 seed 的 w 不可比，而它不會報錯）。
+    _LO_CN = int(os.environ.get("LACOT_LO_ADV_CALIB_N", 50000))
+    _LO_CV = _lo_speed(*_lo_pairs(np.random.default_rng(20260907), _LO_CN))
+    _LO_ST["vbar"] = float(np.median(_LO_CV))
+    assert _LO_ST["vbar"] > 0, "⛔ v̄＝0 ⇒ 全資料一半的段都零位移，w 會炸（先看資料）"
+    print(f"  ⭐ π_lo advantage 定標：v̄（位移/步 中位）={_LO_ST['vbar']:.4f}"
+          f"  p10/p90 {np.percentile(_LO_CV, 10):.4f}/{np.percentile(_LO_CV, 90):.4f}"
+          f"  (n={_LO_CN}、β={LO_ADV_BETA:g}、w 上限 {LO_ADV_WMAX:g})", flush=True)
+
+
+def _lo_batch():
+    """回 (s, w, a, wt)：正規化完整 obs／正規化路標 xy／動作塊／樣本權重（純 BC ⇒ None）。"""
+    rows, tgts = _lo_pairs(_LO_RNG, B)
+    s = (OBS[rows] - mu) / sd
+    w = (OBS_XY[tgts] - MU_XY) / SD_XY
+    a = np.stack([ACT[r:r + CHUNK] for r in rows])
+    wt = None
+    if LO_ADV:
+        v = _lo_speed(rows, tgts)
+        wt = np.minimum(np.exp(LO_ADV_BETA * (v - _LO_ST["vbar"]) / _LO_ST["vbar"]), LO_ADV_WMAX)
+    _T = lambda x: torch.from_numpy(np.ascontiguousarray(x, np.float32)).to(device)
+    return _T(s), _T(w), _T(a), (_T(wt) if wt is not None else None)
 # ⭐ BC_INDEP：bc 地板拆出去用自己的 optimizer ＋ 自己的 grad-clip。
 #    主人 8/24 對 floor 的定義是「真正 BC 能到達的」—— 而共用 opt2 與全域 clip 的話，
 #    它的更新會被主模型的梯度規模牽著走 ⇒ ⛔ 那不是獨立 baseline。
@@ -1195,6 +1298,9 @@ opt2 = _apply_lr_scale(torch.optim.Adam([p for m in f_mods for p in m.parameters
 opt_bc = _apply_lr_scale(torch.optim.Adam(bc_head.parameters(), lr=5e-4)) if BC_INDEP else None
 opt_bc_own = (torch.optim.Adam([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
                                 for p in m.parameters()], lr=5e-4) if BC_OWN else None)
+# ⭐ π_lo 自己的 optimizer（同 bc_own 慣例：獨立 backward／獨立 clip ⇒ 對主模型零影響）
+opt_lo = (torch.optim.Adam([p for m in (lo_s_enc, lo_w_enc, lo_ch, lo_head)
+                            for p in m.parameters()], lr=5e-4) if LO_W > 0.0 else None)
 def condvec(s, g, ix=None):
     """(s,g) → 條件向量。⭐ C：intent 的 embed/residual 接法把錨的全域摘要 ix 拼在尾巴；
     ix=None ⇒ 拼零向量（「沒有路線」＝跟 COND_DROP 歸零同一個哲學）。
@@ -1641,6 +1747,35 @@ def _stage2_loop(n_steps, step_off=0):
                 torch.nn.utils.clip_grad_norm_([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
                                                 for p in m.parameters()], 1.0)
                 _amp_step(opt_bc_own)
+            # ⭐ B 案低層 π_lo：短程 hindsight 配對的 BC（＋梯級一 advantage 加權）。
+            #    ⛔ 完全獨立的 backward（自己的 batch／graph／clip／optimizer），
+            #    ⛔ 也不碰主 rng ⇒ LO_W>0 那顆的主模型跟 LO_W=0 那顆逐位元相同。
+            l_lo = None
+            if LO_W > 0.0:
+                _los, _low, _loa, _lowt = _lo_batch()
+                _lop = lo_act(_los, _low)
+                if _lowt is None:
+                    l_lo = mse(_lop, _loa)                      # 純 BC（LO_ADV=0）
+                else:
+                    l_lo = ((_lop - _loa).pow(2).reshape(len(_lop), -1).mean(1)
+                            * _lowt).sum() / _lowt.sum().clamp(min=1e-6)
+                    if not _LO_ST["logged"]:                    # ⭐ w 分佈印一次（可觀測）
+                        _w9 = _lowt.detach().float().cpu().numpy()
+                        print(f"  ⭐ π_lo advantage 權重 w：p10 {np.percentile(_w9, 10):.3f}"
+                              f" / p50 {np.percentile(_w9, 50):.3f} / p90 {np.percentile(_w9, 90):.3f}"
+                              f"  (首批 n={len(_w9)}、max {_w9.max():.3f}、"
+                              f"打到上限 {int((_w9 >= LO_ADV_WMAX - 1e-9).sum())} 筆)", flush=True)
+                        _LO_ST["logged"] = True
+                # ⚠️ LO_W 是【係數】，⛔ 不是「跟主 loss 的相對配重」—— π_lo 走自己的 optimizer
+                #    ⇒ 乘上去的效果等同 lr 縮放。⛔ 也不做成純 on/off：那樣 _loW0.5 跟 _loW1
+                #    會跑出【完全一樣】的權重卻掛兩個不同檔名，而它不會報錯。
+                l_lo = LO_W * l_lo
+                opt_lo.zero_grad(set_to_none=True)
+                _amp_backward(l_lo)           # ⛔ AMP=0 ⇒ 就是 l_lo.backward()
+                _amp_unscale(opt_lo)          # ⭐ clip 前先 unscale（AMP=0 ⇒ no-op）
+                torch.nn.utils.clip_grad_norm_([p for m in (lo_s_enc, lo_w_enc, lo_ch, lo_head)
+                                                for p in m.parameters()], 1.0)
+                _amp_step(opt_lo)
             total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
             # ⭐ L_div hinge（LACOT_DIV_W>0）：⛔ 整段 gate 在 if 裡 —— DIV_W=0 時連 `+0*l_div`
             #    這種「數學上無害」的 op 都不加，⇒ 預設路徑的 graph 與數值逐位元不變。
@@ -1806,7 +1941,8 @@ def _stage2_loop(n_steps, step_off=0):
                   + (f"  l_div {l_div.item():.4f}" if l_div is not None else ""), flush=True)
         if (_gstp + 1) % LOG_EVERY == 0:      # ⭐ 預設 1000 ⇒ 既有 log 逐行不變
             print(f"  step {_gstp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}"
-                  + (f" l_div {l_div.item():.4f}" if l_div is not None else ""), flush=True)
+                  + (f" l_div {l_div.item():.4f}" if l_div is not None else "")
+                  + (f" l_lo {l_lo.item():.4f}" if l_lo is not None else ""), flush=True)
 
 
 _stage2_loop(STEPS2)
@@ -1852,6 +1988,17 @@ if LOAD_CKPT:
         bc_own_ch.load_state_dict(_ck["bc_own"]["ch"])
         bc_own_head.load_state_dict(_ck["bc_own"]["head"])
         print("  ⭐ 真獨立 GCBC 三模組已載入（bc 臂走 own 鏈）", flush=True)
+    if LO_ON:
+        assert "lo" in _ck, (
+            "⛔ 這一輪要用 π_lo（LACOT_LO_W>0 或 LACOT_SUB_POLICY=lo）但這顆 ckpt 沒有 lo 段"
+            f"（訓練時沒開 LACOT_LO_W）：{os.path.basename(_lp)}")
+        lo_s_enc.load_state_dict(_ck["lo"]["s"])
+        lo_w_enc.load_state_dict(_ck["lo"]["w"])
+        lo_ch.load_state_dict(_ck["lo"]["ch"])
+        lo_head.load_state_dict(_ck["lo"]["head"])
+        print(f"  ⭐ π_lo 低層四模組已載入（訓練時 LO_W={_cfg.get('LO_W', '?')}"
+              f" k∈[{_cfg.get('LO_KMIN', '?')},{_cfg.get('LO_KMAX', '?')}]"
+              f" adv={_cfg.get('LO_ADV', '?')}）", flush=True)
     # ⭐ LACOT_LOAD_EMA=1：用影子權重覆蓋供點鏈五模組（同顆 ckpt 的 raw/ema 配對對照）
     LOAD_EMA = int(os.environ.get("LACOT_LOAD_EMA", 0))
     if LOAD_EMA:
@@ -1948,6 +2095,9 @@ for m in f_mods:
     m.eval()
 if BC_INDEP:
     bc_head.eval()      # ⚠️ BC_INDEP 時它不在 f_mods ⇒ 這一行漏了它會留在 train 模式進 rollout
+if LO_ON:
+    for _m in (lo_s_enc, lo_w_enc, lo_ch, lo_head):
+        _m.eval()       # ⚠️ π_lo 也不在 f_mods（獨立鏈）⇒ 同 bc_head 的理由要自己切
 
 if u_dec is not None:
     # ⭐ 這裡才是 decoder 的最終權重（訓練完 or ckpt 載完）⇒ 檢查要在這裡做，⛔ 不是在 stage 1 後面
@@ -2292,6 +2442,17 @@ def policy_chunk(obs, goal, R, use_u):
     a = ahead(cond, _q(u))[0].cpu().numpy()  # [CHUNK,2]
     return np.clip(a, -1.0, 1.0).astype(np.float32)
 
+
+@torch.no_grad()
+def lo_policy(obs, w_xy):
+    """B 案低層：吃【當下完整 obs】＋【路標 xy】直接出動作塊。
+    ⛔ 不碰 u、不碰 cond 鏈 —— 分段機制（選點／換段／stuck）一行都不動，
+       換掉的只有「開車的那顆頭」。⚠️ w_xy 是【原始座標】的路標，這裡才正規化。"""
+    w = np.asarray(w_xy, np.float64)[..., :XY_DIM]
+    w = torch.tensor(((w - MU_XY) / SD_XY).astype(np.float32), device=device)[None]
+    a = lo_act(normstate(obs), w)[0].cpu().numpy()
+    return np.clip(a, -1.0, 1.0).astype(np.float32)
+
 # ⚠️ ogbench 不看 OGBENCH_DATA_DIR，它只看 dataset_dir 參數（預設 ~/.ogbench/data）。
 #    2026-08-23 實測：不給 dataset_dir 它會【重新下載到 home】，而 home 是 NFS。
 #    ⇒ 一定要明確傳本機 /archive 的路徑。
@@ -2619,6 +2780,56 @@ def _bon_plan(n, cond, anc, s, g):
 SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": [],
             "spread": [], "n_direct": 0, "n_fallback": 0, "esel_e_gap": []}
 
+# ═══ per-leg 統計（B 案的 G1 溫度計）══════════════════════════════════════════
+# ⭐ 一段 leg ＝「這個路標從被設下、到被換掉」之間走的路。它問的是低層那顆頭的
+#    唯一問題：⭐【短程路標到得了嗎】—— ⛔ 全程成功率答不了這個（它混著長程供點的品質）。
+#    到達判定＝planner 自己的 rho（＝0.25·DELTA_SUB）⇒ ⛔ 跟換段的判定同一把尺，
+#    不自訂第二把（兩把尺會給出互相矛盾的「到了」）。
+# ⛔ 預設不開（LACOT_SUB_POLICY=lo 時自動開）⇒ 既有 arm 的 stdout 一個字不變。
+LEG_STATS = int(os.environ.get("LACOT_LEG_STATS", 1 if SUB_POLICY == "lo" else 0))
+_LEG = {"att": 0, "reach": 0, "steps": [], "open": 0, "_pl": None}
+_LEG_ROWS = []        # ⭐ 每個分段 arm 一列（⛔ 只在 LEG_STATS 開著時進 json ⇒ 舊 json 不變）
+
+
+def _leg_reset(pl=None):
+    _LEG.update(att=0, reach=0, steps=[], open=0, _pl=pl)
+
+
+def _leg_close(pl, xy, cut=False):
+    """收一段 leg。cut=True ＝集末截斷（沒有結論）⇒ ⛔ 只計數，不進到達率也不進步數中位
+    —— 把它算成「沒到達」會把成功收尾的那一段也記成失敗，⛔ 那是憑空的悲觀偏差。"""
+    if pl is None or pl.sub is None:
+        return
+    if cut:
+        _LEG["open"] += 1
+        return
+    _LEG["att"] += 1
+    _LEG["steps"].append(pl.since * CHUNK)          # ⚠️ since 是 chunk 數，⛔ 不是 env step
+    if float(np.linalg.norm(np.asarray(xy, np.float64)
+                            - np.asarray(pl.sub, np.float64))) < pl.rho:
+        _LEG["reach"] += 1
+
+
+def _leg_report(tag):
+    """⭐ 這一行就是 G1 溫度計：低層單獨的短程到達率。格式固定、可 grep（前綴 per-leg）。"""
+    if not LEG_STATS:
+        return None
+    _rho = _LEG["_pl"].rho if _LEG["_pl"] is not None else 0.25 * DELTA_SUB
+    _leg_close(_LEG["_pl"], None, cut=True)         # 最後一集那段沒有下一個 on_start 來收
+    _LEG["_pl"] = None
+    _n, _r = _LEG["att"], _LEG["reach"]
+    _md = float(np.median(_LEG["steps"])) if _LEG["steps"] else float("nan")
+    _rate = (_r / _n) if _n else float("nan")
+    print(f"  ⭐ per-leg [{tag}]: legs attempted {_n} / legs reached {_r}"
+          f" / reach rate {_rate:.3f} / median steps per leg {_md:.0f}"
+          f"   (集末未結算 {_LEG['open']} 段；到達半徑 rho {_rho:g}"
+          f"、路標目標間距 DELTA_SUB {DELTA_SUB:g})", flush=True)
+    return dict(arm=str(tag).strip(), legs_attempted=_n, legs_reached=_r,
+                reach_rate=(None if not _n else float(_rate)),
+                steps_med=(None if not _LEG["steps"] else _md),
+                legs_open=_LEG["open"], rho=float(_rho), delta_sub=DELTA_SUB,
+                sub_policy=SUB_POLICY or "u")
+
 
 def _anchor_pts(pts_raw, obs):
     """DEC_ANCHOR：把解碼路徑整條平移到「第 0 點＝當前位置」（原始座標、[B,T,2] 各自平移）。
@@ -2635,11 +2846,15 @@ def make_subgoal_policy(R, use_u):
     """回傳 (policy_chunk_fn, on_episode_start)。⭐ policy 有狀態 ⇒ 每題一定要重置。"""
     planner = SubgoalPlanner(delta_sub=DELTA_SUB, cap=SUB_CAP, stuck_m=SUB_STUCK, chunk=CHUNK)
     SUB_DIAG["_planner"] = planner      # ⭐ 收工時把【最後一題】的計數也收進來（on_start 收不到它）
+    if LEG_STATS:                       # ⭐ per-leg 錶跟著 policy 走：每個 arm 各自從零數
+        _leg_reset(planner)
     box = {"goal": None}
 
     def on_start(obs, goal, task):
         if planner.n_set:                       # ⭐ 上一題的重想次數收進診斷再重置
             SUB_DIAG["n_replan"].append(planner.n_replan)
+        if LEG_STATS:                           # ⛔ 上一集最後那段沒結論 ⇒ 只計數不進到達率
+            _leg_close(planner, None, cut=True)
         planner.reset()
         # ⭐ ant v1：目標存【完整 obs】—— 決策端的 cond 要餵它；幾何要用時各自 to_xy。
         box["goal"] = np.asarray(goal, np.float64)
@@ -2816,7 +3031,13 @@ def make_subgoal_policy(R, use_u):
                 return policy_chunk(obs, box["goal"], R, "bc")
             return policy_chunk(obs, box["goal"], 0, True)   # resample：fresh 短計畫直取 g
         if planner.observe(obs[:2]):
+            if LEG_STATS:                    # ⭐ 這一段結束了（到了／走太久／卡住）⇒ 結算
+                _leg_close(planner, obs[:2])
             planner.set(_plan(obs))
+        if SUB_POLICY == "lo":
+            # ⭐ B 案：只換【開車的頭】—— 分段機制（選點／換段／stuck 判定）一行都沒動。
+            #    ⛔ 路標【不】過 goal_to_obs：低層直吃 xy（那是它自己的 encoder 的語言）。
+            return lo_policy(obs, planner.sub)
         # ⭐ ant v1：planner.sub 是【只有 xy】的路標 ⇒ 補成決策端要的完整 obs
         #    （非 xy 維填資料平均）。pointmaze 上 OBS_DIM==2 ⇒ goal_to_obs 原樣回傳。
         return policy_chunk(obs, goal_to_obs(planner.sub), R,
@@ -2985,6 +3206,10 @@ if DEV_EVAL:
         print(f"      per tier " + "  ".join(
             f"t{k}:{v['success']:.3f}(n={v['n']},d={v['bfs_med']:.0f})"
             for k, v in s["per_tier"].items()), flush=True)
+        if subgoal and LEG_STATS:            # ⭐ G1 溫度計：這個 arm 的短程到達率
+            _lr = _leg_report(f"dev {tag.strip()}")
+            if _lr is not None:
+                _LEG_ROWS.append(_lr)
         return rows, s
 
     # ⭐ 驗收這把尺【本身】：三個已知不同的 policy 要分得開。⛔ 分不開就別拿它跑實驗。
@@ -3175,6 +3400,10 @@ if SUBGOAL:
     _spol, _son = make_subgoal_policy(max(1, min(RS_PRE)), True)
     out["rates"]["subgoal"] = rollout(0, True, f"分段 {SUBGOAL}（官方協定）",
                                       policy_fn=_spol, on_start=_son)
+    if LEG_STATS:                            # ⭐ G1 溫度計：官方協定這一輪的短程到達率
+        _lr = _leg_report(f"official {SUBGOAL}")
+        if _lr is not None:
+            _LEG_ROWS.append(_lr)
 # ⭐ X：反向 refine。⛔ 少了這格，「refine 有用」這個主張沒有任何直接證據。
 # 🚨 2026-08-28 修：_RDIR 只被 _apply_refine 讀，而 _apply_refine 在 LEARNED_REFINE=0 時
 #    直接 return、在 GRAD_REFINE=1 時根本不會被呼叫（policy_chunk 走爬坡那一支）
@@ -3230,7 +3459,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                S1_FROM="", FSQ_TAG="", INTENT_TAG="", INTENT_DROP=0.0,
                CONT_TRAIN=0, STEPS2=2000, DIV_W=0.0, DIV_M=0.3,
                GRPO_W=0.0, GRPO_G=8, GRPO_EVERY=1, GRPO_BQ=4, GRPO_WARM=500, GRPO_STDNORM=1,
-               AMP=0, COMPILE=0, BON_N=0):
+               AMP=0, COMPILE=0, BON_N=0,
+               LO_W=0.0, LO_ADV=0, LO_ADV_BETA=1.0, LO_KMIN=10, LO_KMAX=60):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -3350,6 +3580,17 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         x += "_amp"
     if COMPILE:
         x += "_cmp"
+    # 🚨 B 案低層一定要進檔名（防互蓋鐵則）：LO_W>0 訓出來的 ckpt 多一條 π_lo 鏈，
+    #    ⛔ 少了這一段，同 seed 同步數的「有低層／沒低層」會產生完全相同的檔名而互相覆蓋，
+    #    而被蓋掉的那顆在數值上完全合理、看不出來（本 repo 被同款病咬過三次）。
+    #    ⚠️ adv／k 範圍也一起帶 —— 它們改的是【權重本身】（同 GRPO 那段的慣例）。
+    #    ⭐ 只有非預設（>0）才加 ⇒ 既有檔名一個字不變；eval 的 _splo 走 SUB_POLICY 那格。
+    if LO_W > 0:
+        x += f"_loW{LO_W:g}"
+        if LO_ADV:
+            x += f"a{LO_ADV_BETA:g}"
+        if LO_KMIN != 10 or LO_KMAX != 60:
+            x += f"k{LO_KMIN}-{LO_KMAX}"
     return x
 
 
@@ -3382,7 +3623,9 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     CONT_TRAIN=CONT_TRAIN, STEPS2=CONT_STEPS, DIV_W=DIV_W, DIV_M=DIV_M,
                     GRPO_W=GRPO_W, GRPO_G=GRPO_G, GRPO_EVERY=GRPO_EVERY, GRPO_BQ=GRPO_BQ,
                     GRPO_WARM=GRPO_WARM, GRPO_STDNORM=GRPO_STDNORM,
-                    AMP=AMP, COMPILE=COMPILE, BON_N=BON_N)
+                    AMP=AMP, COMPILE=COMPILE, BON_N=BON_N,
+                    LO_W=LO_W, LO_ADV=LO_ADV, LO_ADV_BETA=LO_ADV_BETA,
+                    LO_KMIN=LO_KMIN, LO_KMAX=LO_KMAX)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
 # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
@@ -3399,6 +3642,13 @@ os.makedirs(os.path.dirname(dst), exist_ok=True)
 out["n_intent_noroute"] = _N_NOROUTE[0]
 if INTENT:
     out["n_intent_src_fallback"] = _N_SRC_FB[0]
+# ⭐ B 案 per-leg（G1 溫度計）＋低層設定：⛔ 只在開著時進 json ⇒ 既有 json 逐 key 不變。
+if _LEG_ROWS:
+    out["leg_stats"] = _LEG_ROWS
+if LO_ON:
+    out["lo"] = dict(w=LO_W, kmin=LO_KMIN, kmax=LO_KMAX, adv=LO_ADV,
+                     adv_beta=LO_ADV_BETA, adv_wmax=LO_ADV_WMAX,
+                     vbar=_LO_ST["vbar"], sub_policy=SUB_POLICY)
 # ⭐ BoN 統計（9/6）：⛔ 0 也要落地 —— 「開著但一次都沒換過計畫」必須看得見。
 #    changed／degen 是判讀的第一格：degen 高＝閘把 N 條全打成同分（多半全 0）⇒ 沒得選；
 #    changed 低而成功率有動＝那個動不是 BoN 帶來的，要先懷疑別的東西。
@@ -3514,6 +3764,9 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             # ⭐ 真獨立 GCBC 三模組（BC_OWN 時）
             **({"bc_own": {"enc": bc_own_enc.state_dict(), "ch": bc_own_ch.state_dict(),
                            "head": bc_own_head.state_dict()}} if BC_OWN else {}),
+            # ⭐ B 案低層 π_lo 四模組（LO_ON 時；⛔ 沒有它 eval 端只能拿隨機權重跑到達率）
+            **({"lo": {"s": lo_s_enc.state_dict(), "w": lo_w_enc.state_dict(),
+                       "ch": lo_ch.state_dict(), "head": lo_head.state_dict()}} if LO_ON else {}),
             # ⭐ optimizer 狀態只在續訓模式存（⛔ 預設路徑的 ckpt 內容逐 key 不變）——
             #    有它，下一次續訓的 Adam m/v 才接得下去（沒有就 fresh，見載入端的警告）
             **({"opt2": opt2.state_dict(),
@@ -3540,5 +3793,9 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
                         #    這顆是不是 fp16 訓的、跳過幾步，⛔ 要能從 ckpt 本身讀出來
                         **({"AMP": AMP, "AMP_SKIP": _AMP_ST["skip"],
                             "AMP_STEPS": _AMP_ST["steps"]} if AMP else {}),
-                        **({"COMPILE": COMPILE} if COMPILE else {}))}, ck)
+                        **({"COMPILE": COMPILE} if COMPILE else {}),
+                        # ⭐ B 案低層血緣（⛔ 只在開著時進 cfg ⇒ 預設 ckpt 逐位元不變）
+                        **({"LO_W": LO_W, "LO_KMIN": LO_KMIN, "LO_KMAX": LO_KMAX,
+                            "LO_ADV": LO_ADV, "LO_ADV_BETA": LO_ADV_BETA,
+                            "LO_VBAR": _LO_ST["vbar"]} if LO_ON else {}))}, ck)
 print(f"存 checkpoint {ck}", flush=True)
