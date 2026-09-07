@@ -36,6 +36,58 @@ assert ends[-1] == N - 1, "資料集最後一筆不是 terminal ⇒ traj_end 尾
 MAX_TRAIN_T = int((ends - starts + 1).max())   # 訓練時 T 到得了的上限＝最長的一條軌跡
 mu, sd = OBS.mean(0), OBS.std(0) + 1e-6
 MU = torch.tensor(mu, device=device); SD = torch.tensor(sd, device=device)
+# ═══ ant 移植 v1（docs/DESIGN-2026-09-07-ant-migration-v1.md）═══════════════════
+# ⭐ 兩個空間、一條投影（設計檔「核心設計決定」）：
+#     計畫棧＝e_target 的軌跡窗／intent 錨／GeoEnergy 佔據圖（獨立多份）／teacher 題庫／
+#             subgoal E 圖／GRPO reward 的眼睛／往返尺 —— 全部住【xy 投影空間】
+#     決策端＝action head／BC 地板頭／cond 的當下 state 與 goal —— 吃【完整】obs
+#   為什麼這樣切：u 的正名地基是軌跡規劃（CANON-u-semantics），而路線就是 xy；
+#   關節姿態不進計畫，由決策端從資料模仿吸收（會不會走路住在 action head 的權重裡）。
+# ⭐ pointmaze 上 obs ≡ xy ⇒ 投影是【恆等】⇒ 既有路徑逐位元不變（golden 的立足點）。
+# ⛔ 維度一律從資料推導，⛔ 不寫死：ant 29/8、pointmaze 退化回 2/2。
+XY_DIM = 2
+OBS_DIM = int(OBS.shape[1])
+ADIM = int(ACT.shape[1])
+assert OBS_DIM >= XY_DIM, f"⛔ obs 維度 {OBS_DIM} < {XY_DIM} ⇒ 沒有 xy 可以投影給計畫棧"
+OBS_XY = OBS[:, :XY_DIM]                    # ⚠️ view；pointmaze 上它就是 OBS 自己
+MU_XY, SD_XY = mu[:XY_DIM], sd[:XY_DIM]     # numpy（原始座標 → 正規化 xy）
+MU_XY_T, SD_XY_T = MU[:XY_DIM], SD[:XY_DIM]  # torch 版（eval 端把正規化 xy 換回原始座標）
+# ⭐ env 家族：終局接管（LACOT_FINISH_R）預設「離目標夠近就換 bc head 直接推過去」——
+#    那個捷徑成立的前提是【速度控制】（pointmaze 的球）。ant 是 8 維關節力矩，
+#    「朝目標推」不是一個動作 ⇒ ant 家族一律 disable（設計檔 3；已呈主人 9/7 TG 5904）。
+ENV_FAMILY = ENV_NAME.split("-", 1)[0]
+IS_ANT = ENV_FAMILY.startswith("ant")
+
+
+def to_xy(x):
+    """計畫棧的唯一投影：[...,D] → [...,2]（numpy／torch 皆可）。
+    ⛔ 決策端不准呼叫它 —— 那一側要完整 obs（ant 的關節姿態就住在被切掉的那些維）。
+    ⚠️ pointmaze（D=2）上是恆等：切出來的值、連續性都跟原張量一樣 ⇒ 下游逐位元不變。"""
+    return x[..., :XY_DIM]
+
+
+def xy_to_obs_slot(xy_n):
+    """【正規化】xy [n,2] → 【正規化】obs [n,OBS_DIM]：非 xy 維補 0（＝資料平均那一格）。
+    給「只有位置、沒有姿態」的合成樣本用（teacher 題庫、自舉出題的 s/g 端點）。
+    ⛔ pointmaze 上 OBS_DIM==2 ⇒ 原樣回傳同一個 array（逐位元不變）。"""
+    xy_n = np.asarray(xy_n)
+    if OBS_DIM == XY_DIM:
+        return xy_n
+    return np.concatenate([xy_n, np.zeros((xy_n.shape[0], OBS_DIM - XY_DIM), xy_n.dtype)], 1)
+
+
+def goal_to_obs(g):
+    """【原始】座標的「目標」→ 決策端要的完整 obs。
+    已經是完整 obs（env 給的 goal state）就原樣回；只有 xy（分段規劃挑出來的路標）就把
+    其餘維度填 mu ⇒ 正規化後那些維＝0＝「姿態視為資料平均」。
+    ⛔ pointmaze 上 OBS_DIM==2 ⇒ 第一個分支永遠成立 ⇒ 行為不變。"""
+    g = np.asarray(g, np.float64)
+    if g.shape[-1] == OBS_DIM:
+        return g
+    assert g.shape[-1] == XY_DIM, f"⛔ 目標維度 {g.shape[-1]} 既不是 obs({OBS_DIM}) 也不是 xy({XY_DIM})"
+    out = np.array(mu, np.float64)
+    out[:XY_DIM] = g
+    return out
 # 🚨 K 與 COND 改成環境變數，⛔ 不要再靠手改檔案跑不同設定 ——
 #    2026-08-23 就踩到：檔案裡寫 K=64，但 FINDINGS 記的三 seed 成功率標的是 K=4，
 #    對不起來，等於那組 0.85 沒辦法照原樣重跑（改了沒記＝下次的自己找不回來）。
@@ -316,6 +368,15 @@ FINISH_R = float(os.environ.get("LACOT_FINISH_R", 0.0))
 FINISH_MODE = os.environ.get("LACOT_FINISH_MODE", "bc")
 assert FINISH_MODE in ("bc", "resample"), f"⛔ LACOT_FINISH_MODE 只能是 bc/resample，收到 {FINISH_MODE}"
 _FIN_COUNT = [0]   # ⭐ 終局接管的觸發次數 —— ⛔ 開關條件寫錯＝永不觸發＝快篩白跑，要能看見
+# ⭐ ant 移植 v1（設計檔 3）：終局接管【按 env 家族關閉】。
+#   它的前提是速度控制（球可以直接朝目標推）；ant 是 8 維關節力矩，「朝目標推」不是一個動作
+#   ⇒ ant 下開著只會把最後一段交給一顆同樣不會走路的 head，而它【不會報錯】。
+#   ⛔ 只關【行為】，⛔ 不動 FINISH_R 本身 —— 檔名的 _fin 段是這條臂的身份，要留著；
+#      計數器與收工那行照印（0 次＝關掉了，看得見）。
+FINISH_ON = (FINISH_R > 0.0) and not IS_ANT
+if FINISH_R > 0.0 and IS_ANT:
+    print(f"  ⭐ 終局接管：takeover=off(ant)（LACOT_FINISH_R={FINISH_R:g} 收到了，"
+          f"但 {ENV_FAMILY} 不是速度控制 ⇒ 本次不接管）", flush=True)
 # ⭐ LOAD_CKPT ── 載入已訓好的權重，跳過訓練，只跑評估。
 #   🚨 起因：交接記著「今天為了換探針重訓了三輪」。換一個 arm、換一個判準就重訓一次，
 #      是這個 repo 從 8/23 就有的浪費 —— 而且它讓「補一個對照」的成本高到我們不想補。
@@ -359,8 +420,14 @@ if T_CAP != T_CAP_REQ:
 #    oracle 路徑 240~256 步 ⇒ pos_emb[201:256] 還是隨機初始化，且那是最靠近目標的一段）。
 #    ⛔ 這支腳本的常數區在資料載入【之後】（跟 exp_etarget_ceiling.py 相反）
 #    ⇒ 夾子必須寫在這一行下面，寫到上面去會 NameError（2026-08-24 smoke 19734 實測炸過）。
-B, D_MODEL, TEMP, ADIM = 64, 256, 0.1, 2
+#    ⭐ ADIM 已在檔頭從 ACT 推導（ant 8 / pointmaze 2）—— ⛔ 這裡不再寫死 2。
+B, D_MODEL, TEMP = 64, 256, 0.1
 DIM = K * D_MODEL
+if OBS_DIM != XY_DIM or ADIM != XY_DIM:
+    # ⛔ 只在【非退化】的 env 印 —— pointmaze（2/2）的 stdout 一個字都不能多，
+    #    否則跟歷史 log 的逐字比對就報假警（同 _tag_extra「只有非預設才加」的慣例）。
+    print(f"⭐ 空間：obs_dim={OBS_DIM} act_dim={ADIM}、計畫棧投影 xy_dim={XY_DIM}"
+          f"（env 家族 {ENV_FAMILY}{'；終局接管 takeover=off(ant)' if IS_ANT else ''}）", flush=True)
 
 # ═══ P1b：ebfs teacher 資料引擎（主人 2026-08-30「開始跑」）════════════════
 # ⭐ 治 cond OOD 的根：訓練配對混入「資料圖搜出來的遠距 (s,g)＋最優拼接軌跡」。
@@ -375,7 +442,7 @@ if TEACHER_MIX > 0:
     assert not LEARNED_REFINE, "⛔ TEACHER_MIX 的 real-mask 尚未接進 l_refine 分支 —— 要開先接"
     from lacot.refine_grad import GeoEnergy as _TchGeo
     from lacot.subgoal import grid_shortest_path as _tch_sp
-    _tg = _TchGeo(OBS, mu, sd, res=8, device="cpu")
+    _tg = _TchGeo(OBS_XY, MU_XY, SD_XY, res=8, device="cpu")
     _tocc = (_tg.dist[0, 0].numpy() == 0.0)
     _tfree = np.argwhere(_tocc)
     _tlo = np.asarray(_tg.lo, np.float64)
@@ -409,7 +476,7 @@ if TEACHER_MIX > 0:
 if INTENT:
     from lacot.intent import hindsight_intent, route_intent
     from lacot.refine_grad import GeoEnergy as _IgGeo
-    _ig = _IgGeo(OBS, mu, sd, res=8, device="cpu")
+    _ig = _IgGeo(OBS_XY, MU_XY, SD_XY, res=8, device="cpu")
     _iocc = (_ig.dist[0, 0].numpy() == 0.0)
     _ifree = np.argwhere(_iocc)
     _ilo = np.asarray(_ig.lo, np.float64)
@@ -509,7 +576,9 @@ def _teacher_traj(rng, n):
 DATA_RESAMPLE = int(os.environ.get("LACOT_DATA_RESAMPLE", 0))
 _RS_CELLS = None
 if DATA_RESAMPLE:
-    _rs_ij = np.floor((OBS[:, :2] + 2.0) / 4.0).astype(np.int64)   # 4×4 格、對齊迷宮牆格
+    # ⚠️ 4×4 格是照 maze_unit=4.0／offset=4 定的（9/7 一手查：pointmaze 與 antmaze 的
+    #    medium/large 都是這組 ⇒ ant 上照樣對齊）。⛔ 換到別的迷宮尺寸要重算，這行不是通用的。
+    _rs_ij = np.floor((to_xy(OBS) + 2.0) / 4.0).astype(np.int64)   # 4×4 格、對齊迷宮牆格
     _rs_key = _rs_ij[:, 0] * 1000 + _rs_ij[:, 1]
     _rs_uniq, _rs_inv, _rs_cnt = np.unique(_rs_key, return_inverse=True, return_counts=True)
     _rs_w = 1.0 / (_rs_cnt + 0.1 * _rs_cnt.mean())
@@ -570,16 +639,21 @@ def make_batch(rng, teacher_mix=0.0):
     lo_i = np.floor(f).astype(np.int64)
     hi_i = np.minimum(lo_i + 1, goals[:, None])      # ⚠️ 夾在終點內，⛔ 不可以跨到下一條軌跡
     w = (f - lo_i)[..., None]
-    traj = ((OBS[lo_i] * (1.0 - w) + OBS[hi_i] * w - mu) / sd).astype(np.float32)
+    # ⭐ ant v1：軌跡窗是【計畫棧】的輸入 ⇒ 只放 xy（OBS_XY/MU_XY/SD_XY）。
+    #    ⛔ s/g 留完整 obs —— 它們走的是決策端（cond → action head / bc head）。
+    #    pointmaze 上 OBS_XY 就是 OBS、MU_XY 就是 mu ⇒ 這一行逐位元不變。
+    traj = ((OBS_XY[lo_i] * (1.0 - w) + OBS_XY[hi_i] * w - MU_XY) / SD_XY).astype(np.float32)
     s = (OBS[rows] - mu) / sd; g = (OBS[goals] - mu) / sd
     act = np.stack([ACT[r:r + CHUNK] for r in rows]).astype(np.float32)
     if n_t > 0:
         # teacher 樣本：正規化格心內插軌跡；s/g＝軌跡端點；act＝零（⛔ 只佔位，loss 端用
         # real-mask 擋掉 —— head/bc 不吃合成動作）。
+        # ⭐ ant v1：teacher 只有位置、沒有關節姿態 ⇒ s/g 的非 xy 維補 0（＝資料平均）。
+        #    合法：這些樣本的 action loss 本來就被 real-mask 擋掉，只餵幾何側。
         tt = _teacher_traj(rng, n_t)                 # [n_t, T_CAP, 2] 已正規化
         traj = np.concatenate([traj, tt], 0)
-        s = np.concatenate([s, tt[:, 0].astype(np.float64)], 0)
-        g = np.concatenate([g, tt[:, -1].astype(np.float64)], 0)
+        s = np.concatenate([s, xy_to_obs_slot(tt[:, 0].astype(np.float64))], 0)
+        g = np.concatenate([g, xy_to_obs_slot(tt[:, -1].astype(np.float64))], 0)
         act = np.concatenate([act, np.zeros((n_t, CHUNK, ADIM), np.float32)], 0)
     mask = np.zeros((B, T_CAP), bool)                # 全 False ＝ 全部都是真點
     # ⚠️ 自檢：一響就代表洩漏又回來了（⛔ 別把它拿掉）
@@ -640,8 +714,9 @@ print(f"設定：seed={SEED} cons={CONS} ema_m={EMA_M} K={K} COND={COND}"
       + (f" data_seed={DATA_SEED}" if DATA_SEED >= 0 else "")
       + (f" boot_seed={BOOT_SEED}" if BOOT_SEED >= 0 else "")
       + (f" lr_scale={LR_SCALE:g}" if LR_SCALE != 1.0 else ""), flush=True)
-traj_enc = sota_mlp(2, 512, 512).to(device); e_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
-sg_c = sota_mlp(2, 512, 512).to(device); q_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
+# ⭐ ant v1：traj_enc 吃【計畫棧】的軌跡點 ⇒ 恆為 XY_DIM；sg_c 吃【決策端】的 (s,g) ⇒ OBS_DIM。
+traj_enc = sota_mlp(XY_DIM, 512, 512).to(device); e_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
+sg_c = sota_mlp(OBS_DIM, 512, 512).to(device); q_pooler = PerceiverPooler(512, D_MODEL, K, 2, 4, max_len=max(512, T_CAP)).to(device)
 opt1 = _apply_lr_scale(torch.optim.Adam([p for m in (traj_enc, e_pooler, sg_c, q_pooler) for p in m.parameters()], lr=1e-3))
 lab = torch.arange(B, device=device)
 # ⭐ A1（2026-08-26）：VICReg 的 variance ＋ covariance 兩項。
@@ -701,8 +776,12 @@ def _decoder_health():
 
 
 def etarget(traj, mask):
-    Bc, Tc, _ = traj.shape
-    return e_pooler(traj_enc(traj.reshape(Bc * Tc, 2)).reshape(Bc, Tc, 512), key_padding_mask=mask)
+    """[B,T,2] 的軌跡窗 → u。⛔ 只吃【xy 投影】——
+    餵完整 obs 進來要當場炸（⭐ 炸是好事：靜默地把關節姿態當座標編進計畫才是災難）。"""
+    Bc, Tc, Dc = traj.shape
+    assert Dc == XY_DIM, (
+        f"⛔ etarget 收到 {Dc} 維的軌跡 —— 計畫棧只吃 xy（{XY_DIM} 維），呼叫端要先過 to_xy()")
+    return e_pooler(traj_enc(traj.reshape(Bc * Tc, XY_DIM)).reshape(Bc, Tc, 512), key_padding_mask=mask)
 
 
 def _route_traj(obs_xy, goal_xy):
@@ -753,7 +832,7 @@ def flow_probe(tasks_sg, M):
         if tr is None or u_dec is None:
             out.append(None); continue
         with torch.no_grad():
-            route_raw = tr[0] * SD + MU                                # [T,2] 原始
+            route_raw = tr[0] * SD_XY_T + MU_XY_T                                # [T,2] 原始
             s_n = normstate(np.asarray(sx, np.float64)); g_n = normstate(np.asarray(gx, np.float64))
             # ⭐ H(3)：診斷路徑也要接 intent，否則 anchor 接法在這裡就維度炸（⛔ 不是靜默的）。
             # ⚠️ 已知缺口：下面 u_o 走的是 etarget(tr)，而 tr 是【絕對】軌跡；INTENT=residual 時
@@ -761,11 +840,11 @@ def flow_probe(tasks_sg, M):
             _anc = _intent_anchor_eval(sx, gx)
             cond = condvec(s_n, g_n, _intent_cond(_anc)).expand(M, -1)
             u = flow.sample(M, flow_cond(cond, _anc))
-            pts_n = _intent_inv(_dec(_q(u), s_n), _anc); pts_raw = _anchor_pts(pts_n * SD + MU, np.asarray(sx, np.float64))   # [M,T,2]
+            pts_n = _intent_inv(_dec(_q(u), s_n), _anc); pts_raw = _anchor_pts(pts_n * SD_XY_T + MU_XY_T, np.asarray(sx, np.float64))   # [M,T,2]
             route_d = _route_d(pts_raw, route_raw)                     # [M]
             wall = (GEO.wall_depth(pts_n) * _head_mask(pts_raw).float()).sum(1) / _head_mask(pts_raw).float().sum(1)
             u_o = etarget(tr, torch.zeros(1, T_CAP, dtype=torch.bool, device=device))
-            po = _anchor_pts(_intent_inv(_dec(_q(u_o), tr[:, 0]), _anc) * SD + MU, np.asarray(sx, np.float64))
+            po = _anchor_pts(_intent_inv(_dec(_q(u_o), tr[:, 0]), _anc) * SD_XY_T + MU_XY_T, np.asarray(sx, np.float64))
             ref = float(_route_d(po, route_raw)[0]); thr = max(2.0 * ref, 0.5)
             onroute = (route_d < thr).float()                          # 對路只看路徑距；穿牆分開報
             heads = [pr[_head_mask(pr[None])[0]] for pr in pts_raw]
@@ -817,7 +896,7 @@ s_embed = None
 if ENC_OBJ.startswith("recon"):
     from lacot.traj_decoder import TrajDecoder
     u_dec = TrajDecoder(D_MODEL, T_CAP).to(device)
-    s_embed = nn.Linear(2, D_MODEL).to(device) if DEC_START == "hard" else None   # ⭐ 起點 token（hard 綁定；進 opt1 與 ckpt）
+    s_embed = nn.Linear(XY_DIM, D_MODEL).to(device) if DEC_START == "hard" else None   # ⭐ 起點 token（hard 綁定；進 opt1 與 ckpt）—— 計畫棧側 ⇒ xy
     u_dec.check_p = 0.01
     # ⛔ sg_c / q_pooler 不進 optimizer —— (s,g)↔τ InfoNCE 整條移除，⛔ 不是降權重。
     opt1 = _apply_lr_scale(torch.optim.Adam([p for m in (traj_enc, e_pooler, u_dec) for p in m.parameters()]
@@ -878,7 +957,10 @@ def _dec(u, s_n):
     ⛔ 所有解碼點都走這裡（訓練 recon、boot 出題、select、投影、latent/conf/conf2、往返尺、flow 探針）——不要另寫。"""
     if DEC_START != "hard":
         return u_dec(u)
-    s2 = torch.as_tensor(s_n, dtype=u.dtype, device=u.device).reshape(-1, 2)
+    # ⭐ ant v1：呼叫端傳進來的 s_n 可能是【完整 obs】（決策端的 state）也可能已經是 xy
+    #    （route 軌跡的第 0 點）⇒ 一律投影 —— decoder 解的是 xy 路徑，起點也只能是 xy。
+    s2 = torch.as_tensor(s_n, dtype=u.dtype, device=u.device)
+    s2 = to_xy(s2.reshape(-1, s2.shape[-1])).reshape(-1, XY_DIM)
     if s2.shape[0] == 1 and u.shape[0] != 1:
         s2 = s2.expand(u.shape[0], -1)
     ctx = torch.cat([u, s_embed(s2)[:, None, :]], 1)   # ⭐ 起點當第 K+1 個 token 餵 decoder（9/2 晚第四版）
@@ -986,11 +1068,13 @@ for stp in range(_S1):
             et_dec, l_vq, _vqst = et, 0.0, None
         _pts1 = _dec(et_dec, s)                          # ⭐ 開頭綁定：hard 在這裡平移到 s
         if DEC_START and stp == 0:                       # 一次性哨兵：traj 第 0 點本來就該＝s（否則 hard 的前提錯）
-            print(f"  ⭐ DEC_START={DEC_START}：‖traj[:,0]−s‖ max {float((traj[:, 0] - s).norm(dim=-1).max()):.4f}（應≈0）", flush=True)
+            # ⭐ ant v1：traj 是 xy、s 是完整 obs ⇒ 比的必須是 s 的 xy 那兩維（pointmaze 上恆等）
+            print(f"  ⭐ DEC_START={DEC_START}：‖traj[:,0]−s‖ max {float((traj[:, 0] - to_xy(s)).norm(dim=-1).max()):.4f}（應≈0）", flush=True)
         _main = (_pts1 - traj).pow(2).mean()             # ⭐ 重建 128 個座標點
         loss = _main + l_vq
         if DEC_START == "soft":                          # ⭐ 軟綁：第 0 點對起點的懲罰
-            loss = loss + DEC_START_W * (_pts1[:, 0] - s).pow(2).mean()
+            # ⭐ ant v1：_pts1 是 xy 路徑 ⇒ 起點也要投影（⛔ 不投影的話這一項在 ant 上直接維度炸）
+            loss = loss + DEC_START_W * (_pts1[:, 0] - to_xy(s)).pow(2).mean()
         if ENC_OBJ == "recon_ictr":
             # instance-level：同一條 τ 的兩個【加噪視角】要互認。
             # ⛔ 這跟被移除的那項不同 —— 它認的是「同一條軌跡」，⛔ 不是「同一組 (s,g)」，
@@ -1035,7 +1119,7 @@ print(f"  e_target match-acc(train batch) {_ma:.3f}", flush=True)   # ⚠️ 訓
 if _ed_hist:
     print(f"  ⇒ u 有效維度 起 {_ed_hist[0]:.3f} → 末 {_ed_hist[-1]:.3f}", flush=True)
 
-cond_enc = sota_mlp(2, 512, 512).to(device)
+cond_enc = sota_mlp(OBS_DIM, 512, 512).to(device)     # ⭐ 決策端：吃完整 obs（ant 的姿態在這裡）
 # ⭐ C：embed/residual 接法把錨的全域摘要拼在 cond 尾巴 ⇒ cond_head 的入口寬 1024+extra。
 cond_head = sota_mlp(1024 + (intent_ad.cond_extra_dim if intent_ad is not None else 0),
                      512, COND).to(device)
@@ -1093,7 +1177,7 @@ if BC_OWN:
     #    0.728/0.328 掉出常軌＝落進 seed 方差）。fork 內用自己的確定性 seed。
     with torch.random.fork_rng(devices=[device] if str(device) != "cpu" else []):
         torch.manual_seed(20260831 + SEED)
-        bc_own_enc = sota_mlp(2, 512, 512).to(device)
+        bc_own_enc = sota_mlp(OBS_DIM, 512, 512).to(device)   # ⭐ 決策端：同 cond_enc 吃完整 obs
         bc_own_ch = sota_mlp(1024, 512, COND).to(device)
         bc_own_head = CondOnlyMLP().to(device)
     def own_condvec(s, g):
@@ -1276,7 +1360,7 @@ if GRPO_W > 0:
     assert INTENT != "residual", "⛔ GRPO rung 1 不支援 residual 接法（decode 出殘差、逐題 contour 反演未定）"
     # ── reward 的眼睛：資料佔據圖 —— 跟 eval E 圖同款建構 GeoEnergy(OBS,mu,sd,res=8)、獨立一份
     #    ⇒ ⛔ 不依賴 SUBGOAL/INTENT 開不開（_ig/_tg 前例）。這一段全在【正規化】空間。
-    _gg = _GrpoGeo(OBS, mu, sd, res=8, device="cpu")
+    _gg = _GrpoGeo(OBS_XY, MU_XY, SD_XY, res=8, device="cpu")
     _GOCC = (_gg.dist[0, 0].numpy() == 0.0)
     _GFREE = np.argwhere(_GOCC)
     _G_LO = np.asarray(_gg.lo, np.float64)
@@ -1319,7 +1403,8 @@ if GRPO_W > 0:
         _lo0 = np.floor(_f0).astype(np.int64)
         _hi0 = np.minimum(_lo0 + 1, _te0)
         _w0 = (_f0 - _lo0)[:, None]
-        _t0 = (OBS[_lo0] * (1.0 - _w0) + OBS[_hi0] * _w0 - mu) / sd
+        # ⭐ ant v1：δ_step 量的是【計畫】的鄰步距 ⇒ 校準軌跡也只能是 xy（同 make_batch 的 traj）
+        _t0 = (OBS_XY[_lo0] * (1.0 - _w0) + OBS_XY[_hi0] * _w0 - MU_XY) / SD_XY
         _gseg.append(np.linalg.norm(np.diff(_t0, axis=0), axis=1))
     _GRPO_DSTEP = float(np.percentile(np.concatenate(_gseg), 95) * 1.5)
 
@@ -1628,7 +1713,9 @@ def _stage2_loop(n_steps, step_off=0):
                     _gpn = _intent_inv(_dec(_q(_gzq), _gsq.repeat_interleave(GRPO_G, 0)), _garep).cpu().numpy()
                 _grw = np.zeros(GRPO_BQ * GRPO_G); _ggate = np.zeros(GRPO_BQ * GRPO_G)
                 for _j in range(GRPO_BQ * GRPO_G):
-                    _grw[_j], _ggate[_j] = _grpo_reward(_gpn[_j], _gsqn[_j // GRPO_G], _ggqn[_j // GRPO_G])
+                    # ⭐ ant v1：reward 的眼睛是 xy 佔據圖 ⇒ 端點也只能餵 xy（⛔ 完整 obs 進去會廣播錯位）
+                    _grw[_j], _ggate[_j] = _grpo_reward(_gpn[_j], to_xy(_gsqn[_j // GRPO_G]),
+                                                        to_xy(_ggqn[_j // GRPO_G]))
                 # ⑤ group advantage（§1.2；退化群 Â≡0＝零梯度＝正確行為、計數進錶）
                 _grg = _grw.reshape(GRPO_BQ, GRPO_G)
                 _gadv = _grg - _grg.mean(1, keepdims=True)
@@ -1890,7 +1977,7 @@ if BOOT_GEN:
     BOOT_EPT = float(os.environ.get("LACOT_BOOT_EPT", 0.25))     # 端點硬門檻：首尾偏離 s/g 上限
     from lacot.refine_grad import GeoEnergy as _BgGeo
     from lacot.subgoal import grid_bfs as _bg_bfs
-    _bgeo = _BgGeo(OBS, mu, sd, res=8, device=device, w_len=W_LEN)
+    _bgeo = _BgGeo(OBS_XY, MU_XY, SD_XY, res=8, device=device, w_len=W_LEN)
     _bocc = (_bgeo.dist[0, 0].cpu().numpy() == 0.0)
     _bfree = np.argwhere(_bocc)
     _blo = np.asarray(_bgeo.lo, np.float64)
@@ -1939,9 +2026,13 @@ if BOOT_GEN:
         for a, b, dr in _bq:
             sn = _blo + np.asarray(a, np.float64) * _bcell + _brng.uniform(-0.4, 0.4, 2) * _bcell
             gn = _blo + np.asarray(b, np.float64) * _bcell + _brng.uniform(-0.4, 0.4, 2) * _bcell
-            st = torch.tensor(sn, dtype=torch.float32, device=device)[None]
+            st = torch.tensor(sn, dtype=torch.float32, device=device)[None]      # 正規化 xy（幾何側）
             gt = torch.tensor(gn, dtype=torch.float32, device=device)[None]
-            cond_b = condvec(st, gt)
+            # ⭐ ant v1：出題只有位置、沒有姿態 ⇒ cond（決策端）用非 xy 維補 0 的完整 obs。
+            #    pointmaze 上 xy_to_obs_slot 原樣回傳 ⇒ 這兩行等於 st/gt 本身。
+            st_o = torch.tensor(xy_to_obs_slot(sn[None]), dtype=torch.float32, device=device)
+            gt_o = torch.tensor(xy_to_obs_slot(gn[None]), dtype=torch.float32, device=device)
+            cond_b = condvec(st_o, gt_o)
             u_b = flow.sample(BOOT_M, cond_b.expand(BOOT_M, -1))
             pts = _dec(_q(u_b), st)                           # [M, T_CAP, 2] 正規化
             e_tot, e_terms = _bgeo(pts, st.expand(BOOT_M, -1), gt.expand(BOOT_M, -1), per_term=True)
@@ -1978,8 +2069,14 @@ if BOOT_GEN:
     raise SystemExit(0)
 
 # -------- SUCCESS-RATE ROLLOUT --------
-def normstate(x):  # raw env position -> normalized torch [1,2]
-    return ((torch.tensor(np.asarray(x, np.float32), device=device) - MU) / SD)[None]
+def normstate(x):  # raw env state -> normalized torch [1, OBS_DIM]（⭐ 決策端，⛔ 不是計畫棧）
+    x = np.asarray(x, np.float32)
+    # ⭐ ant v1：這是【決策端】的入口 ⇒ 只吃完整 obs。⛔ 餵只有 xy 的路標進來要當場炸
+    #    （分段規劃的路標請先過 goal_to_obs）—— 靜默廣播成一個假的 cond 才是災難。
+    assert x.shape[-1] == OBS_DIM, (
+        f"⛔ normstate 收到 {x.shape[-1]} 維 —— 決策端要完整 obs（{OBS_DIM} 維）；"
+        " 只有 xy 的路標請先過 goal_to_obs()")
+    return ((torch.tensor(x, device=device) - MU) / SD)[None]
 
 # ⭐ 「別人的 u」探針（主人 2026-08-23 核可）。
 # ⛔ 零向量那個探針會製造 OOD，量到的是「head 沒看過零」的懲罰，不是 u 的價值。
@@ -2115,7 +2212,7 @@ def policy_chunk(obs, goal, R, use_u):
     #   ⛔ 只影響主 arm（use_u is True）；bc/shuf/null 對照不受影響。
     #   ⚠️ 分段模式另有一道在 make_subgoal_policy.policy()（那裡的 goal 是 subgoal，
     #      這裡判的必須是【最終目標】—— flat 的呼叫端傳的就是最終目標）。
-    if FINISH_R > 0.0 and use_u is True and float(
+    if FINISH_ON and use_u is True and float(
             np.linalg.norm(np.asarray(obs[:2], np.float64)
                            - np.asarray(goal[:2], np.float64))) < FINISH_R:
         _FIN_COUNT[0] += 1
@@ -2164,8 +2261,9 @@ def policy_chunk(obs, goal, R, use_u):
                 cand = sample_plan(SEL_N, cond.expand(SEL_N, -1), _anc, s, g)
                 with torch.no_grad():
                     # ⭐ H(4)：residual 接法解出來的是殘差 ⇒ 進 E_geo 之前先加回錨輪廓
+                    # ⭐ ant v1：E_geo 的 start/goal 兩項是【幾何】距離 ⇒ 端點投影成 xy
                     _e = GEO(_intent_inv(_dec(_q(cand), s), _anc),
-                             s.expand(SEL_N, -1), g.expand(SEL_N, -1))
+                             to_xy(s).expand(SEL_N, -1), to_xy(g).expand(SEL_N, -1))
                 u = cand[int(_e.argmin())][None]
             else:
                 _use_warm, _steps = grad_steps(R, _GRAD_CACHE["u"] is not None, GRAD_R, GRAD_R_WARM)
@@ -2175,7 +2273,8 @@ def policy_chunk(obs, goal, R, use_u):
                     # ⚠️ H(4) 已知缺口：grad_refine 內部自己 decode 去算 E_geo，而它在 lacot/（唯讀）
                     #    ⇒ INTENT=residual＋GRAD_R>0 時那個 E 是對【殘差】算的。
                     #    ⛔ 別靜默用它：residual 臂請配 GRAD_R=0（爬 0 步 ⇒ grad_refine 是 no-op）。
-                    u = grad_refine(u, flow_cond(cond, _anc), u_dec, flow, GEO, s, g,
+                    u = grad_refine(u, flow_cond(cond, _anc), u_dec, flow, GEO,
+                                    to_xy(s), to_xy(g),      # ⭐ ant v1：E_geo 的端點吃 xy
                                     steps=_steps, eta=GRAD_ETA, lam=GRAD_LAM)
                     if GRAD_PROJ:
                         # ⭐ 中間站二：encoder 往返投影 —— 爬完拉回 head 熟悉的殼上再用。
@@ -2223,7 +2322,7 @@ if _NEED_DEC:
 if _NEED_DEC or SUBGOAL == "ebfs" or INTENT:
     # ⭐ H(1)：INTENT 也要 GEO —— 推論端的錨是 E 佔據圖上的 BFS 路線，⛔ 沒有 GEO 就沒有那張圖。
     from lacot.refine_grad import GeoEnergy, grad_refine, grad_steps
-    GEO = GeoEnergy(OBS, mu, sd, res=8, device=device, w_len=W_LEN)
+    GEO = GeoEnergy(OBS_XY, MU_XY, SD_XY, res=8, device=device, w_len=W_LEN)
     if W_LEN != 0.3:
         print(f"  ⚠️ 病一快篩：w_len={W_LEN:g}（預設 0.3）", flush=True)
     print(f"  幾何 energy：佔據圖 {tuple(GEO.shape)}，資料覆蓋 {GEO.coverage:.1%} 的格", flush=True)
@@ -2286,8 +2385,9 @@ if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0 or INTENT:   # ⭐ 9/2：S
     _E_SHAPE = np.asarray(GEO.shape, np.int64)
 
     def _e_xy_to_cell(xy):
-        """原始座標 → E 細格；落在牆格就 snap 到最近自由格（探針實測 snap 恆 0，保底用）。"""
-        z = (np.asarray(xy[:2], np.float64) - mu) / sd
+        """原始座標 → E 細格；落在牆格就 snap 到最近自由格（探針實測 snap 恆 0，保底用）。
+        ⭐ ant v1：進來的可能是完整 obs（29 維）也可能只有 xy ⇒ 先取 [:2]，正規化只用 xy 那兩維。"""
+        z = (np.asarray(xy[:2], np.float64) - MU_XY) / SD_XY
         idx = np.clip(np.round((z - _E_LO) / _E_SPAN * (_E_SHAPE - 1)).astype(int),
                       0, _E_SHAPE - 1)
         c = tuple(idx)
@@ -2296,8 +2396,9 @@ if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0 or INTENT:   # ⭐ 9/2：S
         return tuple(_EFREE[int(np.abs(_EFREE - idx).sum(1).argmin())])
 
     def _e_cell_to_xy(c):
+        """E 細格 → 原始 xy [2]（⭐ ant v1：只還原 xy 兩維 —— 路標本來就只有位置）。"""
         z = _E_LO + np.asarray(c, np.float64) / (_E_SHAPE - 1) * _E_SPAN
-        return z * sd + mu
+        return z * SD_XY + MU_XY
 
     def _e_cell_to_zn(c):
         """⭐ H(2)：_e_cell_to_xy 的【正規化】版（⛔ 不乘 sd、不加 mu）—— intent 的錨住在正規化空間。"""
@@ -2326,7 +2427,7 @@ if SUBGOAL == "ebfs" or SUB_SNAP or SUB_HEADGUARD > 0 or INTENT:   # ⭐ 9/2：S
 
     # DELTA_SUB（xy 單位）→ E 細格數：E 格的 xy 尺寸 = span_norm/(shape-1) × sd（兩維平均）。
     # ⚠️ E 格是各向異性的長方形（x/y 的 sd 不同），平均是近似 —— subgoal 隔多遠本來就是超參。
-    _E_CELL_XY = float(np.mean(_E_SPAN / (_E_SHAPE - 1) * sd))
+    _E_CELL_XY = float(np.mean(_E_SPAN / (_E_SHAPE - 1) * SD_XY))
     _E_DELTA_CELLS = max(1, int(round(DELTA_SUB / _E_CELL_XY)))
     print(f"  E 圖 subgoal：佔據圖 {tuple(GEO.shape)} 覆蓋 {GEO.coverage:.1%}，"
           f"E 格寬≈{_E_CELL_XY:.2f}，subgoal 隔 {_E_DELTA_CELLS} 格", flush=True)
@@ -2345,7 +2446,7 @@ if BON_N > 1:
     from lacot.refine_grad import GeoEnergy as _BonGeo
     from lacot.subgoal import grid_bfs as _bon_bfs
     # ── 打分的眼睛：獨立一份資料佔據圖（⛔ 不依賴 SUBGOAL／INTENT 開不開 —— _ig/_tg/_gg 前例）
-    _bg = _BonGeo(OBS, mu, sd, res=8, device="cpu")
+    _bg = _BonGeo(OBS_XY, MU_XY, SD_XY, res=8, device="cpu")
     _BOCC = (_bg.dist[0, 0].numpy() == 0.0)
     _BFREE = np.argwhere(_BOCC)
     _B_LO = np.asarray(_bg.lo, np.float64)
@@ -2396,7 +2497,8 @@ if BON_N > 1:
     _blo_i = np.floor(_bf).astype(np.int64)
     _bhi_i = np.minimum(_blo_i + 1, _bgoals[:, None])
     _bw = (_bf - _blo_i)[..., None]
-    _btraj = ((OBS[_blo_i] * (1.0 - _bw) + OBS[_bhi_i] * _bw - mu) / sd).astype(np.float32)
+    # ⭐ ant v1：BoN 的 C8 校準跑在【roundtrip-decode 空間】＝計畫棧 ⇒ 校準窗只能是 xy
+    _btraj = ((OBS_XY[_blo_i] * (1.0 - _bw) + OBS_XY[_bhi_i] * _bw - MU_XY) / SD_XY).astype(np.float32)
     _bt = torch.from_numpy(_btraj).to(device)
     with torch.no_grad():
         _bet = etarget(_bt, torch.zeros(_BCAL_N, T_CAP, dtype=torch.bool, device=device))
@@ -2479,8 +2581,9 @@ def _bon_plan(n, cond, anc, s, g):
     with torch.no_grad():          # ⭐ 候選只拿來打分 ⇒ ⛔ 不留 graph（NC 份的圖會吃掉記憶體）
         u_all = sample_plan(NC, cond[:1].expand(NC, -1), anc, s, g)
         pts_n = _intent_inv(_dec(_q(u_all), s), anc)          # [NC, T_CAP, 2] 正規化
+        # ⭐ ant v1：打分的眼睛是 xy 佔據圖 ⇒ 端點投影（pts_n 本來就是計畫棧解出來的 xy）
         r, gate, _nolink, _dg = _bon_score(pts_n.cpu().numpy(),
-                                           s[0].cpu().numpy(), g[0].cpu().numpy())
+                                           to_xy(s[0]).cpu().numpy(), to_xy(g[0]).cpu().numpy())
     order = np.argsort(-r, kind="stable")                     # ⭐ stable ⇒ 平手取抽樣序最前
     keep = np.sort(order[:n])
     _BON_ST["plans"] += 1
@@ -2538,7 +2641,8 @@ def make_subgoal_policy(R, use_u):
         if planner.n_set:                       # ⭐ 上一題的重想次數收進診斷再重置
             SUB_DIAG["n_replan"].append(planner.n_replan)
         planner.reset()
-        box["goal"] = np.asarray(goal[:2], np.float64)
+        # ⭐ ant v1：目標存【完整 obs】—— 決策端的 cond 要餵它；幾何要用時各自 to_xy。
+        box["goal"] = np.asarray(goal, np.float64)
         box["u_long"] = None
         _reset_grad_cache()
         box.setdefault("ep_count", {})
@@ -2551,6 +2655,10 @@ def make_subgoal_policy(R, use_u):
 
     def _plan(obs):
         s_n = normstate(obs); g_n = normstate(box["goal"])
+        # ⭐ ant v1：s_n/g_n 是【決策端】的完整 obs；長程規劃的幾何（E_geo 端點、選路標）住 xy
+        #    ⇒ 這裡各投影一份，⛔ 不要把完整 obs 餵進 GEO／grad_refine（那邊只認 2 維）。
+        s_xy, g_xy = to_xy(s_n), to_xy(g_n)
+        goal_xy = to_xy(np.asarray(box["goal"], np.float64))     # 原始座標的最終目標 xy
         _anc = _intent_anchor_eval(obs, box["goal"])      # ⭐ H(3)：長程層的錨（現在 → 最終目標）
         if SUBGOAL == "latent":
             # 長程層：flow 起手 → E_geo 爬 → 解碼 → 沿弧長取點
@@ -2560,12 +2668,12 @@ def make_subgoal_policy(R, use_u):
                 u_l, _st = box["u_long"], GRAD_R_WARM    # 長程計畫也是接續修，⛔ 不重想
             else:
                 u_l, _st = sample_plan(1, cond_l, _anc, s_n, g_n).detach(), GRAD_R
-            u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO, s_n, g_n,
+            u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO, s_xy, g_xy,
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
                 pts_n = _intent_inv(_dec(_q(u_l), s_n), _anc)   # [1, T_CAP, 2] 正規化座標（residual 已還原）
-                pts_raw = pts_n * SD + MU                # ⭐ 換回原始座標 ⇒ 跟 DELTA_SUB 同單位
+                pts_raw = pts_n * SD_XY_T + MU_XY_T                # ⭐ 換回原始座標 ⇒ 跟 DELTA_SUB 同單位
                 pts_raw = _anchor_pts(pts_raw, obs)
                 sub = arc_subgoal(pts_raw, DELTA_SUB)[0].cpu().numpy()
             _d0 = float(np.linalg.norm(pts_raw[0, 0].cpu().numpy() - np.asarray(obs[:2])))
@@ -2581,11 +2689,11 @@ def make_subgoal_policy(R, use_u):
             else:
                 u_l, _st = sample_plan(SUB_M, cond_l, _anc, s_n, g_n).detach(), GRAD_R
             u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO,
-                              s_n.expand(SUB_M, -1), g_n.expand(SUB_M, -1),
+                              s_xy.expand(SUB_M, -1), g_xy.expand(SUB_M, -1),
                               steps=_st, eta=GRAD_ETA, lam=GRAD_LAM)
             box["u_long"] = u_l
             with torch.no_grad():
-                pts_raw = _anchor_pts(_intent_inv(_dec(_q(u_l), s_n), _anc) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(_intent_inv(_dec(_q(u_l), s_n), _anc) * SD_XY_T + MU_XY_T, obs)   # [M, T_CAP, 2] 原始座標
             sub, _cs = consensus_subgoal(pts_raw, SUB_CONF_LO * DELTA_SUB,
                                          SUB_CONF_HI * DELTA_SUB, ret_stats=True)
             SUB_DIAG["spread"].append(_cs["spread"])
@@ -2606,19 +2714,19 @@ def make_subgoal_policy(R, use_u):
                 #    三項乘法閘打分、留【前 _NS 名】（⛔ 不塌成 1 份 —— 共識層要 M 份分散度）
                 u_l = _bon_plan(_NS, cond_l, _anc, s_n, g_n).detach()
             u_l = grad_refine(u_l, flow_cond(cond_l, _anc), u_dec, flow, GEO,
-                              s_n.expand(_NS, -1), g_n.expand(_NS, -1),
+                              s_xy.expand(_NS, -1), g_xy.expand(_NS, -1),
                               steps=GRAD_R, eta=GRAD_ETA, lam=GRAD_LAM)
             if _NS > SUB_M:                                     # 用 E 留最低的 SUB_M 份（越小越好）
                 with torch.no_grad():
                     _eN = GEO(_intent_inv(_dec(_q(u_l), s_n), _anc),
-                              s_n.expand(_NS, -1), g_n.expand(_NS, -1))
+                              s_xy.expand(_NS, -1), g_xy.expand(_NS, -1))
                     _keep = torch.topk(-_eN, SUB_M).indices
                 SUB_DIAG["esel_e_gap"].append(float(_eN.max() - _eN.min()))
                 u_l, cond_l = u_l[_keep], cond_l[_keep]
             with torch.no_grad():
-                pts_raw = _anchor_pts(_intent_inv(_dec(_q(u_l), s_n), _anc) * SD + MU, obs)   # [M, T_CAP, 2] 原始座標
+                pts_raw = _anchor_pts(_intent_inv(_dec(_q(u_l), s_n), _anc) * SD_XY_T + MU_XY_T, obs)   # [M, T_CAP, 2] 原始座標
             sub, _fc = farthest_confident_subgoal(
-                pts_raw, box["goal"], min_arc=0.25 * DELTA_SUB, ret_stats=True,
+                pts_raw, goal_xy, min_arc=0.25 * DELTA_SUB, ret_stats=True,
                 # 🚨 錨定把頭端分散人工歸零 ⇒ tau 校準窗挪到中段（見 subgoal.py 註解）
                 calib=(0.2, 0.4) if DEC_ANCHOR else (0.0, 0.2),
                 max_arc=SUB_MAX_ARC * DELTA_SUB if SUB_MAX_ARC > 0 else None)
@@ -2634,7 +2742,7 @@ def make_subgoal_policy(R, use_u):
             if SUB_HEADGUARD > 0:                               # ⭐ 9/2 開頭守門（每份計畫各自的偏移取中位；黏住整集）
                 _d0s = np.linalg.norm(pts_raw[:, 0].cpu().numpy() - np.asarray(obs[:2]), axis=1)
                 _d0m = float(np.median(_d0s))
-                _near_goal = float(np.linalg.norm(np.asarray(obs[:2]) - box["goal"])) <= DELTA_SUB
+                _near_goal = float(np.linalg.norm(np.asarray(obs[:2]) - goal_xy)) <= DELTA_SUB
                 if _d0m > SUB_HEADGUARD:
                     if not box.get("hg_sticky"):    # ⭐ 9/3：首次觸發另計（集數）——n_headguard 是黏住後的 replan 總數，當開火率讀會膨脹
                         SUB_DIAG["n_headguard_ep"] = SUB_DIAG.get("n_headguard_ep", 0) + 1
@@ -2643,7 +2751,7 @@ def make_subgoal_policy(R, use_u):
                     SUB_DIAG["n_headguard"] = SUB_DIAG.get("n_headguard", 0) + 1
                     _cg = bfs_subgoal(env, _e_xy_to_cell(obs), _e_xy_to_cell(box["goal"]),
                                       delta_cells=_E_DELTA_CELLS, bfs_from=_e_bfs_from)
-                    sub = _e_cell_to_xy(_cg) if _cg is not None else box["goal"]
+                    sub = _e_cell_to_xy(_cg) if _cg is not None else goal_xy
                     if box.get("trace"):
                         print(f"  🔎 headguard: d0 中位 {_d0m:.2f}（門檻 {SUB_HEADGUARD:g}，黏住）⇒ E 圖 BFS 路標 ({sub[0]:.2f},{sub[1]:.2f})", flush=True)
             if _d0 > 0.5 * DELTA_SUB:
@@ -2653,12 +2761,12 @@ def make_subgoal_policy(R, use_u):
             # 只是圖換成資料重建的佔據圖、格制換成 E 細格。
             c = bfs_subgoal(env, _e_xy_to_cell(obs), _e_xy_to_cell(box["goal"]),
                             delta_cells=_E_DELTA_CELLS, bfs_from=_e_bfs_from)
-            sub = _e_cell_to_xy(c) if c is not None else box["goal"]
+            sub = _e_cell_to_xy(c) if c is not None else goal_xy
         elif SUBGOAL == "bfs":
             c = bfs_subgoal(env, SUB_HELPERS[1](obs), SUB_HELPERS[1](box["goal"]),
                             delta_cells=max(1, int(round(DELTA_SUB / SUB_HELPERS[2]))),
                             bfs_from=DE._bfs_from)
-            sub = np.asarray(env.unwrapped.ij_to_xy(c), np.float64) if c is not None else box["goal"]
+            sub = np.asarray(env.unwrapped.ij_to_xy(c), np.float64) if c is not None else goal_xy
         else:
             raise SystemExit(f"⛔ _plan 不認得 SUBGOAL={SUBGOAL}（新模式要顯式接，⛔ 不准靜默掉進別人的分支）")
         sub = np.asarray(sub, np.float64)
@@ -2694,21 +2802,24 @@ def make_subgoal_policy(R, use_u):
 
     def policy(obs, goal):
         if box["goal"] is None:                          # ⚠️ 沒接 on_start 的呼叫端也要能跑
-            box["goal"] = np.asarray(goal[:2], np.float64)
+            box["goal"] = np.asarray(goal, np.float64)
         if box.get("trace"):
             box["trace_t"] = box.get("trace_t", 0) + 1
             if box["trace_t"] % 200 == 0:
                 print(f"  🔎 t={box['trace_t']} 位置 ({obs[0]:.2f},{obs[1]:.2f}) 現路標 {None if planner.sub is None else tuple(round(float(v), 2) for v in planner.sub)}", flush=True)
         # ⭐ 病二快篩：分段模式的終局判斷用【最終目標】（planner.sub 是中繼點，⛔ 不能拿來判）
-        if FINISH_R > 0.0 and use_u is True and float(
-                np.linalg.norm(np.asarray(obs[:2], np.float64) - box["goal"])) < FINISH_R:
+        if FINISH_ON and use_u is True and float(
+                np.linalg.norm(np.asarray(obs[:2], np.float64)
+                               - to_xy(box["goal"]))) < FINISH_R:
             _FIN_COUNT[0] += 1
             if FINISH_MODE == "bc":
                 return policy_chunk(obs, box["goal"], R, "bc")
             return policy_chunk(obs, box["goal"], 0, True)   # resample：fresh 短計畫直取 g
         if planner.observe(obs[:2]):
             planner.set(_plan(obs))
-        return policy_chunk(obs, planner.sub, R,
+        # ⭐ ant v1：planner.sub 是【只有 xy】的路標 ⇒ 補成決策端要的完整 obs
+        #    （非 xy 維填資料平均）。pointmaze 上 OBS_DIM==2 ⇒ goal_to_obs 原樣回傳。
+        return policy_chunk(obs, goal_to_obs(planner.sub), R,
                             "bc" if SUB_POLICY == "bc" else use_u)
 
     return policy, on_start
@@ -2768,7 +2879,9 @@ if LOAD_CKPT and _TCH is not None and u_dec is not None and GEO is not None:
     _rt_sg = []
     for _t in range(1, N_TASKS + 1):
         _o, _i = env.reset(seed=1000 * _t, options={"task_id": _t, "render_goal": False})
-        _rt_sg.append((np.asarray(_o[:2], np.float64), np.asarray(_i["goal"][:2], np.float64)))
+        # ⭐ ant v1：往返尺／flow 探針兩邊都要（a）geometry 的 xy 與（b）cond 的完整 obs
+        #    ⇒ 這裡存【完整】obs，兩支函式內部各自 to_xy（pointmaze 上兩者相同）。
+        _rt_sg.append((np.asarray(_o, np.float64), np.asarray(_i["goal"], np.float64)))
     RT_GATE = roundtrip_gate(_rt_sg)
     if FLOW_PROBE > 0:
         FLOW_PROBE_OUT = flow_probe(_rt_sg, FLOW_PROBE)
@@ -2808,6 +2921,10 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            #    amp_skip/steps 是收斂比對的第一格：跳掉的步＝沒更新的步。
            **({"amp": AMP, "amp_skip": _AMP_ST["skip"], "amp_steps": _AMP_ST["steps"]} if AMP else {}),
            **({"compile": COMPILE, "compile_active": int(_NLL_C["fn"] is not None)} if COMPILE else {}),
+           # ⭐ ant 移植 v1：非退化 env（obs≠xy 或 act≠2）才落地 ⇒ ⛔ pointmaze 的 json 逐 key 不變
+           **({"obs_dim": OBS_DIM, "act_dim": ADIM, "xy_dim": XY_DIM,
+               "env_family": ENV_FAMILY, "finish_takeover": int(FINISH_ON)}
+              if (OBS_DIM != XY_DIM or ADIM != XY_DIM) else {}),
            dev_tiers=DEV_TIERS, dev_eval=None, load_ckpt=os.path.basename(LOAD_CKPT) or None)
 out["rt_gate"] = RT_GATE
 out["flow_probe"] = FLOW_PROBE_OUT
@@ -3365,7 +3482,9 @@ elif GRPO_W > 0:
           "⇒ 這顆跟純 FM 逐位元同、⛔ 別當 RL 臂收表", flush=True)
 
 if FINISH_R > 0.0:
-    print(f"  病二快篩：終局接管觸發 {_FIN_COUNT[0]} 次（⛔ 0 次＝開關沒作用，快篩白跑）", flush=True)
+    print(f"  病二快篩：終局接管觸發 {_FIN_COUNT[0]} 次（⛔ 0 次＝開關沒作用，快篩白跑）"
+          + ("　⭐ 本次 takeover=off(ant)：0 次是【預期】的，⛔ 不是開關寫壞" if not FINISH_ON else ""),
+          flush=True)
 # ⭐ 存 checkpoint：以後要換探針就不必重訓一次（今天為了換探針重訓了三輪）。
 ck = os.path.join(os.path.dirname(dst), f"ckpt_{tag}.pt")
 if LOAD_CKPT and not CONT_TRAIN:
@@ -3404,6 +3523,11 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
                         CONS=CONS, EMA_M=EMA_M, SEED=SEED, EMA_W=EMA_W,
                         ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE,
                         COND_DROP=COND_DROP, BC_INDEP=BC_INDEP,
+                        # ⭐ ant 移植 v1 血緣：⛔ 只在【非退化】env 進 cfg
+                        #    ⇒ pointmaze 的 ckpt bytes 逐位元不變（golden gate 的立足點）。
+                        **({"ENV": ENV_NAME, "OBS_DIM": OBS_DIM, "ACT_DIM": ADIM,
+                            "XY_DIM": XY_DIM, "FINISH_TAKEOVER": int(FINISH_ON)}
+                           if (OBS_DIM != XY_DIM or ADIM != XY_DIM) else {}),
                         # ⭐ 續訓血緣（⛔ 只在續訓模式進 cfg ⇒ 預設 ckpt 逐位元不變）
                         **({"CONT_TRAIN": 1, "CONT_STEPS": CONT_STEPS,
                             "SRC_CKPT": os.path.basename(_lp),
