@@ -1,0 +1,487 @@
+{
+  "config": {
+    "ckpt": "../ckpt/G16_K16.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "out_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results",
+    "gif_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/gifs",
+    "n_traj": 10,
+    "seed": 20260908,
+    "rho": 1.875,
+    "delta_sub": 7.5,
+    "threads": 4,
+    "tag": "smoke_relay_g16k16",
+    "frame_every": 4,
+    "max_frames": 200,
+    "skip_gifs": true
+  },
+  "delta_sub": 7.5,
+  "dict_cfg": {
+    "G": 16,
+    "K": 16,
+    "group_dim": 8,
+    "seg_len": 4,
+    "steps": 20000,
+    "batch": 512,
+    "lr": 0.0003,
+    "beta": 0.25,
+    "hidden": 512,
+    "decay": 0.99,
+    "dead_steps": 500,
+    "seed": 56016,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_factor_samples": 256,
+    "dataset": "humanoidmaze-medium-stitch-v0"
+  },
+  "compare_ant": {
+    "schedule": 0.554,
+    "nn": 0.555,
+    "greedy": 0.063,
+    "main_head": 0.32,
+    "lo_head": 0.124
+  },
+  "n_tasks_requested": 10,
+  "n_tasks_used": 10,
+  "skipped": [],
+  "waypoints_per_task": {
+    "min": 2,
+    "p50": 2.0,
+    "max": 3,
+    "total": 21
+  },
+  "results": {
+    "schedule": {
+      "seconds": 1.1818616390228271,
+      "n_tasks": 10,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 11,
+      "legs_reached_total": 1,
+      "per_leg_untimed_reach": 0.09090909090909091,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.09090909090909091,
+        "n_evaluable_N_data_1.25N": 11,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.09090909090909091,
+        "n_evaluable_N_data_1.5N": 11,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.09090909090909091,
+        "n_evaluable_N_table_1.25N": 11,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.09090909090909091,
+        "n_evaluable_N_table_1.5N": 11,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.0007003527025275758,
+        "5": 0.0015278019085992625,
+        "25": 0.004239514573458026,
+        "50": 0.007528444270455495,
+        "75": 0.01358705678871067,
+        "95": 0.04217732477488863,
+        "99": 0.05908356630015172
+      },
+      "step_speed_mean": 0.011925426223906455,
+      "fall_rate_step": 0.56975,
+      "fall_rate_task": 1.0,
+      "action_diff_q": {
+        "1": 0.6710956746364575,
+        "5": 0.876263681564204,
+        "25": 1.2683809234606391,
+        "50": 1.6023496169142821,
+        "75": 2.0272655910900035,
+        "95": 2.808945726444853,
+        "99": 3.254850675806911
+      },
+      "action_diff_mean": 1.6915041043195111,
+      "codes_per_group": [
+        {
+          "active": 16,
+          "perplexity": 15.555906837289754,
+          "top1_frac": 0.094
+        },
+        {
+          "active": 16,
+          "perplexity": 15.34644275936894,
+          "top1_frac": 0.093
+        },
+        {
+          "active": 16,
+          "perplexity": 15.263222754829668,
+          "top1_frac": 0.097
+        },
+        {
+          "active": 16,
+          "perplexity": 15.705794562790393,
+          "top1_frac": 0.08
+        },
+        {
+          "active": 16,
+          "perplexity": 15.336196423897906,
+          "top1_frac": 0.093
+        },
+        {
+          "active": 16,
+          "perplexity": 15.304387369191083,
+          "top1_frac": 0.099
+        },
+        {
+          "active": 16,
+          "perplexity": 14.506563522621406,
+          "top1_frac": 0.111
+        },
+        {
+          "active": 16,
+          "perplexity": 14.636141102099845,
+          "top1_frac": 0.117
+        },
+        {
+          "active": 16,
+          "perplexity": 15.227441631090159,
+          "top1_frac": 0.107
+        },
+        {
+          "active": 16,
+          "perplexity": 15.093410199665046,
+          "top1_frac": 0.095
+        },
+        {
+          "active": 16,
+          "perplexity": 15.387250765185703,
+          "top1_frac": 0.103
+        },
+        {
+          "active": 16,
+          "perplexity": 14.916551015620527,
+          "top1_frac": 0.113
+        },
+        {
+          "active": 16,
+          "perplexity": 15.304086315307071,
+          "top1_frac": 0.101
+        },
+        {
+          "active": 16,
+          "perplexity": 15.011359304701465,
+          "top1_frac": 0.118
+        },
+        {
+          "active": 16,
+          "perplexity": 15.11379787693877,
+          "top1_frac": 0.1
+        },
+        {
+          "active": 16,
+          "perplexity": 14.802362534365562,
+          "top1_frac": 0.108
+        }
+      ],
+      "codes_active_min_over_groups": 16,
+      "codes_perplexity_mean_over_groups": 15.156932185935206,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": null,
+      "nn_jump_n": 0
+    },
+    "nn": {
+      "seconds": 1.2262718677520752,
+      "n_tasks": 10,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 11,
+      "legs_reached_total": 1,
+      "per_leg_untimed_reach": 0.09090909090909091,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.09090909090909091,
+        "n_evaluable_N_data_1.25N": 11,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.09090909090909091,
+        "n_evaluable_N_data_1.5N": 11,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.09090909090909091,
+        "n_evaluable_N_table_1.25N": 11,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.09090909090909091,
+        "n_evaluable_N_table_1.5N": 11,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.00014578769262320505,
+        "5": 0.0003168756498326891,
+        "25": 0.0011230715657269863,
+        "50": 0.0022256125988396602,
+        "75": 0.00581155019813399,
+        "95": 0.034858439678208494,
+        "99": 0.059896616357133226
+      },
+      "step_speed_mean": 0.00666427545595067,
+      "fall_rate_step": 0.477,
+      "fall_rate_task": 0.6,
+      "action_diff_q": {
+        "1": 0.7289098436306,
+        "5": 0.9453238896400024,
+        "25": 1.2264193289104006,
+        "50": 1.6467025558526092,
+        "75": 2.0334099891775708,
+        "95": 2.816039704603108,
+        "99": 3.822083252558291
+      },
+      "action_diff_mean": 1.7460176694155132,
+      "codes_per_group": [
+        {
+          "active": 16,
+          "perplexity": 11.540609472304384,
+          "top1_frac": 0.137
+        },
+        {
+          "active": 16,
+          "perplexity": 10.357995779647984,
+          "top1_frac": 0.178
+        },
+        {
+          "active": 16,
+          "perplexity": 9.730206985048987,
+          "top1_frac": 0.261
+        },
+        {
+          "active": 16,
+          "perplexity": 10.804487887441473,
+          "top1_frac": 0.173
+        },
+        {
+          "active": 16,
+          "perplexity": 10.442991121795027,
+          "top1_frac": 0.162
+        },
+        {
+          "active": 16,
+          "perplexity": 8.244066191780613,
+          "top1_frac": 0.232
+        },
+        {
+          "active": 16,
+          "perplexity": 7.590030409945406,
+          "top1_frac": 0.365
+        },
+        {
+          "active": 16,
+          "perplexity": 9.555995841018701,
+          "top1_frac": 0.261
+        },
+        {
+          "active": 16,
+          "perplexity": 11.665627681422086,
+          "top1_frac": 0.146
+        },
+        {
+          "active": 16,
+          "perplexity": 11.215220570647876,
+          "top1_frac": 0.193
+        },
+        {
+          "active": 16,
+          "perplexity": 10.102280119149398,
+          "top1_frac": 0.186
+        },
+        {
+          "active": 16,
+          "perplexity": 10.044821063475728,
+          "top1_frac": 0.175
+        },
+        {
+          "active": 16,
+          "perplexity": 10.449349193826821,
+          "top1_frac": 0.188
+        },
+        {
+          "active": 15,
+          "perplexity": 10.20264354123843,
+          "top1_frac": 0.194
+        },
+        {
+          "active": 16,
+          "perplexity": 7.7658292798937225,
+          "top1_frac": 0.273
+        },
+        {
+          "active": 16,
+          "perplexity": 10.099156904456297,
+          "top1_frac": 0.181
+        }
+      ],
+      "codes_active_min_over_groups": 15,
+      "codes_perplexity_mean_over_groups": 9.988207002693308,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.04242424242424243,
+      "nn_jump_n": 990
+    }
+  },
+  "artifacts": {
+    "pngs": {
+      "speed": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_relay_g16k16_speed_overlay.png",
+      "z": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_relay_g16k16_z_overlay.png",
+      "adiff": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_relay_g16k16_adiff_overlay.png"
+    },
+    "gifs": {}
+  }
+}

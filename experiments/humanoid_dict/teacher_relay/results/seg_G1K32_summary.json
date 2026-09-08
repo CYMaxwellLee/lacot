@@ -1,0 +1,424 @@
+{
+  "config": {
+    "ckpt": "../ckpt/G1_K32.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "out_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results",
+    "n_windows": 1000,
+    "horizon": 80,
+    "goal_steps": "8,12,20,40",
+    "seed": 20260908,
+    "tag": "seg_G1K32",
+    "threads": 4
+  },
+  "dict_cfg": {
+    "G": 1,
+    "K": 32,
+    "group_dim": 8,
+    "seg_len": 4,
+    "steps": 20000,
+    "batch": 512,
+    "lr": 0.0003,
+    "beta": 0.25,
+    "hidden": 512,
+    "decay": 0.99,
+    "dead_steps": 500,
+    "seed": 41032,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_factor_samples": 256,
+    "dataset": "humanoidmaze-medium-stitch-v0"
+  },
+  "fall_line": 0.1581991794705391,
+  "goal_tol": 0.5,
+  "n_windows": 1000,
+  "n_chunks_per_window": 20,
+  "n_segments_per_dict_arm": 20000,
+  "goal_steps_list": [
+    8,
+    12,
+    20,
+    40
+  ],
+  "arms": {
+    "true_chunkcmp": {
+      "seconds": 108.24898195266724,
+      "reach": {
+        "8": {
+          "end_err_mean": 7.380912979995894e-07,
+          "end_err_q": {
+            "1": 1.9078555024050973e-08,
+            "5": 6.009213656754476e-08,
+            "25": 2.0522243403236452e-07,
+            "50": 3.9255068005444366e-07,
+            "75": 6.677782613132826e-07,
+            "95": 1.1888210688527194e-06,
+            "99": 1.8676016085835174e-06
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "12": {
+          "end_err_mean": 7.52723264327832e-07,
+          "end_err_q": {
+            "1": 2.0891993879197336e-08,
+            "5": 4.844355220132261e-08,
+            "25": 2.0476631458213993e-07,
+            "50": 3.7524437494971923e-07,
+            "75": 6.607692178743187e-07,
+            "95": 1.2992005993277725e-06,
+            "99": 1.8332893565575982e-06
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "20": {
+          "end_err_mean": 9.655233449823298e-07,
+          "end_err_q": {
+            "1": 2.761648734458389e-08,
+            "5": 6.067734352273011e-08,
+            "25": 2.0631448439616516e-07,
+            "50": 3.955840072884134e-07,
+            "75": 6.720339230868418e-07,
+            "95": 1.362149048847203e-06,
+            "99": 1.9225414490274525e-06
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "40": {
+          "end_err_mean": 2.9292589463152585e-06,
+          "end_err_q": {
+            "1": 3.501348014212987e-08,
+            "5": 7.730393790933288e-08,
+            "25": 2.3698499256983188e-07,
+            "50": 4.2528939787320833e-07,
+            "75": 7.36449477016341e-07,
+            "95": 1.3712135284999602e-06,
+            "99": 5.832656332122063e-05
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 0.9252548131370328,
+          "n_evaluable_N_table_1.25N": 883,
+          "reach_N_table_1.5N": 0.9586114819759679,
+          "n_evaluable_N_table_1.5N": 749
+        }
+      },
+      "fall_rate_window": 0.081,
+      "fall_rate_step": 0.01025,
+      "action_diff_q": {
+        "1": 1.0358487367630005,
+        "5": 1.28206045627594,
+        "25": 1.7819921970367432,
+        "50": 2.2305797338485718,
+        "75": 2.701779067516327,
+        "95": 3.432789671421051,
+        "99": 3.94587611913681
+      },
+      "action_diff_mean": 2.2722926139831543,
+      "clip_frac": 0.0,
+      "step_speed_mean": 0.051438841968774796,
+      "step_speed_q": {
+        "1": 0.003478538643103093,
+        "5": 0.010808117687702179,
+        "25": 0.034114801324903965,
+        "50": 0.051501013338565826,
+        "75": 0.06946275196969509,
+        "95": 0.08988957591354847,
+        "99": 0.10016093850135802
+      }
+    },
+    "dict_indep": {
+      "seconds": 112.46859884262085,
+      "reach": {
+        "8": {
+          "end_err_mean": 0.01339960531539939,
+          "end_err_q": {
+            "1": 0.0017206848871272123,
+            "5": 0.002971332634677629,
+            "25": 0.007007913035873644,
+            "50": 0.011620993343848748,
+            "75": 0.01748861998436857,
+            "95": 0.030450366907168073,
+            "99": 0.04085505238410409
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "12": {
+          "end_err_mean": 0.016893413341023282,
+          "end_err_q": {
+            "1": 0.0014363342088460278,
+            "5": 0.0038524958008487984,
+            "25": 0.008827490682360814,
+            "50": 0.014641144363248718,
+            "75": 0.022736739984643338,
+            "95": 0.03831040181207554,
+            "99": 0.051219975786839664
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "20": {
+          "end_err_mean": 0.02216847140439735,
+          "end_err_q": {
+            "1": 0.0020075856866926377,
+            "5": 0.005076609204963623,
+            "25": 0.011929035782197355,
+            "50": 0.019334629615593672,
+            "75": 0.029719732233655816,
+            "95": 0.049079208255362314,
+            "99": 0.0692904650341563
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "40": {
+          "end_err_mean": 0.033044782491998374,
+          "end_err_q": {
+            "1": 0.0030116311672480035,
+            "5": 0.007327878641198573,
+            "25": 0.018177167574021984,
+            "50": 0.03006211287299948,
+            "75": 0.043340089496963656,
+            "95": 0.06942989162570544,
+            "99": 0.09547900917202021
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 0.9218573046432617,
+          "n_evaluable_N_table_1.25N": 883,
+          "reach_N_table_1.5N": 0.9599465954606141,
+          "n_evaluable_N_table_1.5N": 749
+        }
+      },
+      "fall_rate_window": 0.08,
+      "fall_rate_step": 0.0103375,
+      "action_diff_q": {
+        "1": 0.30268841177225114,
+        "5": 0.4394766464829445,
+        "25": 0.7676043063402176,
+        "50": 1.1023796796798706,
+        "75": 1.5052785575389862,
+        "95": 2.1250624656677246,
+        "99": 2.589156150817871
+      },
+      "action_diff_mean": 1.1702464818954468,
+      "clip_frac": 0.03514642857142857,
+      "step_speed_mean": 0.05125358700752258,
+      "step_speed_q": {
+        "1": 0.003156061051413417,
+        "5": 0.010760048497468233,
+        "25": 0.03398127853870392,
+        "50": 0.05127735622227192,
+        "75": 0.06925234384834766,
+        "95": 0.08970667496323585,
+        "99": 0.09960554875433443
+      },
+      "codes_per_group": [
+        {
+          "active": 32,
+          "perplexity": 31.065690851402792,
+          "top1_frac": 0.0468
+        }
+      ],
+      "codes_active_min_over_groups": 32,
+      "codes_perplexity_mean_over_groups": 31.065690851402792,
+      "chunk_disp_err_mean": 0.009393524738522183,
+      "chunk_disp_err_q": {
+        "1": 0.0008538827586645228,
+        "5": 0.001922002501152163,
+        "25": 0.0047631091899239955,
+        "50": 0.007850770304838342,
+        "75": 0.012272776682680616,
+        "95": 0.022151348231320013,
+        "99": 0.032454882073280095
+      }
+    },
+    "dict_randcode": {
+      "seconds": 111.878000497818,
+      "reach": {
+        "8": {
+          "end_err_mean": 0.025767149050417784,
+          "end_err_q": {
+            "1": 0.001956260200239941,
+            "5": 0.005390082034287101,
+            "25": 0.012298487453978255,
+            "50": 0.020489448505766478,
+            "75": 0.03368767973304691,
+            "95": 0.06340598109938152,
+            "99": 0.09184866963455104
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "12": {
+          "end_err_mean": 0.033317811476001546,
+          "end_err_q": {
+            "1": 0.003412172506023954,
+            "5": 0.006672782351185479,
+            "25": 0.01619521231245543,
+            "50": 0.02758908444498759,
+            "75": 0.04452459441549576,
+            "95": 0.07698582971632169,
+            "99": 0.11207993029929013
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "20": {
+          "end_err_mean": 0.04543483688788643,
+          "end_err_q": {
+            "1": 0.0034398426566259093,
+            "5": 0.010238017197091479,
+            "25": 0.023254951398536696,
+            "50": 0.03771948999281502,
+            "75": 0.06166827162030754,
+            "95": 0.10521752599018823,
+            "99": 0.14142084554330983
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 1.0,
+          "n_evaluable_N_table_1.25N": 1000,
+          "reach_N_table_1.5N": 1.0,
+          "n_evaluable_N_table_1.5N": 1000
+        },
+        "40": {
+          "end_err_mean": 0.06549238117543774,
+          "end_err_q": {
+            "1": 0.006978362959646264,
+            "5": 0.015469095066852035,
+            "25": 0.037441998762356384,
+            "50": 0.05843282460049466,
+            "75": 0.08764181320208804,
+            "95": 0.13858226549961197,
+            "99": 0.17328841610919477
+          },
+          "reach_any_within_H": 1.0,
+          "reach_N_data_1.25N": 1.0,
+          "n_evaluable_N_data_1.25N": 1000,
+          "reach_N_data_1.5N": 1.0,
+          "n_evaluable_N_data_1.5N": 1000,
+          "reach_N_table_1.25N": 0.9195922989807475,
+          "n_evaluable_N_table_1.25N": 883,
+          "reach_N_table_1.5N": 0.9546061415220294,
+          "n_evaluable_N_table_1.5N": 749
+        }
+      },
+      "fall_rate_window": 0.081,
+      "fall_rate_step": 0.00955,
+      "action_diff_q": {
+        "1": 0.37776682764291764,
+        "5": 0.5091106504201889,
+        "25": 0.793040320277214,
+        "50": 1.0938776731491089,
+        "75": 1.6076419353485107,
+        "95": 2.760832178592682,
+        "99": 3.504059319496152
+      },
+      "action_diff_mean": 1.2919174432754517,
+      "clip_frac": 0.02815,
+      "step_speed_mean": 0.05117982625961304,
+      "step_speed_q": {
+        "1": 0.0037700047227554024,
+        "5": 0.010650895908474923,
+        "25": 0.03363764751702547,
+        "50": 0.051142916083335876,
+        "75": 0.06923246383666992,
+        "95": 0.08993003070354462,
+        "99": 0.10042085908353321
+      },
+      "codes_per_group": [
+        {
+          "active": 32,
+          "perplexity": 31.957888168136645,
+          "top1_frac": 0.03415
+        }
+      ],
+      "codes_active_min_over_groups": 32,
+      "codes_perplexity_mean_over_groups": 31.957888168136645,
+      "chunk_disp_err_mean": 0.01687548776713298,
+      "chunk_disp_err_q": {
+        "1": 0.0012647591827226283,
+        "5": 0.00303029455008706,
+        "25": 0.0077448775611289045,
+        "50": 0.013362501172463844,
+        "75": 0.021925615805336855,
+        "95": 0.04278678431825557,
+        "99": 0.06533113267299794
+      }
+    }
+  },
+  "artifacts": {
+    "speed": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/seg_G1K32_speed_overlay.png",
+    "z": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/seg_G1K32_z_overlay.png",
+    "adiff": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/seg_G1K32_adiff_overlay.png"
+  }
+}

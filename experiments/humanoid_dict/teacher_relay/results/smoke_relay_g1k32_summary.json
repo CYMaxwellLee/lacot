@@ -1,0 +1,337 @@
+{
+  "config": {
+    "ckpt": "../ckpt/G1_K32.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "out_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results",
+    "gif_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/gifs",
+    "n_traj": 10,
+    "seed": 20260908,
+    "rho": 1.875,
+    "delta_sub": 7.5,
+    "threads": 4,
+    "tag": "smoke_relay_g1k32",
+    "frame_every": 4,
+    "max_frames": 200,
+    "skip_gifs": true
+  },
+  "delta_sub": 7.5,
+  "dict_cfg": {
+    "G": 1,
+    "K": 32,
+    "group_dim": 8,
+    "seg_len": 4,
+    "steps": 20000,
+    "batch": 512,
+    "lr": 0.0003,
+    "beta": 0.25,
+    "hidden": 512,
+    "decay": 0.99,
+    "dead_steps": 500,
+    "seed": 41032,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_factor_samples": 256,
+    "dataset": "humanoidmaze-medium-stitch-v0"
+  },
+  "compare_ant": {
+    "schedule": 0.554,
+    "nn": 0.555,
+    "greedy": 0.063,
+    "main_head": 0.32,
+    "lo_head": 0.124
+  },
+  "n_tasks_requested": 10,
+  "n_tasks_used": 10,
+  "skipped": [],
+  "waypoints_per_task": {
+    "min": 2,
+    "p50": 2.0,
+    "max": 3,
+    "total": 21
+  },
+  "results": {
+    "schedule": {
+      "seconds": 0.7602133750915527,
+      "n_tasks": 10,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 12,
+      "legs_reached_total": 2,
+      "per_leg_untimed_reach": 0.16666666666666666,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.16666666666666666,
+        "n_evaluable_N_data_1.25N": 12,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.16666666666666666,
+        "n_evaluable_N_data_1.5N": 12,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.08333333333333333,
+        "n_evaluable_N_table_1.25N": 12,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.08333333333333333,
+        "n_evaluable_N_table_1.5N": 12,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.00043868793149223577,
+        "5": 0.0011924818060018592,
+        "25": 0.0050561195143609215,
+        "50": 0.013776639475181044,
+        "75": 0.03449868591928611,
+        "95": 0.060500200120103965,
+        "99": 0.0727774154297769
+      },
+      "step_speed_mean": 0.021190529253603797,
+      "fall_rate_step": 0.30025,
+      "fall_rate_task": 1.0,
+      "action_diff_q": {
+        "1": 0.32434219339988674,
+        "5": 0.3922149723225598,
+        "25": 0.5506029444034568,
+        "50": 0.7658500653218379,
+        "75": 1.1461285363413771,
+        "95": 1.9512850372554746,
+        "99": 2.4518617183808855
+      },
+      "action_diff_mean": 0.9184634327933782,
+      "codes_per_group": [
+        {
+          "active": 32,
+          "perplexity": 30.434767385878363,
+          "top1_frac": 0.055
+        }
+      ],
+      "codes_active_min_over_groups": 32,
+      "codes_perplexity_mean_over_groups": 30.434767385878363,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": null,
+      "nn_jump_n": 0
+    },
+    "nn": {
+      "seconds": 0.7872395515441895,
+      "n_tasks": 10,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 11,
+      "legs_reached_total": 1,
+      "per_leg_untimed_reach": 0.09090909090909091,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.09090909090909091,
+        "n_evaluable_N_data_1.25N": 11,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.09090909090909091,
+        "n_evaluable_N_data_1.5N": 11,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.09090909090909091,
+        "n_evaluable_N_table_1.25N": 11,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.09090909090909091,
+        "n_evaluable_N_table_1.5N": 11,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 3.1287013968016977e-05,
+        "5": 9.685972886594785e-05,
+        "25": 0.00037082440355556663,
+        "50": 0.001319389178427568,
+        "75": 0.009376131364495062,
+        "95": 0.047105252304971146,
+        "99": 0.06302876317330632
+      },
+      "step_speed_mean": 0.009043777515383567,
+      "fall_rate_step": 0.42425,
+      "fall_rate_task": 0.8,
+      "action_diff_q": {
+        "1": 0.22972192458875784,
+        "5": 0.3205656681726956,
+        "25": 0.4973340095530617,
+        "50": 0.7231850446844127,
+        "75": 1.0235352018064137,
+        "95": 1.7258231338629697,
+        "99": 2.308847240593979
+      },
+      "action_diff_mean": 0.8319170662112366,
+      "codes_per_group": [
+        {
+          "active": 31,
+          "perplexity": 17.06028697511816,
+          "top1_frac": 0.168
+        }
+      ],
+      "codes_active_min_over_groups": 31,
+      "codes_perplexity_mean_over_groups": 17.06028697511816,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.030303030303030304,
+      "nn_jump_n": 990
+    }
+  },
+  "artifacts": {
+    "pngs": {
+      "speed": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_relay_g1k32_speed_overlay.png",
+      "z": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_relay_g1k32_z_overlay.png",
+      "adiff": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_relay_g1k32_adiff_overlay.png"
+    },
+    "gifs": {}
+  }
+}
