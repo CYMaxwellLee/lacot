@@ -333,7 +333,30 @@ SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
 #   回答 0.750 的 +4 是短程 u 的功勞、還是分段結構本身的功勞。⛔ 只影響分段 arm。
 SUB_POLICY = os.environ.get("LACOT_SUB_POLICY", "")
-assert SUB_POLICY in ("", "bc", "lo"), f"⛔ LACOT_SUB_POLICY 只能是空/bc/lo，收到 {SUB_POLICY}"
+assert SUB_POLICY in ("", "bc", "lo", "vq_select"), (
+    f"⛔ LACOT_SUB_POLICY 只能是空/bc/lo/vq_select，收到 {SUB_POLICY}")
+# ═══ M2：寫譜頭 vq_select（DESIGN-2026-09-08-b2-gait-dictionary §二 的 stage2+ 那格）═══
+# ⭐ 為什麼要有它：P2 量到「每 chunk 貪心挑最靠近路標的字」把字典毀了（per-leg .063、
+#    步速只剩真螞蟻 37%）；teacher-relay 量到「照 hindsight 真字串接力」走得到（.554）。
+#    ⇒ 缺的那一塊＝【臨場自己寫譜】：一顆小 head 吃 (當下 obs, 路標相對 xy) → 32-way 選字，
+#      teacher ＝ 驗證過能走的 hindsight 真字（P0 encoder 對 act[t:t+4] 算的 code）。
+#    執行端＝P0 條件化 decoder 展開 4 步 ⇒ ⭐ 沒有模擬器前瞻、這條路可部署
+#    （⛔ 跟 vq_oracle 的作弊上界性質不同）。
+# ⛔ LACOT_VQSEL_W=0（預設）⇒ 模組不建、字典不載、graph 不進、RNG 不碰 ⇒ 既有路徑逐位元不變。
+VQSEL_W = float(os.environ.get("LACOT_VQSEL_W", 0.0))
+VQSEL_CKPT = os.environ.get(
+    "LACOT_VQSEL_CKPT",
+    os.path.expanduser("~/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt"))
+# ⭐ 路標尺度＝【接力尺度】：沿軌跡 xy 取弧長 a ~ U[ARCMIN, ARC] 的未來點。
+#    ⛔ 不是「k 步後的點」—— lo 頭 v1 的分佈教訓（訓練分佈與 eval leg 幾何必須重疊）。
+#    預設 7.5＝DELTA_SUB（conf2 路標間距）、1.875＝rho（planner 到達半徑）
+#    ⇒ 訓練看到的相對路標距離區間，正好是 eval 一個 leg 從開始走到判定到達的區間。
+VQSEL_ARC = float(os.environ.get("LACOT_VQSEL_ARC", 7.5))
+VQSEL_ARCMIN = float(os.environ.get("LACOT_VQSEL_ARCMIN", 1.875))
+assert 0.0 < VQSEL_ARCMIN <= VQSEL_ARC, f"⛔ VQSEL_ARCMIN/ARC 不合法：{VQSEL_ARCMIN}/{VQSEL_ARC}"
+# ⭐ 要在場的條件：訓練它（VQSEL_W>0），或 eval 要用它（SUB_POLICY=vq_select，權重從 ckpt 載）。
+VQSEL_ON = (VQSEL_W > 0.0) or (SUB_POLICY == "vq_select")
+VQSEL_TRACE_DIR = os.environ.get("LACOT_VQSEL_TRACE_DIR", "")   # 非空才落 render 用軌跡
 # ═══ B 案：ant 階層低層 π_lo（docs/DESIGN-2026-09-07-ant-lowlevel-B.md）═══════════
 # ⭐ 為什麼要有它：計畫棧在 ant 上已驗活（pilot 25436 幾何全綠），死的是【動作端】——
 #    「遠程模仿」（8 維步態 × 遠 goal、訊號稀）學不起來。低層化＝把它拆成【短程模仿】：
@@ -1286,6 +1309,101 @@ def _lo_batch():
         wt = np.minimum(np.exp(LO_ADV_BETA * (v - _LO_ST["vbar"]) / _LO_ST["vbar"]), LO_ADV_WMAX)
     _T = lambda x: torch.from_numpy(np.ascontiguousarray(x, np.float32)).to(device)
     return _T(s), _T(w), _T(a), (_T(wt) if wt is not None else None)
+
+# ═══ M2 寫譜頭 vq_select：字典＋頭＋接力尺度的 hindsight 配對 ══════════════════
+# 架構＝π_lo 那條鏈的【同構版】（同容量、同 512 級、同 fork_rng／專用 RNG／獨立 optimizer
+#   三道隔離）：只把出口從「4×8 動作」換成【32-way 字的 logits】、把路標從絕對 xy 換成
+#   ⭐【相對 xy／ARC】（頭要選的是「往哪個方向踏這 4 步」，那是相對量；⛔ 絕對座標會讓它
+#   去記迷宮的位置）。⛔ 不共用 cond_enc、⛔ 不吃 u —— 寫譜頭只管挑字。
+VQSEL_DICT = VQSEL_CFG = None
+VQSEL_K = 0
+vqsel_s_enc = vqsel_w_enc = vqsel_ch = vqsel_head = None
+if VQSEL_ON:
+    assert VQSEL_W > 0.0 or LOAD_CKPT, (
+        "⛔ LACOT_SUB_POLICY=vq_select 但既沒有 LACOT_VQSEL_W>0（訓它）也沒有 "
+        "LACOT_LOAD_CKPT（載它）⇒ 寫譜頭會是隨機初始化的權重，而它【不會報錯】——"
+        " 那一輪的到達率是垃圾")
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))     # experiments/
+    import lacot_vqsel as _vqsel                                       # noqa: E402
+    # 🚨 同 bc_own／π_lo 的 2026-08-31 R3 教訓：建構包 fork_rng ⇒ ⛔ 不消耗全域 RNG 流。
+    #    ⚠️ 字典的建構（CondVQVAE 的 Linear 初始化＋codebook randn）也吃 RNG ⇒ 一起包進來，
+    #    少了它，VQSEL_W>0 那顆的【主模型】初始化整個變掉而不會報錯。
+    with torch.random.fork_rng(devices=[device] if str(device) != "cpu" else []):
+        torch.manual_seed(20260908 + SEED)
+        VQSEL_DICT, VQSEL_CFG = _vqsel.load_dict(VQSEL_CKPT, device=device)
+        VQSEL_K = int(VQSEL_CFG["k"])
+        assert int(VQSEL_CFG["seg_len"]) == CHUNK, (
+            f"⛔ 字典段長 {VQSEL_CFG['seg_len']} != eval CHUNK {CHUNK} —— 標籤與執行必須對齊")
+        assert int(VQSEL_CFG["obs_dim"]) == OBS_DIM and int(VQSEL_CFG["seg_dim"]) == CHUNK * ADIM
+        vqsel_s_enc = sota_mlp(OBS_DIM, 512, 512).to(device)   # ⭐ 決策端：完整 obs（姿態在這裡）
+        vqsel_w_enc = sota_mlp(XY_DIM, 512, 512).to(device)    # ⭐ 路標【相對】xy 直吃
+        vqsel_ch = sota_mlp(1024, 512, COND).to(device)
+        vqsel_head = sota_mlp(COND, 512, VQSEL_K, n=3).to(device)   # ⭐ 32-way logits
+
+    def vqsel_logits(s, w):
+        """s＝正規化【完整 obs】[n,OBS_DIM]；w＝【相對路標 xy／ARC】[n,XY_DIM] ⇒ [n,K] logits。"""
+        return vqsel_head(vqsel_ch(torch.cat([vqsel_s_enc(s), vqsel_w_enc(w)], 1)))
+    print(f"  🔮 vq_select 寫譜頭建立（obs {OBS_DIM} ⊕ 相對路標 xy {XY_DIM} → {VQSEL_K}-way；"
+          f"VQSEL_W={VQSEL_W:g}  弧長 a∈[{VQSEL_ARCMIN:g},{VQSEL_ARC:g}]）", flush=True)
+
+# ⭐ 專用抽樣流：⛔ 不碰主資料 rng ⇒ VQSEL_W>0 那顆的主模型跟 VQSEL_W=0 那顆逐位元相同
+#    （同 _LO_RNG／_GRPO_QRNG 的紀律）。
+_VQSEL_RNG = np.random.default_rng(20260908 + SEED)
+_VQSEL_ST = {"acc_ema": None, "ce_ema": None, "logged": False}
+_VQSEL_ARCCUM = _VQSEL_CODE = _VQSEL_VALID = None
+
+if VQSEL_W > 0.0:
+    # ⭐ 弧長表（一次算好；⛔ 不逐條 episode 迴圈）＋ 全資料 hindsight 真字（標籤）。
+    #    ⚠️ 標籤預先算完是刻意的：① 每步重算 encoder 是白花的算力；
+    #    ② 預先算完才量得到【教材本身的類別分佈】—— 亂猜線 1/32=3.1% 是不是真的成立，
+    #       要看這張分佈，⛔ 不能用「K=32 所以是 3%」代替（塌到少數字的話亂猜線會更高）。
+    _VQSEL_ARCCUM = _vqsel.build_arc_cum(OBS_XY, traj_end)
+    _VQSEL_VALID = (traj_end - np.arange(N)) >= CHUNK     # ⛔ 要有 CHUNK 步真動作可以編碼
+    _vq_rows_all = np.flatnonzero(_VQSEL_VALID)
+    _VQSEL_CODE = np.full(N, -1, np.int16)
+    with torch.no_grad():
+        for _i0 in range(0, len(_vq_rows_all), 65536):
+            _rr = _vq_rows_all[_i0:_i0 + 65536]
+            _segs = ACT[_rr[:, None] + np.arange(CHUNK)[None, :]].reshape(len(_rr), CHUNK * ADIM)
+            _VQSEL_CODE[_rr] = VQSEL_DICT.encode_idx(
+                torch.from_numpy(np.ascontiguousarray(_segs, np.float32)).to(device)
+            ).to(torch.int16).cpu().numpy()
+    _vq_hist = np.bincount(_VQSEL_CODE[_vq_rows_all].astype(np.int64), minlength=VQSEL_K)
+    _vq_fr = _vq_hist / max(_vq_hist.sum(), 1)
+    _vq_nz = _vq_fr[_vq_fr > 0]
+    print(f"  🔮 vq_select 教材標籤：{len(_vq_rows_all)} 段、字 {int((_vq_hist>0).sum())}/{VQSEL_K} 全活、"
+          f"perplexity {np.exp(-np.sum(_vq_nz*np.log(_vq_nz))):.2f}/{VQSEL_K}、"
+          f"最大類 {_vq_fr.max()*100:.1f}%（⭐ 這才是亂猜線，⛔ 不是 1/{VQSEL_K}={100/VQSEL_K:.1f}%）"
+          f"  弧長 p50 {np.median(np.diff(_VQSEL_ARCCUM)):.4f}/步", flush=True)
+
+
+def _vqsel_pairs(rng, n):
+    """接力尺度的 hindsight 配對：(t, 沿軌跡往前 a 單位弧長的點)、a ~ U[ARCMIN, ARC]。
+    ⛔ 不跨 episode 邊界：超出就 clamp 到 traj_end（⛔ 不重抽 —— 同 _lo_pairs 的 F6 教訓）。
+    ⛔ 也【不是】k 步後的點：lo 頭 v1 的分佈教訓 —— 步數配對量到的是「k 步能走多遠」，
+       而 eval 的 leg 是【固定弧長 7.5】的路標，兩者分佈不重疊。"""
+    rows = np.empty(n, np.int64)
+    f = 0
+    while f < n:
+        r = rng.integers(0, N, n - f)
+        r = r[_VQSEL_VALID[r]]
+        if len(r) == 0:
+            continue
+        rows[f:f + len(r)] = r
+        f += len(r)
+    arcs = rng.uniform(VQSEL_ARCMIN, VQSEL_ARC, n)
+    tgts = _vqsel.arc_waypoint(_VQSEL_ARCCUM, traj_end, rows, arcs)
+    return rows, tgts
+
+
+def _vqsel_batch():
+    """回 (s, w, y)：正規化完整 obs／【相對】路標 xy／該 chunk 的 hindsight 真字。"""
+    rows, tgts = _vqsel_pairs(_VQSEL_RNG, B)
+    s = (OBS[rows] - mu) / sd
+    w = (OBS_XY[tgts].astype(np.float64) - OBS_XY[rows].astype(np.float64)) / VQSEL_ARC
+    y = _VQSEL_CODE[rows].astype(np.int64)
+    _T = lambda x: torch.from_numpy(np.ascontiguousarray(x, np.float32)).to(device)
+    return _T(s), _T(w), torch.from_numpy(y).to(device)
 # ⭐ BC_INDEP：bc 地板拆出去用自己的 optimizer ＋ 自己的 grad-clip。
 #    主人 8/24 對 floor 的定義是「真正 BC 能到達的」—— 而共用 opt2 與全域 clip 的話，
 #    它的更新會被主模型的梯度規模牽著走 ⇒ ⛔ 那不是獨立 baseline。
@@ -1301,6 +1419,10 @@ opt_bc_own = (torch.optim.Adam([p for m in (bc_own_enc, bc_own_ch, bc_own_head)
 # ⭐ π_lo 自己的 optimizer（同 bc_own 慣例：獨立 backward／獨立 clip ⇒ 對主模型零影響）
 opt_lo = (torch.optim.Adam([p for m in (lo_s_enc, lo_w_enc, lo_ch, lo_head)
                             for p in m.parameters()], lr=5e-4) if LO_W > 0.0 else None)
+# ⭐ M2 寫譜頭自己的 optimizer（同 bc_own／π_lo 慣例：獨立 backward／獨立 clip ⇒ 對主模型零影響）
+#    ⛔ 字典的參數不進來（load_dict 已 requires_grad_(False)）—— 凍的就是凍的。
+opt_vqsel = (torch.optim.Adam([p for m in (vqsel_s_enc, vqsel_w_enc, vqsel_ch, vqsel_head)
+                               for p in m.parameters()], lr=5e-4) if VQSEL_W > 0.0 else None)
 def condvec(s, g, ix=None):
     """(s,g) → 條件向量。⭐ C：intent 的 embed/residual 接法把錨的全域摘要 ix 拼在尾巴；
     ix=None ⇒ 拼零向量（「沒有路線」＝跟 COND_DROP 歸零同一個哲學）。
@@ -1776,6 +1898,31 @@ def _stage2_loop(n_steps, step_off=0):
                 torch.nn.utils.clip_grad_norm_([p for m in (lo_s_enc, lo_w_enc, lo_ch, lo_head)
                                                 for p in m.parameters()], 1.0)
                 _amp_step(opt_lo)
+            # ⭐ M2 寫譜頭 vq_select：接力尺度 hindsight 配對的 32-way cross-entropy。
+            #    ⛔ 完全獨立的 backward（自己的 batch／graph／clip／optimizer），
+            #    ⛔ 也不碰主 rng ⇒ VQSEL_W>0 那顆的主模型跟 VQSEL_W=0 那顆逐位元相同。
+            l_vqsel = None
+            if VQSEL_W > 0.0:
+                _vqs, _vqw, _vqy = _vqsel_batch()
+                _vqlg = vqsel_logits(_vqs, _vqw)
+                l_vqsel = F.cross_entropy(_vqlg, _vqy)
+                with torch.no_grad():      # ⭐ top-1 accuracy：學不學得起來的第一把尺
+                    _vqacc = float((_vqlg.argmax(1) == _vqy).float().mean())
+                    _vqce = float(l_vqsel)
+                    _VQSEL_ST["acc_ema"] = _vqacc if _VQSEL_ST["acc_ema"] is None else \
+                        0.99 * _VQSEL_ST["acc_ema"] + 0.01 * _vqacc
+                    _VQSEL_ST["ce_ema"] = _vqce if _VQSEL_ST["ce_ema"] is None else \
+                        0.99 * _VQSEL_ST["ce_ema"] + 0.01 * _vqce
+                # ⚠️ VQSEL_W 是【係數】（同 LO_W 的定義）：走自己的 optimizer ⇒ 等同 lr 縮放。
+                #    ⛔ 不做成純 on/off：那樣不同 W 會跑出同權重卻掛不同檔名，而它不會報錯。
+                l_vqsel = VQSEL_W * l_vqsel
+                opt_vqsel.zero_grad(set_to_none=True)
+                _amp_backward(l_vqsel)        # ⛔ AMP=0 ⇒ 就是 l_vqsel.backward()
+                _amp_unscale(opt_vqsel)       # ⭐ clip 前先 unscale（AMP=0 ⇒ no-op）
+                torch.nn.utils.clip_grad_norm_(
+                    [p for m in (vqsel_s_enc, vqsel_w_enc, vqsel_ch, vqsel_head)
+                     for p in m.parameters()], 1.0)
+                _amp_step(opt_vqsel)
             total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
             # ⭐ L_div hinge（LACOT_DIV_W>0）：⛔ 整段 gate 在 if 裡 —— DIV_W=0 時連 `+0*l_div`
             #    這種「數學上無害」的 op 都不加，⇒ 預設路徑的 graph 與數值逐位元不變。
@@ -1942,7 +2089,9 @@ def _stage2_loop(n_steps, step_off=0):
         if (_gstp + 1) % LOG_EVERY == 0:      # ⭐ 預設 1000 ⇒ 既有 log 逐行不變
             print(f"  step {_gstp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}"
                   + (f" l_div {l_div.item():.4f}" if l_div is not None else "")
-                  + (f" l_lo {l_lo.item():.4f}" if l_lo is not None else ""), flush=True)
+                  + (f" l_lo {l_lo.item():.4f}" if l_lo is not None else "")
+                  + (f" l_vqsel(ce) {_VQSEL_ST['ce_ema']:.4f} top1 {_VQSEL_ST['acc_ema']:.4f}"
+                     if l_vqsel is not None else ""), flush=True)
 
 
 _stage2_loop(STEPS2)
@@ -1999,6 +2148,23 @@ if LOAD_CKPT:
         print(f"  ⭐ π_lo 低層四模組已載入（訓練時 LO_W={_cfg.get('LO_W', '?')}"
               f" k∈[{_cfg.get('LO_KMIN', '?')},{_cfg.get('LO_KMAX', '?')}]"
               f" adv={_cfg.get('LO_ADV', '?')}）", flush=True)
+    if VQSEL_ON:
+        assert "vqsel" in _ck, (
+            "⛔ 這一輪要用 vq_select 寫譜頭（LACOT_VQSEL_W>0 或 LACOT_SUB_POLICY=vq_select）"
+            f"但這顆 ckpt 沒有 vqsel 段（訓練時沒開 LACOT_VQSEL_W）：{os.path.basename(_lp)}")
+        # 🚨 字典是【標籤的定義】：換一本字典 = 頭的 32 個輸出對應到別的動作，
+        #    而它【不會報錯】—— 成績照樣算得出來。⇒ 訓練用哪本，eval 就必須是哪本。
+        assert _ck["vqsel"].get("dict_ckpt") == VQSEL_CKPT, (
+            f"⛔ 訓練時的字典是 {_ck['vqsel'].get('dict_ckpt')}，這一輪要用 {VQSEL_CKPT}"
+            " —— 換字典等於換掉 32 個輸出的意思，⛔ 不准混")
+        assert int(_ck["vqsel"].get("K", -1)) == VQSEL_K
+        vqsel_s_enc.load_state_dict(_ck["vqsel"]["s"])
+        vqsel_w_enc.load_state_dict(_ck["vqsel"]["w"])
+        vqsel_ch.load_state_dict(_ck["vqsel"]["ch"])
+        vqsel_head.load_state_dict(_ck["vqsel"]["head"])
+        print(f"  🔮 vq_select 寫譜頭四模組已載入（訓練時 VQSEL_W={_cfg.get('VQSEL_W', '?')}"
+              f" 弧長 [{_cfg.get('VQSEL_ARCMIN', '?')},{_cfg.get('VQSEL_ARC', '?')}]"
+              f" 字典 {os.path.basename(str(_ck['vqsel'].get('dict_ckpt')))}）", flush=True)
     # ⭐ LACOT_LOAD_EMA=1：用影子權重覆蓋供點鏈五模組（同顆 ckpt 的 raw/ema 配對對照）
     LOAD_EMA = int(os.environ.get("LACOT_LOAD_EMA", 0))
     if LOAD_EMA:
@@ -2098,6 +2264,9 @@ if BC_INDEP:
 if LO_ON:
     for _m in (lo_s_enc, lo_w_enc, lo_ch, lo_head):
         _m.eval()       # ⚠️ π_lo 也不在 f_mods（獨立鏈）⇒ 同 bc_head 的理由要自己切
+if VQSEL_ON:
+    for _m in (vqsel_s_enc, vqsel_w_enc, vqsel_ch, vqsel_head):
+        _m.eval()       # ⚠️ 寫譜頭同理（獨立鏈、不在 f_mods）；字典 load_dict 就已經 eval()
 
 if u_dec is not None:
     # ⭐ 這裡才是 decoder 的最終權重（訓練完 or ckpt 載完）⇒ 檢查要在這裡做，⛔ 不是在 stage 1 後面
@@ -2453,6 +2622,40 @@ def lo_policy(obs, w_xy):
     a = lo_act(normstate(obs), w)[0].cpu().numpy()
     return np.clip(a, -1.0, 1.0).astype(np.float32)
 
+
+# ⭐ M2 寫譜頭的執行端：選字（argmax）→ P0 條件化 decoder 展開 4 步。
+#    ⛔ 沒有模擬器前瞻（那是 P2 vq_oracle 的作弊上界）⇒ 這條是可部署的。
+#    ⭐ 選字統計恆開（旗開才存在）：⛔「頭塌到一兩個字」這種死法不會報錯，
+#    per-leg 掉下來時得分得出「是選字塌了」還是「選對字但走不到」。
+_VQSEL_EVAL = {"stats": (_vqsel.CodeStats(VQSEL_K) if VQSEL_ON else None), "trace": None}
+
+
+@torch.no_grad()
+def vqsel_policy(obs, w_xy):
+    """吃【當下完整 obs】＋【路標 xy（原始座標）】→ 選一個步法字 → 展開成動作塊。
+    ⚠️ 頭吃的是【相對】路標（w−obs_xy）／ARC —— 跟訓練時的配對定義同一把尺。
+    ⚠️ decoder 吃的是【原始 obs】（它自己內部用 ckpt 裡的 obs_mean/std 正規化，
+       ⛔ 不是主模型的 mu/sd —— 兩把尺混用不會報錯，但展開的動作是別的東西）。"""
+    o = np.asarray(obs, np.float64)
+    w = np.asarray(w_xy, np.float64)[..., :XY_DIM]
+    wrel = torch.tensor((((w - o[:XY_DIM]) / VQSEL_ARC)[None]).astype(np.float32), device=device)
+    k = int(vqsel_logits(normstate(obs), wrel).argmax(1)[0])
+    ot = torch.tensor(o[None].astype(np.float32), device=device)
+    seg = VQSEL_DICT.decode_from_idx(
+        torch.tensor([k], dtype=torch.long, device=device), ot)[0].cpu().numpy()
+    a = np.clip(seg.reshape(CHUNK, ADIM), -1.0, 1.0).astype(np.float32)
+    if _VQSEL_EVAL["stats"] is not None:
+        _VQSEL_EVAL["stats"].add(k)
+    if _VQSEL_EVAL["trace"] is not None:
+        _tr = _VQSEL_EVAL["trace"]
+        _u = env.unwrapped
+        _tr["qpos"].append(np.asarray(_u.data.qpos)[:15].copy())
+        _tr["qvel"].append(np.asarray(_u.data.qvel)[:14].copy())
+        _tr["actions"].append(a.astype(np.float64).copy())
+        _tr["codes"].append(k)
+        _tr["subs"].append(w.copy())
+    return a
+
 # ⚠️ ogbench 不看 OGBENCH_DATA_DIR，它只看 dataset_dir 參數（預設 ~/.ogbench/data）。
 #    2026-08-23 實測：不給 dataset_dir 它會【重新下載到 home】，而 home 是 NFS。
 #    ⇒ 一定要明確傳本機 /archive 的路徑。
@@ -2786,7 +2989,7 @@ SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": []
 #    到達判定＝planner 自己的 rho（＝0.25·DELTA_SUB）⇒ ⛔ 跟換段的判定同一把尺，
 #    不自訂第二把（兩把尺會給出互相矛盾的「到了」）。
 # ⛔ 預設不開（LACOT_SUB_POLICY=lo 時自動開）⇒ 既有 arm 的 stdout 一個字不變。
-LEG_STATS = int(os.environ.get("LACOT_LEG_STATS", 1 if SUB_POLICY == "lo" else 0))
+LEG_STATS = int(os.environ.get("LACOT_LEG_STATS", 1 if SUB_POLICY in ("lo", "vq_select") else 0))
 _LEG = {"att": 0, "reach": 0, "steps": [], "open": 0, "_pl": None}
 _LEG_ROWS = []        # ⭐ 每個分段 arm 一列（⛔ 只在 LEG_STATS 開著時進 json ⇒ 舊 json 不變）
 
@@ -3038,6 +3241,10 @@ def make_subgoal_policy(R, use_u):
             # ⭐ B 案：只換【開車的頭】—— 分段機制（選點／換段／stuck 判定）一行都沒動。
             #    ⛔ 路標【不】過 goal_to_obs：低層直吃 xy（那是它自己的 encoder 的語言）。
             return lo_policy(obs, planner.sub)
+        if SUB_POLICY == "vq_select":
+            # ⭐ M2 寫譜頭：同樣只換【開車的頭】—— 選路標的上面四行一字未動。
+            #    ⚠️ 路標【不】過 goal_to_obs：寫譜頭吃的是相對 xy（它自己的語言）。
+            return vqsel_policy(obs, planner.sub)
         # ⭐ ant v1：planner.sub 是【只有 xy】的路標 ⇒ 補成決策端要的完整 obs
         #    （非 xy 維填資料平均）。pointmaze 上 OBS_DIM==2 ⇒ goal_to_obs 原樣回傳。
         return policy_chunk(obs, goal_to_obs(planner.sub), R,
@@ -3069,6 +3276,8 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
             _reset_grad_cache()
             if on_start is not None:           # ⭐ 分段 policy 有狀態 ⇒ 每集重置（同 dev 那條）
                 on_start(obs, goal, task)                 # ⭐ 9/2：傳真 task（單集追蹤用；on_start 其餘不吃它）
+            if VQSEL_ON and VQSEL_TRACE_DIR:              # ⛔ 旗關＝這格不存在
+                _VQSEL_EVAL["trace"] = dict(qpos=[], qvel=[], actions=[], codes=[], subs=[])
             _reseed_shuf(1000 * task + sd_)    # #16：shuf arm 也要每集釘死 ⇒ 各 arm 配對
             while steps < MAXH and not success:
                 for a in (policy_fn(obs, goal) if policy_fn is not None
@@ -3080,6 +3289,19 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
                     if success or term or trunc or steps >= MAXH:
                         break
             succ += int(success); ep += 1
+            if VQSEL_ON and VQSEL_TRACE_DIR:              # ⛔ 旗關＝這格不存在
+                _tr = _VQSEL_EVAL["trace"]; _VQSEL_EVAL["trace"] = None
+                if _tr is not None and len(_tr["qpos"]):
+                    os.makedirs(VQSEL_TRACE_DIR, exist_ok=True)
+                    np.savez_compressed(
+                        os.path.join(VQSEL_TRACE_DIR, f"trace_t{task}_s{sd_}.npz"),
+                        qpos=np.asarray(_tr["qpos"], np.float64),
+                        qvel=np.asarray(_tr["qvel"], np.float64),
+                        actions=np.asarray(_tr["actions"], np.float64),
+                        codes=np.asarray(_tr["codes"], np.int64),
+                        subs=np.asarray(_tr["subs"], np.float64),
+                        goal_xy=np.asarray(goal[:2], np.float64),
+                        success=np.asarray([int(success)]), steps=np.asarray([steps]))
             if DIAG_DUMP:                    # 成功集也記 —— 讀屍體要有活人對照
                 _fp = np.asarray(obs[:2], np.float64)
                 _gl = np.asarray(goal[:2], np.float64)
@@ -3404,6 +3626,14 @@ if SUBGOAL:
         _lr = _leg_report(f"official {SUBGOAL}")
         if _lr is not None:
             _LEG_ROWS.append(_lr)
+    if VQSEL_ON and _VQSEL_EVAL["stats"] is not None:     # ⛔ 旗關＝這格不存在
+        _vs = _VQSEL_EVAL["stats"].stats()
+        print(f"  🔮 vq_select 選字統計：chunks {_vs['n_chunks']} / 有被選到的字 "
+              f"{_vs['codes_active']}/{_vs['codes_K']} / perplexity {_vs['code_perplexity']:.2f}"
+              f" / top1 {_vs['code_top1_frac']*100:.1f}%", flush=True)
+        _vs["dict_ckpt"] = VQSEL_CKPT
+        _vs["arc"] = [VQSEL_ARCMIN, VQSEL_ARC]
+        out["vq_select"] = _vs
 # ⭐ X：反向 refine。⛔ 少了這格，「refine 有用」這個主張沒有任何直接證據。
 # 🚨 2026-08-28 修：_RDIR 只被 _apply_refine 讀，而 _apply_refine 在 LEARNED_REFINE=0 時
 #    直接 return、在 GRAD_REFINE=1 時根本不會被呼叫（policy_chunk 走爬坡那一支）
@@ -3460,7 +3690,8 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                CONT_TRAIN=0, STEPS2=2000, DIV_W=0.0, DIV_M=0.3,
                GRPO_W=0.0, GRPO_G=8, GRPO_EVERY=1, GRPO_BQ=4, GRPO_WARM=500, GRPO_STDNORM=1,
                AMP=0, COMPILE=0, BON_N=0,
-               LO_W=0.0, LO_ADV=0, LO_ADV_BETA=1.0, LO_KMIN=10, LO_KMAX=60):
+               LO_W=0.0, LO_ADV=0, LO_ADV_BETA=1.0, LO_KMIN=10, LO_KMAX=60,
+               VQSEL_W=0.0, VQSEL_ARC=7.5, VQSEL_ARCMIN=1.875):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
@@ -3591,6 +3822,15 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"a{LO_ADV_BETA:g}"
         if LO_KMIN != 10 or LO_KMAX != 60:
             x += f"k{LO_KMIN}-{LO_KMAX}"
+    # 🚨 M2 寫譜頭同一條防互蓋鐵則：VQSEL_W>0 訓出來的 ckpt 多一條 vq_select 鏈，
+    #    ⛔ 少了這一段，同 seed 同步數的「有寫譜頭／沒寫譜頭」會產生完全相同的檔名
+    #    而互相覆蓋，被蓋掉的那顆在數值上完全合理、看不出來。
+    #    ⚠️ 弧長窗也一起帶 —— 它改的是【訓練分佈】＝權重本身。
+    #    ⭐ 只有非預設（>0）才加 ⇒ 既有檔名一個字不變；eval 的 _spvq_select 走 SUB_POLICY 那格。
+    if VQSEL_W > 0:
+        x += f"_vqsW{VQSEL_W:g}"
+        if VQSEL_ARC != 7.5 or VQSEL_ARCMIN != 1.875:
+            x += f"a{VQSEL_ARCMIN:g}-{VQSEL_ARC:g}"
     return x
 
 
@@ -3624,6 +3864,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     GRPO_W=GRPO_W, GRPO_G=GRPO_G, GRPO_EVERY=GRPO_EVERY, GRPO_BQ=GRPO_BQ,
                     GRPO_WARM=GRPO_WARM, GRPO_STDNORM=GRPO_STDNORM,
                     AMP=AMP, COMPILE=COMPILE, BON_N=BON_N,
+                    VQSEL_W=VQSEL_W, VQSEL_ARC=VQSEL_ARC, VQSEL_ARCMIN=VQSEL_ARCMIN,
                     LO_W=LO_W, LO_ADV=LO_ADV, LO_ADV_BETA=LO_ADV_BETA,
                     LO_KMIN=LO_KMIN, LO_KMAX=LO_KMAX)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
@@ -3645,6 +3886,10 @@ if INTENT:
 # ⭐ B 案 per-leg（G1 溫度計）＋低層設定：⛔ 只在開著時進 json ⇒ 既有 json 逐 key 不變。
 if _LEG_ROWS:
     out["leg_stats"] = _LEG_ROWS
+if VQSEL_ON:
+    out["vqsel_cfg"] = dict(w=VQSEL_W, arc=VQSEL_ARC, arcmin=VQSEL_ARCMIN, K=VQSEL_K,
+                            dict_ckpt=VQSEL_CKPT, sub_policy=SUB_POLICY,
+                            ce_ema=_VQSEL_ST["ce_ema"], acc_ema=_VQSEL_ST["acc_ema"])
 if LO_ON:
     out["lo"] = dict(w=LO_W, kmin=LO_KMIN, kmax=LO_KMAX, adv=LO_ADV,
                      adv_beta=LO_ADV_BETA, adv_wmax=LO_ADV_WMAX,
@@ -3767,6 +4012,12 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             # ⭐ B 案低層 π_lo 四模組（LO_ON 時；⛔ 沒有它 eval 端只能拿隨機權重跑到達率）
             **({"lo": {"s": lo_s_enc.state_dict(), "w": lo_w_enc.state_dict(),
                        "ch": lo_ch.state_dict(), "head": lo_head.state_dict()}} if LO_ON else {}),
+            # ⭐ M2 寫譜頭四模組（VQSEL_ON 時）＋【字典的身份】。
+            #    🚨 dict_ckpt 一定要一起存：換一本字典＝這 K 個輸出對應到別的動作，
+            #    而它【不會報錯】—— 載入端拿它當 assert 的依據。
+            **({"vqsel": {"s": vqsel_s_enc.state_dict(), "w": vqsel_w_enc.state_dict(),
+                          "ch": vqsel_ch.state_dict(), "head": vqsel_head.state_dict(),
+                          "dict_ckpt": VQSEL_CKPT, "K": VQSEL_K}} if VQSEL_ON else {}),
             # ⭐ optimizer 狀態只在續訓模式存（⛔ 預設路徑的 ckpt 內容逐 key 不變）——
             #    有它，下一次續訓的 Adam m/v 才接得下去（沒有就 fresh，見載入端的警告）
             **({"opt2": opt2.state_dict(),
@@ -3797,5 +4048,11 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
                         # ⭐ B 案低層血緣（⛔ 只在開著時進 cfg ⇒ 預設 ckpt 逐位元不變）
                         **({"LO_W": LO_W, "LO_KMIN": LO_KMIN, "LO_KMAX": LO_KMAX,
                             "LO_ADV": LO_ADV, "LO_ADV_BETA": LO_ADV_BETA,
-                            "LO_VBAR": _LO_ST["vbar"]} if LO_ON else {}))}, ck)
+                            "LO_VBAR": _LO_ST["vbar"]} if LO_ON else {}),
+                        # ⭐ M2 寫譜頭血緣（⛔ 只在開著時進 cfg ⇒ 預設 ckpt 逐位元不變）
+                        **({"VQSEL_W": VQSEL_W, "VQSEL_ARC": VQSEL_ARC,
+                            "VQSEL_ARCMIN": VQSEL_ARCMIN, "VQSEL_K": VQSEL_K,
+                            "VQSEL_CKPT": VQSEL_CKPT,
+                            "VQSEL_CE_EMA": _VQSEL_ST["ce_ema"],
+                            "VQSEL_ACC_EMA": _VQSEL_ST["acc_ema"]} if VQSEL_ON else {}))}, ck)
 print(f"存 checkpoint {ck}", flush=True)

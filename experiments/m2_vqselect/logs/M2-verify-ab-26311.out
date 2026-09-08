@@ -1,0 +1,52 @@
+===================== ① goldab（pointmaze、GPU）=====================
+== git 狀態快照 ==
+main
+main
+vq-select-v1
+vq-select-v1
+A1 rc=0
+A2 rc=0
+B  rc=0
+== ckpt/json sha256 ==
+A1 1c203ff189359672bd29e53d67c6f411bb83e7a9e8616ce96fb5d0545a47590d  ckpt_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.pt
+A1 fd028208c806a35b915d8848b6037fd92db9ce107a726c5fbfa1af71ac29418f  rollout_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.json
+A2 1c203ff189359672bd29e53d67c6f411bb83e7a9e8616ce96fb5d0545a47590d  ckpt_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.pt
+A2 fd028208c806a35b915d8848b6037fd92db9ce107a726c5fbfa1af71ac29418f  rollout_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.json
+B 1c203ff189359672bd29e53d67c6f411bb83e7a9e8616ce96fb5d0545a47590d  ckpt_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.pt
+B fd028208c806a35b915d8848b6037fd92db9ce107a726c5fbfa1af71ac29418f  rollout_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.json
+== stdout diff（A1 vs A2）==
+Files /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/A1.log and /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/A2.log differ
+A1!=A2 stdout: DIFFER
+== stdout diff（A1 vs B）==
+48,50c48,50
+< 寫入 /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/A1/rollout_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.json
+< ⭐ 散度時間序列：2 筆 -> /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/A1/divlog_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.jsonl
+< ⭐ grpo 時間序列：19 筆 -> /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/A1/grpolog_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.jsonl   退化群 30/36（0.833） 閘通過率 0.333 無路錨 0
+---
+> 寫入 /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/B/rollout_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.json
+> ⭐ 散度時間序列：2 筆 -> /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/B/divlog_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.jsonl
+> ⭐ grpo 時間序列：19 筆 -> /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/B/grpolog_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.jsonl   退化群 30/36（0.833） 閘通過率 0.333 無路錨 0
+52c52
+< 存 checkpoint /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/A1/ckpt_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.pt
+---
+> 存 checkpoint /home/cymaxwelllee/Projects/lacot/results/goldab_vqselect/B/ckpt_medium-stitch_self_K8_c256_ch4_st20_T64_ep1_gu_eorecon_ictr_tch0.5_emw0.999_wu5_s1150_ite_idp0.3_dvw0.1_grpo1g2q2w2_dssoft_norf_cd0.1_bci_sgconf2_ma2_spbc_gr0_fin2_bon4_s0.pt
+VERDICT: PASS — 受測分支對 pointmaze 於 GPU 亦零差（ckpt+json 全同）
+
+===================== ② ant 旗關閉零差 =============================
+== git ==
+main
+main
+vq-select-v1
+vq-select-v1
+== A (main, flag off) ==
+A rc=0
+== B (worktree, flag off) ==
+B rc=0
+== sha256 ==
+A e77f3b6dea1629dd81e00015faf9747dddd1aaba534157d67f3f8e96cac38b9a  rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+B e77f3b6dea1629dd81e00015faf9747dddd1aaba534157d67f3f8e96cac38b9a  rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+== 檔名比對 ==
+rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+== stdout diff (A vs B，路徑字串會不同、其餘應全同) ==
+FLAGOFF VERDICT: PASS — ant 路徑旗關閉零差（rollout json sha256 全同）
