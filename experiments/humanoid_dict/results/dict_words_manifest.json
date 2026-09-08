@@ -1,0 +1,102 @@
+{
+  "cell": {
+    "G": 16,
+    "K": 16
+  },
+  "group": 10,
+  "render_env_ok": true,
+  "render_env_error": null,
+  "n_words": 8,
+  "n_mujoco_gif": 8,
+  "n_fallback_plot": 0,
+  "words": [
+    {
+      "rank": 0,
+      "group": 10,
+      "code": 11,
+      "usage_frac": 0.081694,
+      "n_members": 40847,
+      "seg_index": 163048,
+      "seg_start": 653822,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank0_code11.gif"
+    },
+    {
+      "rank": 1,
+      "group": 10,
+      "code": 15,
+      "usage_frac": 0.07905,
+      "n_members": 39525,
+      "seg_index": 165760,
+      "seg_start": 664697,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank1_code15.gif"
+    },
+    {
+      "rank": 2,
+      "group": 10,
+      "code": 9,
+      "usage_frac": 0.0747,
+      "n_members": 37350,
+      "seg_index": 438622,
+      "seg_start": 1758874,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank2_code9.gif"
+    },
+    {
+      "rank": 3,
+      "group": 10,
+      "code": 7,
+      "usage_frac": 0.072996,
+      "n_members": 36498,
+      "seg_index": 157532,
+      "seg_start": 631703,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank3_code7.gif"
+    },
+    {
+      "rank": 4,
+      "group": 10,
+      "code": 12,
+      "usage_frac": 0.068938,
+      "n_members": 34469,
+      "seg_index": 188768,
+      "seg_start": 756959,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank4_code12.gif"
+    },
+    {
+      "rank": 5,
+      "group": 10,
+      "code": 3,
+      "usage_frac": 0.064432,
+      "n_members": 32216,
+      "seg_index": 199806,
+      "seg_start": 801222,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank5_code3.gif"
+    },
+    {
+      "rank": 6,
+      "group": 10,
+      "code": 6,
+      "usage_frac": 0.064158,
+      "n_members": 32079,
+      "seg_index": 65921,
+      "seg_start": 264343,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank6_code6.gif"
+    },
+    {
+      "rank": 7,
+      "group": 10,
+      "code": 0,
+      "usage_frac": 0.063312,
+      "n_members": 31656,
+      "seg_index": 311433,
+      "seg_start": 1248846,
+      "method": "mujoco_gif_real_segment",
+      "file": "viz_words/word_group10_rank7_code0.gif"
+    }
+  ]
+}

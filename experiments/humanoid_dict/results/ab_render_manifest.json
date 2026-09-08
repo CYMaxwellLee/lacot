@@ -1,0 +1,334 @@
+{
+  "cell": {
+    "G": 16,
+    "K": 16
+  },
+  "render_env_ok": true,
+  "render_env_error": null,
+  "n_pairs_per_group": 2,
+  "n_pairs_total": 32,
+  "n_mujoco_gif": 32,
+  "n_fallback_plot": 0,
+  "pairs": [
+    {
+      "group": 0,
+      "pair": 0,
+      "seg_index": 285450,
+      "seg_start": 1144654,
+      "orig_code": 4,
+      "swapped_code": 12,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group00_pair0.gif"
+    },
+    {
+      "group": 0,
+      "pair": 1,
+      "seg_index": 55139,
+      "seg_start": 221107,
+      "orig_code": 2,
+      "swapped_code": 10,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group00_pair1.gif"
+    },
+    {
+      "group": 1,
+      "pair": 0,
+      "seg_index": 453593,
+      "seg_start": 1818907,
+      "orig_code": 11,
+      "swapped_code": 3,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group01_pair0.gif"
+    },
+    {
+      "group": 1,
+      "pair": 1,
+      "seg_index": 248663,
+      "seg_start": 997138,
+      "orig_code": 3,
+      "swapped_code": 11,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group01_pair1.gif"
+    },
+    {
+      "group": 2,
+      "pair": 0,
+      "seg_index": 218112,
+      "seg_start": 874629,
+      "orig_code": 0,
+      "swapped_code": 8,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group02_pair0.gif"
+    },
+    {
+      "group": 2,
+      "pair": 1,
+      "seg_index": 220787,
+      "seg_start": 885355,
+      "orig_code": 0,
+      "swapped_code": 8,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group02_pair1.gif"
+    },
+    {
+      "group": 3,
+      "pair": 0,
+      "seg_index": 300812,
+      "seg_start": 1206256,
+      "orig_code": 0,
+      "swapped_code": 8,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group03_pair0.gif"
+    },
+    {
+      "group": 3,
+      "pair": 1,
+      "seg_index": 282055,
+      "seg_start": 1131040,
+      "orig_code": 11,
+      "swapped_code": 3,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group03_pair1.gif"
+    },
+    {
+      "group": 4,
+      "pair": 0,
+      "seg_index": 300347,
+      "seg_start": 1204391,
+      "orig_code": 14,
+      "swapped_code": 6,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group04_pair0.gif"
+    },
+    {
+      "group": 4,
+      "pair": 1,
+      "seg_index": 396041,
+      "seg_start": 1588124,
+      "orig_code": 9,
+      "swapped_code": 1,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group04_pair1.gif"
+    },
+    {
+      "group": 5,
+      "pair": 0,
+      "seg_index": 243780,
+      "seg_start": 977557,
+      "orig_code": 5,
+      "swapped_code": 13,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group05_pair0.gif"
+    },
+    {
+      "group": 5,
+      "pair": 1,
+      "seg_index": 296081,
+      "seg_start": 1187284,
+      "orig_code": 4,
+      "swapped_code": 12,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group05_pair1.gif"
+    },
+    {
+      "group": 6,
+      "pair": 0,
+      "seg_index": 104241,
+      "seg_start": 418006,
+      "orig_code": 8,
+      "swapped_code": 0,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group06_pair0.gif"
+    },
+    {
+      "group": 6,
+      "pair": 1,
+      "seg_index": 98441,
+      "seg_start": 394748,
+      "orig_code": 11,
+      "swapped_code": 3,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group06_pair1.gif"
+    },
+    {
+      "group": 7,
+      "pair": 0,
+      "seg_index": 346412,
+      "seg_start": 1389112,
+      "orig_code": 6,
+      "swapped_code": 14,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group07_pair0.gif"
+    },
+    {
+      "group": 7,
+      "pair": 1,
+      "seg_index": 472077,
+      "seg_start": 1893028,
+      "orig_code": 12,
+      "swapped_code": 4,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group07_pair1.gif"
+    },
+    {
+      "group": 8,
+      "pair": 0,
+      "seg_index": 393733,
+      "seg_start": 1578869,
+      "orig_code": 2,
+      "swapped_code": 10,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group08_pair0.gif"
+    },
+    {
+      "group": 8,
+      "pair": 1,
+      "seg_index": 350131,
+      "seg_start": 1404025,
+      "orig_code": 10,
+      "swapped_code": 2,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group08_pair1.gif"
+    },
+    {
+      "group": 9,
+      "pair": 0,
+      "seg_index": 389397,
+      "seg_start": 1561481,
+      "orig_code": 12,
+      "swapped_code": 4,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group09_pair0.gif"
+    },
+    {
+      "group": 9,
+      "pair": 1,
+      "seg_index": 261578,
+      "seg_start": 1048927,
+      "orig_code": 6,
+      "swapped_code": 14,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group09_pair1.gif"
+    },
+    {
+      "group": 10,
+      "pair": 0,
+      "seg_index": 306471,
+      "seg_start": 1228948,
+      "orig_code": 3,
+      "swapped_code": 11,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group10_pair0.gif"
+    },
+    {
+      "group": 10,
+      "pair": 1,
+      "seg_index": 312336,
+      "seg_start": 1252467,
+      "orig_code": 5,
+      "swapped_code": 13,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group10_pair1.gif"
+    },
+    {
+      "group": 11,
+      "pair": 0,
+      "seg_index": 390516,
+      "seg_start": 1565969,
+      "orig_code": 8,
+      "swapped_code": 0,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group11_pair0.gif"
+    },
+    {
+      "group": 11,
+      "pair": 1,
+      "seg_index": 210427,
+      "seg_start": 843812,
+      "orig_code": 10,
+      "swapped_code": 2,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group11_pair1.gif"
+    },
+    {
+      "group": 12,
+      "pair": 0,
+      "seg_index": 29443,
+      "seg_start": 118066,
+      "orig_code": 14,
+      "swapped_code": 6,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group12_pair0.gif"
+    },
+    {
+      "group": 12,
+      "pair": 1,
+      "seg_index": 279970,
+      "seg_start": 1122679,
+      "orig_code": 1,
+      "swapped_code": 9,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group12_pair1.gif"
+    },
+    {
+      "group": 13,
+      "pair": 0,
+      "seg_index": 265288,
+      "seg_start": 1063804,
+      "orig_code": 0,
+      "swapped_code": 8,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group13_pair0.gif"
+    },
+    {
+      "group": 13,
+      "pair": 1,
+      "seg_index": 85364,
+      "seg_start": 342309,
+      "orig_code": 8,
+      "swapped_code": 0,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group13_pair1.gif"
+    },
+    {
+      "group": 14,
+      "pair": 0,
+      "seg_index": 9482,
+      "seg_start": 38022,
+      "orig_code": 7,
+      "swapped_code": 15,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group14_pair0.gif"
+    },
+    {
+      "group": 14,
+      "pair": 1,
+      "seg_index": 313610,
+      "seg_start": 1257576,
+      "orig_code": 11,
+      "swapped_code": 3,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group14_pair1.gif"
+    },
+    {
+      "group": 15,
+      "pair": 0,
+      "seg_index": 341990,
+      "seg_start": 1371379,
+      "orig_code": 8,
+      "swapped_code": 0,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group15_pair0.gif"
+    },
+    {
+      "group": 15,
+      "pair": 1,
+      "seg_index": 262937,
+      "seg_start": 1054377,
+      "orig_code": 0,
+      "swapped_code": 8,
+      "method": "mujoco_gif_side_by_side",
+      "file": "viz_recommended/group15_pair1.gif"
+    }
+  ]
+}
