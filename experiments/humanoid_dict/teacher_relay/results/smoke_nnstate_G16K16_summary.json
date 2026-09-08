@@ -1,0 +1,904 @@
+{
+  "config": {
+    "ckpt": "../ckpt/G16_K16.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "out_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results",
+    "gif_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/gifs",
+    "n_traj": 5,
+    "seed": 20260908,
+    "rho": 1.875,
+    "delta_sub": 7.5,
+    "threads": 2,
+    "tag": "smoke_nnstate_G16K16",
+    "hist_key": "G16K16",
+    "frame_every": 4,
+    "max_frames": 200,
+    "skip_gifs": true,
+    "gif_versions": ""
+  },
+  "delta_sub": 7.5,
+  "pos_idx": [
+    0,
+    1
+  ],
+  "obs_mean_state": [
+    9.606021881103516,
+    10.261933326721191,
+    0.09493746608495712,
+    -0.13773225247859955,
+    -0.04525578394532204,
+    -0.20920172333717346,
+    -0.8265504240989685,
+    -0.38058003783226013,
+    -0.5976207852363586,
+    -0.2592349350452423,
+    -0.2105138748884201,
+    -0.18522541224956512,
+    -0.5533080697059631,
+    -0.496708482503891,
+    -1.0136076211929321,
+    -0.27321577072143555,
+    0.2183123230934143,
+    0.06887172162532806,
+    -0.36689454317092896,
+    0.2608286738395691,
+    -0.6875597238540649,
+    -0.34537866711616516,
+    0.762861430644989,
+    1.0871573686599731,
+    0.08053190261125565,
+    0.14193525910377502,
+    0.11026324331760406,
+    0.1800278276205063,
+    0.1810896247625351,
+    -0.860177755355835,
+    0.10164251178503036,
+    -0.19309519231319427,
+    0.015003691427409649,
+    0.22502638399600983,
+    -0.02973116561770439,
+    -0.7819321751594543,
+    0.049956779927015305,
+    0.06015494465827942,
+    0.7294799089431763,
+    0.011896300129592419,
+    -0.004652770701795816,
+    -0.06859008222818375,
+    -0.01123556774109602,
+    0.0012353636557236314,
+    -0.0665818452835083,
+    -0.22970367968082428,
+    0.1375514268875122,
+    -0.028684908524155617,
+    -0.02907068282365799,
+    0.058018915355205536,
+    0.02565922960639,
+    0.026253025978803635,
+    -0.041019413620233536,
+    -0.03351837396621704,
+    0.040693316608667374,
+    -0.07995502650737762,
+    -0.05246509239077568,
+    0.05458284169435501,
+    -0.05197606235742569,
+    0.021570276468992233,
+    0.028013767674565315,
+    0.08126652240753174,
+    -0.07624687254428864,
+    0.04010564833879471,
+    -0.006961335893720388,
+    -0.02752543054521084,
+    -0.08550480753183365,
+    -0.06595294922590256,
+    -0.0028318497352302074
+  ],
+  "obs_std_state": [
+    6.237067222595215,
+    5.5543084144592285,
+    0.3619481921195984,
+    0.3903159201145172,
+    0.36996662616729736,
+    0.25985944271087646,
+    0.36183449625968933,
+    0.8132787942886353,
+    0.800664484500885,
+    0.6685245633125305,
+    0.7687506079673767,
+    0.23353302478790283,
+    0.3669949769973755,
+    0.7024642825126648,
+    1.2359342575073242,
+    0.6654457449913025,
+    0.8059290051460266,
+    0.9112586975097656,
+    0.8656728267669678,
+    0.816382110118866,
+    0.6003785729408264,
+    0.7543164491653442,
+    0.33865049481391907,
+    0.3953947424888611,
+    0.07329846173524857,
+    0.05763391777873039,
+    0.09225436300039291,
+    0.3236793279647827,
+    0.25178641080856323,
+    0.262671560049057,
+    0.15921278297901154,
+    0.16530434787273407,
+    0.1919175237417221,
+    0.3434002101421356,
+    0.3204081654548645,
+    0.3778098523616791,
+    0.3354809880256653,
+    0.448716938495636,
+    0.38462769985198975,
+    1.4394007921218872,
+    1.4790610074996948,
+    1.032644271850586,
+    1.5018311738967896,
+    1.5288684368133545,
+    1.3163173198699951,
+    2.5174386501312256,
+    2.514733076095581,
+    4.42844820022583,
+    3.614445209503174,
+    3.6332690715789795,
+    4.094148635864258,
+    4.347095489501953,
+    3.022461175918579,
+    5.726558685302734,
+    11.83713150024414,
+    13.061281204223633,
+    14.07020378112793,
+    4.176097393035889,
+    3.896122455596924,
+    7.165945053100586,
+    7.485476970672607,
+    12.327290534973145,
+    13.193608283996582,
+    8.358920097351074,
+    7.382751941680908,
+    10.056294441223145,
+    6.058241367340088,
+    5.715879917144775,
+    5.0614333152771
+  ],
+  "dict_cfg": {
+    "G": 16,
+    "K": 16,
+    "group_dim": 8,
+    "seg_len": 4,
+    "steps": 20000,
+    "batch": 512,
+    "lr": 0.0003,
+    "beta": 0.25,
+    "hidden": 512,
+    "decay": 0.99,
+    "dead_steps": 500,
+    "seed": 56016,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_factor_samples": 256,
+    "dataset": "humanoidmaze-medium-stitch-v0"
+  },
+  "compare_ant": {
+    "schedule": 0.554,
+    "nn": 0.555,
+    "greedy": 0.063,
+    "main_head": 0.32,
+    "lo_head": 0.124
+  },
+  "hist_humanoid": {
+    "schedule": 0.0524,
+    "nn": 0.0293,
+    "nn_backjump": 0.03
+  },
+  "n_tasks_requested": 5,
+  "n_tasks_used": 5,
+  "skipped": [],
+  "waypoints_per_task": {
+    "min": 2,
+    "p50": 2.0,
+    "max": 3,
+    "total": 11
+  },
+  "results": {
+    "schedule": {
+      "seconds": 0.5911064147949219,
+      "n_tasks": 5,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 6,
+      "legs_reached_total": 1,
+      "per_leg_untimed_reach": 0.16666666666666666,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.16666666666666666,
+        "n_evaluable_N_data_1.25N": 6,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.16666666666666666,
+        "n_evaluable_N_data_1.5N": 6,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.16666666666666666,
+        "n_evaluable_N_table_1.25N": 6,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.16666666666666666,
+        "n_evaluable_N_table_1.5N": 6,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.0007134845439537439,
+        "5": 0.0014589890765076862,
+        "25": 0.004146664463869619,
+        "50": 0.00714297583172173,
+        "75": 0.012513185062333915,
+        "95": 0.03986465290086676,
+        "99": 0.05090776877071713
+      },
+      "step_speed_mean": 0.01104769357842915,
+      "fall_rate_step": 0.447,
+      "fall_rate_task": 1.0,
+      "action_diff_q": {
+        "1": 0.6839638161844178,
+        "5": 0.871935344176177,
+        "25": 1.2549967062967409,
+        "50": 1.5806024354574149,
+        "75": 2.0162090920450666,
+        "95": 2.7946738236286746,
+        "99": 3.2444208066035
+      },
+      "action_diff_mean": 1.672791104911399,
+      "codes_per_group": [
+        {
+          "active": 16,
+          "perplexity": 15.32230374359067,
+          "top1_frac": 0.11
+        },
+        {
+          "active": 16,
+          "perplexity": 15.124531377387962,
+          "top1_frac": 0.098
+        },
+        {
+          "active": 16,
+          "perplexity": 15.178688044855594,
+          "top1_frac": 0.098
+        },
+        {
+          "active": 16,
+          "perplexity": 15.611105573178303,
+          "top1_frac": 0.082
+        },
+        {
+          "active": 16,
+          "perplexity": 15.1133314303708,
+          "top1_frac": 0.108
+        },
+        {
+          "active": 16,
+          "perplexity": 15.060275215516048,
+          "top1_frac": 0.098
+        },
+        {
+          "active": 16,
+          "perplexity": 14.315163192883864,
+          "top1_frac": 0.12
+        },
+        {
+          "active": 16,
+          "perplexity": 14.478558376165452,
+          "top1_frac": 0.126
+        },
+        {
+          "active": 16,
+          "perplexity": 15.130454548391123,
+          "top1_frac": 0.12
+        },
+        {
+          "active": 16,
+          "perplexity": 14.708058001156044,
+          "top1_frac": 0.102
+        },
+        {
+          "active": 16,
+          "perplexity": 15.310588308821126,
+          "top1_frac": 0.098
+        },
+        {
+          "active": 16,
+          "perplexity": 14.813803592002214,
+          "top1_frac": 0.118
+        },
+        {
+          "active": 16,
+          "perplexity": 15.076328597302705,
+          "top1_frac": 0.104
+        },
+        {
+          "active": 16,
+          "perplexity": 15.132428804541366,
+          "top1_frac": 0.102
+        },
+        {
+          "active": 16,
+          "perplexity": 14.766650395148599,
+          "top1_frac": 0.114
+        },
+        {
+          "active": 16,
+          "perplexity": 14.651886311504617,
+          "top1_frac": 0.112
+        }
+      ],
+      "codes_active_min_over_groups": 16,
+      "codes_perplexity_mean_over_groups": 14.98713471955103,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": null,
+      "nn_jump_n": 0
+    },
+    "nn": {
+      "seconds": 0.6089887619018555,
+      "n_tasks": 5,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 6,
+      "legs_reached_total": 1,
+      "per_leg_untimed_reach": 0.16666666666666666,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.16666666666666666,
+        "n_evaluable_N_data_1.25N": 6,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.16666666666666666,
+        "n_evaluable_N_data_1.5N": 6,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.16666666666666666,
+        "n_evaluable_N_table_1.25N": 6,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.16666666666666666,
+        "n_evaluable_N_table_1.5N": 6,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.00014100137148923114,
+        "5": 0.0002431298113046117,
+        "25": 0.0009425587591195344,
+        "50": 0.0019408382445522247,
+        "75": 0.004957376819045022,
+        "95": 0.031591805589598634,
+        "99": 0.05162650535607777
+      },
+      "step_speed_mean": 0.0059891025417337235,
+      "fall_rate_step": 0.344,
+      "fall_rate_task": 0.4,
+      "action_diff_q": {
+        "1": 0.7488145380225198,
+        "5": 0.9091429108010536,
+        "25": 1.0649993452477047,
+        "50": 1.3880061142748181,
+        "75": 1.760135434391759,
+        "95": 2.5641218098979106,
+        "99": 2.8249067196038298
+      },
+      "action_diff_mean": 1.4938193848298114,
+      "codes_per_group": [
+        {
+          "active": 15,
+          "perplexity": 7.633385534943025,
+          "top1_frac": 0.224
+        },
+        {
+          "active": 15,
+          "perplexity": 7.626489447318348,
+          "top1_frac": 0.2
+        },
+        {
+          "active": 15,
+          "perplexity": 5.106960104509839,
+          "top1_frac": 0.51
+        },
+        {
+          "active": 16,
+          "perplexity": 7.856713541941887,
+          "top1_frac": 0.206
+        },
+        {
+          "active": 15,
+          "perplexity": 7.203162247348729,
+          "top1_frac": 0.238
+        },
+        {
+          "active": 13,
+          "perplexity": 6.586135464583062,
+          "top1_frac": 0.294
+        },
+        {
+          "active": 13,
+          "perplexity": 3.041982773387933,
+          "top1_frac": 0.71
+        },
+        {
+          "active": 15,
+          "perplexity": 5.572775057036897,
+          "top1_frac": 0.386
+        },
+        {
+          "active": 15,
+          "perplexity": 6.953850231303435,
+          "top1_frac": 0.28
+        },
+        {
+          "active": 16,
+          "perplexity": 8.619135102530423,
+          "top1_frac": 0.194
+        },
+        {
+          "active": 14,
+          "perplexity": 6.825477960501875,
+          "top1_frac": 0.302
+        },
+        {
+          "active": 15,
+          "perplexity": 6.261823223959234,
+          "top1_frac": 0.348
+        },
+        {
+          "active": 14,
+          "perplexity": 6.326837394967219,
+          "top1_frac": 0.372
+        },
+        {
+          "active": 14,
+          "perplexity": 8.130295696096988,
+          "top1_frac": 0.2
+        },
+        {
+          "active": 13,
+          "perplexity": 6.44879334678012,
+          "top1_frac": 0.306
+        },
+        {
+          "active": 16,
+          "perplexity": 6.636827481964589,
+          "top1_frac": 0.334
+        }
+      ],
+      "codes_active_min_over_groups": 13,
+      "codes_perplexity_mean_over_groups": 6.67691528807335,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.050505050505050504,
+      "nn_jump_n": 495
+    },
+    "nn_state_full": {
+      "seconds": 0.6039125919342041,
+      "n_tasks": 5,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 6,
+      "legs_reached_total": 1,
+      "per_leg_untimed_reach": 0.16666666666666666,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.16666666666666666,
+        "n_evaluable_N_data_1.25N": 6,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.16666666666666666,
+        "n_evaluable_N_data_1.5N": 6,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.16666666666666666,
+        "n_evaluable_N_table_1.25N": 6,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.16666666666666666,
+        "n_evaluable_N_table_1.5N": 6,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.00032574041620862023,
+        "5": 0.0009218925175237491,
+        "25": 0.002877547878636855,
+        "50": 0.006326297138798422,
+        "75": 0.011882995426183809,
+        "95": 0.039958589747589784,
+        "99": 0.052938975090440536
+      },
+      "step_speed_mean": 0.010288767758801172,
+      "fall_rate_step": 0.5655,
+      "fall_rate_task": 0.8,
+      "action_diff_q": {
+        "1": 0.6706753202235942,
+        "5": 0.9147777762264377,
+        "25": 1.2505488119241108,
+        "50": 1.6336716449648132,
+        "75": 2.0705982981840725,
+        "95": 3.0277445130194316,
+        "99": 3.680009334515204
+      },
+      "action_diff_mean": 1.737682278219128,
+      "codes_per_group": [
+        {
+          "active": 16,
+          "perplexity": 13.442400952279522,
+          "top1_frac": 0.146
+        },
+        {
+          "active": 16,
+          "perplexity": 13.777984397926566,
+          "top1_frac": 0.128
+        },
+        {
+          "active": 16,
+          "perplexity": 13.6530818709608,
+          "top1_frac": 0.114
+        },
+        {
+          "active": 16,
+          "perplexity": 13.573611796757511,
+          "top1_frac": 0.134
+        },
+        {
+          "active": 16,
+          "perplexity": 14.723349776633809,
+          "top1_frac": 0.102
+        },
+        {
+          "active": 16,
+          "perplexity": 12.914049112071364,
+          "top1_frac": 0.172
+        },
+        {
+          "active": 16,
+          "perplexity": 11.722748245175687,
+          "top1_frac": 0.192
+        },
+        {
+          "active": 16,
+          "perplexity": 13.210206017451535,
+          "top1_frac": 0.146
+        },
+        {
+          "active": 16,
+          "perplexity": 13.187315112431516,
+          "top1_frac": 0.184
+        },
+        {
+          "active": 16,
+          "perplexity": 14.232379554277522,
+          "top1_frac": 0.132
+        },
+        {
+          "active": 16,
+          "perplexity": 13.177661918575364,
+          "top1_frac": 0.166
+        },
+        {
+          "active": 16,
+          "perplexity": 12.700722978544068,
+          "top1_frac": 0.18
+        },
+        {
+          "active": 16,
+          "perplexity": 13.74175670404456,
+          "top1_frac": 0.132
+        },
+        {
+          "active": 16,
+          "perplexity": 13.689791693815963,
+          "top1_frac": 0.118
+        },
+        {
+          "active": 16,
+          "perplexity": 13.973322391224235,
+          "top1_frac": 0.118
+        },
+        {
+          "active": 16,
+          "perplexity": 11.378573500416616,
+          "top1_frac": 0.212
+        }
+      ],
+      "codes_active_min_over_groups": 16,
+      "codes_perplexity_mean_over_groups": 13.318684751411665,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.1898989898989899,
+      "nn_jump_n": 495
+    },
+    "nn_state_pose": {
+      "seconds": 0.6278495788574219,
+      "n_tasks": 5,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 6,
+      "legs_reached_total": 1,
+      "per_leg_untimed_reach": 0.16666666666666666,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.16666666666666666,
+        "n_evaluable_N_data_1.25N": 6,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.16666666666666666,
+        "n_evaluable_N_data_1.5N": 6,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.16666666666666666,
+        "n_evaluable_N_table_1.25N": 6,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.16666666666666666,
+        "n_evaluable_N_table_1.5N": 6,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.0004997302778710752,
+        "5": 0.0010757611074208647,
+        "25": 0.003094198923923733,
+        "50": 0.006046599604678397,
+        "75": 0.01172002105181846,
+        "95": 0.03715499656097902,
+        "99": 0.05234141981390502
+      },
+      "step_speed_mean": 0.009886078413032717,
+      "fall_rate_step": 0.5915,
+      "fall_rate_task": 1.0,
+      "action_diff_q": {
+        "1": 0.6544445414039315,
+        "5": 0.894196075147526,
+        "25": 1.2293813816508863,
+        "50": 1.585234698667559,
+        "75": 2.097126742894836,
+        "95": 3.0728999982123026,
+        "99": 3.6292187494191874
+      },
+      "action_diff_mean": 1.7246657298588663,
+      "codes_per_group": [
+        {
+          "active": 16,
+          "perplexity": 14.062814517794203,
+          "top1_frac": 0.15
+        },
+        {
+          "active": 16,
+          "perplexity": 13.326114741583424,
+          "top1_frac": 0.152
+        },
+        {
+          "active": 16,
+          "perplexity": 13.241020493524225,
+          "top1_frac": 0.162
+        },
+        {
+          "active": 16,
+          "perplexity": 13.746473444259854,
+          "top1_frac": 0.172
+        },
+        {
+          "active": 16,
+          "perplexity": 13.90125411990582,
+          "top1_frac": 0.152
+        },
+        {
+          "active": 16,
+          "perplexity": 13.585042470825718,
+          "top1_frac": 0.15
+        },
+        {
+          "active": 16,
+          "perplexity": 12.75745387279039,
+          "top1_frac": 0.198
+        },
+        {
+          "active": 16,
+          "perplexity": 12.606784290034414,
+          "top1_frac": 0.142
+        },
+        {
+          "active": 16,
+          "perplexity": 12.6226181468037,
+          "top1_frac": 0.19
+        },
+        {
+          "active": 16,
+          "perplexity": 13.17691981994488,
+          "top1_frac": 0.2
+        },
+        {
+          "active": 16,
+          "perplexity": 13.481777984606502,
+          "top1_frac": 0.21
+        },
+        {
+          "active": 16,
+          "perplexity": 10.660592802690559,
+          "top1_frac": 0.294
+        },
+        {
+          "active": 16,
+          "perplexity": 14.273796526607295,
+          "top1_frac": 0.13
+        },
+        {
+          "active": 16,
+          "perplexity": 12.289408082543275,
+          "top1_frac": 0.194
+        },
+        {
+          "active": 16,
+          "perplexity": 13.670874679641818,
+          "top1_frac": 0.128
+        },
+        {
+          "active": 16,
+          "perplexity": 11.810249493890028,
+          "top1_frac": 0.156
+        }
+      ],
+      "codes_active_min_over_groups": 16,
+      "codes_perplexity_mean_over_groups": 13.07582471796538,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.19797979797979798,
+      "nn_jump_n": 495
+    }
+  },
+  "artifacts": {
+    "pngs": {
+      "speed": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_nnstate_G16K16_speed_overlay.png",
+      "z": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_nnstate_G16K16_z_overlay.png",
+      "adiff": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/smoke_nnstate_G16K16_adiff_overlay.png"
+    },
+    "gifs": {}
+  }
+}

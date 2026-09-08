@@ -1,0 +1,6850 @@
+{
+  "config": {
+    "ckpt": "../ckpt/G1_K32.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "out_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results",
+    "gif_dir": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/gifs",
+    "n_traj": 200,
+    "seed": 20260908,
+    "rho": 1.875,
+    "delta_sub": 7.5,
+    "threads": 4,
+    "tag": "relay_nnstate_G1K32",
+    "hist_key": "G1K32",
+    "frame_every": 4,
+    "max_frames": 200,
+    "skip_gifs": true,
+    "gif_versions": ""
+  },
+  "delta_sub": 7.5,
+  "pos_idx": [
+    0,
+    1
+  ],
+  "obs_mean_state": [
+    9.606021881103516,
+    10.261933326721191,
+    0.09493746608495712,
+    -0.13773225247859955,
+    -0.04525578394532204,
+    -0.20920172333717346,
+    -0.8265504240989685,
+    -0.38058003783226013,
+    -0.5976207852363586,
+    -0.2592349350452423,
+    -0.2105138748884201,
+    -0.18522541224956512,
+    -0.5533080697059631,
+    -0.496708482503891,
+    -1.0136076211929321,
+    -0.27321577072143555,
+    0.2183123230934143,
+    0.06887172162532806,
+    -0.36689454317092896,
+    0.2608286738395691,
+    -0.6875597238540649,
+    -0.34537866711616516,
+    0.762861430644989,
+    1.0871573686599731,
+    0.08053190261125565,
+    0.14193525910377502,
+    0.11026324331760406,
+    0.1800278276205063,
+    0.1810896247625351,
+    -0.860177755355835,
+    0.10164251178503036,
+    -0.19309519231319427,
+    0.015003691427409649,
+    0.22502638399600983,
+    -0.02973116561770439,
+    -0.7819321751594543,
+    0.049956779927015305,
+    0.06015494465827942,
+    0.7294799089431763,
+    0.011896300129592419,
+    -0.004652770701795816,
+    -0.06859008222818375,
+    -0.01123556774109602,
+    0.0012353636557236314,
+    -0.0665818452835083,
+    -0.22970367968082428,
+    0.1375514268875122,
+    -0.028684908524155617,
+    -0.02907068282365799,
+    0.058018915355205536,
+    0.02565922960639,
+    0.026253025978803635,
+    -0.041019413620233536,
+    -0.03351837396621704,
+    0.040693316608667374,
+    -0.07995502650737762,
+    -0.05246509239077568,
+    0.05458284169435501,
+    -0.05197606235742569,
+    0.021570276468992233,
+    0.028013767674565315,
+    0.08126652240753174,
+    -0.07624687254428864,
+    0.04010564833879471,
+    -0.006961335893720388,
+    -0.02752543054521084,
+    -0.08550480753183365,
+    -0.06595294922590256,
+    -0.0028318497352302074
+  ],
+  "obs_std_state": [
+    6.237067222595215,
+    5.5543084144592285,
+    0.3619481921195984,
+    0.3903159201145172,
+    0.36996662616729736,
+    0.25985944271087646,
+    0.36183449625968933,
+    0.8132787942886353,
+    0.800664484500885,
+    0.6685245633125305,
+    0.7687506079673767,
+    0.23353302478790283,
+    0.3669949769973755,
+    0.7024642825126648,
+    1.2359342575073242,
+    0.6654457449913025,
+    0.8059290051460266,
+    0.9112586975097656,
+    0.8656728267669678,
+    0.816382110118866,
+    0.6003785729408264,
+    0.7543164491653442,
+    0.33865049481391907,
+    0.3953947424888611,
+    0.07329846173524857,
+    0.05763391777873039,
+    0.09225436300039291,
+    0.3236793279647827,
+    0.25178641080856323,
+    0.262671560049057,
+    0.15921278297901154,
+    0.16530434787273407,
+    0.1919175237417221,
+    0.3434002101421356,
+    0.3204081654548645,
+    0.3778098523616791,
+    0.3354809880256653,
+    0.448716938495636,
+    0.38462769985198975,
+    1.4394007921218872,
+    1.4790610074996948,
+    1.032644271850586,
+    1.5018311738967896,
+    1.5288684368133545,
+    1.3163173198699951,
+    2.5174386501312256,
+    2.514733076095581,
+    4.42844820022583,
+    3.614445209503174,
+    3.6332690715789795,
+    4.094148635864258,
+    4.347095489501953,
+    3.022461175918579,
+    5.726558685302734,
+    11.83713150024414,
+    13.061281204223633,
+    14.07020378112793,
+    4.176097393035889,
+    3.896122455596924,
+    7.165945053100586,
+    7.485476970672607,
+    12.327290534973145,
+    13.193608283996582,
+    8.358920097351074,
+    7.382751941680908,
+    10.056294441223145,
+    6.058241367340088,
+    5.715879917144775,
+    5.0614333152771
+  ],
+  "dict_cfg": {
+    "G": 1,
+    "K": 32,
+    "group_dim": 8,
+    "seg_len": 4,
+    "steps": 20000,
+    "batch": 512,
+    "lr": 0.0003,
+    "beta": 0.25,
+    "hidden": 512,
+    "decay": 0.99,
+    "dead_steps": 500,
+    "seed": 41032,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_factor_samples": 256,
+    "dataset": "humanoidmaze-medium-stitch-v0"
+  },
+  "compare_ant": {
+    "schedule": 0.554,
+    "nn": 0.555,
+    "greedy": 0.063,
+    "main_head": 0.32,
+    "lo_head": 0.124
+  },
+  "hist_humanoid": {
+    "schedule": 0.1216,
+    "nn": 0.0481,
+    "nn_backjump": 0.031
+  },
+  "n_tasks_requested": 200,
+  "n_tasks_used": 200,
+  "skipped": [
+    {
+      "episode": 24,
+      "arclen": 1.022140301335436,
+      "reason": "arclen<DELTA_SUB"
+    }
+  ],
+  "waypoints_per_task": {
+    "min": 1,
+    "p50": 2.0,
+    "max": 3,
+    "total": 412
+  },
+  "results": {
+    "schedule": {
+      "seconds": 14.817840814590454,
+      "n_tasks": 200,
+      "completion_ratio": 0.025,
+      "legs_attempted_total": 222,
+      "legs_reached_total": 27,
+      "per_leg_untimed_reach": 0.12162162162162163,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.08796296296296297,
+        "n_evaluable_N_data_1.25N": 216,
+        "n_not_evaluable_N_data_1.25N": 6,
+        "reach_N_data_1.5N": 0.0892018779342723,
+        "n_evaluable_N_data_1.5N": 213,
+        "n_not_evaluable_N_data_1.5N": 9,
+        "reach_N_table_1.25N": 0.022935779816513763,
+        "n_evaluable_N_table_1.25N": 218,
+        "n_not_evaluable_N_table_1.25N": 4,
+        "reach_N_table_1.5N": 0.04128440366972477,
+        "n_evaluable_N_table_1.5N": 218,
+        "n_not_evaluable_N_table_1.5N": 4
+      },
+      "step_speed_q": {
+        "1": 0.0004862201243992986,
+        "5": 0.0013937037055544296,
+        "25": 0.0056443494081920625,
+        "50": 0.013971615299958547,
+        "75": 0.032223837999634485,
+        "95": 0.05743686760365655,
+        "99": 0.07155586742724608
+      },
+      "step_speed_mean": 0.02053941782470838,
+      "fall_rate_step": 0.23519570066923545,
+      "fall_rate_task": 0.98,
+      "action_diff_q": {
+        "1": 0.30444725530267625,
+        "5": 0.38062600533771546,
+        "25": 0.5440795656100726,
+        "50": 0.7586820622921358,
+        "75": 1.1412623585540385,
+        "95": 1.9684864606224641,
+        "99": 2.5224421437902174
+      },
+      "action_diff_mean": 0.9140995040212995,
+      "codes_per_group": [
+        {
+          "active": 32,
+          "perplexity": 31.121383850658116,
+          "top1_frac": 0.04375380247414318
+        }
+      ],
+      "codes_active_min_over_groups": 32,
+      "codes_perplexity_mean_over_groups": 31.121383850658116,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 10,
+          "episode": 263,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 11,
+          "episode": 61,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 12,
+          "episode": 234,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 13,
+          "episode": 290,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 14,
+          "episode": 136,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 15,
+          "episode": 129,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 16,
+          "episode": 458,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 17,
+          "episode": 407,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 18,
+          "episode": 94,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 19,
+          "episode": 71,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 20,
+          "episode": 483,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 21,
+          "episode": 404,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 22,
+          "episode": 79,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 23,
+          "episode": 190,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 24,
+          "episode": 220,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 25,
+          "episode": 450,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 26,
+          "episode": 419,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 27,
+          "episode": 499,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 28,
+          "episode": 376,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 29,
+          "episode": 206,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 30,
+          "episode": 421,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 31,
+          "episode": 204,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 32,
+          "episode": 313,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 33,
+          "episode": 198,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 34,
+          "episode": 134,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 35,
+          "episode": 101,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 36,
+          "episode": 320,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 37,
+          "episode": 387,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 38,
+          "episode": 375,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 39,
+          "episode": 338,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 40,
+          "episode": 48,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 41,
+          "episode": 142,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 42,
+          "episode": 462,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 43,
+          "episode": 99,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 44,
+          "episode": 273,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 68
+        },
+        {
+          "ti": 45,
+          "episode": 193,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 46,
+          "episode": 465,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 47,
+          "episode": 225,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 48,
+          "episode": 212,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 49,
+          "episode": 8,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 50,
+          "episode": 215,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 51,
+          "episode": 491,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 52,
+          "episode": 395,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 52
+        },
+        {
+          "ti": 53,
+          "episode": 334,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 54,
+          "episode": 210,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 55,
+          "episode": 145,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 56,
+          "episode": 342,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 57,
+          "episode": 122,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 58,
+          "episode": 152,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 59,
+          "episode": 205,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 60,
+          "episode": 207,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 61,
+          "episode": 29,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 62,
+          "episode": 7,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 63,
+          "episode": 187,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 64,
+          "episode": 62,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 65,
+          "episode": 224,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 66,
+          "episode": 26,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 67,
+          "episode": 415,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 68,
+          "episode": 310,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 69,
+          "episode": 396,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 70,
+          "episode": 461,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 71,
+          "episode": 265,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 72,
+          "episode": 104,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 73,
+          "episode": 340,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 74,
+          "episode": 422,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 75,
+          "episode": 191,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 76,
+          "episode": 454,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 77,
+          "episode": 416,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 78,
+          "episode": 292,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 79,
+          "episode": 433,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 80,
+          "episode": 378,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 81,
+          "episode": 163,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 82,
+          "episode": 424,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 83,
+          "episode": 131,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 84,
+          "episode": 351,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 85,
+          "episode": 146,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 86,
+          "episode": 411,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 87,
+          "episode": 36,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 88,
+          "episode": 196,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 89,
+          "episode": 41,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 90,
+          "episode": 127,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 91,
+          "episode": 471,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 92,
+          "episode": 300,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 93,
+          "episode": 337,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 94,
+          "episode": 106,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 95,
+          "episode": 468,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 96,
+          "episode": 431,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 97,
+          "episode": 246,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 98,
+          "episode": 222,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 99,
+          "episode": 495,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 100,
+          "episode": 303,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 101,
+          "episode": 195,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 102,
+          "episode": 405,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 103,
+          "episode": 248,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 104,
+          "episode": 144,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 105,
+          "episode": 466,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 106,
+          "episode": 47,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 107,
+          "episode": 370,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 108,
+          "episode": 226,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 109,
+          "episode": 377,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 110,
+          "episode": 368,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 111,
+          "episode": 75,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 112,
+          "episode": 169,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 113,
+          "episode": 203,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 114,
+          "episode": 211,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 115,
+          "episode": 436,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 116,
+          "episode": 70,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 117,
+          "episode": 311,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 118,
+          "episode": 227,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 119,
+          "episode": 477,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 120,
+          "episode": 66,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 121,
+          "episode": 402,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 122,
+          "episode": 371,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 123,
+          "episode": 355,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 124,
+          "episode": 276,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 125,
+          "episode": 125,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 126,
+          "episode": 349,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 127,
+          "episode": 428,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 128,
+          "episode": 218,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 129,
+          "episode": 258,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 130,
+          "episode": 165,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 131,
+          "episode": 357,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 132,
+          "episode": 2,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 133,
+          "episode": 444,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 134,
+          "episode": 494,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 135,
+          "episode": 209,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 136,
+          "episode": 372,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 137,
+          "episode": 130,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 138,
+          "episode": 414,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 139,
+          "episode": 296,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 140,
+          "episode": 429,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 141,
+          "episode": 363,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 142,
+          "episode": 307,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 143,
+          "episode": 93,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 144,
+          "episode": 68,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 145,
+          "episode": 9,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 146,
+          "episode": 232,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 147,
+          "episode": 132,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 148,
+          "episode": 173,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 149,
+          "episode": 385,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 204
+        },
+        {
+          "ti": 150,
+          "episode": 345,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 151,
+          "episode": 279,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 152,
+          "episode": 259,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 153,
+          "episode": 367,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 154,
+          "episode": 102,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 155,
+          "episode": 33,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 260
+        },
+        {
+          "ti": 156,
+          "episode": 304,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 157,
+          "episode": 356,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 158,
+          "episode": 464,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 159,
+          "episode": 343,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 160,
+          "episode": 117,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 161,
+          "episode": 403,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 162,
+          "episode": 484,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 163,
+          "episode": 55,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 164,
+          "episode": 113,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 165,
+          "episode": 381,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 166,
+          "episode": 13,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 167,
+          "episode": 323,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 168,
+          "episode": 120,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 169,
+          "episode": 86,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 170,
+          "episode": 192,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 171,
+          "episode": 124,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 172,
+          "episode": 347,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 173,
+          "episode": 426,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 174,
+          "episode": 350,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 175,
+          "episode": 17,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 176,
+          "episode": 332,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 177,
+          "episode": 492,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 178,
+          "episode": 64,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 179,
+          "episode": 116,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 180,
+          "episode": 4,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 181,
+          "episode": 301,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 182,
+          "episode": 271,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 183,
+          "episode": 77,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 184,
+          "episode": 229,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 185,
+          "episode": 418,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 186,
+          "episode": 147,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 187,
+          "episode": 105,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 188,
+          "episode": 447,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 189,
+          "episode": 98,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 190,
+          "episode": 360,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 191,
+          "episode": 488,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 192,
+          "episode": 174,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 193,
+          "episode": 114,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 194,
+          "episode": 65,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 195,
+          "episode": 361,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 312
+        },
+        {
+          "ti": 196,
+          "episode": 482,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 197,
+          "episode": 326,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 198,
+          "episode": 476,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 199,
+          "episode": 485,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": null,
+      "nn_jump_n": 0
+    },
+    "nn": {
+      "seconds": 15.454808712005615,
+      "n_tasks": 200,
+      "completion_ratio": 0.01,
+      "legs_attempted_total": 208,
+      "legs_reached_total": 10,
+      "per_leg_untimed_reach": 0.04807692307692308,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.04807692307692308,
+        "n_evaluable_N_data_1.25N": 208,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.04854368932038835,
+        "n_evaluable_N_data_1.5N": 206,
+        "n_not_evaluable_N_data_1.5N": 2,
+        "reach_N_table_1.25N": 0.02403846153846154,
+        "n_evaluable_N_table_1.25N": 208,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.02403846153846154,
+        "n_evaluable_N_table_1.5N": 208,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 5.046766175990027e-05,
+        "5": 0.00013516183543267564,
+        "25": 0.0005230313756396548,
+        "50": 0.0016582726284342275,
+        "75": 0.011600359391323105,
+        "95": 0.04811588766700518,
+        "99": 0.06439143066423074
+      },
+      "step_speed_mean": 0.009742577688452035,
+      "fall_rate_step": 0.37282449679665036,
+      "fall_rate_task": 0.79,
+      "action_diff_q": {
+        "1": 0.2948495819864841,
+        "5": 0.36575171061666634,
+        "25": 0.5181799908053515,
+        "50": 0.7262501207908101,
+        "75": 1.0522626226096483,
+        "95": 1.7637160840097221,
+        "99": 2.2780982276091444
+      },
+      "action_diff_mean": 0.8536354451995796,
+      "codes_per_group": [
+        {
+          "active": 32,
+          "perplexity": 29.655939298653603,
+          "top1_frac": 0.05367502396206427
+        }
+      ],
+      "codes_active_min_over_groups": 32,
+      "codes_perplexity_mean_over_groups": 29.655939298653603,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 10,
+          "episode": 263,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 11,
+          "episode": 61,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 12,
+          "episode": 234,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 13,
+          "episode": 290,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 14,
+          "episode": 136,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 15,
+          "episode": 129,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 16,
+          "episode": 458,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 17,
+          "episode": 407,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 18,
+          "episode": 94,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 19,
+          "episode": 71,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 20,
+          "episode": 483,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 21,
+          "episode": 404,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 22,
+          "episode": 79,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 23,
+          "episode": 190,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 24,
+          "episode": 220,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 25,
+          "episode": 450,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 26,
+          "episode": 419,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 27,
+          "episode": 499,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 28,
+          "episode": 376,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 29,
+          "episode": 206,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 30,
+          "episode": 421,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 31,
+          "episode": 204,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 32,
+          "episode": 313,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 33,
+          "episode": 198,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 34,
+          "episode": 134,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 35,
+          "episode": 101,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 36,
+          "episode": 320,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 37,
+          "episode": 387,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 38,
+          "episode": 375,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 39,
+          "episode": 338,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 40,
+          "episode": 48,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 41,
+          "episode": 142,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 42,
+          "episode": 462,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 43,
+          "episode": 99,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 44,
+          "episode": 273,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 52
+        },
+        {
+          "ti": 45,
+          "episode": 193,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 46,
+          "episode": 465,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 47,
+          "episode": 225,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 48,
+          "episode": 212,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 49,
+          "episode": 8,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 50,
+          "episode": 215,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 51,
+          "episode": 491,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 52,
+          "episode": 395,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 40
+        },
+        {
+          "ti": 53,
+          "episode": 334,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 54,
+          "episode": 210,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 55,
+          "episode": 145,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 56,
+          "episode": 342,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 57,
+          "episode": 122,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 58,
+          "episode": 152,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 59,
+          "episode": 205,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 60,
+          "episode": 207,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 61,
+          "episode": 29,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 62,
+          "episode": 7,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 63,
+          "episode": 187,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 64,
+          "episode": 62,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 65,
+          "episode": 224,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 66,
+          "episode": 26,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 67,
+          "episode": 415,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 68,
+          "episode": 310,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 69,
+          "episode": 396,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 70,
+          "episode": 461,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 71,
+          "episode": 265,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 72,
+          "episode": 104,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 73,
+          "episode": 340,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 74,
+          "episode": 422,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 75,
+          "episode": 191,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 76,
+          "episode": 454,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 77,
+          "episode": 416,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 78,
+          "episode": 292,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 79,
+          "episode": 433,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 80,
+          "episode": 378,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 81,
+          "episode": 163,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 82,
+          "episode": 424,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 83,
+          "episode": 131,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 84,
+          "episode": 351,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 85,
+          "episode": 146,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 86,
+          "episode": 411,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 87,
+          "episode": 36,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 88,
+          "episode": 196,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 89,
+          "episode": 41,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 90,
+          "episode": 127,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 91,
+          "episode": 471,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 92,
+          "episode": 300,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 93,
+          "episode": 337,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 94,
+          "episode": 106,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 95,
+          "episode": 468,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 96,
+          "episode": 431,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 97,
+          "episode": 246,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 98,
+          "episode": 222,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 99,
+          "episode": 495,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 100,
+          "episode": 303,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 101,
+          "episode": 195,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 102,
+          "episode": 405,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 103,
+          "episode": 248,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 104,
+          "episode": 144,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 105,
+          "episode": 466,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 106,
+          "episode": 47,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 107,
+          "episode": 370,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 108,
+          "episode": 226,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 109,
+          "episode": 377,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 110,
+          "episode": 368,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 111,
+          "episode": 75,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 112,
+          "episode": 169,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 113,
+          "episode": 203,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 114,
+          "episode": 211,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 115,
+          "episode": 436,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 116,
+          "episode": 70,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 117,
+          "episode": 311,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 118,
+          "episode": 227,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 119,
+          "episode": 477,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 120,
+          "episode": 66,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 121,
+          "episode": 402,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 122,
+          "episode": 371,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 123,
+          "episode": 355,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 124,
+          "episode": 276,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 125,
+          "episode": 125,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 126,
+          "episode": 349,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 127,
+          "episode": 428,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 128,
+          "episode": 218,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 129,
+          "episode": 258,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 130,
+          "episode": 165,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 131,
+          "episode": 357,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 132,
+          "episode": 2,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 133,
+          "episode": 444,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 134,
+          "episode": 494,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 135,
+          "episode": 209,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 136,
+          "episode": 372,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 137,
+          "episode": 130,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 138,
+          "episode": 414,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 139,
+          "episode": 296,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 140,
+          "episode": 429,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 141,
+          "episode": 363,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 142,
+          "episode": 307,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 143,
+          "episode": 93,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 144,
+          "episode": 68,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 145,
+          "episode": 9,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 146,
+          "episode": 232,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 147,
+          "episode": 132,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 148,
+          "episode": 173,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 149,
+          "episode": 385,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 150,
+          "episode": 345,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 151,
+          "episode": 279,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 152,
+          "episode": 259,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 153,
+          "episode": 367,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 154,
+          "episode": 102,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 155,
+          "episode": 33,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 156,
+          "episode": 304,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 157,
+          "episode": 356,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 158,
+          "episode": 464,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 159,
+          "episode": 343,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 160,
+          "episode": 117,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 161,
+          "episode": 403,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 162,
+          "episode": 484,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 163,
+          "episode": 55,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 164,
+          "episode": 113,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 165,
+          "episode": 381,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 166,
+          "episode": 13,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 167,
+          "episode": 323,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 168,
+          "episode": 120,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 169,
+          "episode": 86,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 170,
+          "episode": 192,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 171,
+          "episode": 124,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 172,
+          "episode": 347,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 173,
+          "episode": 426,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 174,
+          "episode": 350,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 175,
+          "episode": 17,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 176,
+          "episode": 332,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 177,
+          "episode": 492,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 178,
+          "episode": 64,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 179,
+          "episode": 116,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 180,
+          "episode": 4,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 181,
+          "episode": 301,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 182,
+          "episode": 271,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 183,
+          "episode": 77,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 184,
+          "episode": 229,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 185,
+          "episode": 418,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 186,
+          "episode": 147,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 187,
+          "episode": 105,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 188,
+          "episode": 447,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 189,
+          "episode": 98,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 190,
+          "episode": 360,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 191,
+          "episode": 488,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 192,
+          "episode": 174,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 193,
+          "episode": 114,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 194,
+          "episode": 65,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 195,
+          "episode": 361,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 196,
+          "episode": 482,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 197,
+          "episode": 326,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 198,
+          "episode": 476,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 199,
+          "episode": 485,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.030525403862814045,
+      "nn_jump_n": 19623
+    },
+    "nn_state_full": {
+      "seconds": 15.476107120513916,
+      "n_tasks": 200,
+      "completion_ratio": 0.02,
+      "legs_attempted_total": 232,
+      "legs_reached_total": 36,
+      "per_leg_untimed_reach": 0.15517241379310345,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.1036036036036036,
+        "n_evaluable_N_data_1.25N": 222,
+        "n_not_evaluable_N_data_1.25N": 10,
+        "reach_N_data_1.5N": 0.11009174311926606,
+        "n_evaluable_N_data_1.5N": 218,
+        "n_not_evaluable_N_data_1.5N": 14,
+        "reach_N_table_1.25N": 0.02252252252252252,
+        "n_evaluable_N_table_1.25N": 222,
+        "n_not_evaluable_N_table_1.25N": 10,
+        "reach_N_table_1.5N": 0.04054054054054054,
+        "n_evaluable_N_table_1.5N": 222,
+        "n_not_evaluable_N_table_1.5N": 10
+      },
+      "step_speed_q": {
+        "1": 0.00011847544831783173,
+        "5": 0.0002847032483250924,
+        "25": 0.0019233260846682494,
+        "50": 0.00998543776973326,
+        "75": 0.029901756420340393,
+        "95": 0.058372519103288695,
+        "99": 0.075211838477558
+      },
+      "step_speed_mean": 0.018084838887288346,
+      "fall_rate_step": 0.2685311677798017,
+      "fall_rate_task": 0.935,
+      "action_diff_q": {
+        "1": 0.3089246370463165,
+        "5": 0.38760662917588945,
+        "25": 0.5594611723783907,
+        "50": 0.7659463413374783,
+        "75": 1.1474263302689347,
+        "95": 1.9162840764260605,
+        "99": 2.4633602823912146
+      },
+      "action_diff_mean": 0.9140231308457589,
+      "codes_per_group": [
+        {
+          "active": 32,
+          "perplexity": 30.65851002375646,
+          "top1_frac": 0.05201376239627606
+        }
+      ],
+      "codes_active_min_over_groups": 32,
+      "codes_perplexity_mean_over_groups": 30.65851002375646,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 10,
+          "episode": 263,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 11,
+          "episode": 61,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 12,
+          "episode": 234,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 13,
+          "episode": 290,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 14,
+          "episode": 136,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 15,
+          "episode": 129,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 16,
+          "episode": 458,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 17,
+          "episode": 407,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 18,
+          "episode": 94,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 19,
+          "episode": 71,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 20,
+          "episode": 483,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 21,
+          "episode": 404,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 22,
+          "episode": 79,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 176
+        },
+        {
+          "ti": 23,
+          "episode": 190,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 24,
+          "episode": 220,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 25,
+          "episode": 450,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 26,
+          "episode": 419,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 27,
+          "episode": 499,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 28,
+          "episode": 376,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 29,
+          "episode": 206,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 30,
+          "episode": 421,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 31,
+          "episode": 204,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 32,
+          "episode": 313,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 33,
+          "episode": 198,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 34,
+          "episode": 134,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 35,
+          "episode": 101,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 36,
+          "episode": 320,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 37,
+          "episode": 387,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 38,
+          "episode": 375,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 39,
+          "episode": 338,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 40,
+          "episode": 48,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 41,
+          "episode": 142,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 42,
+          "episode": 462,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 43,
+          "episode": 99,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 44,
+          "episode": 273,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 64
+        },
+        {
+          "ti": 45,
+          "episode": 193,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 46,
+          "episode": 465,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 47,
+          "episode": 225,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 48,
+          "episode": 212,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 49,
+          "episode": 8,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 50,
+          "episode": 215,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 51,
+          "episode": 491,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 52,
+          "episode": 395,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 48
+        },
+        {
+          "ti": 53,
+          "episode": 334,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 54,
+          "episode": 210,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 55,
+          "episode": 145,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 56,
+          "episode": 342,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 57,
+          "episode": 122,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 58,
+          "episode": 152,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 59,
+          "episode": 205,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 60,
+          "episode": 207,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 61,
+          "episode": 29,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 62,
+          "episode": 7,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 63,
+          "episode": 187,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 64,
+          "episode": 62,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 65,
+          "episode": 224,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 66,
+          "episode": 26,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 67,
+          "episode": 415,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 68,
+          "episode": 310,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 69,
+          "episode": 396,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 70,
+          "episode": 461,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 71,
+          "episode": 265,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 72,
+          "episode": 104,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 73,
+          "episode": 340,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 74,
+          "episode": 422,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 75,
+          "episode": 191,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 76,
+          "episode": 454,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 77,
+          "episode": 416,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 78,
+          "episode": 292,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 79,
+          "episode": 433,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 80,
+          "episode": 378,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 81,
+          "episode": 163,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 82,
+          "episode": 424,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 83,
+          "episode": 131,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 84,
+          "episode": 351,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 85,
+          "episode": 146,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 86,
+          "episode": 411,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 87,
+          "episode": 36,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 88,
+          "episode": 196,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 89,
+          "episode": 41,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 90,
+          "episode": 127,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 91,
+          "episode": 471,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 92,
+          "episode": 300,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 93,
+          "episode": 337,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 94,
+          "episode": 106,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 95,
+          "episode": 468,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 96,
+          "episode": 431,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 97,
+          "episode": 246,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 98,
+          "episode": 222,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 99,
+          "episode": 495,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 100,
+          "episode": 303,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 101,
+          "episode": 195,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 102,
+          "episode": 405,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 103,
+          "episode": 248,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 104,
+          "episode": 144,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 105,
+          "episode": 466,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 106,
+          "episode": 47,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 107,
+          "episode": 370,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 108,
+          "episode": 226,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 109,
+          "episode": 377,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 110,
+          "episode": 368,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 111,
+          "episode": 75,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 112,
+          "episode": 169,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 113,
+          "episode": 203,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 114,
+          "episode": 211,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 115,
+          "episode": 436,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 116,
+          "episode": 70,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 117,
+          "episode": 311,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 118,
+          "episode": 227,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 119,
+          "episode": 477,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 120,
+          "episode": 66,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 121,
+          "episode": 402,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 122,
+          "episode": 371,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 123,
+          "episode": 355,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 124,
+          "episode": 276,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 125,
+          "episode": 125,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 126,
+          "episode": 349,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 127,
+          "episode": 428,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 128,
+          "episode": 218,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 129,
+          "episode": 258,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 130,
+          "episode": 165,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 131,
+          "episode": 357,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 132,
+          "episode": 2,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 133,
+          "episode": 444,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 134,
+          "episode": 494,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 135,
+          "episode": 209,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 136,
+          "episode": 372,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 137,
+          "episode": 130,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 138,
+          "episode": 414,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 139,
+          "episode": 296,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 140,
+          "episode": 429,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 141,
+          "episode": 363,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 142,
+          "episode": 307,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 143,
+          "episode": 93,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 144,
+          "episode": 68,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 145,
+          "episode": 9,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 146,
+          "episode": 232,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 147,
+          "episode": 132,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 148,
+          "episode": 173,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 149,
+          "episode": 385,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 368
+        },
+        {
+          "ti": 150,
+          "episode": 345,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 151,
+          "episode": 279,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 152,
+          "episode": 259,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 153,
+          "episode": 367,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 154,
+          "episode": 102,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 155,
+          "episode": 33,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 156,
+          "episode": 304,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 157,
+          "episode": 356,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 158,
+          "episode": 464,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 159,
+          "episode": 343,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 160,
+          "episode": 117,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 161,
+          "episode": 403,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 162,
+          "episode": 484,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 163,
+          "episode": 55,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 164,
+          "episode": 113,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 165,
+          "episode": 381,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 166,
+          "episode": 13,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 167,
+          "episode": 323,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 168,
+          "episode": 120,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 169,
+          "episode": 86,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 170,
+          "episode": 192,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 171,
+          "episode": 124,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 172,
+          "episode": 347,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 173,
+          "episode": 426,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 174,
+          "episode": 350,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 175,
+          "episode": 17,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 176,
+          "episode": 332,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 177,
+          "episode": 492,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 178,
+          "episode": 64,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 179,
+          "episode": 116,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 180,
+          "episode": 4,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 181,
+          "episode": 301,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 182,
+          "episode": 271,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 183,
+          "episode": 77,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 184,
+          "episode": 229,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 185,
+          "episode": 418,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 186,
+          "episode": 147,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 187,
+          "episode": 105,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 188,
+          "episode": 447,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 189,
+          "episode": 98,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 190,
+          "episode": 360,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 191,
+          "episode": 488,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 192,
+          "episode": 174,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 193,
+          "episode": 114,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 194,
+          "episode": 65,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 195,
+          "episode": 361,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 196,
+          "episode": 482,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 197,
+          "episode": 326,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 198,
+          "episode": 476,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 199,
+          "episode": 485,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.1627479043140462,
+      "nn_jump_n": 19564
+    },
+    "nn_state_pose": {
+      "seconds": 15.7145414352417,
+      "n_tasks": 200,
+      "completion_ratio": 0.01,
+      "legs_attempted_total": 224,
+      "legs_reached_total": 26,
+      "per_leg_untimed_reach": 0.11607142857142858,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.08294930875576037,
+        "n_evaluable_N_data_1.25N": 217,
+        "n_not_evaluable_N_data_1.25N": 7,
+        "reach_N_data_1.5N": 0.09302325581395349,
+        "n_evaluable_N_data_1.5N": 215,
+        "n_not_evaluable_N_data_1.5N": 9,
+        "reach_N_table_1.25N": 0.0273972602739726,
+        "n_evaluable_N_table_1.25N": 219,
+        "n_not_evaluable_N_table_1.25N": 5,
+        "reach_N_table_1.5N": 0.0365296803652968,
+        "n_evaluable_N_table_1.5N": 219,
+        "n_not_evaluable_N_table_1.5N": 5
+      },
+      "step_speed_q": {
+        "1": 0.00011087201006659603,
+        "5": 0.00027186915447560564,
+        "25": 0.001948201215488202,
+        "50": 0.010578054532598632,
+        "75": 0.031141806339452734,
+        "95": 0.05901193813640739,
+        "99": 0.0756420097583961
+      },
+      "step_speed_mean": 0.018613280099723753,
+      "fall_rate_step": 0.2472261448456728,
+      "fall_rate_task": 0.935,
+      "action_diff_q": {
+        "1": 0.3130632721689639,
+        "5": 0.3837893099015287,
+        "25": 0.556362406217986,
+        "50": 0.7677792126108962,
+        "75": 1.1455399631248013,
+        "95": 1.92472437319137,
+        "99": 2.467401962724961
+      },
+      "action_diff_mean": 0.9147429526705254,
+      "codes_per_group": [
+        {
+          "active": 32,
+          "perplexity": 30.49795163754508,
+          "top1_frac": 0.05204760944119427
+        }
+      ],
+      "codes_active_min_over_groups": 32,
+      "codes_perplexity_mean_over_groups": 30.49795163754508,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 1,
+          "episode": 386,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 2,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 3,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 4,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 5,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 6,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 7,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 8,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 9,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 10,
+          "episode": 263,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 11,
+          "episode": 61,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 12,
+          "episode": 234,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 13,
+          "episode": 290,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 14,
+          "episode": 136,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 15,
+          "episode": 129,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 16,
+          "episode": 458,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 17,
+          "episode": 407,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 18,
+          "episode": 94,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 19,
+          "episode": 71,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 20,
+          "episode": 483,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 21,
+          "episode": 404,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 22,
+          "episode": 79,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 23,
+          "episode": 190,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 24,
+          "episode": 220,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 25,
+          "episode": 450,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 26,
+          "episode": 419,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 27,
+          "episode": 499,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 28,
+          "episode": 376,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 29,
+          "episode": 206,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 30,
+          "episode": 421,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 31,
+          "episode": 204,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 32,
+          "episode": 313,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 33,
+          "episode": 198,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 34,
+          "episode": 134,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 35,
+          "episode": 101,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 36,
+          "episode": 320,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 37,
+          "episode": 387,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 38,
+          "episode": 375,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 39,
+          "episode": 338,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 40,
+          "episode": 48,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 41,
+          "episode": 142,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 42,
+          "episode": 462,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 43,
+          "episode": 99,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 44,
+          "episode": 273,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 64
+        },
+        {
+          "ti": 45,
+          "episode": 193,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 46,
+          "episode": 465,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 47,
+          "episode": 225,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 48,
+          "episode": 212,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 49,
+          "episode": 8,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 50,
+          "episode": 215,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 51,
+          "episode": 491,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 52,
+          "episode": 395,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 48
+        },
+        {
+          "ti": 53,
+          "episode": 334,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 54,
+          "episode": 210,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 55,
+          "episode": 145,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 56,
+          "episode": 342,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 57,
+          "episode": 122,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 58,
+          "episode": 152,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 59,
+          "episode": 205,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 60,
+          "episode": 207,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 61,
+          "episode": 29,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 62,
+          "episode": 7,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 63,
+          "episode": 187,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 64,
+          "episode": 62,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 65,
+          "episode": 224,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 66,
+          "episode": 26,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 67,
+          "episode": 415,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 68,
+          "episode": 310,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 69,
+          "episode": 396,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 70,
+          "episode": 461,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 71,
+          "episode": 265,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 72,
+          "episode": 104,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 73,
+          "episode": 340,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 74,
+          "episode": 422,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 75,
+          "episode": 191,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 76,
+          "episode": 454,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 77,
+          "episode": 416,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 78,
+          "episode": 292,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 79,
+          "episode": 433,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 80,
+          "episode": 378,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 81,
+          "episode": 163,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 82,
+          "episode": 424,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 83,
+          "episode": 131,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 84,
+          "episode": 351,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 85,
+          "episode": 146,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 86,
+          "episode": 411,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 87,
+          "episode": 36,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 88,
+          "episode": 196,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 89,
+          "episode": 41,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 90,
+          "episode": 127,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 91,
+          "episode": 471,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 92,
+          "episode": 300,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 93,
+          "episode": 337,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 94,
+          "episode": 106,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 95,
+          "episode": 468,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 96,
+          "episode": 431,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 97,
+          "episode": 246,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 98,
+          "episode": 222,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 99,
+          "episode": 495,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 100,
+          "episode": 303,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 101,
+          "episode": 195,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 102,
+          "episode": 405,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 103,
+          "episode": 248,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 104,
+          "episode": 144,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 105,
+          "episode": 466,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 106,
+          "episode": 47,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 107,
+          "episode": 370,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 108,
+          "episode": 226,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 109,
+          "episode": 377,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 110,
+          "episode": 368,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 111,
+          "episode": 75,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 112,
+          "episode": 169,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 113,
+          "episode": 203,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 114,
+          "episode": 211,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 115,
+          "episode": 436,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 116,
+          "episode": 70,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 117,
+          "episode": 311,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 118,
+          "episode": 227,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 119,
+          "episode": 477,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 120,
+          "episode": 66,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 121,
+          "episode": 402,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 122,
+          "episode": 371,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 123,
+          "episode": 355,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 124,
+          "episode": 276,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 125,
+          "episode": 125,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 126,
+          "episode": 349,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 127,
+          "episode": 428,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 128,
+          "episode": 218,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 129,
+          "episode": 258,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 130,
+          "episode": 165,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 131,
+          "episode": 357,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 132,
+          "episode": 2,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 133,
+          "episode": 444,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 134,
+          "episode": 494,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 135,
+          "episode": 209,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 136,
+          "episode": 372,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 137,
+          "episode": 130,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 138,
+          "episode": 414,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 139,
+          "episode": 296,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 140,
+          "episode": 429,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 141,
+          "episode": 363,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 142,
+          "episode": 307,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 143,
+          "episode": 93,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 144,
+          "episode": 68,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 145,
+          "episode": 9,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 146,
+          "episode": 232,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 147,
+          "episode": 132,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 148,
+          "episode": 173,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 149,
+          "episode": 385,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 150,
+          "episode": 345,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 151,
+          "episode": 279,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 152,
+          "episode": 259,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 153,
+          "episode": 367,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 154,
+          "episode": 102,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 155,
+          "episode": 33,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 156,
+          "episode": 304,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 157,
+          "episode": 356,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 158,
+          "episode": 464,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 159,
+          "episode": 343,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 160,
+          "episode": 117,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 161,
+          "episode": 403,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 162,
+          "episode": 484,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 163,
+          "episode": 55,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 164,
+          "episode": 113,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 165,
+          "episode": 381,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 166,
+          "episode": 13,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 167,
+          "episode": 323,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 168,
+          "episode": 120,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 169,
+          "episode": 86,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 170,
+          "episode": 192,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 171,
+          "episode": 124,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 172,
+          "episode": 347,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 173,
+          "episode": 426,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 174,
+          "episode": 350,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 175,
+          "episode": 17,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 176,
+          "episode": 332,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 177,
+          "episode": 492,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 178,
+          "episode": 64,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 179,
+          "episode": 116,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 180,
+          "episode": 4,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 181,
+          "episode": 301,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 182,
+          "episode": 271,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 183,
+          "episode": 77,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 184,
+          "episode": 229,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 185,
+          "episode": 418,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 186,
+          "episode": 147,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 187,
+          "episode": 105,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 188,
+          "episode": 447,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 189,
+          "episode": 98,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 190,
+          "episode": 360,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 191,
+          "episode": 488,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 192,
+          "episode": 174,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 193,
+          "episode": 114,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 194,
+          "episode": 65,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 195,
+          "episode": 361,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 196,
+          "episode": 482,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 197,
+          "episode": 326,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 198,
+          "episode": 476,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        },
+        {
+          "ti": 199,
+          "episode": 485,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 400
+        }
+      ],
+      "nn_backward_jump_frac": 0.16359282657428165,
+      "nn_jump_n": 19628
+    }
+  },
+  "artifacts": {
+    "pngs": {
+      "speed": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/relay_nnstate_G1K32_speed_overlay.png",
+      "z": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/relay_nnstate_G1K32_z_overlay.png",
+      "adiff": "/home/cymaxwelllee/Projects/lacot/experiments/humanoid_dict/teacher_relay/results/relay_nnstate_G1K32_adiff_overlay.png"
+    },
+    "gifs": {}
+  }
+}
