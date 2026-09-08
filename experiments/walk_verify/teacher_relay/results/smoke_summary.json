@@ -1,0 +1,226 @@
+{
+  "config": {
+    "ckpt": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "out_dir": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/teacher_relay/results",
+    "gif_dir": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/teacher_relay/results/gifs",
+    "n_traj": 5,
+    "seed": 20260908,
+    "rho": 1.875,
+    "threads": 4,
+    "tag": "smoke",
+    "frame_every": 4,
+    "max_frames": 200,
+    "skip_gifs": true
+  },
+  "delta_sub": 7.5,
+  "compare": {
+    "greedy": 0.063,
+    "main_head": 0.32,
+    "lo_head": 0.124
+  },
+  "n_tasks_requested": 5,
+  "n_tasks_used": 5,
+  "skipped": [
+    {
+      "episode": 386,
+      "arclen": 3.36172704454282,
+      "reason": "arclen<DELTA_SUB"
+    }
+  ],
+  "waypoints_per_task": {
+    "min": 2,
+    "p50": 3.0,
+    "max": 4,
+    "total": 15
+  },
+  "results": {
+    "schedule": {
+      "seconds": 0.2048499584197998,
+      "n_tasks": 5,
+      "completion_ratio": 0.2,
+      "legs_attempted_total": 7,
+      "legs_reached_total": 3,
+      "per_leg_untimed_reach": 0.42857142857142855,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.42857142857142855,
+        "n_evaluable_N_data_1.25N": 7,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.42857142857142855,
+        "n_evaluable_N_data_1.5N": 7,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.14285714285714285,
+        "n_evaluable_N_table_1.25N": 7,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.14285714285714285,
+        "n_evaluable_N_table_1.5N": 7,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.009708022738381393,
+        "5": 0.021122102128748432,
+        "25": 0.05723693471662798,
+        "50": 0.09735699255892727,
+        "75": 0.145329252614467,
+        "95": 0.2164731169054309,
+        "99": 0.25009676105133416
+      },
+      "step_speed_mean": 0.10502245430124778,
+      "fall_rate_step": 0.0,
+      "fall_rate_task": 0.0,
+      "action_diff_q": {
+        "1": 0.40452912792348683,
+        "5": 0.5549700343402604,
+        "25": 0.900382430695125,
+        "50": 1.2444701809830307,
+        "75": 1.6867478824702364,
+        "95": 2.4170600800777327,
+        "99": 2.904879765277842
+      },
+      "action_diff_mean": 1.330489237580387,
+      "codes_active": 31,
+      "codes_perplexity": 27.983926022612703,
+      "codes_top1_frac": 0.06306306306306306,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200
+        },
+        {
+          "ti": 1,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200
+        },
+        {
+          "ti": 2,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200
+        },
+        {
+          "ti": 3,
+          "episode": 423,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 88
+        },
+        {
+          "ti": 4,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200
+        }
+      ]
+    },
+    "nn": {
+      "seconds": 0.19794392585754395,
+      "n_tasks": 5,
+      "completion_ratio": 0.6,
+      "legs_attempted_total": 14,
+      "legs_reached_total": 12,
+      "per_leg_untimed_reach": 0.8571428571428571,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.3333333333333333,
+        "n_evaluable_N_data_1.25N": 9,
+        "n_not_evaluable_N_data_1.25N": 5,
+        "reach_N_data_1.5N": 0.4444444444444444,
+        "n_evaluable_N_data_1.5N": 9,
+        "n_not_evaluable_N_data_1.5N": 5,
+        "reach_N_table_1.25N": 0.0,
+        "n_evaluable_N_table_1.25N": 13,
+        "n_not_evaluable_N_table_1.25N": 1,
+        "reach_N_table_1.5N": 0.0,
+        "n_evaluable_N_table_1.5N": 13,
+        "n_not_evaluable_N_table_1.5N": 1
+      },
+      "step_speed_q": {
+        "1": 0.008397744892923175,
+        "5": 0.018591012497563272,
+        "25": 0.05654486915400694,
+        "50": 0.09557200668391788,
+        "75": 0.13741375114688914,
+        "95": 0.19514851489416452,
+        "99": 0.23360595736844014
+      },
+      "step_speed_mean": 0.09968118081673229,
+      "fall_rate_step": 0.0,
+      "fall_rate_task": 0.0,
+      "action_diff_q": {
+        "1": 0.4125450097527119,
+        "5": 0.5552531665564059,
+        "25": 0.8611684260912247,
+        "50": 1.1761291401424372,
+        "75": 1.703044029900972,
+        "95": 2.5342064779636737,
+        "99": 3.0982391259364697
+      },
+      "action_diff_mean": 1.334117563983064,
+      "codes_active": 27,
+      "codes_perplexity": 23.255600331877293,
+      "codes_top1_frac": 0.08837209302325581,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200
+        },
+        {
+          "ti": 1,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200
+        },
+        {
+          "ti": 2,
+          "episode": 56,
+          "completed": true,
+          "legs_attempted": 4,
+          "legs_reached": 4,
+          "n_steps_run": 192
+        },
+        {
+          "ti": 3,
+          "episode": 423,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 88
+        },
+        {
+          "ti": 4,
+          "episode": 286,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 180
+        }
+      ]
+    }
+  },
+  "artifacts": {
+    "pngs": {
+      "speed": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/teacher_relay/results/smoke_speed_overlay.png",
+      "z": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/teacher_relay/results/smoke_z_overlay.png",
+      "adiff": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/teacher_relay/results/smoke_adiff_overlay.png"
+    },
+    "gifs": {}
+  }
+}
