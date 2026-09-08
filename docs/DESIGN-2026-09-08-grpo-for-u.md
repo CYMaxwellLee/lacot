@@ -1,5 +1,13 @@
 # DESIGN — GRPO for u：整合更新目標 v0（2026-09-08）
 
+**🚨 v0.1 修正（主人 6132 抓到 offline 協定踩線）**：OGBench＝offline，訓練期
+⛔ 不准碰真模擬器 —— v0 的「reward＝模擬器實走」只有 eval 合法、訓練期犯規。
+合法路三條（TG 6133、主人裁中）：① dynamics model（虛擬 online —— 主人 9/7 章：
+想像中走、四關在想像軌跡上量、流形刀防 policy 剝削 model 誤差）＝ルナ推薦；
+② 學 V/Q（model-free 正統、但軌跡級四關壓標量勉強）；③ 分層故事（offline 主章＋
+online-finetune 附章、模擬 reward 版明標 online 當上界）。
+既有帳全合規：模擬器至今只用在 eval；訓練（SFT/字典/選字頭）全純資料。
+
 _主人 6123：「怎麼同時把這些整合在一起變成好的 grpo 更新目標，規劃一下」。_
 _整合的零件：四關 reward（6119）／字串進 u（6112-6115）／hindsight（9/7）／
 covariate shift 教訓（M2 蹲姿吸子・humanoid 摔）／教材上界 .554／乘法閘哲學。_
