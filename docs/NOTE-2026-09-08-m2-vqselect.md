@@ -96,6 +96,12 @@ ckpt 多存 `vqsel` 段並帶 **`dict_ckpt` 字典身份**；載入端 assert �
      FLAGOFF VERDICT: PASS — ant 路徑旗關閉零差（rollout json sha256 全同）
 ```
 
+⚠️ **出處註記**：本分支從 `abe6ab2` 開出，驗收當下 main 就在那一顆。工作期間 main 前進了
+六個 commit（到 `ff9a78f`），但 `git diff abe6ab2..ff9a78f -- experiments/scratch_lacot_rollout.py
+slurm/goldab/` 是**空的** ⇒ 上面的零差判決對【現在的 main】仍然成立。
+⭐ 那六顆裡有兩顆跟本檔的判讀方向相關（`c4e7498` relay 逐段分解「失敗 77% 是走歪非走慢」、
+`733ab22` nn_state 姿態選字），⚠️ 那是平行工作的結論，**本檔沒有去驗它們**，只是點名存在。
+
 **（3）旗開著也不污染主流**（CPU 對照）：同組輕裝設定跑 `VQSEL_W=0` 與 `=1`，
 主模型 40 行 stdout **逐字相同**，rollout json 除多一個 `vqsel_cfg` key 外**逐位元相同**，
 唯一差是檔名多 `_vqsW1`（防互蓋、刻意的）。
