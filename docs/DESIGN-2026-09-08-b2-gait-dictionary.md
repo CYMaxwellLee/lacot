@@ -89,6 +89,13 @@ eval    骨架選路標（conf2 照舊）＋ 步法字串 → stage0 decoder 展
   前人同形狀：Hierarchical Diffuser 高層 15 步跳。條件：humanoid 開大前先配擾動增強
   （開環窗變長、4 步都摔）；ant 先彰顯。
 
+- **GRPO for u（主人 6117）＝三級火箭的第三級**：M2 逐格版 → 字串進 u（SFT 模仿教材）→
+  GRPO for u（u 生成字串候選、reward 打分強化）。離散字串上 GRPO 是標準形；reward＝
+  展開實走的 per-leg 到達率（金標）／學的 V（便宜代理、三把尺統一格）；pass-G 過低的
+  解＝字串版 hindsight relabel（走到哪就把哪記成目標正樣本 —— 主人 9/7 的藥在字串空間
+  更自然）。順序鐵則：SFT 站住才上 GRPO、不同時開。＝主人 9/7「exploration 讓它自己
+  學會走路」的離散實現。
+
 ## 四、開放問題（留主人裁）
 
 1. K=16 起步同意嗎？（M0 會同時量 8/16/32 的使用率，資料可改推薦）
