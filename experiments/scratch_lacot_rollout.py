@@ -333,7 +333,18 @@ SUB_CONF_HI = float(os.environ.get("LACOT_SUB_CONF_HI", 1.5))
 # ⭐ 歸因對照（主人 8/29 晚）：分段模式的【短程】改走 bc head ——「bc＋BFS 中繼點」
 #   回答 0.750 的 +4 是短程 u 的功勞、還是分段結構本身的功勞。⛔ 只影響分段 arm。
 SUB_POLICY = os.environ.get("LACOT_SUB_POLICY", "")
-assert SUB_POLICY in ("", "bc", "lo"), f"⛔ LACOT_SUB_POLICY 只能是空/bc/lo，收到 {SUB_POLICY}"
+assert SUB_POLICY in ("", "bc", "lo", "vq_oracle"), (
+    f"⛔ LACOT_SUB_POLICY 只能是空/bc/lo/vq_oracle，收到 {SUB_POLICY}")
+# ═══ P2：B2 步法字典的作弊選字上界（docs/PLAN-2026-09-08-walk-first.md P2）═════
+# ⭐ vq_oracle＝conf2 選路標一行不動、只換執行端：每 chunk 枚舉 K 個步法字、
+#    各用還原機展開 4 步、在模擬器裡前瞻執行、選終點離當前路標最近的字實際執行。
+# ⛔ 旗預設 off（SUB_POLICY 空）⇒ VQO_ON False、不 import、不建模組，
+#    既有檔名與 stdout 一字不變。
+VQO_ON = (SUB_POLICY == "vq_oracle")
+VQO_CKPT = os.environ.get(
+    "LACOT_VQO_CKPT",
+    os.path.expanduser("~/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt"))
+VQO_TRACE_DIR = os.environ.get("LACOT_VQO_TRACE_DIR", "")  # 非空才落 render 用軌跡
 # ═══ B 案：ant 階層低層 π_lo（docs/DESIGN-2026-09-07-ant-lowlevel-B.md）═══════════
 # ⭐ 為什麼要有它：計畫棧在 ant 上已驗活（pilot 25436 幾何全綠），死的是【動作端】——
 #    「遠程模仿」（8 維步態 × 遠 goal、訊號稀）學不起來。低層化＝把它拆成【短程模仿】：
@@ -2458,6 +2469,12 @@ def lo_policy(obs, w_xy):
 #    ⇒ 一定要明確傳本機 /archive 的路徑。
 os.environ.setdefault("OGBENCH_DATA_DIR", OGB_DATA)
 env, _, _ = ogbench.make_env_and_datasets(ENV_NAME, dataset_dir=OGB_DATA)
+# ⭐ P2 vq_oracle：旗開才 import／建物件（旗關＝這三行完全不執行）
+VQO = None
+if VQO_ON:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # experiments/
+    import lacot_vqo as _vqo  # noqa: E402
+    VQO = _vqo.VQOraclePolicy(env, VQO_CKPT, CHUNK, ADIM, device="cpu")
 MAXH = int(os.environ.get("LACOT_EVAL_MAXH", env.spec.max_episode_steps or 1000))  # 官方標準，不自訂難度
 N_TASKS = len(env.unwrapped.task_infos); SEEDS = int(os.environ.get("LACOT_EVAL_EPISODES", 50))
 # 🚨 50，⛔ 不是 20。一手來源：OGBench `impls/hyperparameters.sh` —— pointmaze 的【每一行】
@@ -2786,7 +2803,7 @@ SUB_DIAG = {"d0": [], "dsub": [], "n_bad_d0": 0, "n_bad_dsub": 0, "n_replan": []
 #    到達判定＝planner 自己的 rho（＝0.25·DELTA_SUB）⇒ ⛔ 跟換段的判定同一把尺，
 #    不自訂第二把（兩把尺會給出互相矛盾的「到了」）。
 # ⛔ 預設不開（LACOT_SUB_POLICY=lo 時自動開）⇒ 既有 arm 的 stdout 一個字不變。
-LEG_STATS = int(os.environ.get("LACOT_LEG_STATS", 1 if SUB_POLICY == "lo" else 0))
+LEG_STATS = int(os.environ.get("LACOT_LEG_STATS", 1 if SUB_POLICY in ("lo", "vq_oracle") else 0))
 _LEG = {"att": 0, "reach": 0, "steps": [], "open": 0, "_pl": None}
 _LEG_ROWS = []        # ⭐ 每個分段 arm 一列（⛔ 只在 LEG_STATS 開著時進 json ⇒ 舊 json 不變）
 
@@ -3038,6 +3055,10 @@ def make_subgoal_policy(R, use_u):
             # ⭐ B 案：只換【開車的頭】—— 分段機制（選點／換段／stuck 判定）一行都沒動。
             #    ⛔ 路標【不】過 goal_to_obs：低層直吃 xy（那是它自己的 encoder 的語言）。
             return lo_policy(obs, planner.sub)
+        if SUB_POLICY == "vq_oracle":
+            # ⭐ P2 作弊選字上界：同樣只換【開車的頭】，選路標的上面四行一字未動。
+            #    ⛔ 用模擬器前瞻 ⇒ 這是上界、不是可部署方法。
+            return VQO(obs, planner.sub)
         # ⭐ ant v1：planner.sub 是【只有 xy】的路標 ⇒ 補成決策端要的完整 obs
         #    （非 xy 維填資料平均）。pointmaze 上 OBS_DIM==2 ⇒ goal_to_obs 原樣回傳。
         return policy_chunk(obs, goal_to_obs(planner.sub), R,
@@ -3069,6 +3090,8 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
             _reset_grad_cache()
             if on_start is not None:           # ⭐ 分段 policy 有狀態 ⇒ 每集重置（同 dev 那條）
                 on_start(obs, goal, task)                 # ⭐ 9/2：傳真 task（單集追蹤用；on_start 其餘不吃它）
+            if VQO is not None and VQO_TRACE_DIR:         # ⛔ 旗關＝這格不存在
+                VQO.start_trace()
             _reseed_shuf(1000 * task + sd_)    # #16：shuf arm 也要每集釘死 ⇒ 各 arm 配對
             while steps < MAXH and not success:
                 for a in (policy_fn(obs, goal) if policy_fn is not None
@@ -3080,6 +3103,19 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
                     if success or term or trunc or steps >= MAXH:
                         break
             succ += int(success); ep += 1
+            if VQO is not None and VQO_TRACE_DIR:   # ⛔ 旗關＝這格不存在
+                _tr = VQO.pop_trace()
+                if _tr is not None and len(_tr["qpos"]):
+                    os.makedirs(VQO_TRACE_DIR, exist_ok=True)
+                    np.savez_compressed(
+                        os.path.join(VQO_TRACE_DIR, f"trace_t{task}_s{sd_}.npz"),
+                        qpos=np.asarray(_tr["qpos"], np.float64),
+                        qvel=np.asarray(_tr["qvel"], np.float64),
+                        actions=np.asarray(_tr["actions"], np.float64),
+                        codes=np.asarray(_tr["codes"], np.int64),
+                        subs=np.asarray(_tr["subs"], np.float64),
+                        goal_xy=np.asarray(goal[:2], np.float64),
+                        success=np.asarray([int(success)]), steps=np.asarray([steps]))
             if DIAG_DUMP:                    # 成功集也記 —— 讀屍體要有活人對照
                 _fp = np.asarray(obs[:2], np.float64)
                 _gl = np.asarray(goal[:2], np.float64)
@@ -3404,6 +3440,13 @@ if SUBGOAL:
         _lr = _leg_report(f"official {SUBGOAL}")
         if _lr is not None:
             _LEG_ROWS.append(_lr)
+    if VQO is not None:                      # ⛔ 旗關＝這格不存在
+        _vs = VQO.stats()
+        print(f"  🔮 vq_oracle 選字統計：chunks {_vs['n_chunks']} / 前瞻步數 "
+              f"{_vs['n_lookahead_steps']} / 有被選到的字 {_vs['codes_active']}/{_vs['codes_K']}"
+              f" / perplexity {_vs['code_perplexity']:.2f} / top1 {_vs['code_top1_frac']*100:.1f}%",
+              flush=True)
+        out["vq_oracle"] = _vs
 # ⭐ X：反向 refine。⛔ 少了這格，「refine 有用」這個主張沒有任何直接證據。
 # 🚨 2026-08-28 修：_RDIR 只被 _apply_refine 讀，而 _apply_refine 在 LEARNED_REFINE=0 時
 #    直接 return、在 GRAD_REFINE=1 時根本不會被呼叫（policy_chunk 走爬坡那一支）
