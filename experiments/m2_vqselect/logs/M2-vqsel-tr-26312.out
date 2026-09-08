@@ -1,0 +1,138 @@
+worktree: vq-select-v1 abe6ab2f08c6325fad2fa53d01f01ddb7007d0af
+S1_FROM: /home/cymaxwelllee/Projects/lacot/results/ant_pilot/idp03/ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_ite_idp0.3_dssoft_norf_cd0.1_bci_s40.pt
+dict   : /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt
+steps2 : 100000   out: /home/cymaxwelllee/Projects/lacot-m2/experiments/m2_vqselect/ckpt
+/dev/nvme0n1p2  3.6T  2.8T  710G  80% /
+device: cuda
+⭐ 空間：obs_dim=29 act_dim=8、計畫棧投影 xy_dim=2（env 家族 antmaze；終局接管 takeover=off(ant)）
+  teacher 題庫：4096 條（細格步數 p50 27 p90 43 max 63），mix=0.5
+⭐ INTENT=embed（src=hindsight）：錨點佔據圖 (np.int64(39), np.int64(43))、T_A=32
+設定：seed=40 cons=self ema_m=0.996 K=8 COND=256
+  ⭐ intent 接法 embed（ite）：cond 尾巴 +64 維、per-token +0 維
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ S1_FROM=/home/cymaxwelllee/Projects/lacot/results/ant_pilot/idp03/ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_ite_idp0.3_dssoft_norf_cd0.1_bci_s40.pt：stage 1 載入並跳過訓練；torch RNG 重播 SEED=40（只抽 stage 2）
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/venvs/lacot-rocm/lib/python3.12/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+  🔮 vq_select 字典：p0_dict_v1_L4K32_50k.pt K=32 seg_len=4 latent=16 obs_dim=29 conditional_decoder=True
+  🔮 vq_select 寫譜頭建立（obs 29 ⊕ 相對路標 xy 2 → 32-way；VQSEL_W=1  弧長 a∈[1.875,7.5]）
+  🔮 vq_select 教材標籤：985000 段、字 32/32 全活、perplexity 31.10/32、最大類 5.1%（⭐ 這才是亂猜線，⛔ 不是 1/32=3.1%）  弧長 p50 0.1321/步
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+  step 1000  l_nf/dim -0.781 l_anchor 0.2531 l_refine 0.0000 l_vqsel(ce) 2.1481 top1 0.3252
+  step 2000  l_nf/dim -1.224 l_anchor 0.2616 l_refine 0.0000 l_vqsel(ce) 2.0446 top1 0.3446
+  step 3000  l_nf/dim -1.348 l_anchor 0.2474 l_refine 0.0000 l_vqsel(ce) 1.9678 top1 0.3696
+  step 4000  l_nf/dim -1.471 l_anchor 0.2541 l_refine 0.0000 l_vqsel(ce) 1.9402 top1 0.3742
+  step 5000  l_nf/dim -1.579 l_anchor 0.2753 l_refine 0.0000 l_vqsel(ce) 1.9107 top1 0.3744
+  step 6000  l_nf/dim -1.661 l_anchor 0.2064 l_refine 0.0000 l_vqsel(ce) 1.8948 top1 0.3824
+  step 7000  l_nf/dim -1.697 l_anchor 0.2191 l_refine 0.0000 l_vqsel(ce) 1.8836 top1 0.3879
+  step 8000  l_nf/dim -1.758 l_anchor 0.2284 l_refine 0.0000 l_vqsel(ce) 1.8606 top1 0.3902
+  step 9000  l_nf/dim -1.749 l_anchor 0.1877 l_refine 0.0000 l_vqsel(ce) 1.8522 top1 0.4036
+  step 10000  l_nf/dim -1.935 l_anchor 0.2227 l_refine 0.0000 l_vqsel(ce) 1.8328 top1 0.3985
+  step 11000  l_nf/dim -1.875 l_anchor 0.1715 l_refine 0.0000 l_vqsel(ce) 1.8127 top1 0.4046
+  step 12000  l_nf/dim -2.026 l_anchor 0.2081 l_refine 0.0000 l_vqsel(ce) 1.8015 top1 0.4121
+  step 13000  l_nf/dim -2.016 l_anchor 0.1934 l_refine 0.0000 l_vqsel(ce) 1.7885 top1 0.4072
+  step 14000  l_nf/dim -2.072 l_anchor 0.2135 l_refine 0.0000 l_vqsel(ce) 1.7975 top1 0.4094
+  step 15000  l_nf/dim -2.020 l_anchor 0.1648 l_refine 0.0000 l_vqsel(ce) 1.7788 top1 0.4070
+  step 16000  l_nf/dim -2.110 l_anchor 0.2075 l_refine 0.0000 l_vqsel(ce) 1.7513 top1 0.4226
+  step 17000  l_nf/dim -2.144 l_anchor 0.1909 l_refine 0.0000 l_vqsel(ce) 1.7614 top1 0.4153
+  step 18000  l_nf/dim -2.132 l_anchor 0.1891 l_refine 0.0000 l_vqsel(ce) 1.7514 top1 0.4227
+  step 19000  l_nf/dim -2.210 l_anchor 0.2200 l_refine 0.0000 l_vqsel(ce) 1.7519 top1 0.4228
+  step 20000  l_nf/dim -2.109 l_anchor 0.2012 l_refine 0.0000 l_vqsel(ce) 1.7645 top1 0.4187
+  step 21000  l_nf/dim -2.222 l_anchor 0.2260 l_refine 0.0000 l_vqsel(ce) 1.7442 top1 0.4246
+  step 22000  l_nf/dim -2.133 l_anchor 0.1983 l_refine 0.0000 l_vqsel(ce) 1.7197 top1 0.4296
+  step 23000  l_nf/dim -2.150 l_anchor 0.2102 l_refine 0.0000 l_vqsel(ce) 1.7180 top1 0.4313
+  step 24000  l_nf/dim -2.233 l_anchor 0.1974 l_refine 0.0000 l_vqsel(ce) 1.7037 top1 0.4358
+  step 25000  l_nf/dim -2.270 l_anchor 0.1649 l_refine 0.0000 l_vqsel(ce) 1.7108 top1 0.4263
+  step 26000  l_nf/dim -2.181 l_anchor 0.1550 l_refine 0.0000 l_vqsel(ce) 1.7008 top1 0.4356
+  step 27000  l_nf/dim -2.215 l_anchor 0.2030 l_refine 0.0000 l_vqsel(ce) 1.7264 top1 0.4327
+  step 28000  l_nf/dim -2.255 l_anchor 0.1760 l_refine 0.0000 l_vqsel(ce) 1.7089 top1 0.4270
+  step 29000  l_nf/dim -2.325 l_anchor 0.1603 l_refine 0.0000 l_vqsel(ce) 1.7141 top1 0.4368
+  step 30000  l_nf/dim -2.200 l_anchor 0.1631 l_refine 0.0000 l_vqsel(ce) 1.6956 top1 0.4350
+  step 31000  l_nf/dim -2.328 l_anchor 0.1882 l_refine 0.0000 l_vqsel(ce) 1.6804 top1 0.4431
+  step 32000  l_nf/dim -2.322 l_anchor 0.1683 l_refine 0.0000 l_vqsel(ce) 1.6668 top1 0.4423
+  step 33000  l_nf/dim -2.340 l_anchor 0.1817 l_refine 0.0000 l_vqsel(ce) 1.6914 top1 0.4368
+  step 34000  l_nf/dim -2.392 l_anchor 0.1756 l_refine 0.0000 l_vqsel(ce) 1.7001 top1 0.4320
+  step 35000  l_nf/dim -2.294 l_anchor 0.2110 l_refine 0.0000 l_vqsel(ce) 1.6582 top1 0.4471
+  step 36000  l_nf/dim -2.267 l_anchor 0.2068 l_refine 0.0000 l_vqsel(ce) 1.6805 top1 0.4430
+  step 37000  l_nf/dim -2.438 l_anchor 0.2074 l_refine 0.0000 l_vqsel(ce) 1.6620 top1 0.4489
+  step 38000  l_nf/dim -2.390 l_anchor 0.2220 l_refine 0.0000 l_vqsel(ce) 1.6796 top1 0.4358
+  step 39000  l_nf/dim -2.354 l_anchor 0.1807 l_refine 0.0000 l_vqsel(ce) 1.6529 top1 0.4489
+  step 40000  l_nf/dim -2.465 l_anchor 0.1826 l_refine 0.0000 l_vqsel(ce) 1.6571 top1 0.4516
+  step 41000  l_nf/dim -2.319 l_anchor 0.1616 l_refine 0.0000 l_vqsel(ce) 1.6608 top1 0.4445
+  step 42000  l_nf/dim -2.477 l_anchor 0.1447 l_refine 0.0000 l_vqsel(ce) 1.6392 top1 0.4484
+  step 43000  l_nf/dim -2.449 l_anchor 0.1648 l_refine 0.0000 l_vqsel(ce) 1.6658 top1 0.4410
+  step 44000  l_nf/dim -2.376 l_anchor 0.1464 l_refine 0.0000 l_vqsel(ce) 1.6548 top1 0.4428
+  step 45000  l_nf/dim -2.441 l_anchor 0.1950 l_refine 0.0000 l_vqsel(ce) 1.6510 top1 0.4486
+  step 46000  l_nf/dim -2.400 l_anchor 0.2060 l_refine 0.0000 l_vqsel(ce) 1.6466 top1 0.4502
+  step 47000  l_nf/dim -2.437 l_anchor 0.1613 l_refine 0.0000 l_vqsel(ce) 1.6211 top1 0.4593
+  step 48000  l_nf/dim -2.465 l_anchor 0.1716 l_refine 0.0000 l_vqsel(ce) 1.6070 top1 0.4603
+  step 49000  l_nf/dim -2.456 l_anchor 0.1515 l_refine 0.0000 l_vqsel(ce) 1.6220 top1 0.4523
+  step 50000  l_nf/dim -2.478 l_anchor 0.1735 l_refine 0.0000 l_vqsel(ce) 1.6419 top1 0.4532
+  step 51000  l_nf/dim -2.478 l_anchor 0.1989 l_refine 0.0000 l_vqsel(ce) 1.6206 top1 0.4616
+  step 52000  l_nf/dim -2.453 l_anchor 0.1620 l_refine 0.0000 l_vqsel(ce) 1.6268 top1 0.4516
+  step 53000  l_nf/dim -2.540 l_anchor 0.1789 l_refine 0.0000 l_vqsel(ce) 1.6182 top1 0.4617
+  step 54000  l_nf/dim -2.544 l_anchor 0.1444 l_refine 0.0000 l_vqsel(ce) 1.6158 top1 0.4580
+  step 55000  l_nf/dim -2.421 l_anchor 0.1710 l_refine 0.0000 l_vqsel(ce) 1.6112 top1 0.4543
+  step 56000  l_nf/dim -2.476 l_anchor 0.1641 l_refine 0.0000 l_vqsel(ce) 1.6119 top1 0.4632
+  step 57000  l_nf/dim -2.513 l_anchor 0.1447 l_refine 0.0000 l_vqsel(ce) 1.6118 top1 0.4543
+  step 58000  l_nf/dim -2.590 l_anchor 0.1393 l_refine 0.0000 l_vqsel(ce) 1.6174 top1 0.4552
+  step 59000  l_nf/dim -2.592 l_anchor 0.1771 l_refine 0.0000 l_vqsel(ce) 1.6380 top1 0.4516
+  step 60000  l_nf/dim -2.552 l_anchor 0.1728 l_refine 0.0000 l_vqsel(ce) 1.6104 top1 0.4588
+  step 61000  l_nf/dim -2.559 l_anchor 0.1518 l_refine 0.0000 l_vqsel(ce) 1.6160 top1 0.4532
+  step 62000  l_nf/dim -2.503 l_anchor 0.1150 l_refine 0.0000 l_vqsel(ce) 1.6077 top1 0.4607
+  step 63000  l_nf/dim -2.579 l_anchor 0.1740 l_refine 0.0000 l_vqsel(ce) 1.6119 top1 0.4532
+  step 64000  l_nf/dim -2.587 l_anchor 0.1718 l_refine 0.0000 l_vqsel(ce) 1.6203 top1 0.4571
+  step 65000  l_nf/dim -2.588 l_anchor 0.1650 l_refine 0.0000 l_vqsel(ce) 1.6031 top1 0.4603
+  step 66000  l_nf/dim -2.623 l_anchor 0.2033 l_refine 0.0000 l_vqsel(ce) 1.5984 top1 0.4604
+  step 67000  l_nf/dim -2.549 l_anchor 0.1312 l_refine 0.0000 l_vqsel(ce) 1.5917 top1 0.4672
+  step 68000  l_nf/dim -2.641 l_anchor 0.1503 l_refine 0.0000 l_vqsel(ce) 1.5999 top1 0.4607
+  step 69000  l_nf/dim -2.579 l_anchor 0.1655 l_refine 0.0000 l_vqsel(ce) 1.5779 top1 0.4685
+  step 70000  l_nf/dim -2.669 l_anchor 0.1873 l_refine 0.0000 l_vqsel(ce) 1.5939 top1 0.4614
+  step 71000  l_nf/dim -2.536 l_anchor 0.1701 l_refine 0.0000 l_vqsel(ce) 1.5890 top1 0.4596
+  step 72000  l_nf/dim -2.662 l_anchor 0.1501 l_refine 0.0000 l_vqsel(ce) 1.6058 top1 0.4653
+  step 73000  l_nf/dim -2.542 l_anchor 0.1540 l_refine 0.0000 l_vqsel(ce) 1.5829 top1 0.4708
+  step 74000  l_nf/dim -2.731 l_anchor 0.1823 l_refine 0.0000 l_vqsel(ce) 1.5862 top1 0.4700
+  step 75000  l_nf/dim -2.590 l_anchor 0.1598 l_refine 0.0000 l_vqsel(ce) 1.5873 top1 0.4640
+  step 76000  l_nf/dim -2.588 l_anchor 0.1736 l_refine 0.0000 l_vqsel(ce) 1.5857 top1 0.4668
+  step 77000  l_nf/dim -2.612 l_anchor 0.1616 l_refine 0.0000 l_vqsel(ce) 1.5634 top1 0.4757
+  step 78000  l_nf/dim -2.558 l_anchor 0.1433 l_refine 0.0000 l_vqsel(ce) 1.5698 top1 0.4734
+  step 79000  l_nf/dim -2.568 l_anchor 0.1491 l_refine 0.0000 l_vqsel(ce) 1.5838 top1 0.4733
+  step 80000  l_nf/dim -2.583 l_anchor 0.1654 l_refine 0.0000 l_vqsel(ce) 1.5639 top1 0.4714
+  step 81000  l_nf/dim -2.590 l_anchor 0.1297 l_refine 0.0000 l_vqsel(ce) 1.5672 top1 0.4771
+  step 82000  l_nf/dim -2.597 l_anchor 0.2178 l_refine 0.0000 l_vqsel(ce) 1.5755 top1 0.4681
+  step 83000  l_nf/dim -2.587 l_anchor 0.1847 l_refine 0.0000 l_vqsel(ce) 1.5673 top1 0.4718
+  step 84000  l_nf/dim -2.736 l_anchor 0.1949 l_refine 0.0000 l_vqsel(ce) 1.5567 top1 0.4723
+  step 85000  l_nf/dim -2.709 l_anchor 0.1940 l_refine 0.0000 l_vqsel(ce) 1.5631 top1 0.4748
+  step 86000  l_nf/dim -2.754 l_anchor 0.1589 l_refine 0.0000 l_vqsel(ce) 1.5805 top1 0.4676
+  step 87000  l_nf/dim -2.577 l_anchor 0.1408 l_refine 0.0000 l_vqsel(ce) 1.5658 top1 0.4705
+  step 88000  l_nf/dim -2.648 l_anchor 0.1459 l_refine 0.0000 l_vqsel(ce) 1.5488 top1 0.4756
+  step 89000  l_nf/dim -2.729 l_anchor 0.1255 l_refine 0.0000 l_vqsel(ce) 1.5578 top1 0.4743
+  step 90000  l_nf/dim -2.723 l_anchor 0.1612 l_refine 0.0000 l_vqsel(ce) 1.5598 top1 0.4730
+  step 91000  l_nf/dim -2.694 l_anchor 0.1730 l_refine 0.0000 l_vqsel(ce) 1.5295 top1 0.4844
+  step 92000  l_nf/dim -2.683 l_anchor 0.1757 l_refine 0.0000 l_vqsel(ce) 1.5435 top1 0.4768
+  step 93000  l_nf/dim -2.669 l_anchor 0.1694 l_refine 0.0000 l_vqsel(ce) 1.5653 top1 0.4689
+  step 94000  l_nf/dim -2.685 l_anchor 0.1638 l_refine 0.0000 l_vqsel(ce) 1.5606 top1 0.4770
+  step 95000  l_nf/dim -2.748 l_anchor 0.1234 l_refine 0.0000 l_vqsel(ce) 1.5442 top1 0.4752
+  step 96000  l_nf/dim -2.726 l_anchor 0.1635 l_refine 0.0000 l_vqsel(ce) 1.5553 top1 0.4725
+  step 97000  l_nf/dim -2.687 l_anchor 0.1835 l_refine 0.0000 l_vqsel(ce) 1.5406 top1 0.4795
+  step 98000  l_nf/dim -2.609 l_anchor 0.1732 l_refine 0.0000 l_vqsel(ce) 1.5646 top1 0.4732
+  step 99000  l_nf/dim -2.675 l_anchor 0.2416 l_refine 0.0000 l_vqsel(ce) 1.5372 top1 0.4810
+  step 100000  l_nf/dim -2.706 l_anchor 0.1252 l_refine 0.0000 l_vqsel(ce) 1.5254 top1 0.4848
+  ⭐ intent 錨源 src=hindsight：處理 6400000 個樣本，fallback 回 hindsight 0 次（0.0000）
+  decoder 內部點 RMSE 0.1477   打亂 u 之後 2.0000   用到的 u 值 +1.8523   ✓
+  幾何 energy：佔據圖 (np.int64(39), np.int64(43))，資料覆蓋 40.9% 的格
+  sanity：真軌跡穿牆中位 0.0000（⚠️ 恆真、參考用）   格心 round-trip 2.10e-06   盒內隨機點穿牆中位 0.1207
+  ✓ 幾何 energy 健康檢查通過（映射對得上、牆這一項不是空的）
+  E 圖 subgoal：佔據圖 (np.int64(39), np.int64(43)) 覆蓋 40.9%，E 格寬≈0.71，subgoal 隔 11 格
+
+==== SUCCESS RATE (env=antmaze-medium-stitch-v0, 5 tasks x 2 seeds, MAXH 1000) ====
+  誠實 BC 地板（獨立 head，只吃 cond）: success 6/10 = 0.600
+  u 歸零（⚠️ OOD 探針，不是地板）: success 2/10 = 0.200
+  別人的 u（分布對、內容錯）: success 0/10 = 0.000
+  LaCoT refine R=0: success 2/10 = 0.200
+  intent_swap R=0｜別人的 intent（分布內、內容錯）: success 2/10 = 0.200
+  intent_noise R=0｜噪音 intent（出分佈）: success 2/10 = 0.200
+=> want: LaCoT > floor (reasoning helps on success), rate rises with R (test-time scaling).
+寫入 /home/cymaxwelllee/Projects/lacot-m2/experiments/m2_vqselect/ckpt/rollout_antmaze-medium-stitch_self_K8_c256_ch4_st100000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_vqsW1_s40.json
+存 checkpoint /home/cymaxwelllee/Projects/lacot-m2/experiments/m2_vqselect/ckpt/ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st100000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_vqsW1_s40.pt

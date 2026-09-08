@@ -1,0 +1,24 @@
+{
+ "n_eps": 500,
+ "n_chunks": 25000,
+ "arc": 7.5,
+ "true": {
+  "same_code_rate": 0.02787755102040816,
+  "perplexity": 31.104160313314477,
+  "top1": 0.04912,
+  "active": 32
+ },
+ "argmax": {
+  "same_code_rate": 0.024122448979591836,
+  "perplexity": 30.273609513488427,
+  "top1": 0.05788,
+  "active": 32
+ },
+ "sample": {
+  "same_code_rate": 0.02787755102040816,
+  "perplexity": 31.198001557661296,
+  "top1": 0.04896,
+  "active": 32
+ },
+ "argmax_vs_true_top1": 0.45204
+}

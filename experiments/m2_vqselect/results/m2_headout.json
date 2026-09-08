@@ -1,0 +1,27 @@
+{
+ "ckpt": "experiments/m2_vqselect/ckpt/ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st100000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_vqsW1_s40.pt",
+ "dict": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+ "K": 32,
+ "arc": [
+  1.875,
+  7.5
+ ],
+ "train": {
+  "n": 200000,
+  "ce": 1.5437692403793335,
+  "top1": 0.47749999165534973,
+  "top5": 0.8920850157737732,
+  "majority": 0.051145,
+  "pred_active": 32,
+  "pred_perplexity": 30.14617791485198
+ },
+ "val": {
+  "n": 200000,
+  "ce": 1.6144258975982666,
+  "top1": 0.46065500378608704,
+  "top5": 0.8770999908447266,
+  "majority": 0.051295,
+  "pred_active": 32,
+  "pred_perplexity": 30.066368657941933
+ }
+}
