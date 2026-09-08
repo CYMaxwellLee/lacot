@@ -1,0 +1,17 @@
+== git ==
+main
+main
+vq-oracle-v1
+vq-oracle-v1
+== A (main, flag off) ==
+A rc=0
+== B (worktree, flag off) ==
+B rc=0
+== sha256 ==
+A e77f3b6dea1629dd81e00015faf9747dddd1aaba534157d67f3f8e96cac38b9a  rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+B e77f3b6dea1629dd81e00015faf9747dddd1aaba534157d67f3f8e96cac38b9a  rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+== 檔名比對 ==
+rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_gr0_fin2_loW1_s40.json
+== stdout diff (A vs B，路徑字串會不同、其餘應全同) ==
+FLAGOFF VERDICT: PASS — ant 路徑旗關閉零差（rollout json sha256 全同）

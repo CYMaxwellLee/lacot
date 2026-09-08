@@ -1,0 +1,43 @@
+worktree: vq-oracle-v1 ec800fa6e59bf57739f361f4baceb87676ca19c3
+ckpt: /home/cymaxwelllee/Projects/lacot/results/ant_pilot/lo_100k/ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st100000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_loW1_s40.pt
+dict: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt
+trace_dir: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p2_traces_smoke   episodes: 1   extra: LACOT_EVAL_MAXH=200
+device: cuda
+  ⭐ 終局接管：takeover=off(ant)（LACOT_FINISH_R=2 收到了，但 antmaze 不是速度控制 ⇒ 本次不接管）
+⭐ 空間：obs_dim=29 act_dim=8、計畫棧投影 xy_dim=2（env 家族 antmaze；終局接管 takeover=off(ant)）
+  teacher 題庫：4096 條（細格步數 p50 27 p90 43 max 63），mix=0.5
+⭐ INTENT=embed（src=hindsight）：錨點佔據圖 (np.int64(39), np.int64(43))、T_A=32
+設定：seed=40 cons=self ema_m=0.996 K=8 COND=256
+  ⭐ intent 接法 embed（ite）：cond 尾巴 +64 維、per-token +0 維
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/venvs/lacot-rocm/lib/python3.12/site-packages/torch/nn/modules/transformer.py:392: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+  ⭐ π_lo 低層頭建立（obs 29 ⊕ 路標 xy 2 → 4×8；LO_W=1  k∈[10,60]  adv=0）
+stage 2 flow+refine+action ...
+  ⭐ π_lo 低層四模組已載入（訓練時 LO_W=1.0 k∈[10,60] adv=0）
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st100000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_loW1_s40.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.1477   打亂 u 之後 1.8144   用到的 u 值 +1.6667   ✓
+  🔮 vq_oracle：字典 p0_dict_v1_L4K32_50k.pt K=32 seg_len=4 obs_dim=29 conditional_decoder=True
+  幾何 energy：佔據圖 (np.int64(39), np.int64(43))，資料覆蓋 40.9% 的格
+  sanity：真軌跡穿牆中位 0.0000（⚠️ 恆真、參考用）   格心 round-trip 2.10e-06   盒內隨機點穿牆中位 0.1207
+  ✓ 幾何 energy 健康檢查通過（映射對得上、牆這一項不是空的）
+  ✓ decoder 讀得到 u（打亂後 RMSE 0.1477 → 1.8144，差 +1.6667）
+  E 圖 subgoal：佔據圖 (np.int64(39), np.int64(43)) 覆蓋 40.9%，E 格寬≈0.71，subgoal 隔 11 格
+  ⭐ embedding 往返尺（任務路徑→enc→dec；mse/穿牆/末點距）：t1:0.0253/0.043/0.11  t2:0.0412/0.032/0.09  t3:0.0142/0.043/0.29  t4:0.0672/0.048/0.10  t5:0.0182/0.005/0.22
+
+==== SUCCESS RATE (env=antmaze-medium-stitch-v0, 5 tasks x 1 seeds, MAXH 200) ====
+  誠實 BC 地板（獨立 head，只吃 cond）: success 0/5 = 0.000
+  u 歸零（⚠️ OOD 探針，不是地板）: success 0/5 = 0.000
+  別人的 u（分布對、內容錯）: success 0/5 = 0.000
+  LaCoT refine R=0: success 0/5 = 0.000
+  intent_swap R=0｜別人的 intent（分布內、內容錯）: success 0/5 = 0.000
+  intent_noise R=0｜噪音 intent（出分佈）: success 0/5 = 0.000
+  分段 conf2（官方協定）: success 0/5 = 0.000
+  ⭐ per-leg [official conf2]: legs attempted 31 / legs reached 0 / reach rate 0.000 / median steps per leg 36   (集末未結算 5 段；到達半徑 rho 1.875、路標目標間距 DELTA_SUB 7.5)
+  🔮 vq_oracle 選字統計：chunks 250 / 前瞻步數 32000 / 有被選到的字 32/32 / perplexity 26.93 / top1 8.0%
+=> want: LaCoT > floor (reasoning helps on success), rate rises with R (test-time scaling).
+寫入 results/ant_pilot/eval_vqo_smoke/rollout_antmaze-medium-stitch_self_K8_c256_ch4_st0_T128_ep1_gu_eorecon_ictr_tch0.5_emw0.999_ema_ite_idp0.3_dssoft_norf_cd0.1_bci_sgconf2_ma2_spvq_oracle_gr0_fin2_loW1_s40.json
+  病二快篩：終局接管觸發 0 次（⛔ 0 次＝開關沒作用，快篩白跑）　⭐ 本次 takeover=off(ant)：0 次是【預期】的，⛔ 不是開關寫壞
+（只評估模式：⛔ 不存 ckpt，來源是 ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st100000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_loW1_s40.pt）
