@@ -1,0 +1,31 @@
+=== build_corpus_aug_v2: n_cuts=4 cut_seed=20260912 讀既有語料 /home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_v1.pt ===
+loaded: n_train=4457 n_val=495 n_total=4952  build_tasks_seed(meta)=0  split_seed(meta)=42
+rebuilt tasks（僅為取 wp_local_idx）: 4952 usable  skipped=48  n_ep(raw)=5000
+
+自檢①（wp_xy 逐位元比對，全部 4952 集）：PASS 0 mismatches
+
+增強子樣本 ledger（cut_seed=20260912 n_cuts=4 avoid_last=4）:
+  n_episodes = 4952
+  n_episodes_zero_candidates = 0
+  n_episodes_lt_n_cuts = 0
+  n_cuts_drawn_total = 19808
+  n_subsamples_created = 17420
+  n_subsamples_skipped_zero_remaining_wp = 2388
+
+樣本數帳：原始樣本=4952  子樣本=17420  混合後總計=22372
+
+split(episode-level, split_seed=42): {'split_seed': 42, 'val_frac': 0.1, 'n_train_episodes': 4457, 'n_val_episodes': 495, 'n_train': 20130, 'n_val': 2242}
+
+自檢②（episode 級切分跟 corpus_v1.pt 原本切分逐集比對）：PASS 完全相同
+
+=== 驗收①自檢：3 個子樣本 vs 母 episode 完整字串後綴 + 條件 obs 位元一致 ===
+  episode= 1937 cut_chunk=29/50  code_seq len=21 (parent len=50): PASS bit-exact suffix   s0_obs: PASS bit-exact (L2=0.00000000)   M=1 (parent M=3)
+  episode=  382 cut_chunk= 4/50  code_seq len=46 (parent len=50): PASS bit-exact suffix   s0_obs: PASS bit-exact (L2=0.00000000)   M=3 (parent M=3)
+  episode= 3389 cut_chunk=36/50  code_seq len=14 (parent len=50): PASS bit-exact suffix   s0_obs: PASS bit-exact (L2=0.00000000)   M=1 (parent M=4)
+驗收①自檢：3/3 PASS
+
+語料整體長度分佈（全部 22372 樣本，code_seq len，含原樣本+子樣本）: p25=22.0 p50=35.0 p75=48.0  min=5 max=50
+子樣本長度分佈（僅 is_aug=True 的 17420 個, code_seq len）: p25=19.0 p50=30.0 p75=39.0  min=5 max=49
+
+saved: /home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_aug_v2_c4.pt (16.77 MB)
+=== done wall=1.4s ===

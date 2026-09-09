@@ -1,0 +1,87 @@
+{
+  "rows": {
+    "2\u5200(\u5f15\u7528,corpus_aug_v1.pt)": {
+      "n_orig": 4952,
+      "n_sub": 8706,
+      "n_total": 13658,
+      "sub_frac": 0.6374286132669498,
+      "all_p25": 25.0,
+      "all_p50": 41.0,
+      "all_p75": 50.0,
+      "all_min": 5,
+      "all_max": 50,
+      "sub_p25": 20.0,
+      "sub_p50": 30.0,
+      "sub_p75": 40.0,
+      "sub_min": 5,
+      "sub_max": 49,
+      "cut_seed": 20260909,
+      "n_cuts": 2,
+      "ledger": {
+        "n_episodes": 4952,
+        "n_episodes_zero_candidates": 0,
+        "n_episodes_lt_n_cuts": 0,
+        "n_cuts_drawn_total": 9904,
+        "n_subsamples_created": 8706,
+        "n_subsamples_skipped_zero_remaining_wp": 1198
+      },
+      "path": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_aug_v1.pt"
+    },
+    "4\u5200(corpus_aug_v2_c4.pt)": {
+      "n_orig": 4952,
+      "n_sub": 17420,
+      "n_total": 22372,
+      "sub_frac": 0.7786518862864295,
+      "all_p25": 22.0,
+      "all_p50": 35.0,
+      "all_p75": 48.0,
+      "all_min": 5,
+      "all_max": 50,
+      "sub_p25": 19.0,
+      "sub_p50": 30.0,
+      "sub_p75": 39.0,
+      "sub_min": 5,
+      "sub_max": 49,
+      "cut_seed": 20260912,
+      "n_cuts": 4,
+      "ledger": {
+        "n_episodes": 4952,
+        "n_episodes_zero_candidates": 0,
+        "n_episodes_lt_n_cuts": 0,
+        "n_cuts_drawn_total": 19808,
+        "n_subsamples_created": 17420,
+        "n_subsamples_skipped_zero_remaining_wp": 2388
+      },
+      "path": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_aug_v2_c4.pt"
+    },
+    "8\u5200(corpus_aug_v2_c8.pt)": {
+      "n_orig": 4952,
+      "n_sub": 34814,
+      "n_total": 39766,
+      "sub_frac": 0.8754715083236936,
+      "all_p25": 21.0,
+      "all_p50": 32.0,
+      "all_p75": 44.0,
+      "all_min": 5,
+      "all_max": 50,
+      "sub_p25": 19.0,
+      "sub_p50": 30.0,
+      "sub_p75": 39.0,
+      "sub_min": 5,
+      "sub_max": 49,
+      "cut_seed": 20260913,
+      "n_cuts": 8,
+      "ledger": {
+        "n_episodes": 4952,
+        "n_episodes_zero_candidates": 0,
+        "n_episodes_lt_n_cuts": 0,
+        "n_cuts_drawn_total": 39616,
+        "n_subsamples_created": 34814,
+        "n_subsamples_skipped_zero_remaining_wp": 4802
+      },
+      "path": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_aug_v2_c8.pt"
+    }
+  },
+  "all_monotonic_down": true,
+  "sub_stable": true
+}

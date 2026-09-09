@@ -1,0 +1,28 @@
+worktree: rewrite-v1 730db5b2306647ae598e9e238874f89a7a783867
+node: zeldajr  gensft_ckpt=/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/gensft_c8_s20260910_best.pt  r_grid=8,inf  n_traj=200  tag=rewrite_eval_c8_s20260910
+=== rewrite eval (aug)  gensft_ckpt=gensft_c8_s20260910_best.pt  n_traj=200  seed=20260908  rho=1.875  R_grid=['8', 'inf'] ===
+dict: seg_len=4 K=32  fall_line=0.2573
+gensft model: {'d_model': 128, 'n_layers': 3, 'n_heads': 4, 'dropout': 0.1, 'max_len': 96}  best_step=4500  held_out_at_best={'loss': 2.4909555337683527, 'top1_all': 0.2584324451995825, 'n_all': 131249, 'top1_codes_only': 0.25178391801835787, 'n_codes': 127248, 'top1_eos': 0.46988252936765806, 'n_eos': 4001}  train_args.corpus=/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_aug_v2_c8.pt  train_args.seed=20260910
+tasks: 200 usable (要求>=200)  skipped=1
+eval_tasks=200  waypoints M: min=1 p50=3 max=4  total_legs=595
+
+obs_proxy_check（sim_obs(u) vs raw['observations'][s0]，reset 剛完、零漂移）: n=5  L2 min/p50/max=0.000000/0.000000/0.000000
+
+初始生成（貪心，全部 R 共用第一個 block）：200 條，長度 min/p50/max=49/50/60  (2.0s)
+
+=== 開始 rollout：2 個 R x 200 題 = 400 條 ===
+  parallel_walk_rewrite: 400 rollouts, 8 workers, 11.0s
+
+=== R=∞ 參考（描述性，非硬性判準）：per-leg=0.5305  v1 錨點=0.5875  差=-0.0570  落在 v1 錨點 ±.01 外（不是異常——這是本工單要量的訓練抖動本身） ===
+
+=== 主表（200 題，貪心解碼）===
+     R |  per-leg | completion | fall(step) | adiff_p50 | avg_rewrites
+----------------------------------------------------------------------
+     8 |   0.6636 |     0.2750 |      0.03% |     1.261 |         5.30
+   inf |   0.5305 |     0.1150 |      0.05% |     1.261 |         0.00
+
+本次 R_grid 內最佳：R=8  per-leg=0.6636
+⛔ --render-gifs 未指定：本次沒有產生 gif
+
+saved: experiments/gen_sft/results/rewrite_eval_c8_s20260910_summary.json
+=== done wall=13.2s ===

@@ -1,0 +1,176 @@
+{
+  "main_table": {
+    "c4_R8": {
+      "20260909": 0.6744186046511628,
+      "20260910": 0.6720183486238532,
+      "20260911": 0.695067264573991
+    },
+    "c4_Rinf": {
+      "20260909": 0.5263157894736842,
+      "20260910": 0.5526992287917738,
+      "20260911": 0.5875
+    },
+    "c8_R8": {
+      "20260909": 0.6104218362282878,
+      "20260910": 0.6635730858468677,
+      "20260911": 0.6986301369863014
+    },
+    "c8_Rinf": {
+      "20260909": 0.48739495798319327,
+      "20260910": 0.5305039787798409,
+      "20260911": 0.5714285714285714
+    }
+  },
+  "ref_c2": {
+    "label": "2\u5200(\u5f15\u7528)",
+    "R8": {
+      "20260909": 0.6899,
+      "20260910": 0.6651,
+      "20260911": 0.6368
+    },
+    "Rinf": {
+      "20260909": 0.59,
+      "20260910": 0.5337,
+      "20260911": 0.5931
+    },
+    "source": "docs/NOTE-2026-09-09-midstart-aug.md \u00a7\u4e09\u4e3b\u8868 aug \u4e09\u5217\uff08\u5de5\u55ae\u539f\u6587\u5f15\u7528\uff0c\u975e\u672c\u6a94\u91cd\u8dd1\uff09"
+  },
+  "summary_stats": {
+    "2\u5200(\u5f15\u7528)_R8": {
+      "values": {
+        "20260909": 0.6899,
+        "20260910": 0.6651,
+        "20260911": 0.6368
+      },
+      "mean": 0.6639333333333334,
+      "sample_std": 0.026569217777972526,
+      "pop_std": 0.02169367547363872,
+      "range": 0.053099999999999925,
+      "min": 0.6368,
+      "max": 0.6899,
+      "note": "\u5de5\u55ae\u5f15\u7528"
+    },
+    "2\u5200(\u5f15\u7528)_Rinf": {
+      "values": {
+        "20260909": 0.59,
+        "20260910": 0.5337,
+        "20260911": 0.5931
+      },
+      "mean": 0.5722666666666666,
+      "sample_std": 0.03343565960667344,
+      "pop_std": 0.02730010174991214,
+      "range": 0.05940000000000001,
+      "min": 0.5337,
+      "max": 0.5931,
+      "note": "\u5de5\u55ae\u5f15\u7528"
+    },
+    "4\u5200_R8": {
+      "values": {
+        "20260909": 0.6744186046511628,
+        "20260910": 0.6720183486238532,
+        "20260911": 0.695067264573991
+      },
+      "mean": 0.680501405949669,
+      "sample_std": 0.012671364778387574,
+      "pop_std": 0.010346126017241468,
+      "range": 0.023048915950137805,
+      "min": 0.6720183486238532,
+      "max": 0.695067264573991,
+      "note": "\u672c\u6b21\u91cf\u6e2c"
+    },
+    "4\u5200_Rinf": {
+      "values": {
+        "20260909": 0.5263157894736842,
+        "20260910": 0.5526992287917738,
+        "20260911": 0.5875
+      },
+      "mean": 0.555505006088486,
+      "sample_std": 0.030688453758884526,
+      "pop_std": 0.025057017568087838,
+      "range": 0.06118421052631584,
+      "min": 0.5263157894736842,
+      "max": 0.5875,
+      "note": "\u672c\u6b21\u91cf\u6e2c"
+    },
+    "8\u5200_R8": {
+      "values": {
+        "20260909": 0.6104218362282878,
+        "20260910": 0.6635730858468677,
+        "20260911": 0.6986301369863014
+      },
+      "mean": 0.6575416863538189,
+      "sample_std": 0.04441237907990975,
+      "pop_std": 0.036262555669612374,
+      "range": 0.08820830075801356,
+      "min": 0.6104218362282878,
+      "max": 0.6986301369863014,
+      "note": "\u672c\u6b21\u91cf\u6e2c"
+    },
+    "8\u5200_Rinf": {
+      "values": {
+        "20260909": 0.48739495798319327,
+        "20260910": 0.5305039787798409,
+        "20260911": 0.5714285714285714
+      },
+      "mean": 0.5297758360638686,
+      "sample_std": 0.04202153841820795,
+      "pop_std": 0.034310442443789876,
+      "range": 0.08403361344537813,
+      "min": 0.48739495798319327,
+      "max": 0.5714285714285714,
+      "note": "\u672c\u6b21\u91cf\u6e2c"
+    }
+  },
+  "self_check": {
+    "mean_ok": true,
+    "std_ok": true
+  },
+  "verdict1_better": {
+    "4": {
+      "mean": 0.680501405949669,
+      "diff": 0.01656807261633564,
+      "clear": false
+    },
+    "8": {
+      "mean": 0.6575416863538189,
+      "diff": -0.006391646979514443,
+      "clear": false
+    }
+  },
+  "verdict2_stabler": {
+    "4": {
+      "std": 0.012671364778387574,
+      "range": 0.023048915950137805,
+      "std_ratio": 0.4769190001857298,
+      "range_ratio": 0.43406621375024174,
+      "clear": true
+    },
+    "8": {
+      "std": 0.04441237907990975,
+      "range": 0.08820830075801356,
+      "std_ratio": 1.671572699318618,
+      "range_ratio": 1.6611732722789772,
+      "clear": false
+    }
+  },
+  "final_verdict": {
+    "4": "\u66f4\u7a69\uff08\u5224\u6e962\u6210\u7acb\uff0c\u5224\u6e961\u4e0d\u6210\u7acb\uff09",
+    "8": "2\u5200\u5df2\u5920\u3001\u52a0\u78bc\u7121\u76ca\uff08\u5169\u689d\u5224\u6e96\u90fd\u4e0d\u6210\u7acb\uff09"
+  },
+  "stabler_ratio_threshold": 0.7,
+  "better_diff_threshold": 0.02,
+  "source_files": {
+    "c4_s20260909_R8": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c4_s20260909_summary.json",
+    "c4_s20260910_R8": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c4_s20260910_summary.json",
+    "c4_s20260911_R8": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c4_s20260911_summary.json",
+    "c4_s20260909_Rinf": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c4_s20260909_summary.json",
+    "c4_s20260910_Rinf": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c4_s20260910_summary.json",
+    "c4_s20260911_Rinf": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c4_s20260911_summary.json",
+    "c8_s20260909_R8": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c8_s20260909_summary.json",
+    "c8_s20260910_R8": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c8_s20260910_summary.json",
+    "c8_s20260911_R8": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c8_s20260911_summary.json",
+    "c8_s20260909_Rinf": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c8_s20260909_summary.json",
+    "c8_s20260910_Rinf": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c8_s20260910_summary.json",
+    "c8_s20260911_Rinf": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_c8_s20260911_summary.json"
+  }
+}

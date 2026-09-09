@@ -1,0 +1,22 @@
+=== 語料帳 + 長度分佈並排比較（p25/50/75，code_seq len）===
+                    corpus |  n_orig |   n_sub |  n_total |   sub% | all_p25 | all_p50 | all_p75 | sub_p25 | sub_p50 | sub_p75
+------------------------------------------------------------------------------------------------------------------------------
+   2刀(引用,corpus_aug_v1.pt) |    4952 |    8706 |    13658 |  63.7% |    25.0 |    41.0 |    50.0 |    20.0 |    30.0 |    40.0
+   4刀(corpus_aug_v2_c4.pt) |    4952 |   17420 |    22372 |  77.9% |    22.0 |    35.0 |    48.0 |    19.0 |    30.0 |    39.0
+   8刀(corpus_aug_v2_c8.pt) |    4952 |   34814 |    39766 |  87.5% |    21.0 |    32.0 |    44.0 |    19.0 |    30.0 |    39.0
+
+=== ledger / cut_seed 明細（可重現性紀錄）===
+2刀(引用,corpus_aug_v1.pt): n_cuts=2 cut_seed=20260909 ledger={'n_episodes': 4952, 'n_episodes_zero_candidates': 0, 'n_episodes_lt_n_cuts': 0, 'n_cuts_drawn_total': 9904, 'n_subsamples_created': 8706, 'n_subsamples_skipped_zero_remaining_wp': 1198}
+4刀(corpus_aug_v2_c4.pt): n_cuts=4 cut_seed=20260912 ledger={'n_episodes': 4952, 'n_episodes_zero_candidates': 0, 'n_episodes_lt_n_cuts': 0, 'n_cuts_drawn_total': 19808, 'n_subsamples_created': 17420, 'n_subsamples_skipped_zero_remaining_wp': 2388}
+8刀(corpus_aug_v2_c8.pt): n_cuts=8 cut_seed=20260913 ledger={'n_episodes': 4952, 'n_episodes_zero_candidates': 0, 'n_episodes_lt_n_cuts': 0, 'n_cuts_drawn_total': 39616, 'n_subsamples_created': 34814, 'n_subsamples_skipped_zero_remaining_wp': 4802}
+
+=== 短譜偏置判讀 ===
+整體語料(all, 原樣本+子樣本混合) p50 隨刀數變化：2刀(引用,corpus_aug_v1.pt)=41.0  ->  4刀(corpus_aug_v2_c4.pt)=35.0  ->  8刀(corpus_aug_v2_c8.pt)=32.0
+子樣本本身(sub_only) p50 隨刀數變化：2刀(引用,corpus_aug_v1.pt)=30.0  ->  4刀(corpus_aug_v2_c4.pt)=30.0  ->  8刀(corpus_aug_v2_c8.pt)=30.0
+子樣本佔整體語料比例：2刀(引用,corpus_aug_v1.pt)=63.7%  ->  4刀(corpus_aug_v2_c4.pt)=77.9%  ->  8刀(corpus_aug_v2_c8.pt)=87.5%
+
+判讀：整體語料 all_p50 隨刀數增加單調不增：True（41.0 -> 35.0 -> 32.0）
+      子樣本本身 sub_p50 三者差 <= 2.0（大致穩定，非工單既有門檻，質性參考）：True（30.0 / 30.0 / 30.0）
+      => 短譜偏置的機制正是「子樣本比例上升」而非「子樣本本身變更短」：個別子樣本長度分佈大致不變，但它在整體教材裡的佔比從 2刀64% 一路推高到 8刀88%，把整體教材的長度中位數往短的方向拖——短譜偏置確實發生，且機制可解釋（非雜訊）。
+
+saved: /home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_length_report_v2.json

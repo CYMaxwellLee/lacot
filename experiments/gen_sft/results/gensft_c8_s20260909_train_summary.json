@@ -1,0 +1,239 @@
+{
+  "args": {
+    "corpus": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_aug_v2_c8.pt",
+    "steps": 30000,
+    "batch_size": 256,
+    "lr": 0.0003,
+    "warmup": 500,
+    "weight_decay": 0.01,
+    "eval_every": 500,
+    "log_every": 20,
+    "patience_evals": 8,
+    "min_delta": 0.001,
+    "seed": 20260909,
+    "d_model": 128,
+    "n_layers": 3,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "device": "cuda",
+    "tag": "gensft_c8_s20260909",
+    "out_dir": "experiments/gen_sft/results"
+  },
+  "n_params": 620577,
+  "corpus_meta": {
+    "build_tasks_seed": 0,
+    "n_episodes": 5000,
+    "n_usable": 4952,
+    "n_skipped": 48,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_train": 4457,
+    "n_val": 495,
+    "delta_sub": 7.5,
+    "rho": 1.875,
+    "dict_ckpt": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "dataset": "antmaze-medium-stitch-v0",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "waypoints_M": {
+      "min": 1,
+      "p50": 3.0,
+      "max": 4
+    },
+    "code_len_L": {
+      "min": 50,
+      "p50": 50.0,
+      "max": 50
+    },
+    "built_at": "2026-09-09 17:29:13",
+    "aug_source_corpus": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_v1.pt",
+    "aug_ledger": {
+      "n_episodes": 4952,
+      "n_episodes_zero_candidates": 0,
+      "n_episodes_lt_n_cuts": 0,
+      "n_cuts_drawn_total": 39616,
+      "n_subsamples_created": 34814,
+      "n_subsamples_skipped_zero_remaining_wp": 4802
+    },
+    "aug_cut_seed": 20260913,
+    "aug_n_cuts_per_episode": 8,
+    "aug_avoid_last_chunks": 4,
+    "aug_split_meta": {
+      "split_seed": 42,
+      "val_frac": 0.1,
+      "n_train_episodes": 4457,
+      "n_val_episodes": 495,
+      "n_train": 35765,
+      "n_val": 4001
+    },
+    "aug_sample_ledger": {
+      "n_original": 4952,
+      "n_subsamples": 34814,
+      "n_total": 39766,
+      "n_train": 35765,
+      "n_val": 4001
+    },
+    "aug_length_dist": {
+      "all": {
+        "p25": 21.0,
+        "p50": 32.0,
+        "p75": 44.0,
+        "min": 5,
+        "max": 50
+      },
+      "sub_only": {
+        "p25": 19.0,
+        "p50": 30.0,
+        "p75": 39.0,
+        "min": 5,
+        "max": 49
+      }
+    },
+    "aug_self_check": {
+      "wp_xy_mismatches": 0,
+      "split_matches_original": true,
+      "self_check_pass": true,
+      "n_self_check_samples": 3
+    },
+    "aug_built_at": "2026-09-09 22:45:44",
+    "aug_script": "build_corpus_aug_v2.py\uff08\u5200\u6578\u52a0\u78bc rewrite-v1 \u6b653\uff0cn_cuts \u53c3\u6578\u5316\uff09"
+  },
+  "total_steps_run": 8000,
+  "stopped_early": true,
+  "best_step": 4000,
+  "best_held_out": {
+    "loss": 2.4908707786583135,
+    "top1_all": 0.2570381488620866,
+    "n_all": 131249,
+    "top1_codes_only": 0.25062869357475165,
+    "n_codes": 127248,
+    "top1_eos": 0.46088477880529866,
+    "n_eos": 4001
+  },
+  "smoke": {
+    "loss_at_0": 3.6592893600463867,
+    "loss_at_500": 2.8953213691711426,
+    "drop": 0.7639679908752441,
+    "random_baseline_ce_ln32": 3.4657359027997265
+  },
+  "random_baseline_top1": {
+    "codes_only_1_over_32": 0.03125,
+    "all_1_over_33": 0.030303030303030304
+  },
+  "held_out_curve": [
+    {
+      "step": 500,
+      "loss": 2.8666700704624417,
+      "top1_codes": 0.1700066012825349,
+      "top1_all": 0.18352139825827243,
+      "top1_eos": 0.6133466633341664
+    },
+    {
+      "step": 1000,
+      "loss": 2.632233172669411,
+      "top1_codes": 0.2193197535521187,
+      "top1_all": 0.23059985218935,
+      "top1_eos": 0.5893526618345414
+    },
+    {
+      "step": 1500,
+      "loss": 2.566097825031048,
+      "top1_codes": 0.2343298126493147,
+      "top1_all": 0.24272184930932808,
+      "top1_eos": 0.5096225943514121
+    },
+    {
+      "step": 2000,
+      "loss": 2.540357502426209,
+      "top1_codes": 0.2353042876901798,
+      "top1_all": 0.2481695098629323,
+      "top1_eos": 0.6573356660834792
+    },
+    {
+      "step": 2500,
+      "loss": 2.517452625531909,
+      "top1_codes": 0.243210109392682,
+      "top1_all": 0.25142286798375607,
+      "top1_eos": 0.5126218445388653
+    },
+    {
+      "step": 3000,
+      "loss": 2.4995231511287703,
+      "top1_codes": 0.2477524204702628,
+      "top1_all": 0.254173365130401,
+      "top1_eos": 0.45838540364908775
+    },
+    {
+      "step": 3500,
+      "loss": 2.4950493521617307,
+      "top1_codes": 0.24856186344775558,
+      "top1_all": 0.2576400582099673,
+      "top1_eos": 0.5463634091477131
+    },
+    {
+      "step": 4000,
+      "loss": 2.4908707786583135,
+      "top1_codes": 0.25062869357475165,
+      "top1_all": 0.2570381488620866,
+      "top1_eos": 0.46088477880529866
+    },
+    {
+      "step": 4500,
+      "loss": 2.491811276895443,
+      "top1_codes": 0.2501728907330567,
+      "top1_all": 0.2594838817819564,
+      "top1_eos": 0.5556110972256936
+    },
+    {
+      "step": 5000,
+      "loss": 2.4929276618893286,
+      "top1_codes": 0.2456620143342135,
+      "top1_all": 0.2572362456094904,
+      "top1_eos": 0.625343664083979
+    },
+    {
+      "step": 5500,
+      "loss": 2.5013917888779154,
+      "top1_codes": 0.24910411165597887,
+      "top1_all": 0.2565733834162546,
+      "top1_eos": 0.49412646838290425
+    },
+    {
+      "step": 6000,
+      "loss": 2.5092591628079073,
+      "top1_codes": 0.2483103860178549,
+      "top1_all": 0.2557581391096313,
+      "top1_eos": 0.4926268432891777
+    },
+    {
+      "step": 6500,
+      "loss": 2.519522663625056,
+      "top1_codes": 0.24315509870489124,
+      "top1_all": 0.25290859358928447,
+      "top1_eos": 0.5631092226943264
+    },
+    {
+      "step": 7000,
+      "loss": 2.5298889926066104,
+      "top1_codes": 0.24364233622532377,
+      "top1_all": 0.25390669643197283,
+      "top1_eos": 0.580354911272182
+    },
+    {
+      "step": 7500,
+      "loss": 2.5419167851397915,
+      "top1_codes": 0.24414529108512512,
+      "top1_all": 0.25152191635745796,
+      "top1_eos": 0.48612846788302927
+    },
+    {
+      "step": 8000,
+      "loss": 2.5557869280194514,
+      "top1_codes": 0.24343015214384509,
+      "top1_all": 0.24954094888342007,
+      "top1_eos": 0.4438890277430642
+    }
+  ],
+  "wall_seconds": 307.64793848991394,
+  "ckpt_path": "experiments/gen_sft/results/gensft_c8_s20260909_best.pt",
+  "loss_curve_png": "experiments/gen_sft/results/gensft_c8_s20260909_loss_curve.png"
+}
