@@ -1,0 +1,99 @@
+{
+  "args": {
+    "corpus": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/results/corpus_v1.pt",
+    "steps": 15,
+    "batch_size": 32,
+    "lr": 0.0003,
+    "warmup": 500,
+    "weight_decay": 0.01,
+    "eval_every": 10,
+    "log_every": 5,
+    "patience_evals": 100,
+    "min_delta": 0.001,
+    "seed": 1234,
+    "d_model": 128,
+    "n_layers": 3,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "device": "cpu",
+    "tag": "SMOKE_v2_soft2",
+    "out_dir": "experiments/gen_sft/results",
+    "weight_mode": "soft",
+    "scores_path": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/results/corpus_scores_v2.pt"
+  },
+  "weighting_info": {
+    "weight_mode": "soft",
+    "beta": 6.73828125,
+    "ess_frac": 0.5001404814216395
+  },
+  "n_params": 620577,
+  "corpus_meta": {
+    "build_tasks_seed": 0,
+    "n_episodes": 5000,
+    "n_usable": 4952,
+    "n_skipped": 48,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_train": 4457,
+    "n_val": 495,
+    "delta_sub": 7.5,
+    "rho": 1.875,
+    "dict_ckpt": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "dataset": "antmaze-medium-stitch-v0",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "waypoints_M": {
+      "min": 1,
+      "p50": 3.0,
+      "max": 4
+    },
+    "code_len_L": {
+      "min": 50,
+      "p50": 50.0,
+      "max": 50
+    },
+    "built_at": "2026-09-09 17:29:13"
+  },
+  "n_train_used": 4457,
+  "n_train_total": 4457,
+  "total_steps_run": 15,
+  "stopped_early": false,
+  "best_step": 15,
+  "best_held_out": {
+    "loss": 3.6592051024955436,
+    "top1_all": 0.03224400871459695,
+    "n_all": 25245,
+    "top1_codes_only": 0.03143434343434343,
+    "n_codes": 24750,
+    "top1_eos": 0.07272727272727272,
+    "n_eos": 495
+  },
+  "smoke": {
+    "loss_at_0": 3.660656452178955,
+    "loss_at_500": 3.67366361618042,
+    "drop": -0.013007164001464844,
+    "random_baseline_ce_ln32": 3.4657359027997265
+  },
+  "random_baseline_top1": {
+    "codes_only_1_over_32": 0.03125,
+    "all_1_over_33": 0.030303030303030304
+  },
+  "held_out_curve": [
+    {
+      "step": 10,
+      "loss": 3.6639103968607647,
+      "top1_codes": 0.031151515151515152,
+      "top1_all": 0.03188750247573777,
+      "top1_eos": 0.06868686868686869
+    },
+    {
+      "step": 15,
+      "loss": 3.6592051024955436,
+      "top1_codes": 0.03143434343434343,
+      "top1_all": 0.03224400871459695,
+      "top1_eos": 0.07272727272727272
+    }
+  ],
+  "wall_seconds": 1.00288724899292,
+  "ckpt_path": "experiments/gen_sft/results/SMOKE_v2_soft2_best.pt",
+  "loss_curve_png": "experiments/gen_sft/results/SMOKE_v2_soft2_loss_curve.png"
+}

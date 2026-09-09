@@ -1,0 +1,119 @@
+{
+  "n_train": 4457,
+  "n_val": 495,
+  "train_raw_summary": {
+    "dawdle_steps": {
+      "mean": 32.72739510881759,
+      "p10": 27.0,
+      "p50": 31.666666666666668,
+      "p90": 40.0
+    },
+    "jerk_mean": {
+      "mean": 1.8483384790804613,
+      "p10": 1.79865505695343,
+      "p50": 1.859582781791687,
+      "p90": 1.9132394313812255
+    },
+    "fall_frac": {
+      "mean": 0.006356293470944581,
+      "frac_nonzero": 0.037917881983396906
+    },
+    "reach_frac": {
+      "mean": 1.0,
+      "frac_all_reached": 1.0
+    }
+  },
+  "score_quality_summary": {
+    "mean": 0.30965772757698784,
+    "p10": 0.034911375364595015,
+    "p50": 0.2692393986986762,
+    "p90": 0.6361678258918556
+  },
+  "val_score_quality_mean": 0.30854245846393036,
+  "adversarial": {
+    "base_score": {
+      "pct_dawdle": 0.4274175454341485,
+      "pct_jerk": 0.26722010320843614,
+      "pct_fall": 0.0,
+      "badness": 0.4274175454341485,
+      "score_quality": 0.5725824545658516
+    },
+    "results": {
+      "reverse": {
+        "dawdle_steps": 180.0,
+        "jerk_mean": 1.8317877054214478,
+        "fall_frac": 0.0,
+        "reach_frac": 0.3333333333333333,
+        "score_quality": 0.0,
+        "pct_dawdle": 1.0,
+        "pct_jerk": 0.26722010320843614,
+        "pct_fall": 0.0,
+        "pct_rank_in_real": 0.0,
+        "below_real_p10": true,
+        "significantly_below_p10": true
+      },
+      "shuffle": {
+        "dawdle_steps": 5.0,
+        "jerk_mean": 2.5772955417633057,
+        "fall_frac": 0.0,
+        "reach_frac": 1.0,
+        "score_quality": 0.0,
+        "pct_dawdle": 0.0004487323311644604,
+        "pct_jerk": 1.0,
+        "pct_fall": 0.0,
+        "pct_rank_in_real": 0.0,
+        "below_real_p10": true,
+        "significantly_below_p10": true
+      }
+    },
+    "both_lit": true,
+    "p10_real": 0.034911375364595015,
+    "source_episode": 3247
+  },
+  "eyecheck": [
+    {
+      "idx": 3485,
+      "episode": 4775,
+      "M": 3,
+      "arclen": 27.319734703969125,
+      "dawdle_steps": 37.333333333333336,
+      "jerk_mean": 1.847464919090271,
+      "fall_frac": 0.0,
+      "reach_frac": 1.0,
+      "score_quality": 0.16760152568992592,
+      "note": "\u5230\u9f4a\u5168\u90e8\u817f\uff1b\u6b65\u901f\u6bd4 corpus \u4e2d\u4f4d\u6578\u6162(\u8f03\u78e8\u8e6d)\uff1b\u52d5\u4f5c\u5e73\u6ed1\uff1b\u6c92\u6709\u7ffb\u5012\u98a8\u96aa"
+    },
+    {
+      "idx": 2114,
+      "episode": 1903,
+      "M": 3,
+      "arclen": 27.593863530551175,
+      "dawdle_steps": 32.0,
+      "jerk_mean": 1.9195058345794678,
+      "fall_frac": 0.0,
+      "reach_frac": 1.0,
+      "score_quality": 0.07718196096028718,
+      "note": "\u5230\u9f4a\u5168\u90e8\u817f\uff1b\u6b65\u901f\u6bd4 corpus \u4e2d\u4f4d\u6578\u6162(\u8f03\u78e8\u8e6d)\uff1b\u52d5\u4f5c\u8f03\u8df3\u52d5\uff1b\u6c92\u6709\u7ffb\u5012\u98a8\u96aa"
+    },
+    {
+      "idx": 3814,
+      "episode": 321,
+      "M": 3,
+      "arclen": 27.281662957278126,
+      "dawdle_steps": 28.0,
+      "jerk_mean": 1.8592231273651123,
+      "fall_frac": 0.0,
+      "reach_frac": 1.0,
+      "score_quality": 0.5034776755665246,
+      "note": "\u5230\u9f4a\u5168\u90e8\u817f\uff1b\u6b65\u901f\u6bd4 corpus \u4e2d\u4f4d\u6578\u5feb(\u4e0d\u78e8\u8e6d)\uff1b\u52d5\u4f5c\u5e73\u6ed1\uff1b\u6c92\u6709\u7ffb\u5012\u98a8\u96aa"
+    }
+  ],
+  "weighting": {
+    "beta": 3.515625,
+    "ess": 2231.9712701459653,
+    "ess_frac": 0.5007788355723503,
+    "median_score": 0.2692393986986762,
+    "n_kept_hard": 2229,
+    "n_total": 4457
+  }
+}

@@ -1,0 +1,490 @@
+{
+  "config": {
+    "gensft_ckpt": "experiments/gen_sft/results/SMOKE_v2_widedeep_best.pt",
+    "dict_ckpt": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/walk_verify/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "n_traj": 3,
+    "bon_n": 1,
+    "workers": 2,
+    "seed": 20260908,
+    "rho": 1.875,
+    "tag": "SMOKE_v2_compat",
+    "out_dir": "experiments/gen_sft/results",
+    "gif_dir": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/results/gifs",
+    "skip_gifs": true,
+    "force_past_gate": false
+  },
+  "anchors": {
+    "greedy": 0.063,
+    "main_head": 0.32,
+    "lo_head": 0.124,
+    "teacher_relay_schedule": 0.554,
+    "teacher_relay_nn": 0.555
+  },
+  "control_seed": 99,
+  "bon_seed": 20260909,
+  "max_new_tokens": 60,
+  "gate": {
+    "pass_": true,
+    "threshold": 0.3,
+    "control_per_leg": 0.2
+  },
+  "n_tasks_eval": 3,
+  "n_tasks_control": 20,
+  "gensft_ckpt_meta": {
+    "config": {
+      "d_model": 256,
+      "n_layers": 6,
+      "n_heads": 8,
+      "dropout": 0.1,
+      "max_len": 96
+    },
+    "best_step": 15,
+    "held_out_at_best": {
+      "loss": 3.614699074074074,
+      "top1_all": 0.034858387799564274,
+      "n_all": 25245,
+      "top1_codes_only": 0.035555555555555556,
+      "n_codes": 24750,
+      "top1_eos": 0.0,
+      "n_eos": 495
+    }
+  },
+  "generation": {
+    "greedy_len": {
+      "min": 4,
+      "p50": 38.0,
+      "max": 60
+    },
+    "greedy_hit_cap": 1,
+    "bon_len": {
+      "min": 2,
+      "p50": 23.0,
+      "max": 31
+    },
+    "bon_hit_cap": 0,
+    "bon_winner_idx": [
+      0,
+      0,
+      0
+    ]
+  },
+  "results": {
+    "greedy": {
+      "n_tasks": 3,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 3,
+      "legs_reached_total": 0,
+      "per_leg_untimed_reach": 0.0,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.0,
+        "n_evaluable_N_data_1.25N": 3,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.0,
+        "n_evaluable_N_data_1.5N": 3,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.0,
+        "n_evaluable_N_table_1.25N": 3,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.0,
+        "n_evaluable_N_table_1.5N": 3,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.007621226165226226,
+        "5": 0.015628566603055553,
+        "25": 0.03974966098084405,
+        "50": 0.07008111033877243,
+        "75": 0.10216936841813691,
+        "95": 0.15333582429092227,
+        "99": 0.1804263230832297
+      },
+      "step_speed_mean": 0.07460001683259569,
+      "fall_rate_step": 0.0,
+      "fall_rate_task": 0.0,
+      "action_diff_q": {
+        "1": 0.510463278118196,
+        "5": 0.6532586428191599,
+        "25": 0.8917338666234859,
+        "50": 1.159164931022695,
+        "75": 1.56221114983567,
+        "95": 2.2915376402081096,
+        "99": 2.96920052630664
+      },
+      "action_diff_mean": 1.294324357772246,
+      "codes_active": 11,
+      "codes_perplexity": 6.464210702085362,
+      "codes_top1_frac": 0.2826086956521739,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 60
+        },
+        {
+          "ti": 1,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 152,
+          "ran_out_of_codes": true,
+          "n_codes_available": 38
+        },
+        {
+          "ti": 2,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 16,
+          "ran_out_of_codes": true,
+          "n_codes_available": 4
+        }
+      ],
+      "ran_out_of_codes_frac": 0.6666666666666666
+    },
+    "bon": {
+      "n_tasks": 3,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 3,
+      "legs_reached_total": 0,
+      "per_leg_untimed_reach": 0.0,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.0,
+        "n_evaluable_N_data_1.25N": 3,
+        "n_not_evaluable_N_data_1.25N": 0,
+        "reach_N_data_1.5N": 0.0,
+        "n_evaluable_N_data_1.5N": 3,
+        "n_not_evaluable_N_data_1.5N": 0,
+        "reach_N_table_1.25N": 0.0,
+        "n_evaluable_N_table_1.25N": 3,
+        "n_not_evaluable_N_table_1.25N": 0,
+        "reach_N_table_1.5N": 0.0,
+        "n_evaluable_N_table_1.5N": 3,
+        "n_not_evaluable_N_table_1.5N": 0
+      },
+      "step_speed_q": {
+        "1": 0.004317346508716225,
+        "5": 0.018901520721205052,
+        "25": 0.04608261062491853,
+        "50": 0.07507551783990016,
+        "75": 0.1221216018119215,
+        "95": 0.17955420420209298,
+        "99": 0.22478868423914453
+      },
+      "step_speed_mean": 0.08583187992158203,
+      "fall_rate_step": 0.0,
+      "fall_rate_task": 0.0,
+      "action_diff_q": {
+        "1": 0.5132019086378861,
+        "5": 0.6154623263112317,
+        "25": 0.9201352215153612,
+        "50": 1.1585830783902569,
+        "75": 1.5801225019026268,
+        "95": 2.3289864809100544,
+        "99": 2.7542369220693703
+      },
+      "action_diff_mean": 1.3034054663936114,
+      "codes_active": 27,
+      "codes_perplexity": 23.468094572976913,
+      "codes_top1_frac": 0.07142857142857142,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 124,
+          "ran_out_of_codes": true,
+          "n_codes_available": 31
+        },
+        {
+          "ti": 1,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 92,
+          "ran_out_of_codes": true,
+          "n_codes_available": 23
+        },
+        {
+          "ti": 2,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 8,
+          "ran_out_of_codes": true,
+          "n_codes_available": 2
+        }
+      ],
+      "ran_out_of_codes_frac": 1.0
+    },
+    "control": {
+      "n_tasks": 20,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 25,
+      "legs_reached_total": 5,
+      "per_leg_untimed_reach": 0.2,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.0,
+        "n_evaluable_N_data_1.25N": 22,
+        "n_not_evaluable_N_data_1.25N": 3,
+        "reach_N_data_1.5N": 0.045454545454545456,
+        "n_evaluable_N_data_1.5N": 22,
+        "n_not_evaluable_N_data_1.5N": 3,
+        "reach_N_table_1.25N": 0.0,
+        "n_evaluable_N_table_1.25N": 24,
+        "n_not_evaluable_N_table_1.25N": 1,
+        "reach_N_table_1.5N": 0.0,
+        "n_evaluable_N_table_1.5N": 23,
+        "n_not_evaluable_N_table_1.5N": 2
+      },
+      "step_speed_q": {
+        "1": 0.0075433459706991295,
+        "5": 0.017512346189285224,
+        "25": 0.050301350457664304,
+        "50": 0.0856828150146525,
+        "75": 0.12161584978037468,
+        "95": 0.17645709386799607,
+        "99": 0.21204002921031223
+      },
+      "step_speed_mean": 0.08929792925097074,
+      "fall_rate_step": 0.0,
+      "fall_rate_task": 0.0,
+      "action_diff_q": {
+        "1": 0.40783590638801037,
+        "5": 0.5796645066916565,
+        "25": 0.8766320977365947,
+        "50": 1.1800797469723943,
+        "75": 1.606154717986355,
+        "95": 2.345441497434895,
+        "99": 2.8403038841100936
+      },
+      "action_diff_mean": 1.287385101349422,
+      "codes_active": 32,
+      "codes_perplexity": 31.58130494140293,
+      "codes_top1_frac": 0.042,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 1,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 2,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 3,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 4,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 5,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 6,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 7,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 8,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 9,
+          "episode": 263,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 10,
+          "episode": 61,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 11,
+          "episode": 234,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 12,
+          "episode": 290,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 13,
+          "episode": 136,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 14,
+          "episode": 129,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 15,
+          "episode": 458,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 16,
+          "episode": 407,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 17,
+          "episode": 94,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 18,
+          "episode": 71,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 19,
+          "episode": 483,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        }
+      ],
+      "ran_out_of_codes_frac": 0.0
+    }
+  },
+  "artifacts": {
+    "pngs": {
+      "speed": "experiments/gen_sft/results/SMOKE_v2_compat_speed_overlay.png",
+      "z": "experiments/gen_sft/results/SMOKE_v2_compat_z_overlay.png",
+      "adiff": "experiments/gen_sft/results/SMOKE_v2_compat_adiff_overlay.png"
+    },
+    "gifs": {}
+  }
+}

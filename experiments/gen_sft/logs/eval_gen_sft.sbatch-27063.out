@@ -1,0 +1,41 @@
+worktree: gen-sft-v1 1b2fb5411561c3924e05c74b6930233b3f4590ce
+node: zeldajr  gensft_ckpt=experiments/gen_sft/results/gensft_v2_softw_best.pt  n_traj=200  bon_n=16  tag=gensft_v2_softw_eval
+=== gen_sft eval  gensft_ckpt=gensft_v2_softw_best.pt  n_traj=200  bon_n=16  seed=20260908  rho=1.875 ===
+dict: seg_len=4 K=32  fall_line=0.2573
+gensft model: {'d_model': 128, 'n_layers': 3, 'n_heads': 4, 'dropout': 0.1, 'max_len': 96}  best_step=1500  held_out_at_best={'loss': 2.3956929125816995, 'top1_all': 0.2776787482669836, 'n_all': 25245, 'top1_codes_only': 0.2632323232323232, 'n_codes': 24750, 'top1_eos': 1.0, 'n_eos': 495}
+tasks: 200 usable (要求>=200)  skipped=1
+eval_tasks=200  waypoints M: min=1 p50=3 max=4  total_legs=595
+
+=== 對照組：隨機字串 x 20 題（control_seed=99）===
+  parallel_walk: 20 rollouts, 8 workers, 0.6s
+control per-leg 不限時到達率 = 0.2000  (reached 5/25)  閘門門檻 < 0.3
+閘門通過（PASS），繼續 greedy/BoN。
+
+greedy 生成：200 條，長度 min/p50/max=50/50/50  撞 max_new_tokens 未出 EOS 的條數=0  (1.5s)
+BoN 生成：200x16=3200 條（temperature=1.0, bon_seed=20260909），長度 min/p50/max=2/50/60  撞 cap 條數=15  (58.8s)
+
+=== 開始 rollout：greedy 200 + BoN 200x16 = 3400 條 ===
+  parallel_walk: 3400 rollouts, 8 workers, 30.2s
+
+[greedy] per-leg=0.5282  completion=0.1200  speed_p50=0.1063  fall(step)=0.03%  adiff_p50=1.241
+[BoN N=16] per-leg=0.8089  completion=0.4850  speed_p50=0.1171  fall(step)=0.01%  adiff_p50=1.252
+[control random] per-leg=0.2000  completion=0.0000
+
+=== 對照行（一手引用，非本次量測）===
+  greedy                     = 0.063
+  main_head                  = 0.320
+  lo_head                    = 0.124
+  teacher_relay_schedule     = 0.554
+  teacher_relay_nn           = 0.555
+（參照：已訓練主頭 closed-loop per-leg 量級 = 0.32——跟本次 u 生成開環播放是不同機制，不嚴格同分佈，見 NOTE 可比性註記）
+驗收①「學會寫譜」門檻(>=0.3): greedy PASS  (greedy=0.5282)
+驗收②「貼近教材上界」門檻(>=0.45): greedy PASS  BoN PASS
+saved: experiments/gen_sft/results/gensft_v2_softw_eval_speed_overlay.png
+saved: experiments/gen_sft/results/gensft_v2_softw_eval_z_overlay.png
+saved: experiments/gen_sft/results/gensft_v2_softw_eval_adiff_overlay.png
+saved gif: experiments/gen_sft/results/gifs/greedy_success_0_ep286.gif (28 幀, episode=286, legs 3/3)
+saved gif: experiments/gen_sft/results/gifs/greedy_success_1_ep90.gif (25 幀, episode=90, legs 3/3)
+saved gif: experiments/gen_sft/results/gifs/greedy_fail_0_ep319.gif (50 幀, episode=319, legs 0/3)
+saved gif: experiments/gen_sft/results/gifs/greedy_fail_1_ep260.gif (50 幀, episode=260, legs 1/3)
+saved: experiments/gen_sft/results/gensft_v2_softw_eval_summary.json
+=== done wall=100.9s ===

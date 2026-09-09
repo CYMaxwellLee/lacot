@@ -1,0 +1,153 @@
+{
+  "args": {
+    "corpus": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/results/corpus_v1.pt",
+    "steps": 30000,
+    "batch_size": 256,
+    "lr": 0.0003,
+    "warmup": 500,
+    "weight_decay": 0.01,
+    "eval_every": 500,
+    "log_every": 20,
+    "patience_evals": 8,
+    "min_delta": 0.001,
+    "seed": 1234,
+    "d_model": 256,
+    "n_layers": 6,
+    "n_heads": 8,
+    "dropout": 0.1,
+    "device": "cuda",
+    "tag": "gensft_v2_widedeep",
+    "out_dir": "experiments/gen_sft/results",
+    "weight_mode": "none",
+    "scores_path": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/results/corpus_scores_v2.pt"
+  },
+  "weighting_info": {
+    "weight_mode": "none"
+  },
+  "n_params": 4790049,
+  "corpus_meta": {
+    "build_tasks_seed": 0,
+    "n_episodes": 5000,
+    "n_usable": 4952,
+    "n_skipped": 48,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_train": 4457,
+    "n_val": 495,
+    "delta_sub": 7.5,
+    "rho": 1.875,
+    "dict_ckpt": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "dataset": "antmaze-medium-stitch-v0",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "waypoints_M": {
+      "min": 1,
+      "p50": 3.0,
+      "max": 4
+    },
+    "code_len_L": {
+      "min": 50,
+      "p50": 50.0,
+      "max": 50
+    },
+    "built_at": "2026-09-09 17:29:13"
+  },
+  "n_train_used": 4457,
+  "n_train_total": 4457,
+  "total_steps_run": 5000,
+  "stopped_early": true,
+  "best_step": 1000,
+  "best_held_out": {
+    "loss": 2.311748381486433,
+    "top1_all": 0.29431570608041197,
+    "n_all": 25245,
+    "top1_codes_only": 0.2802020202020202,
+    "n_codes": 24750,
+    "top1_eos": 1.0,
+    "n_eos": 495
+  },
+  "smoke": {
+    "loss_at_0": 3.6572911739349365,
+    "loss_at_500": 2.3944571018218994,
+    "drop": 1.262834072113037,
+    "random_baseline_ce_ln32": 3.4657359027997265
+  },
+  "random_baseline_top1": {
+    "codes_only_1_over_32": 0.03125,
+    "all_1_over_33": 0.030303030303030304
+  },
+  "held_out_curve": [
+    {
+      "step": 500,
+      "loss": 2.3609243476430977,
+      "top1_codes": 0.27046464646464646,
+      "top1_all": 0.28476926123984947,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 1000,
+      "loss": 2.311748381486433,
+      "top1_codes": 0.2802020202020202,
+      "top1_all": 0.29431570608041197,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 1500,
+      "loss": 2.4709606790948704,
+      "top1_codes": 0.2596767676767677,
+      "top1_all": 0.2741929094870271,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 2000,
+      "loss": 2.863113518766092,
+      "top1_codes": 0.2370909090909091,
+      "top1_all": 0.2520499108734403,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 2500,
+      "loss": 3.3445464138938403,
+      "top1_codes": 0.22577777777777777,
+      "top1_all": 0.240958605664488,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 3000,
+      "loss": 3.9774370543672015,
+      "top1_codes": 0.2174949494949495,
+      "top1_all": 0.23283818577936224,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 3500,
+      "loss": 4.492514916320063,
+      "top1_codes": 0.2101010101010101,
+      "top1_all": 0.2255892255892256,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 4000,
+      "loss": 4.929892676767677,
+      "top1_codes": 0.2073131313131313,
+      "top1_all": 0.2228560110913052,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 4500,
+      "loss": 5.29460660526837,
+      "top1_codes": 0.20694949494949494,
+      "top1_all": 0.22249950485244602,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 5000,
+      "loss": 5.6290930134680135,
+      "top1_codes": 0.20763636363636365,
+      "top1_all": 0.2231729055258467,
+      "top1_eos": 1.0
+    }
+  ],
+  "wall_seconds": 759.8025977611542,
+  "ckpt_path": "experiments/gen_sft/results/gensft_v2_widedeep_best.pt",
+  "loss_curve_png": "experiments/gen_sft/results/gensft_v2_widedeep_loss_curve.png"
+}

@@ -1,0 +1,163 @@
+{
+  "args": {
+    "corpus": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/results/corpus_v1.pt",
+    "steps": 30000,
+    "batch_size": 256,
+    "lr": 0.0003,
+    "warmup": 500,
+    "weight_decay": 0.01,
+    "eval_every": 500,
+    "log_every": 20,
+    "patience_evals": 8,
+    "min_delta": 0.001,
+    "seed": 1234,
+    "d_model": 128,
+    "n_layers": 3,
+    "n_heads": 4,
+    "dropout": 0.1,
+    "device": "cuda",
+    "tag": "gensft_v2_hardf",
+    "out_dir": "experiments/gen_sft/results",
+    "weight_mode": "hard",
+    "scores_path": "experiments/gen_sft/results/corpus_scores_v2.pt"
+  },
+  "weighting_info": {
+    "weight_mode": "hard",
+    "median_score": 0.2692393986986762,
+    "n_kept": 2229,
+    "n_total": 4457
+  },
+  "n_params": 620577,
+  "corpus_meta": {
+    "build_tasks_seed": 0,
+    "n_episodes": 5000,
+    "n_usable": 4952,
+    "n_skipped": 48,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_train": 4457,
+    "n_val": 495,
+    "delta_sub": 7.5,
+    "rho": 1.875,
+    "dict_ckpt": "/home/cymaxwelllee/Projects/lacot-gensft/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "dataset": "antmaze-medium-stitch-v0",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "waypoints_M": {
+      "min": 1,
+      "p50": 3.0,
+      "max": 4
+    },
+    "code_len_L": {
+      "min": 50,
+      "p50": 50.0,
+      "max": 50
+    },
+    "built_at": "2026-09-09 17:29:13"
+  },
+  "n_train_used": 2229,
+  "n_train_total": 4457,
+  "total_steps_run": 5500,
+  "stopped_early": true,
+  "best_step": 1500,
+  "best_held_out": {
+    "loss": 2.411888105936819,
+    "top1_all": 0.2752624282036047,
+    "n_all": 25245,
+    "top1_codes_only": 0.26076767676767676,
+    "n_codes": 24750,
+    "top1_eos": 1.0,
+    "n_eos": 495
+  },
+  "smoke": {
+    "loss_at_0": 3.655092716217041,
+    "loss_at_500": 2.545741558074951,
+    "drop": 1.1093511581420898,
+    "random_baseline_ce_ln32": 3.4657359027997265
+  },
+  "random_baseline_top1": {
+    "codes_only_1_over_32": 0.03125,
+    "all_1_over_33": 0.030303030303030304
+  },
+  "held_out_curve": [
+    {
+      "step": 500,
+      "loss": 2.5666282153644286,
+      "top1_codes": 0.2282020202020202,
+      "top1_all": 0.2433353139235492,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 1000,
+      "loss": 2.41922603795306,
+      "top1_codes": 0.25907070707070706,
+      "top1_all": 0.27359873242226185,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 1500,
+      "loss": 2.411888105936819,
+      "top1_codes": 0.26076767676767676,
+      "top1_all": 0.2752624282036047,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 2000,
+      "loss": 2.4582551928599723,
+      "top1_codes": 0.25652525252525255,
+      "top1_all": 0.2711031887502476,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 2500,
+      "loss": 2.542333723262032,
+      "top1_codes": 0.2517979797979798,
+      "top1_all": 0.26646860764507824,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 3000,
+      "loss": 2.6227151261388393,
+      "top1_codes": 0.2467070707070707,
+      "top1_all": 0.2614775203010497,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 3500,
+      "loss": 2.7410542310358488,
+      "top1_codes": 0.2402020202020202,
+      "top1_all": 0.25510001980590213,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 4000,
+      "loss": 2.825598819073084,
+      "top1_codes": 0.23426262626262626,
+      "top1_all": 0.2492770845712022,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 4500,
+      "loss": 2.964086328976035,
+      "top1_codes": 0.23054545454545455,
+      "top1_all": 0.24563279857397505,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 5000,
+      "loss": 3.008270666221034,
+      "top1_codes": 0.22965656565656567,
+      "top1_all": 0.24476133887898593,
+      "top1_eos": 1.0
+    },
+    {
+      "step": 5500,
+      "loss": 3.1508208618043176,
+      "top1_codes": 0.22585858585858587,
+      "top1_all": 0.2410378292731234,
+      "top1_eos": 1.0
+    }
+  ],
+  "wall_seconds": 209.42797684669495,
+  "ckpt_path": "experiments/gen_sft/results/gensft_v2_hardf_best.pt",
+  "loss_curve_png": "experiments/gen_sft/results/gensft_v2_hardf_loss_curve.png"
+}
