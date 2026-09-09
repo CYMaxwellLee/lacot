@@ -25,10 +25,6 @@ split(episode-level, split_seed=42): {'split_seed': 42, 'val_frac': 0.1, 'n_trai
   episode= 3383 cut_chunk= 6/50  code_seq len=44 (parent len=50): PASS bit-exact suffix   s0_obs: PASS bit-exact (L2=0.00000000)   M=3 (parent M=3)
   episode= 2128 cut_chunk=18/50  code_seq len=32 (parent len=50): PASS bit-exact suffix   s0_obs: PASS bit-exact (L2=0.00000000)   M=2 (parent M=3)
 驗收①自檢：5/5 PASS
-Traceback (most recent call last):
-  File "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/build_corpus_aug.py", line 164, in <module>
-    main()
-  File "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/build_corpus_aug.py", line 144, in main
-    meta=dict(**{k: v for k, v in orig_meta.items()},
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: dict() got multiple values for keyword argument 'built_at'
+
+saved: /home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/corpus_aug_v1.pt (10.53 MB)
+=== done wall=1.2s ===
