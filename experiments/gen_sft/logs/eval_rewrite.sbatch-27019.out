@@ -1,0 +1,39 @@
+worktree: rewrite-v1 1b2fb5411561c3924e05c74b6930233b3f4590ce
+node: zeldajr  gensft_ckpt=experiments/gen_sft/results/gensft_v1_best.pt  n_traj=200  tag=rewrite_eval
+=== rewrite eval  gensft_ckpt=gensft_v1_best.pt  n_traj=200  seed=20260908  rho=1.875  R_grid=['2', '4', '8', '16', 'inf'] ===
+dict: seg_len=4 K=32  fall_line=0.2573
+gensft model: {'d_model': 128, 'n_layers': 3, 'n_heads': 4, 'dropout': 0.1, 'max_len': 96}  best_step=2500  held_out_at_best={'loss': 2.285277251683502, 'top1_all': 0.3010497128144187, 'n_all': 25245, 'top1_codes_only': 0.2870707070707071, 'n_codes': 24750, 'top1_eos': 1.0, 'n_eos': 495}
+tasks: 200 usable (要求>=200)  skipped=1
+eval_tasks=200  waypoints M: min=1 p50=3 max=4  total_legs=595
+
+obs_proxy_check（sim_obs(u) vs raw['observations'][s0]，reset 剛完、零漂移）: n=5  L2 min/p50/max=0.000000/0.000000/0.000000
+    episode=319  L2=0.000000  max_abs=0.000000
+    episode=260  L2=0.000000  max_abs=0.000000
+    episode=56  L2=0.000000  max_abs=0.000000
+    episode=423  L2=0.000000  max_abs=0.000000
+    episode=286  L2=0.000000  max_abs=0.000000
+
+初始生成（貪心，全部 R 共用第一個 block）：200 條，長度 min/p50/max=50/50/50  (1.2s)
+
+=== 開始 rollout：5 個 R x 200 題 = 1000 條 ===
+  parallel_walk_rewrite: 1000 rollouts, 8 workers, 66.7s
+
+=== 驗收①管線斷言：R=∞ per-leg=0.5875  錨點=0.5875  容忍=±0.01  PASS ===
+
+=== 主表（200 題，貪心解碼，錨點 R=∞=0.5875，清楚贏門檻>=0.66）===
+     R |  per-leg | completion | fall(step) | adiff_p50 | avg_rewrites | clear_win
+----------------------------------------------------------------------------------
+     2 |   0.5495 |     0.1350 |      0.03% |     1.260 |        23.04 |          
+     4 |   0.5415 |     0.1150 |      0.03% |     1.248 |        11.47 |          
+     8 |   0.6381 |     0.2200 |      0.02% |     1.271 |         5.46 |          
+    16 |   0.6111 |     0.1950 |      0.03% |     1.274 |         2.71 |          
+   inf |   0.5875 |     0.1750 |      0.02% |     1.261 |         0.00 |          
+
+甜蜜點候選：R=8  per-leg=0.6381  增益(對 R=∞ 本次量測)=+0.0506  增益(對錨點 0.5875)=+0.0506
+驗收②「任一 R 清楚贏」(>=0.66): FAIL —— 沒有任何 R 清楚贏，重寫在本設定下無效（合法答案）
+步2 觸發判準（最佳 R 對錨點增益 < 0.04）: 不觸發
+saved gif: experiments/gen_sft/results/gifs_rewrite/R8_success_0_ep319.gif (23 幀, episode=319, legs 3/3, n_rewrites=2)
+saved gif: experiments/gen_sft/results/gifs_rewrite/R8_fail_0_ep260.gif (50 幀, episode=260, legs 1/3, n_rewrites=6)
+
+saved: experiments/gen_sft/results/rewrite_eval_summary.json
+=== done wall=73.3s ===
