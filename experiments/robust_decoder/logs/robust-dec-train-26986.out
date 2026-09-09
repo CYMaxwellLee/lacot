@@ -1,0 +1,39 @@
+host: zeldajr
+python: /home/cymaxwelllee/venvs/lacot-rocm/bin/python
+Python 3.12.3
+sigma_xy=1.0 tag=sigma1.0 extra_args=
+rocm-smi 摘要：
+
+
+============================ ROCm System Management Interface ============================
+=========================================== ID ===========================================
+GPU[0]		: Device Name: 		Navi 48 [Radeon AI PRO R9700]
+GPU[0]		: Device ID: 		0x7551
+GPU[0]		: Device Rev: 		0xc0
+GPU[0]		: Subsystem ID: 	0x5413
+GPU[0]		: GUID: 		33599
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+GPU: AMD Radeon Graphics  count=1
+=== robust-decoder fine-tune  tag=sigma1.0  sigma_xy=1.0  steps=20000  seed=20261909  device=cuda ===
+噪音校準參考點（一手來源：/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis/results/drift_summary.json）：{'fail_threshold_m': 0.23523661929341885, 'succ_leg_start_p75_m': 0.357982619350346, 'fail_leg_start_median_m': 1.1831176980018214}
+segments total=250000 train=225000 val=25000
+REPRO CHECK obs stats（重算 vs ckpt buffer）：mean PASS  std PASS  (max|Δmean|=0.00e+00  max|Δstd|=0.00e+00)
+decoder trainable params = 302624（encoder frozen, vq codebook frozen）
+xy_std_ref(train, mean of obs_std[0:2])=5.5559  rho=sigma_xy/xy_std_ref=0.17999
+noise_std[xy]=[1.0, 1.0]
+noise_std[other 27 dims] p25/50/75=[0.05031820014119148, 0.1334589421749115, 0.29711030423641205]
+  step      0 train_recon(noisy,batch)=0.10704 val_mse_noisy=0.11758 val_mse_clean=0.10788 (0s)
+  step   2500 train_recon(noisy,batch)=0.10436 val_mse_noisy=0.11226 val_mse_clean=0.10533 (4s)
+  step   5000 train_recon(noisy,batch)=0.09952 val_mse_noisy=0.11212 val_mse_clean=0.10538 (8s)
+  step   7500 train_recon(noisy,batch)=0.10328 val_mse_noisy=0.11190 val_mse_clean=0.10529 (12s)
+  step  10000 train_recon(noisy,batch)=0.10174 val_mse_noisy=0.11167 val_mse_clean=0.10519 (16s)
+  step  12500 train_recon(noisy,batch)=0.10562 val_mse_noisy=0.11128 val_mse_clean=0.10481 (20s)
+  step  15000 train_recon(noisy,batch)=0.10407 val_mse_noisy=0.11142 val_mse_clean=0.10494 (24s)
+  step  17500 train_recon(noisy,batch)=0.10426 val_mse_noisy=0.11148 val_mse_clean=0.10504 (28s)
+  step  19999 train_recon(noisy,batch)=0.09945 val_mse_noisy=0.11138 val_mse_clean=0.10503 (32s)
+loss-flatness（val_mse_noisy）：late-8pt mean=0.11140 vs prev-8pt mean=0.11141  rel_improve=0.00%  flat(<2%)=True
+saved: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/train_sigma1.0.json
+saved: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/loss_sigma1.0.png
+saved: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/ckpt_sigma1.0.pt
+=== done sigma1.0 wall=34.0s ===

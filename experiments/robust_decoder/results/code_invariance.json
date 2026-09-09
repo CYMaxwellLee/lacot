@@ -1,0 +1,116 @@
+{
+  "base_ckpt": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+  "n_sample": 10,
+  "sample_seed": 0,
+  "sample_pick_idx": [
+    212648,
+    203317,
+    159235,
+    127780,
+    67445,
+    10243,
+    4131,
+    76955,
+    43816,
+    18809
+  ],
+  "base_code_idx": [
+    11,
+    29,
+    12,
+    25,
+    20,
+    18,
+    24,
+    0,
+    6,
+    11
+  ],
+  "results": {
+    "sigma0": {
+      "status": "PASS",
+      "code_match": true,
+      "code_idx_ft": [
+        11,
+        29,
+        12,
+        25,
+        20,
+        18,
+        24,
+        0,
+        6,
+        11
+      ],
+      "encoder_vq_weights_bitexact": true,
+      "changed_frozen_keys": [],
+      "n_decoder_tensors_changed": 6,
+      "n_decoder_tensors_total": 6,
+      "sigma_xy": 0.0
+    },
+    "sigma0.1": {
+      "status": "PASS",
+      "code_match": true,
+      "code_idx_ft": [
+        11,
+        29,
+        12,
+        25,
+        20,
+        18,
+        24,
+        0,
+        6,
+        11
+      ],
+      "encoder_vq_weights_bitexact": true,
+      "changed_frozen_keys": [],
+      "n_decoder_tensors_changed": 6,
+      "n_decoder_tensors_total": 6,
+      "sigma_xy": 0.1
+    },
+    "sigma0.35": {
+      "status": "PASS",
+      "code_match": true,
+      "code_idx_ft": [
+        11,
+        29,
+        12,
+        25,
+        20,
+        18,
+        24,
+        0,
+        6,
+        11
+      ],
+      "encoder_vq_weights_bitexact": true,
+      "changed_frozen_keys": [],
+      "n_decoder_tensors_changed": 6,
+      "n_decoder_tensors_total": 6,
+      "sigma_xy": 0.35
+    },
+    "sigma1.0": {
+      "status": "PASS",
+      "code_match": true,
+      "code_idx_ft": [
+        11,
+        29,
+        12,
+        25,
+        20,
+        18,
+        24,
+        0,
+        6,
+        11
+      ],
+      "encoder_vq_weights_bitexact": true,
+      "changed_frozen_keys": [],
+      "n_decoder_tensors_changed": 6,
+      "n_decoder_tensors_total": 6,
+      "sigma_xy": 1.0
+    }
+  },
+  "all_pass": true
+}

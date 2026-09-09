@@ -1,0 +1,35 @@
+host: zeldajr
+Python 3.11.15
+=== drift_compare（schedule, 200 題, seed=20260908, rho=1.875）===
+tasks: 200 usable, skipped=1
+
+=== STEP 1：REUSE CHECK（原始 ckpt，比對 drift_summary.json）===
+completion_ratio: mine=0.1250000000 vs gt=0.1250000000 -> PASS
+  j=  1  mine=0.047361  gt=0.047361  PASS
+  j=  2  mine=0.156067  gt=0.156067  PASS
+  j=  3  mine=0.304937  gt=0.304937  PASS
+  j=  4  mine=0.468194  gt=0.468194  PASS
+  j=  5  mine=0.597852  gt=0.597852  PASS
+  j=  6  mine=0.748525  gt=0.748525  PASS
+  j=  8  mine=1.090046  gt=1.090046  PASS
+  j= 10  mine=1.328919  gt=1.328919  PASS
+  j= 15  mine=2.333240  gt=2.333240  PASS
+  j= 20  mine=4.073880  gt=4.073880  PASS
+  j= 30  mine=6.775940  gt=6.775940  PASS
+  j= 40  mine=7.401060  gt=7.401060  PASS
+  j= 50  mine=7.568381  gt=7.568381  PASS
+REUSE CHECK PASS（completion_ratio 與 accounting_table 全部核對點一致）
+best_tag 從 eval_summary.json 讀到：sigma1.0（gif_tag_note: best_tag 本身就是 sigma0（噪音沒有比對照組好），drift 加測改用 best_nonzero_tag 對照，已標明是替代選擇）
+比較對象：ctrl=sigma0  best=sigma1.0
+
+=== STEP 2：sigma0 vs sigma1.0（200 題全量 run_one_drift）===
+[sigma0] completion_ratio=0.140  j_max=50  d_xy_p50(j=1)=0.0442  d_xy_p50(j=10)=1.3293  d_xy_p50(j=50 or j_max)=6.9034
+[sigma1.0] completion_ratio=0.120  j_max=50  d_xy_p50(j=1)=0.0474  d_xy_p50(j=10)=1.3349  d_xy_p50(j=50 or j_max)=7.3986
+
+=== 增長斜率比較（p50 xy drift, m/chunk）===
+  [sigma0] slope(j:1→10)=0.1427884472784053  slope(j:10→50)=0.13935271783813308
+  [sigma1.0] slope(j:1→10)=0.1430583278095506  slope(j:10→50)=0.15159225633665435
+  最好顆斜率比對照顆低：早段(j1-10)=False  晚段(j10-50)=False
+saved: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/drift_compare_curve_xy.png
+saved: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/drift_compare_summary.json
+=== done wall=25.9s ===

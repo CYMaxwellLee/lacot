@@ -1,0 +1,130 @@
+{
+  "config": {
+    "base_ckpt": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "sigma_xy": 0.35,
+    "steps": 50,
+    "batch": 512,
+    "lr": 0.0003,
+    "eval_every": 10,
+    "eval_repeats": 2,
+    "seed": 20261259,
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "out_dir": "/home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results",
+    "tag": "smoke",
+    "threads": 4,
+    "device": "cpu"
+  },
+  "noise": {
+    "xy_std_ref": 5.55586576461792,
+    "rho": 0.0629964824256458,
+    "noise_std": [
+      0.3499999940395355,
+      0.3499999940395355,
+      0.005796437617391348,
+      0.010886677540838718,
+      0.00841477233916521,
+      0.007656589150428772,
+      0.016117548570036888,
+      0.026976026594638824,
+      0.018386710435152054,
+      0.02652847021818161,
+      0.018222158774733543,
+      0.026024146005511284,
+      0.017000582069158554,
+      0.026371998712420464,
+      0.01554881501942873,
+      0.06753350049257278,
+      0.062088675796985626,
+      0.04671063274145126,
+      0.07035452127456665,
+      0.06783334910869598,
+      0.06803029775619507,
+      0.15465594828128815,
+      0.13108068704605103,
+      0.201872318983078,
+      0.12295780330896378,
+      0.1866869479417801,
+      0.1130722239613533,
+      0.193266823887825,
+      0.09490499645471573
+    ],
+    "calibration_ref": {
+      "fail_threshold_m": 0.23523661929341885,
+      "succ_leg_start_p75_m": 0.357982619350346,
+      "fail_leg_start_median_m": 1.1831176980018214
+    },
+    "calibration_ref_source": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis/results/drift_summary.json"
+  },
+  "repro_check_obs_stats": {
+    "mean_ok": true,
+    "std_ok": true,
+    "max_abs_diff_mean": 0.0,
+    "max_abs_diff_std": 0.0
+  },
+  "metrics": {
+    "final_val_mse_noisy": 0.10637436523437499,
+    "final_val_mse_clean": 0.10517779296875,
+    "final_train_recon_noisy_batch": 0.09264214336872101
+  },
+  "flatness": {
+    "late_tail": 0.10646118164062499,
+    "prev_tail": 0.10662291259765624,
+    "rel_improve": 0.0015168499255085416,
+    "n_tail_points": 2,
+    "is_flat_lt2pct": true
+  },
+  "loss_curve": [
+    [
+      0,
+      0.09710153192281723,
+      0.109045595703125,
+      0.1078944921875
+    ],
+    [
+      10,
+      0.09685944765806198,
+      0.10734732421875001,
+      0.106166640625
+    ],
+    [
+      20,
+      0.09849821031093597,
+      0.106642060546875,
+      0.10545115234375
+    ],
+    [
+      30,
+      0.09289146959781647,
+      0.1066037646484375,
+      0.10545134765625
+    ],
+    [
+      40,
+      0.09341930598020554,
+      0.106547998046875,
+      0.1053212109375
+    ],
+    [
+      49,
+      0.09264214336872101,
+      0.10637436523437499,
+      0.10517779296875
+    ]
+  ],
+  "data": {
+    "n_segments": 250000,
+    "n_train": 225000,
+    "n_val": 25000
+  },
+  "timing": {
+    "train_seconds": 2.428624391555786,
+    "wall_seconds": 3.907327890396118
+  },
+  "artifacts": {
+    "loss_png": "/home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/loss_smoke.png",
+    "ckpt": "/home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/ckpt_smoke.pt"
+  },
+  "n_decoder_trainable_params": 302624
+}

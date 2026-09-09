@@ -1,0 +1,132 @@
+{
+  "status": "OK",
+  "baseline": 0.5535714285714286,
+  "baseline_source": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/teacher_relay/results/teacher_relay_summary.json",
+  "thresholds": {
+    "win": 0.62,
+    "sanity_band": 0.07
+  },
+  "compare_reference": {
+    "greedy": 0.063,
+    "main_head": 0.32,
+    "lo_head": 0.124
+  },
+  "config": {
+    "n_traj": 200,
+    "seed": 20260908,
+    "rho": 1.875,
+    "n_tasks_used": 200,
+    "skipped": [
+      {
+        "episode": 386,
+        "arclen": 3.36172704454282,
+        "reason": "arclen<DELTA_SUB"
+      }
+    ]
+  },
+  "repro_check": {
+    "per_leg": 0.5535714285714286,
+    "diff": 0.0,
+    "status": "PASS"
+  },
+  "sanity_check": {
+    "tag": "sigma0",
+    "per_leg": 0.5773955773955773,
+    "diff": 0.02382414882414874,
+    "band": 0.07,
+    "status": "PASS"
+  },
+  "table_rows": [
+    {
+      "tag": "sigma0",
+      "per_leg_untimed_reach": 0.5773955773955773,
+      "completion_ratio": 0.14,
+      "legs_reached_total": 235,
+      "legs_attempted_total": 407,
+      "step_speed_p50": 0.10446617867335596,
+      "step_speed_mean": 0.10844140382890204,
+      "fall_rate_task": 0.025,
+      "fall_rate_step": 0.0001327668613913967,
+      "action_diff_p50": 1.2667235255897475,
+      "codes_active": 32,
+      "codes_perplexity": 31.024036552582956,
+      "reach_1_25N_data": 0.4270833333333333,
+      "reach_1_5N_data": 0.48138297872340424,
+      "judge": "ineffective"
+    },
+    {
+      "tag": "sigma0.1",
+      "per_leg_untimed_reach": 0.5452196382428941,
+      "completion_ratio": 0.12,
+      "legs_reached_total": 211,
+      "legs_attempted_total": 387,
+      "step_speed_p50": 0.10332349919856008,
+      "step_speed_mean": 0.10727785684473913,
+      "fall_rate_task": 0.015,
+      "fall_rate_step": 7.870710462797775e-05,
+      "action_diff_p50": 1.2550733681481243,
+      "codes_active": 32,
+      "codes_perplexity": 31.08143821660609,
+      "reach_1_25N_data": 0.39037433155080214,
+      "reach_1_5N_data": 0.44141689373297005,
+      "judge": "ineffective"
+    },
+    {
+      "tag": "sigma0.35",
+      "per_leg_untimed_reach": 0.5210526315789473,
+      "completion_ratio": 0.09,
+      "legs_reached_total": 198,
+      "legs_attempted_total": 380,
+      "step_speed_p50": 0.10336539995257268,
+      "step_speed_mean": 0.10707188923665871,
+      "fall_rate_task": 0.01,
+      "fall_rate_step": 5.168492867479843e-05,
+      "action_diff_p50": 1.247672277133325,
+      "codes_active": 32,
+      "codes_perplexity": 31.064390926971214,
+      "reach_1_25N_data": 0.36363636363636365,
+      "reach_1_5N_data": 0.4173669467787115,
+      "judge": "ineffective"
+    },
+    {
+      "tag": "sigma1.0",
+      "per_leg_untimed_reach": 0.5544303797468354,
+      "completion_ratio": 0.12,
+      "legs_reached_total": 219,
+      "legs_attempted_total": 395,
+      "step_speed_p50": 0.10385588032390189,
+      "step_speed_mean": 0.10847880725266629,
+      "fall_rate_task": 0.025,
+      "fall_rate_step": 0.00023774302620456467,
+      "action_diff_p50": 1.2242984266872718,
+      "codes_active": 32,
+      "codes_perplexity": 31.054570293145236,
+      "reach_1_25N_data": 0.408,
+      "reach_1_5N_data": 0.44808743169398907,
+      "judge": "ineffective"
+    }
+  ],
+  "best_tag": "sigma0",
+  "best_nonzero_tag": "sigma1.0",
+  "gif_tag": "sigma1.0",
+  "gif_tag_note": "best_tag \u672c\u8eab\u5c31\u662f sigma0\uff08\u566a\u97f3\u6c92\u6709\u6bd4\u5c0d\u7167\u7d44\u597d\uff09\uff0cdrift \u52a0\u6e2c\u6539\u7528 best_nonzero_tag \u5c0d\u7167\uff0c\u5df2\u6a19\u660e\u662f\u66ff\u4ee3\u9078\u64c7",
+  "gifs": {
+    "success": {
+      "path": "/home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/gifs/sigma1.0_schedule_success_ep319.gif",
+      "n_frames": 24,
+      "episode": 319,
+      "legs_reached": 3,
+      "M": 3,
+      "n_steps_run": 96
+    },
+    "fail": {
+      "path": "/home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/gifs/sigma1.0_schedule_fail_ep260.gif",
+      "n_frames": 50,
+      "episode": 260,
+      "legs_reached": 0,
+      "M": 3,
+      "n_steps_run": 200
+    }
+  },
+  "wall_seconds": 47.588374614715576
+}

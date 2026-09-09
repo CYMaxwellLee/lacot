@@ -1,0 +1,12 @@
+host: zeldajr
+Python 3.11.15
+=== code 不變斷言：['sigma0', 'sigma0.1', 'sigma0.35', 'sigma1.0'] vs base=p0_dict_v1_L4K32_50k.pt (n_sample=10, sample_seed=0) ===
+抽樣段 index（seg_starts 陣列的 index，非資料 global index）：[212648, 203317, 159235, 127780, 67445, 10243, 4131, 76955, 43816, 18809]
+base code idx: [11, 29, 12, 25, 20, 18, 24, 0, 6, 11]
+[sigma0] code_match=True  encoder/vq bitexact=True (changed=[])  decoder tensors changed=6/6  => PASS
+[sigma0.1] code_match=True  encoder/vq bitexact=True (changed=[])  decoder tensors changed=6/6  => PASS
+[sigma0.35] code_match=True  encoder/vq bitexact=True (changed=[])  decoder tensors changed=6/6  => PASS
+[sigma1.0] code_match=True  encoder/vq bitexact=True (changed=[])  decoder tensors changed=6/6  => PASS
+
+=== 總結：PASS（4/4 顆通過）===
+saved: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/code_invariance.json

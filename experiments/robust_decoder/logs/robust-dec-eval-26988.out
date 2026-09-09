@@ -1,0 +1,37 @@
+host: zeldajr
+Python 3.11.15
+=== eval_all（schedule, 200 題, seed=20260908, rho=1.875）===
+baseline（schedule, 一手來源 /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/teacher_relay/results/teacher_relay_summary.json）= 0.5535714286
+判準：win>=0.62  ineffective=baseline±0.07=[0.4836,0.6236]  否則=dose_or_direction_wrong
+對照行（一手引用自 teacher_relay COMPARE 常數）：{'greedy': 0.063, 'main_head': 0.32, 'lo_head': 0.124}
+tasks: 200 usable, skipped=1
+
+=== STEP A：REPRO CHECK（原始 ckpt，本檔 harness 可信度前提）===
+my harness on ORIGINAL ckpt: per_leg=0.5535714286 vs stored 0.5535714286  diff=0.00e+00  -> PASS
+
+=== STEP B：sigma=0（對照顆）—— 驗收 #1 sanity ===
+sigma=0 per_leg=0.5774  |Δ from baseline|=0.0238  sanity(<= 0.07)=PASS  judge=ineffective
+
+=== STEP C：sigma=0.1 / 0.35 / 1.0 ===
+[sigma0.1] per_leg=0.5452  completion=0.120  judge=ineffective
+[sigma0.35] per_leg=0.5211  completion=0.090  judge=ineffective
+[sigma1.0] per_leg=0.5544  completion=0.120  judge=ineffective
+
+=== 主結果表（schedule, 200 題, 四關）===
+baseline(orig ckpt)   0.5536   .125*      (見一手 json，本檔沒重列四關)
+tag             per_leg  completion  speed_p50  fall_task  adiff_p50  judge
+---------------------------------------------------------------------------
+sigma0           0.5774       0.140     0.1045      2.50%      1.267  ineffective
+sigma0.1         0.5452       0.120     0.1033      1.50%      1.255  ineffective
+sigma0.35        0.5211       0.090     0.1034      1.00%      1.248  ineffective
+sigma1.0         0.5544       0.120     0.1039      2.50%      1.224  ineffective
+* baseline completion 取自 teacher_relay_summary.json（非本檔重算）
+
+best_tag(全體 argmax)=sigma0  best_nonzero_tag=sigma1.0  gif/drift 用的 tag=sigma1.0  (best_tag 本身就是 sigma0（噪音沒有比對照組好），drift 加測改用 best_nonzero_tag 對照，已標明是替代選擇)
+
+=== gif：sigma1.0（schedule）成功/失敗各 1 ===
+saved gif: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/gifs/sigma1.0_schedule_success_ep319.gif (24 幀, episode=319, legs 3/3)
+saved gif: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/gifs/sigma1.0_schedule_fail_ep260.gif (50 幀, episode=260, legs 0/3)
+
+saved: /home/cymaxwelllee/Projects/lacot/experiments/robust_decoder/results/eval_summary.json
+=== done wall=47.6s ===
