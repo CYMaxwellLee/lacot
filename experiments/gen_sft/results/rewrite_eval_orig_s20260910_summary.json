@@ -1,0 +1,4204 @@
+{
+  "config": {
+    "gensft_ckpt": "experiments/gen_sft/results/gensft_orig_s20260910_best.pt",
+    "dict_ckpt": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/walk_verify/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "n_traj": 200,
+    "workers": 8,
+    "seed": 20260908,
+    "rho": 1.875,
+    "r_grid": "8,inf",
+    "tag": "rewrite_eval_orig_s20260910",
+    "out_dir": "experiments/gen_sft/results",
+    "gif_dir": "experiments/gen_sft/results/gifs_rewrite_aug",
+    "render_gifs": false,
+    "gif_r": null
+  },
+  "r_grid": [
+    "8",
+    "inf"
+  ],
+  "seed_note": {
+    "build_tasks_seed": 20260908,
+    "generation": "temperature=0 \u8caa\u5fc3\uff0c\u6c7a\u5b9a\u6027\uff0c\u7121\u9700 seed"
+  },
+  "gensft_ckpt_meta": {
+    "config": {
+      "d_model": 128,
+      "n_layers": 3,
+      "n_heads": 4,
+      "dropout": 0.1,
+      "max_len": 96
+    },
+    "best_step": 2500,
+    "held_out_at_best": {
+      "loss": 2.2919180314171124,
+      "top1_all": 0.29855416914240446,
+      "n_all": 25245,
+      "top1_codes_only": 0.2845252525252525,
+      "n_codes": 24750,
+      "top1_eos": 1.0,
+      "n_eos": 495
+    },
+    "train_args": {
+      "corpus": "experiments/gen_sft/results/corpus_v1.pt",
+      "steps": 30000,
+      "batch_size": 256,
+      "lr": 0.0003,
+      "warmup": 500,
+      "weight_decay": 0.01,
+      "eval_every": 500,
+      "log_every": 20,
+      "patience_evals": 8,
+      "min_delta": 0.001,
+      "seed": 20260910,
+      "d_model": 128,
+      "n_layers": 3,
+      "n_heads": 4,
+      "dropout": 0.1,
+      "device": "cuda",
+      "tag": "gensft_orig_s20260910",
+      "out_dir": "experiments/gen_sft/results"
+    }
+  },
+  "obs_proxy_check": [
+    {
+      "episode": 319,
+      "l2": 0.0,
+      "max_abs": 0.0
+    },
+    {
+      "episode": 260,
+      "l2": 0.0,
+      "max_abs": 0.0
+    },
+    {
+      "episode": 56,
+      "l2": 0.0,
+      "max_abs": 0.0
+    },
+    {
+      "episode": 423,
+      "l2": 0.0,
+      "max_abs": 0.0
+    },
+    {
+      "episode": 286,
+      "l2": 0.0,
+      "max_abs": 0.0
+    }
+  ],
+  "baseline_anchor_ref": 0.5875,
+  "results": {
+    "8": {
+      "n_tasks": 200,
+      "completion_ratio": 0.24,
+      "legs_attempted_total": 440,
+      "legs_reached_total": 288,
+      "per_leg_untimed_reach": 0.6545454545454545,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.3687002652519894,
+        "n_evaluable_N_data_1.25N": 377,
+        "n_not_evaluable_N_data_1.25N": 63,
+        "reach_N_data_1.5N": 0.4214876033057851,
+        "n_evaluable_N_data_1.5N": 363,
+        "n_not_evaluable_N_data_1.5N": 77,
+        "reach_N_table_1.25N": 0.13194444444444445,
+        "n_evaluable_N_table_1.25N": 432,
+        "n_not_evaluable_N_table_1.25N": 8,
+        "reach_N_table_1.5N": 0.18414918414918416,
+        "n_evaluable_N_table_1.5N": 429,
+        "n_not_evaluable_N_table_1.5N": 11
+      },
+      "step_speed_q": {
+        "1": 0.005484173859248925,
+        "5": 0.019634497498726356,
+        "25": 0.059390397080504344,
+        "50": 0.10164541223066845,
+        "75": 0.14968069467502226,
+        "95": 0.21035157662821014,
+        "99": 0.25013901968857927
+      },
+      "step_speed_mean": 0.10681644450502369,
+      "fall_rate_step": 0.00013379000321096007,
+      "fall_rate_task": 0.015,
+      "action_diff_q": {
+        "1": 0.3993519459368909,
+        "5": 0.5655449153629313,
+        "25": 0.9123624565962628,
+        "50": 1.2566171582308274,
+        "75": 1.7393570281896418,
+        "95": 2.6060480742524854,
+        "99": 3.148939139596494
+      },
+      "action_diff_mean": 1.3802370052904065,
+      "codes_active": 31,
+      "codes_perplexity": 25.16526200591858,
+      "codes_top1_frac": 0.07021299368511184,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 1,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 2,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 3,
+          "episode": 423,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 84,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 4,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 5,
+          "episode": 202,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 6,
+          "episode": 90,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 7,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 8,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 9,
+          "episode": 263,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 10,
+          "episode": 61,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 11,
+          "episode": 234,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 12,
+          "episode": 290,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 13,
+          "episode": 136,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 14,
+          "episode": 129,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 15,
+          "episode": 458,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 16,
+          "episode": 407,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 17,
+          "episode": 94,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 18,
+          "episode": 71,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 124,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 19,
+          "episode": 483,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 20,
+          "episode": 404,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 21,
+          "episode": 79,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 128,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 22,
+          "episode": 190,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 23,
+          "episode": 220,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 24,
+          "episode": 450,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 25,
+          "episode": 419,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 104,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 26,
+          "episode": 499,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 27,
+          "episode": 376,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 28,
+          "episode": 206,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 29,
+          "episode": 421,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 30,
+          "episode": 204,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 31,
+          "episode": 313,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 32,
+          "episode": 198,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 33,
+          "episode": 134,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 34,
+          "episode": 101,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 35,
+          "episode": 320,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 188,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 36,
+          "episode": 387,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 156,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 37,
+          "episode": 375,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 38,
+          "episode": 338,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 39,
+          "episode": 48,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 40,
+          "episode": 142,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 41,
+          "episode": 462,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 128,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 42,
+          "episode": 99,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 43,
+          "episode": 273,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 184,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 44,
+          "episode": 193,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 45,
+          "episode": 465,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 46,
+          "episode": 225,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 47,
+          "episode": 212,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 48,
+          "episode": 8,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 49,
+          "episode": 215,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 50,
+          "episode": 491,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 128,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 51,
+          "episode": 395,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 52,
+          "episode": 334,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 53,
+          "episode": 210,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 188,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 54,
+          "episode": 145,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 55,
+          "episode": 342,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 56,
+          "episode": 122,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 57,
+          "episode": 152,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 58,
+          "episode": 205,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 156,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 59,
+          "episode": 207,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 60,
+          "episode": 29,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 61,
+          "episode": 7,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 196,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 62,
+          "episode": 187,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 63,
+          "episode": 62,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 64,
+          "episode": 224,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 65,
+          "episode": 26,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 66,
+          "episode": 415,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 67,
+          "episode": 310,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 68,
+          "episode": 396,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 172,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 69,
+          "episode": 461,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 70,
+          "episode": 265,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 71,
+          "episode": 104,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 72,
+          "episode": 340,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 73,
+          "episode": 422,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 74,
+          "episode": 191,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 84,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 75,
+          "episode": 454,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 192,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 76,
+          "episode": 416,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 92,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 77,
+          "episode": 292,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 78,
+          "episode": 433,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 84,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 79,
+          "episode": 378,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 92,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 80,
+          "episode": 163,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 81,
+          "episode": 424,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 82,
+          "episode": 131,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 83,
+          "episode": 351,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 84,
+          "episode": 146,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 85,
+          "episode": 411,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 86,
+          "episode": 36,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 120,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 87,
+          "episode": 196,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 88,
+          "episode": 41,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 89,
+          "episode": 127,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 32,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 90,
+          "episode": 471,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 116,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 91,
+          "episode": 300,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 92,
+          "episode": 337,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 93,
+          "episode": 106,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 94,
+          "episode": 468,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 95,
+          "episode": 431,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 96,
+          "episode": 246,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 97,
+          "episode": 222,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 98,
+          "episode": 495,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 99,
+          "episode": 303,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 100,
+          "episode": 195,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 101,
+          "episode": 405,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 102,
+          "episode": 248,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 103,
+          "episode": 144,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 104,
+          "episode": 466,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 172,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 105,
+          "episode": 47,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 192,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 106,
+          "episode": 370,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 120,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 107,
+          "episode": 226,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 108,
+          "episode": 377,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 109,
+          "episode": 368,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 110,
+          "episode": 75,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 111,
+          "episode": 169,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 112,
+          "episode": 203,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 113,
+          "episode": 211,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 114,
+          "episode": 436,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 148,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 115,
+          "episode": 70,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 116,
+          "episode": 311,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 117,
+          "episode": 227,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 118,
+          "episode": 477,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 119,
+          "episode": 66,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 180,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 120,
+          "episode": 402,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 121,
+          "episode": 371,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 122,
+          "episode": 355,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 123,
+          "episode": 276,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 124,
+          "episode": 125,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 164,
+          "ran_out_of_codes": false,
+          "n_codes_available": 53
+        },
+        {
+          "ti": 125,
+          "episode": 349,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 128,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 126,
+          "episode": 428,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 127,
+          "episode": 218,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 128,
+          "episode": 258,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 116,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 129,
+          "episode": 165,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 130,
+          "episode": 357,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 131,
+          "episode": 2,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 132,
+          "episode": 444,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 133,
+          "episode": 494,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 152,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 134,
+          "episode": 209,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 135,
+          "episode": 372,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 136,
+          "episode": 130,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 137,
+          "episode": 414,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 138,
+          "episode": 296,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 139,
+          "episode": 429,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 140,
+          "episode": 363,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 124,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 141,
+          "episode": 307,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 142,
+          "episode": 93,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 143,
+          "episode": 68,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 144,
+          "episode": 9,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 145,
+          "episode": 232,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 53
+        },
+        {
+          "ti": 146,
+          "episode": 132,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 144,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 147,
+          "episode": 173,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 148,
+          "episode": 385,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 149,
+          "episode": 345,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 150,
+          "episode": 279,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 152,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 151,
+          "episode": 259,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 164,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 152,
+          "episode": 367,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 153,
+          "episode": 102,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 154,
+          "episode": 33,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 155,
+          "episode": 304,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 156,
+          "episode": 356,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 116,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 157,
+          "episode": 464,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 158,
+          "episode": 343,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 159,
+          "episode": 117,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 160,
+          "episode": 403,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 161,
+          "episode": 484,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 162,
+          "episode": 55,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 84,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 163,
+          "episode": 113,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 164,
+          "episode": 381,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 192,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 165,
+          "episode": 24,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 166,
+          "episode": 13,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 168,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 167,
+          "episode": 323,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 168,
+          "episode": 120,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 169,
+          "episode": 86,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 180,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 170,
+          "episode": 192,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 171,
+          "episode": 124,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 172,
+          "episode": 347,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 173,
+          "episode": 426,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 174,
+          "episode": 350,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 175,
+          "episode": 17,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 176,
+          "episode": 332,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 177,
+          "episode": 492,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 196,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 178,
+          "episode": 64,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 179,
+          "episode": 116,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 53
+        },
+        {
+          "ti": 180,
+          "episode": 4,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 181,
+          "episode": 301,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 182,
+          "episode": 271,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 180,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 183,
+          "episode": 77,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 184,
+          "episode": 229,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 185,
+          "episode": 418,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 186,
+          "episode": 147,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 187,
+          "episode": 105,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 124,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 188,
+          "episode": 447,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 180,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 189,
+          "episode": 98,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 156,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 190,
+          "episode": 360,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 180,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 191,
+          "episode": 488,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 112,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 192,
+          "episode": 174,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 52
+        },
+        {
+          "ti": 193,
+          "episode": 114,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 194,
+          "episode": 65,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 195,
+          "episode": 361,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 196,
+          "episode": 482,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 197,
+          "episode": 326,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 198,
+          "episode": 476,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 51
+        },
+        {
+          "ti": 199,
+          "episode": 485,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        }
+      ],
+      "ran_out_of_codes_frac": 0.0
+    },
+    "inf": {
+      "n_tasks": 200,
+      "completion_ratio": 0.18,
+      "legs_attempted_total": 399,
+      "legs_reached_total": 235,
+      "per_leg_untimed_reach": 0.5889724310776943,
+      "timed_reach": {
+        "reach_N_data_1.25N": 0.43669250645994834,
+        "n_evaluable_N_data_1.25N": 387,
+        "n_not_evaluable_N_data_1.25N": 12,
+        "reach_N_data_1.5N": 0.48677248677248675,
+        "n_evaluable_N_data_1.5N": 378,
+        "n_not_evaluable_N_data_1.5N": 21,
+        "reach_N_table_1.25N": 0.15656565656565657,
+        "n_evaluable_N_table_1.25N": 396,
+        "n_not_evaluable_N_table_1.25N": 3,
+        "reach_N_table_1.5N": 0.24242424242424243,
+        "n_evaluable_N_table_1.5N": 396,
+        "n_not_evaluable_N_table_1.5N": 3
+      },
+      "step_speed_q": {
+        "1": 0.004755617331005433,
+        "5": 0.019535358677895045,
+        "25": 0.05934183399719872,
+        "50": 0.10183057832813931,
+        "75": 0.15199732770671165,
+        "95": 0.21256403985176775,
+        "99": 0.25214147945132853
+      },
+      "step_speed_mean": 0.10769468110140758,
+      "fall_rate_step": 0.00021720243266724586,
+      "fall_rate_task": 0.03,
+      "action_diff_q": {
+        "1": 0.37259390948111915,
+        "5": 0.5294687342556225,
+        "25": 0.8796447847921378,
+        "50": 1.2564707441335976,
+        "75": 1.7805910969584735,
+        "95": 2.6530750696231276,
+        "99": 3.2020614466164314
+      },
+      "action_diff_mean": 1.3846097945764937,
+      "codes_active": 32,
+      "codes_perplexity": 21.845862654321017,
+      "codes_top1_frac": 0.10360556038227628,
+      "per_task": [
+        {
+          "ti": 0,
+          "episode": 319,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 1,
+          "episode": 260,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 2,
+          "episode": 56,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 3,
+          "episode": 423,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 4,
+          "episode": 286,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 5,
+          "episode": 202,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 116,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 6,
+          "episode": 90,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 116,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 7,
+          "episode": 161,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 8,
+          "episode": 53,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 9,
+          "episode": 263,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 10,
+          "episode": 61,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 11,
+          "episode": 234,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 12,
+          "episode": 290,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 13,
+          "episode": 136,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 14,
+          "episode": 129,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 15,
+          "episode": 458,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 16,
+          "episode": 407,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 17,
+          "episode": 94,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 180,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 18,
+          "episode": 71,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 19,
+          "episode": 483,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 20,
+          "episode": 404,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 21,
+          "episode": 79,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 22,
+          "episode": 190,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 23,
+          "episode": 220,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 24,
+          "episode": 450,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 25,
+          "episode": 419,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 26,
+          "episode": 499,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 27,
+          "episode": 376,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 108,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 28,
+          "episode": 206,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 29,
+          "episode": 421,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 30,
+          "episode": 204,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 31,
+          "episode": 313,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 32,
+          "episode": 198,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 104,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 33,
+          "episode": 134,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 34,
+          "episode": 101,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 35,
+          "episode": 320,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 36,
+          "episode": 387,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 37,
+          "episode": 375,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 38,
+          "episode": 338,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 124,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 39,
+          "episode": 48,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 40,
+          "episode": 142,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 41,
+          "episode": 462,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 42,
+          "episode": 99,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 43,
+          "episode": 273,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 44,
+          "episode": 193,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 45,
+          "episode": 465,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 140,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 46,
+          "episode": 225,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 47,
+          "episode": 212,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 48,
+          "episode": 8,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 49,
+          "episode": 215,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 108,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 50,
+          "episode": 491,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 51,
+          "episode": 395,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 104,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 52,
+          "episode": 334,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 53,
+          "episode": 210,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 104,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 54,
+          "episode": 145,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 55,
+          "episode": 342,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 56,
+          "episode": 122,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 57,
+          "episode": 152,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 58,
+          "episode": 205,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 59,
+          "episode": 207,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 60,
+          "episode": 29,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 61,
+          "episode": 7,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 62,
+          "episode": 187,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 63,
+          "episode": 62,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 64,
+          "episode": 224,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 65,
+          "episode": 26,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 72,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 66,
+          "episode": 415,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 67,
+          "episode": 310,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 68,
+          "episode": 396,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 69,
+          "episode": 461,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 70,
+          "episode": 265,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 71,
+          "episode": 104,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 72,
+          "episode": 340,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 73,
+          "episode": 422,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 74,
+          "episode": 191,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 75,
+          "episode": 454,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 76,
+          "episode": 416,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 77,
+          "episode": 292,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 78,
+          "episode": 433,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 79,
+          "episode": 378,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 80,
+          "episode": 163,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 81,
+          "episode": 424,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 82,
+          "episode": 131,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 84,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 83,
+          "episode": 351,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 84,
+          "episode": 146,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 85,
+          "episode": 411,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 86,
+          "episode": 36,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 87,
+          "episode": 196,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 88,
+          "episode": 41,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 89,
+          "episode": 127,
+          "completed": true,
+          "legs_attempted": 1,
+          "legs_reached": 1,
+          "n_steps_run": 32,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 90,
+          "episode": 471,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 120,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 91,
+          "episode": 300,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 92,
+          "episode": 337,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 93,
+          "episode": 106,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 128,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 94,
+          "episode": 468,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 95,
+          "episode": 431,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 96,
+          "episode": 246,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 97,
+          "episode": 222,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 116,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 98,
+          "episode": 495,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 99,
+          "episode": 303,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 100,
+          "episode": 195,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 101,
+          "episode": 405,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 102,
+          "episode": 248,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 103,
+          "episode": 144,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 96,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 104,
+          "episode": 466,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 92,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 105,
+          "episode": 47,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 106,
+          "episode": 370,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 107,
+          "episode": 226,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 108,
+          "episode": 377,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 109,
+          "episode": 368,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 110,
+          "episode": 75,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 111,
+          "episode": 169,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 112,
+          "episode": 203,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 113,
+          "episode": 211,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 114,
+          "episode": 436,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 115,
+          "episode": 70,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 100,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 116,
+          "episode": 311,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 117,
+          "episode": 227,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 118,
+          "episode": 477,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 119,
+          "episode": 66,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 120,
+          "episode": 402,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 121,
+          "episode": 371,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 122,
+          "episode": 355,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 88,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 123,
+          "episode": 276,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 124,
+          "episode": 125,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 120,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 125,
+          "episode": 349,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 126,
+          "episode": 428,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 92,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 127,
+          "episode": 218,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 128,
+          "episode": 258,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 129,
+          "episode": 165,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 130,
+          "episode": 357,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 131,
+          "episode": 2,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 88,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 132,
+          "episode": 444,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 133,
+          "episode": 494,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 128,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 134,
+          "episode": 209,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 108,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 135,
+          "episode": 372,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 136,
+          "episode": 130,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 137,
+          "episode": 414,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 138,
+          "episode": 296,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 139,
+          "episode": 429,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 140,
+          "episode": 363,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 141,
+          "episode": 307,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 142,
+          "episode": 93,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 143,
+          "episode": 68,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 144,
+          "episode": 9,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 145,
+          "episode": 232,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 146,
+          "episode": 132,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 147,
+          "episode": 173,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 148,
+          "episode": 385,
+          "completed": true,
+          "legs_attempted": 4,
+          "legs_reached": 4,
+          "n_steps_run": 104,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 149,
+          "episode": 345,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 150,
+          "episode": 279,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 151,
+          "episode": 259,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 152,
+          "episode": 367,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 140,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 153,
+          "episode": 102,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 154,
+          "episode": 33,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 155,
+          "episode": 304,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 196,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 156,
+          "episode": 356,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 157,
+          "episode": 464,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 158,
+          "episode": 343,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 159,
+          "episode": 117,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 164,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 160,
+          "episode": 403,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 161,
+          "episode": 484,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 162,
+          "episode": 55,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 163,
+          "episode": 113,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 164,
+          "episode": 381,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 165,
+          "episode": 24,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 166,
+          "episode": 13,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 167,
+          "episode": 323,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 168,
+          "episode": 120,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 169,
+          "episode": 86,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 92,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 170,
+          "episode": 192,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 171,
+          "episode": 124,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 172,
+          "episode": 347,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 173,
+          "episode": 426,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 174,
+          "episode": 350,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 175,
+          "episode": 17,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 176,
+          "episode": 332,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 104,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 177,
+          "episode": 492,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 178,
+          "episode": 64,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 179,
+          "episode": 116,
+          "completed": false,
+          "legs_attempted": 3,
+          "legs_reached": 2,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 180,
+          "episode": 4,
+          "completed": true,
+          "legs_attempted": 2,
+          "legs_reached": 2,
+          "n_steps_run": 112,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 181,
+          "episode": 301,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 182,
+          "episode": 271,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 183,
+          "episode": 77,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 184,
+          "episode": 229,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 185,
+          "episode": 418,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 186,
+          "episode": 147,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 187,
+          "episode": 105,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 188,
+          "episode": 447,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 116,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 189,
+          "episode": 98,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 190,
+          "episode": 360,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 191,
+          "episode": 488,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 88,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 192,
+          "episode": 174,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 193,
+          "episode": 114,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 194,
+          "episode": 65,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 120,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 195,
+          "episode": 361,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 196,
+          "episode": 482,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 197,
+          "episode": 326,
+          "completed": true,
+          "legs_attempted": 3,
+          "legs_reached": 3,
+          "n_steps_run": 128,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 198,
+          "episode": 476,
+          "completed": false,
+          "legs_attempted": 2,
+          "legs_reached": 1,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        },
+        {
+          "ti": 199,
+          "episode": 485,
+          "completed": false,
+          "legs_attempted": 1,
+          "legs_reached": 0,
+          "n_steps_run": 200,
+          "ran_out_of_codes": false,
+          "n_codes_available": 50
+        }
+      ],
+      "ran_out_of_codes_frac": 0.0
+    }
+  },
+  "avg_rewrites": {
+    "8": 5.49,
+    "inf": 0.0
+  },
+  "best_in_grid": {
+    "label": "8",
+    "per_leg": 0.6545454545454545
+  },
+  "artifacts": {
+    "gifs": {}
+  }
+}

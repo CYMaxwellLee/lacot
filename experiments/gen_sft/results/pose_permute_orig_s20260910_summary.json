@@ -1,0 +1,77 @@
+{
+  "config": {
+    "gensft_ckpt": "experiments/gen_sft/results/gensft_orig_s20260910_best.pt",
+    "dict_ckpt": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "ruler": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/walk_verify/results/ruler_pack.json",
+    "data_dir": "/home/cymaxwelllee/.ogbench/data",
+    "n_probe": 40,
+    "seed": 20260908,
+    "rho": 1.875,
+    "r_rewrite": 8,
+    "tag": "pose_permute_orig_s20260910",
+    "out_dir": "experiments/gen_sft/results"
+  },
+  "pair_seed": 20260909314,
+  "n_probe": 40,
+  "gensft_ckpt_meta": {
+    "best_step": 2500,
+    "train_args": {
+      "corpus": "experiments/gen_sft/results/corpus_v1.pt",
+      "steps": 30000,
+      "batch_size": 256,
+      "lr": 0.0003,
+      "warmup": 500,
+      "weight_decay": 0.01,
+      "eval_every": 500,
+      "log_every": 20,
+      "patience_evals": 8,
+      "min_delta": 0.001,
+      "seed": 20260910,
+      "d_model": 128,
+      "n_layers": 3,
+      "n_heads": 4,
+      "dropout": 0.1,
+      "device": "cuda",
+      "tag": "gensft_orig_s20260910",
+      "out_dir": "experiments/gen_sft/results"
+    }
+  },
+  "baseline": {
+    "inf": {
+      "per_leg_untimed_reach": 0.5584415584415584,
+      "completion_ratio": 0.15,
+      "legs_attempted_total": 77,
+      "legs_reached_total": 43,
+      "n_tasks": 40
+    },
+    "r": {
+      "per_leg_untimed_reach": 0.6162790697674418,
+      "completion_ratio": 0.175,
+      "legs_attempted_total": 86,
+      "legs_reached_total": 53,
+      "n_tasks": 40
+    }
+  },
+  "permuted": {
+    "inf": {
+      "per_leg_untimed_reach": 0.2777777777777778,
+      "completion_ratio": 0.025,
+      "legs_attempted_total": 54,
+      "legs_reached_total": 15,
+      "n_tasks": 40
+    },
+    "r": {
+      "per_leg_untimed_reach": 0.16666666666666666,
+      "completion_ratio": 0.0,
+      "legs_attempted_total": 48,
+      "legs_reached_total": 8,
+      "n_tasks": 40
+    }
+  },
+  "drop": {
+    "inf": 0.2806637806637806,
+    "r": 0.4496124031007752
+  },
+  "big_drop_threshold_self_set": 0.1,
+  "verdict": "u \u6709\u5728\u7528\u59ff\u614b token\uff08\u6389\u5e45\u660e\u986f >= \u81ea\u8a02\u9580\u6abb .10\uff09"
+}

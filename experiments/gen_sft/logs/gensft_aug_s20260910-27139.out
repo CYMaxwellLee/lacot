@@ -1,0 +1,66 @@
+worktree: rewrite-v1 a3630e651b125a771bc5f786a72b831e1e6c03c2
+node: zeldajr  corpus=experiments/gen_sft/results/corpus_aug_v1.pt seed=20260910 steps=30000 tag=gensft_aug_s20260910 batch=256
+env(visible/gpu): CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_HOME=/home/cymaxwelllee/.cuda CUDA_VISIBLE_DEVICES=0 GPU_DEVICE_ORDINAL=0 HIP_VISIBLE_DEVICES=0 LD_LIBRARY_PATH=/home/cymaxwelllee/.rocm/lib:/home/cymaxwelllee/.rocm/lib64:/home/cymaxwelllee/.cuda/lib64:/home/cymaxwelllee/.cuda/extras/CUPTI/lib64: ROCM_HOME=/home/cymaxwelllee/.rocm ROCR_VISIBLE_DEVICES=0 SLURM_GPUS_ON_NODE=1 SLURM_JOB_GPUS=2 TF_FORCE_GPU_ALLOW_GROWTH=true 
+
+
+============================ ROCm System Management Interface ============================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		Navi 48 [Radeon AI PRO R9700]
+GPU[0]		: Card Model: 		0x7551
+torch.cuda.is_available()=True on attempt 1
+[gpu-visibility guard] CUDA_VISIBLE_DEVICES='0' HIP_VISIBLE_DEVICES='0' is_available(before importing gen_sft_common)=True
+[gpu-visibility guard] HIP_VISIBLE_DEVICES(after importing gen_sft_common)='0'  is_available(cached)=True
+corpus: n_train=12293 n_val=1365 (corpus 內部 9:1 held-out，split_seed=42 —— ⚠️ 不是 antmaze -val.npz 那個 200 題接力用的 val)
+waypoints_M={'min': 1, 'p50': 3.0, 'max': 4}  code_len_L={'min': 50, 'p50': 50.0, 'max': 50}
+model: d_model=128 n_layers=3 n_heads=4 n_params=620577
+  step=    0  loss=3.6837  ema=3.6837  lr=1.20e-06
+  step=   20  loss=3.6496  ema=3.6779  lr=1.32e-05
+  step=   40  loss=3.6067  ema=3.6621  lr=2.52e-05
+  step=   60  loss=3.5557  ema=3.6338  lr=3.72e-05
+  step=   80  loss=3.5149  ema=3.5978  lr=4.92e-05
+  step=  100  loss=3.4574  ema=3.5592  lr=6.12e-05
+  step=  120  loss=3.4145  ema=3.5167  lr=7.32e-05
+  step=  140  loss=3.3444  ema=3.4717  lr=8.52e-05
+  step=  160  loss=3.2570  ema=3.4139  lr=9.72e-05
+  step=  180  loss=3.1718  ema=3.3408  lr=1.09e-04
+  step=  200  loss=3.1030  ema=3.2618  lr=1.21e-04
+  step=  220  loss=3.0516  ema=3.1956  lr=1.33e-04
+  step=  240  loss=3.0176  ema=3.1398  lr=1.45e-04
+  step=  260  loss=3.0020  ema=3.0940  lr=1.57e-04
+  step=  280  loss=2.9961  ema=3.0590  lr=1.69e-04
+  step=  300  loss=2.9748  ema=3.0277  lr=1.81e-04
+  step=  320  loss=2.9683  ema=3.0024  lr=1.93e-04
+  step=  340  loss=2.9363  ema=2.9804  lr=2.05e-04
+  step=  360  loss=2.9339  ema=2.9603  lr=2.17e-04
+  step=  380  loss=2.8983  ema=2.9424  lr=2.29e-04
+  step=  400  loss=2.9011  ema=2.9266  lr=2.41e-04
+  step=  420  loss=2.8630  ema=2.9124  lr=2.53e-04
+  step=  440  loss=2.8877  ema=2.8996  lr=2.65e-04
+  step=  460  loss=2.8370  ema=2.8869  lr=2.77e-04
+  step=  480  loss=2.8455  ema=2.8739  lr=2.89e-04
+[eval step=   500] train_loss(ema)=2.8622  held_out_loss=2.7923  top1_codes=18.44%  top1_all=19.59%  top1_eos=61.68%
+[eval step=  1000] train_loss(ema)=2.5994  held_out_loss=2.5584  top1_codes=23.21%  top1_all=24.34%  top1_eos=65.49%
+[eval step=  1500] train_loss(ema)=2.5047  held_out_loss=2.4959  top1_codes=24.45%  top1_all=25.50%  top1_eos=64.03%
+[eval step=  2000] train_loss(ema)=2.4520  held_out_loss=2.4591  top1_codes=25.38%  top1_all=26.40%  top1_eos=63.88%
+[eval step=  2500] train_loss(ema)=2.4133  held_out_loss=2.4423  top1_codes=25.82%  top1_all=26.69%  top1_eos=58.68%
+[eval step=  3000] train_loss(ema)=2.3828  held_out_loss=2.4304  top1_codes=25.85%  top1_all=26.87%  top1_eos=64.32%
+[eval step=  3500] train_loss(ema)=2.3552  held_out_loss=2.4280  top1_codes=26.06%  top1_all=26.88%  top1_eos=56.92%
+[eval step=  4000] train_loss(ema)=2.3312  held_out_loss=2.4229  top1_codes=26.34%  top1_all=27.33%  top1_eos=63.52%
+[eval step=  4500] train_loss(ema)=2.3074  held_out_loss=2.4295  top1_codes=26.00%  top1_all=26.95%  top1_eos=61.68%
+[eval step=  5000] train_loss(ema)=2.2862  held_out_loss=2.4302  top1_codes=26.03%  top1_all=26.93%  top1_eos=59.71%
+[eval step=  5500] train_loss(ema)=2.2648  held_out_loss=2.4362  top1_codes=25.81%  top1_all=26.86%  top1_eos=65.49%
+[eval step=  6000] train_loss(ema)=2.2446  held_out_loss=2.4515  top1_codes=25.70%  top1_all=26.77%  top1_eos=65.79%
+[eval step=  6500] train_loss(ema)=2.2254  held_out_loss=2.4623  top1_codes=25.72%  top1_all=26.61%  top1_eos=59.19%
+[eval step=  7000] train_loss(ema)=2.2039  held_out_loss=2.4716  top1_codes=25.38%  top1_all=26.56%  top1_eos=69.52%
+[eval step=  7500] train_loss(ema)=2.1838  held_out_loss=2.4847  top1_codes=25.67%  top1_all=26.53%  top1_eos=58.17%
+[eval step=  8000] train_loss(ema)=2.1653  held_out_loss=2.4921  top1_codes=25.40%  top1_all=26.38%  top1_eos=62.42%
+⏹ held-out loss 連續 8 次 eval（4000 steps）沒有改善 > 0.001，提早停在 step=8000（plateau）
+
+=== smoke（前 500 steps）: loss[0]=3.6837 -> loss[~500]=2.8114  drop=0.8723  (亂猜 CE 基準=ln(32)=3.4657) ===
+saved checkpoint (best held-out loss @ step=4000): experiments/gen_sft/results/gensft_aug_s20260910_best.pt
+saved: experiments/gen_sft/results/gensft_aug_s20260910_loss_curve.png
+saved: experiments/gen_sft/results/gensft_aug_s20260910_train_summary.json
+
+=== FINAL（best checkpoint @ step=4000）===
+held-out loss=2.4229  top1_codes_only=26.34%  (baseline 3.125%)  top1_all=27.33%  top1_eos=63.52%
+=== done wall=305.6s  total_steps_run=8000 stopped_early=True ===

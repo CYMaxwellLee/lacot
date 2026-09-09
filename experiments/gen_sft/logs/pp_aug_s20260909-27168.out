@@ -1,0 +1,17 @@
+worktree: rewrite-v1 a3630e651b125a771bc5f786a72b831e1e6c03c2
+node: zeldajr  gensft_ckpt=experiments/gen_sft/results/gensft_aug_s20260909_best.pt  n_probe=40  r_rewrite=8  tag=pose_permute_aug_s20260909
+=== pose permute probe  ckpt=gensft_aug_s20260909_best.pt  n_probe=40  seed=20260908  pair_seed=20260909314  R=8 ===
+gensft model best_step=4500  train_args.corpus=experiments/gen_sft/results/corpus_aug_v1.pt  train_args.seed=20260909
+probe tasks: 40（來自標準 200 題子集，同一個 build_tasks(seed=20260908)）
+derangement pairing (fixed seed=20260909314)，前 5 對：0->12, 1->5, 2->36, 3->6, 4->31
+
+=== 結果（n=40 題子集，ckpt=gensft_aug_s20260909_best.pt）===
+                 arm |  R=inf per-leg |    R=8 per-leg
+       baseline(真姿態) |         0.6203 |         0.6512
+     permuted(換別題姿態) |         0.1875 |         0.1111
+
+掉幅：R=inf +0.4328   R=8 +0.5401
+判讀（門檻=0.1，⛔ 本探針自訂、非工單既有精確判準，質性判讀以掉幅數字本身為準）：u 有在用姿態 token（掉幅明顯 >= 自訂門檻 .10）
+
+saved: experiments/gen_sft/results/pose_permute_aug_s20260909_summary.json
+=== done wall=33.1s ===

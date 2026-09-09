@@ -1,0 +1,30 @@
+worktree: rewrite-v1 a3630e651b125a771bc5f786a72b831e1e6c03c2
+node: zeldajr  gensft_ckpt=experiments/gen_sft/results/gensft_aug_s20260910_best.pt  r_grid=4,8,16,inf  n_traj=200  tag=rewrite_eval_aug_s20260910
+=== rewrite eval (aug)  gensft_ckpt=gensft_aug_s20260910_best.pt  n_traj=200  seed=20260908  rho=1.875  R_grid=['4', '8', '16', 'inf'] ===
+dict: seg_len=4 K=32  fall_line=0.2573
+gensft model: {'d_model': 128, 'n_layers': 3, 'n_heads': 4, 'dropout': 0.1, 'max_len': 96}  best_step=4000  held_out_at_best={'loss': 2.4228913636485223, 'top1_all': 0.27325253389879967, 'n_all': 51403, 'top1_codes_only': 0.2633798313281906, 'n_codes': 50038, 'top1_eos': 0.6351648351648351, 'n_eos': 1365}  train_args.corpus=experiments/gen_sft/results/corpus_aug_v1.pt  train_args.seed=20260910
+tasks: 200 usable (要求>=200)  skipped=1
+eval_tasks=200  waypoints M: min=1 p50=3 max=4  total_legs=595
+
+obs_proxy_check（sim_obs(u) vs raw['observations'][s0]，reset 剛完、零漂移）: n=5  L2 min/p50/max=0.000000/0.000000/0.000000
+
+初始生成（貪心，全部 R 共用第一個 block）：200 條，長度 min/p50/max=49/50/50  (1.5s)
+
+=== 開始 rollout：4 個 R x 200 題 = 800 條 ===
+  parallel_walk_rewrite: 800 rollouts, 8 workers, 30.7s
+
+=== R=∞ 參考（描述性，非硬性判準）：per-leg=0.5337  v1 錨點=0.5875  差=-0.0538  落在 v1 錨點 ±.01 外（不是異常——這是本工單要量的訓練抖動本身） ===
+
+=== 主表（200 題，貪心解碼）===
+     R |  per-leg | completion | fall(step) | adiff_p50 | avg_rewrites
+----------------------------------------------------------------------
+     4 |   0.6575 |     0.2550 |      0.04% |     1.270 |        10.96
+     8 |   0.6651 |     0.2700 |      0.03% |     1.259 |         5.34
+    16 |   0.6598 |     0.2600 |      0.03% |     1.258 |         2.60
+   inf |   0.5337 |     0.1000 |      0.04% |     1.245 |         0.00
+
+本次 R_grid 內最佳：R=8  per-leg=0.6651
+⛔ --render-gifs 未指定：本次沒有產生 gif
+
+saved: experiments/gen_sft/results/rewrite_eval_aug_s20260910_summary.json
+=== done wall=32.6s ===

@@ -1,0 +1,94 @@
+{
+  "main_table": {
+    "orig_s20260909": {
+      "8": 0.6132075471698113,
+      "inf": 0.6187050359712231
+    },
+    "orig_s20260910": {
+      "8": 0.6545454545454545,
+      "inf": 0.5889724310776943
+    },
+    "orig_s20260911": {
+      "8": 0.6086956521739131,
+      "inf": 0.5454545454545454
+    },
+    "aug_s20260909": {
+      "4": 0.6643356643356644,
+      "8": 0.6898876404494382,
+      "16": 0.6604215456674473,
+      "inf": 0.59
+    },
+    "aug_s20260910": {
+      "4": 0.6574712643678161,
+      "8": 0.6651376146788991,
+      "16": 0.6597701149425287,
+      "inf": 0.533678756476684
+    },
+    "aug_s20260911": {
+      "4": 0.648960739030023,
+      "8": 0.6367924528301887,
+      "16": 0.6342042755344418,
+      "inf": 0.5930521091811415
+    }
+  },
+  "bell_curve": {
+    "diffs": {
+      "20260909": -0.005497488801411765,
+      "20260910": 0.06557302346776028,
+      "20260911": 0.06324110671936767
+    },
+    "all_positive": false,
+    "mean_diff": 0.04110554712857206,
+    "threshold": 0.03,
+    "verdict": false
+  },
+  "training_jitter": {
+    "values": {
+      "20260909": 0.6187050359712231,
+      "20260910": 0.5889724310776943,
+      "20260911": 0.5454545454545454
+    },
+    "mean": 0.5843773375011543,
+    "std": 0.030080389558274672,
+    "min": 0.5454545454545454,
+    "max": 0.6187050359712231,
+    "anchor": 0.5875,
+    "mean_minus_anchor": -0.0031226624988457408
+  },
+  "aug_verdict": {
+    "r8_values": {
+      "20260909": 0.6898876404494382,
+      "20260910": 0.6651376146788991,
+      "20260911": 0.6367924528301887
+    },
+    "mean": 0.6639392359861753,
+    "threshold": 0.66,
+    "verdict": true
+  },
+  "r4_penalty_check": {
+    "deltas": {
+      "20260909": 0.07433566433566441,
+      "20260910": 0.12379250789113216,
+      "20260911": 0.055908629848881564
+    },
+    "mean_delta": 0.08467893402522604,
+    "orig_note_r4": 0.5415,
+    "orig_note_rinf": 0.5875,
+    "orig_note_delta": -0.04600000000000004,
+    "penalty_reduced_qualitative": true
+  },
+  "best_orig_seed": 20260910,
+  "best_aug_seed": 20260909,
+  "source_files": {
+    "orig": {
+      "20260909": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_orig_s20260909_summary.json",
+      "20260910": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_orig_s20260910_summary.json",
+      "20260911": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_orig_s20260911_summary.json"
+    },
+    "aug": {
+      "20260909": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_aug_s20260909_summary.json",
+      "20260910": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_aug_s20260910_summary.json",
+      "20260911": "/home/cymaxwelllee/Projects/lacot-rewrite/experiments/gen_sft/results/rewrite_eval_aug_s20260911_summary.json"
+    }
+  }
+}
