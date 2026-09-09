@@ -1,0 +1,57 @@
+host: zeldajr
+python: /home/cymaxwelllee/Projects/lacot/.venv/bin/python
+Python 3.11.15
+=== drift-analysis  ckpt=p0_dict_v1_L4K32_50k.pt n_traj=200 seed=20260908 rho=1.875 DELTA_SUB=7.5 repro_ti=[0, 2, 3] ===
+dict: seg_len=4 K=32  ruler fall_line=0.2573
+tasks: 200 usable (要求 >= 200)  skipped=1
+waypoints per task: min=1 p50=3 max=4 total_legs_available=595
+n_chunks per task = 50（全部一致，val episode 長度固定 201 步）
+
+=== STEP 1：復現斷言 ===
+  ti=0 episode=319 M=3 legs=2 completed(gt/mine)=False/False  對帳=PASS
+  ti=2 episode=56 M=4 legs=1 completed(gt/mine)=False/False  對帳=PASS
+  ti=3 episode=423 M=2 legs=2 completed(gt/mine)=True/True  對帳=PASS
+復現斷言 PASS：3 條題目（ti=[0, 2, 3]）per-leg 事件序列與 teacher_relay_byleg_summary.json 逐欄位一致（m/reached/active_step/end_step/first_hit/d_start/d_end），task 級欄位與 teacher_relay_summary.json 一致。
+
+=== STEP 2：臂 1（cont，schedule 開環）200 題全量 ===
+done in 8.6s  completion_ratio=0.125  (gt teacher_relay 為 0.125，供對照)
+200 題粗對帳（vs teacher_relay_summary.json per_task，4 欄位 x 200 題 = 800 項）：全部一致
+
+=== STEP 3：臂 2（indep 重置對照）200 題 x 每題全部 chunk ===
+done in 19.5s
+字選擇自檢（臂1 vs 臂2，同 task 同 k 應選同一個字，因為 encode 不吃 obs）：9485 次比較中 0 次不一致
+
+=== STEP 4：分析 ===
+自檢#2（首 chunk 誤差同量級）：xy drift 臂1(j=1) median=0.0474m (n=200)  vs 臂2(k=0) median=0.0474m (n=200)  比值=1.000
+                          state drift 臂1(j=1) median=2.1416 vs 臂2(k=0) median=2.1416  比值=1.000
+
+拆帳基線 E_indep（臂2 全部 chunk 合併中位數）：xy=0.0491m  state=2.2842
+
+   j  n_active  D_cont_xy_p50  E_indep_xy_p50(k=j-1)  net_xy=Dcont-Eoverall   D_cont_state_p50
+   1       200         0.0474                 0.0474                -0.0017             2.1416
+   2       200         0.1561                 0.0433                 0.1070             3.1867
+   3       200         0.3049                 0.0465                 0.2559             3.4173
+   4       200         0.4682                 0.0460                 0.4191             3.8402
+   5       200         0.5979                 0.0455                 0.5488             4.3493
+   6       200         0.7485                 0.0442                 0.6994             4.3023
+   8       200         1.0900                 0.0530                 1.0410             4.6837
+  10       200         1.3289                 0.0432                 1.2798             4.7271
+  15       198         2.3332                 0.0488                 2.2842             5.1478
+  20       198         4.0739                 0.0443                 4.0248             5.3546
+  30       187         6.7759                 0.0517                 6.7269             5.1968
+  40       178         7.4011                 0.0533                 7.3520             5.0976
+  50       175         7.5684                 0.0499                 7.5193             4.7330
+
+失敗前兆：失敗 leg n=175  成功 leg n=217
+  失敗 leg 開始時漂移 p25/50/75 = 0.249/1.183/2.496
+  成功 leg 開始時漂移 p25/50/75 = 0.000/0.000/0.358
+  AUC 分離度（0.5=分不開，1.0=完全分開，失敗 leg 漂移系統性更大）= 0.770
+  最佳單一門檻：thr=0.23523661929341885  accuracy=0.742  多數類 baseline accuracy=0.554
+  leg-1 專門子群（leg_start_drift 定義上恆為 0，n=200）：失敗率=0.215  vs 全體失敗率=0.446
+
+=== STEP 5：存檔 ===
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis/results/drift_curve_xy.png
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis/results/drift_failure_precursor.png
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis/results/drift_summary.json
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis/results/drift_raw.npz
+=== done wall=28.6s ===
