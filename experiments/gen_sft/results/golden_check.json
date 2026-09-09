@@ -1,0 +1,209 @@
+{
+  "golden": {
+    "n_total": 12,
+    "n_match": 12,
+    "all_match": true,
+    "rows": [
+      {
+        "episode": 110,
+        "chunk": 0,
+        "pipeline_code": 1,
+        "direct_code": 1,
+        "match": true
+      },
+      {
+        "episode": 110,
+        "chunk": 1,
+        "pipeline_code": 30,
+        "direct_code": 30,
+        "match": true
+      },
+      {
+        "episode": 110,
+        "chunk": 2,
+        "pipeline_code": 1,
+        "direct_code": 1,
+        "match": true
+      },
+      {
+        "episode": 110,
+        "chunk": 3,
+        "pipeline_code": 29,
+        "direct_code": 29,
+        "match": true
+      },
+      {
+        "episode": 1937,
+        "chunk": 0,
+        "pipeline_code": 7,
+        "direct_code": 7,
+        "match": true
+      },
+      {
+        "episode": 1937,
+        "chunk": 1,
+        "pipeline_code": 3,
+        "direct_code": 3,
+        "match": true
+      },
+      {
+        "episode": 1937,
+        "chunk": 2,
+        "pipeline_code": 27,
+        "direct_code": 27,
+        "match": true
+      },
+      {
+        "episode": 1937,
+        "chunk": 3,
+        "pipeline_code": 13,
+        "direct_code": 13,
+        "match": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 0,
+        "pipeline_code": 24,
+        "direct_code": 24,
+        "match": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 1,
+        "pipeline_code": 22,
+        "direct_code": 22,
+        "match": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 2,
+        "pipeline_code": 8,
+        "direct_code": 8,
+        "match": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 3,
+        "pipeline_code": 10,
+        "direct_code": 10,
+        "match": true
+      }
+    ],
+    "picked_episodes": [
+      110,
+      1937,
+      3893
+    ],
+    "ep_pick_seed": 1234
+  },
+  "adversarial_reverse": {
+    "n_total": 12,
+    "n_changed": 12,
+    "rows": [
+      {
+        "episode": 110,
+        "chunk": 0,
+        "orig_code": 1,
+        "reversed_code": 25,
+        "changed": true
+      },
+      {
+        "episode": 110,
+        "chunk": 1,
+        "orig_code": 30,
+        "reversed_code": 9,
+        "changed": true
+      },
+      {
+        "episode": 110,
+        "chunk": 2,
+        "orig_code": 1,
+        "reversed_code": 21,
+        "changed": true
+      },
+      {
+        "episode": 110,
+        "chunk": 3,
+        "orig_code": 29,
+        "reversed_code": 9,
+        "changed": true
+      },
+      {
+        "episode": 1937,
+        "chunk": 0,
+        "orig_code": 7,
+        "reversed_code": 7,
+        "changed": false
+      },
+      {
+        "episode": 1937,
+        "chunk": 1,
+        "orig_code": 3,
+        "reversed_code": 3,
+        "changed": false
+      },
+      {
+        "episode": 1937,
+        "chunk": 2,
+        "orig_code": 27,
+        "reversed_code": 7,
+        "changed": true
+      },
+      {
+        "episode": 1937,
+        "chunk": 3,
+        "orig_code": 13,
+        "reversed_code": 14,
+        "changed": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 0,
+        "orig_code": 24,
+        "reversed_code": 7,
+        "changed": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 1,
+        "orig_code": 22,
+        "reversed_code": 27,
+        "changed": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 2,
+        "orig_code": 8,
+        "reversed_code": 7,
+        "changed": true
+      },
+      {
+        "episode": 3893,
+        "chunk": 3,
+        "orig_code": 10,
+        "reversed_code": 8,
+        "changed": true
+      }
+    ]
+  },
+  "adversarial_fallback_cross_episode": [
+    {
+      "episode": 1937,
+      "chunk": 0,
+      "orig_code": 7,
+      "other_episode": 1877,
+      "other_code": 21,
+      "changed": true
+    },
+    {
+      "episode": 1937,
+      "chunk": 1,
+      "orig_code": 3,
+      "other_episode": 887,
+      "other_code": 27,
+      "changed": true
+    }
+  ],
+  "neg_pass_at_least_one_changed": true,
+  "all_reverse_or_fallback_changed": true
+}

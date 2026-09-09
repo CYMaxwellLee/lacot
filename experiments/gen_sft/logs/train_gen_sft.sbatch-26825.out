@@ -1,0 +1,17 @@
+worktree: gen-sft-v1 c8c16fd9d8f8eaac3fbb44d4d1b38f953a2cdb16
+node: zeldajr  steps=60000 tag=gensft_v1 batch=256
+env(visible/gpu): CUDA_VISIBLE_DEVICES=0 GPU_DEVICE_ORDINAL=0 ROCR_VISIBLE_DEVICES=0 SLURM_GPUS_ON_NODE=1 SLURM_JOB_GPUS=0 
+
+
+============================ ROCm System Management Interface ============================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		Navi 48 [Radeon AI PRO R9700]
+GPU[0]		: Card Model: 		0x7551
+torch.cuda.is_available()=True on attempt 1
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/train_gen_sft.py", line 267, in <module>
+    main()
+  File "/home/cymaxwelllee/Projects/lacot-gensft/experiments/gen_sft/train_gen_sft.py", line 125, in main
+    assert args.device == "cpu" or torch.cuda.is_available(), (
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ⛔ 要求 --device cuda 但 torch.cuda.is_available()=False —— 停手回報，不准偷偷退回 CPU

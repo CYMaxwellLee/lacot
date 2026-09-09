@@ -1,0 +1,37 @@
+worktree: gen-sft-v1 c8c16fd9d8f8eaac3fbb44d4d1b38f953a2cdb16
+node: zeldajr  gensft_ckpt=experiments/gen_sft/results/gensft_v1_best.pt  n_traj=20  bon_n=2  tag=SMOKE_eval2
+=== gen_sft eval  gensft_ckpt=gensft_v1_best.pt  n_traj=20  bon_n=2  seed=20260908  rho=1.875 ===
+dict: seg_len=4 K=32  fall_line=0.2573
+gensft model: {'d_model': 128, 'n_layers': 3, 'n_heads': 4, 'dropout': 0.1, 'max_len': 96}  best_step=2500  held_out_at_best={'loss': 2.285277251683502, 'top1_all': 0.3010497128144187, 'n_all': 25245, 'top1_codes_only': 0.2870707070707071, 'n_codes': 24750, 'top1_eos': 1.0, 'n_eos': 495}
+tasks: 200 usable (要求>=200)  skipped=1
+eval_tasks=20  waypoints M: min=2 p50=3 max=4  total_legs=60
+
+=== 對照組：隨機字串 x 20 題（control_seed=99）===
+  parallel_walk: 20 rollouts, 8 workers, 0.6s
+control per-leg 不限時到達率 = 0.2000  (reached 5/25)  閘門門檻 < 0.3
+閘門通過（PASS），繼續 greedy/BoN。
+
+greedy 生成：20 條，長度 min/p50/max=50/50/50  撞 max_new_tokens 未出 EOS 的條數=0  (0.2s)
+BoN 生成：20x2=40 條（temperature=1.0, bon_seed=20260909），長度 min/p50/max=50/50/50  撞 cap 條數=0  (0.2s)
+
+=== 開始 rollout：greedy 20 + BoN 20x2 = 60 條 ===
+  parallel_walk: 60 rollouts, 8 workers, 0.9s
+
+[greedy] per-leg=0.5405  completion=0.1500  speed_p50=0.0961  fall(step)=0.00%  adiff_p50=1.290
+[BoN N=2] per-leg=0.5641  completion=0.1500  speed_p50=0.1069  fall(step)=0.00%  adiff_p50=1.269
+[control random] per-leg=0.2000  completion=0.0000
+
+=== 對照行（一手引用，非本次量測）===
+  greedy                     = 0.063
+  main_head                  = 0.320
+  lo_head                    = 0.124
+  teacher_relay_schedule     = 0.554
+  teacher_relay_nn           = 0.555
+驗收①「學會寫譜」門檻(>=0.32): greedy PASS  (greedy=0.5405)
+驗收②「貼近教材上界」門檻(>=0.45): greedy PASS  BoN PASS
+saved: experiments/gen_sft/results/SMOKE_eval2_speed_overlay.png
+saved: experiments/gen_sft/results/SMOKE_eval2_z_overlay.png
+saved: experiments/gen_sft/results/SMOKE_eval2_adiff_overlay.png
+⛔ --skip-gifs：本次沒有產生 gif
+saved: experiments/gen_sft/results/SMOKE_eval2_summary.json
+=== done wall=2.1s ===
