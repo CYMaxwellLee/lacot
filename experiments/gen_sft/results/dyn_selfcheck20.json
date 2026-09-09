@@ -1,0 +1,187 @@
+{
+  "n_checked": 20,
+  "all_ok": true,
+  "seed": 20260909777,
+  "rows": [
+    {
+      "episode": 479,
+      "cut_k": 30,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 20,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 270,
+      "cut_k": 22,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 28,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 631,
+      "cut_k": 26,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 24,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 4899,
+      "cut_k": 4,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 46,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 793,
+      "cut_k": 19,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 31,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 3812,
+      "cut_k": 6,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 44,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 97,
+      "cut_k": 30,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 20,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 2458,
+      "cut_k": 36,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 14,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 35,
+      "cut_k": 38,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 12,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 756,
+      "cut_k": 38,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 12,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 1609,
+      "cut_k": 7,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 43,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 820,
+      "cut_k": 37,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 13,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 1199,
+      "cut_k": 1,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 49,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 3200,
+      "cut_k": 13,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 37,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 3380,
+      "cut_k": 40,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 10,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 3364,
+      "cut_k": 30,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 20,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 1972,
+      "cut_k": 13,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 37,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 612,
+      "cut_k": 17,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 33,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 3167,
+      "cut_k": 5,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 45,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    },
+    {
+      "episode": 4566,
+      "cut_k": 36,
+      "parent_n_chunks": 50,
+      "sub_n_chunks": 14,
+      "codes_ok": true,
+      "obs_ok": true,
+      "obs_l2": 0.0
+    }
+  ]
+}

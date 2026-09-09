@@ -1,0 +1,26 @@
+worktree: rewrite-dyn 730db5b2306647ae598e9e238874f89a7a783867
+node: zeldajr  collecting dyn results
+=== 主表：R8 / Rinf per-leg，3 組 x 3 seed ===
+group              seed |      R8 |    Rinf
+2cut(引用)       20260909 | 0.6899 | 0.5900
+2cut(引用)       20260910 | 0.6651 | 0.5337
+2cut(引用)       20260911 | 0.6368 | 0.5931
+  -> mean=0.6639 std=0.0217  (Rinf mean=0.5722 std=0.0273)
+dyn_nopert     20260909 | 0.6344 | 0.5946
+dyn_nopert     20260910 | 0.6635 | 0.5417
+dyn_nopert     20260911 | 0.6527 | 0.5819
+  -> mean=0.6502 std=0.0120  (Rinf mean=0.5727 std=0.0226)
+dyn_pert       20260909 | 0.6513 | 0.5823
+dyn_pert       20260910 | 0.6325 | 0.5934
+dyn_pert       20260911 | 0.6811 | 0.6099
+  -> mean=0.6549 std=0.0200  (Rinf mean=0.5952 std=0.0113)
+
+=== Q1：dyn(無擾動) vs 2刀版（門檻：差>=+0.02 或 std<=剩下不到一半(0.0108)）===
+  mean_diff = 0.6502 - 0.6639 = -0.0137  < +.02 (未達更好門檻)
+  dyn std = 0.0120  vs  threshold 0.0108(=0.5x baseline std 0.0217)  未明顯小
+  => 判讀：無差
+
+=== Q2：擾動 vs 無擾動（門檻：差>=+0.02）===
+  mean_diff = 0.6549 - 0.6502 = +0.0047  => 判讀：無效/無差
+
+saved: /home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/dyn_analysis.json

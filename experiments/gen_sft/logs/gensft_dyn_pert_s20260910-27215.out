@@ -1,0 +1,30 @@
+worktree: rewrite-dyn 730db5b2306647ae598e9e238874f89a7a783867
+node: zeldajr  corpus=results/corpus_dyn_v1.pt seed=20260910 steps=30000 tag=gensft_dyn_pert_s20260910 batch=256 perturb=1
+env(visible/gpu): CUDA_VISIBLE_DEVICES=0 GPU_DEVICE_ORDINAL=0 ROCR_VISIBLE_DEVICES=0 SLURM_GPUS_ON_NODE=1 SLURM_JOB_GPUS=0 
+
+
+============================ ROCm System Management Interface ============================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		Navi 48 [Radeon AI PRO R9700]
+GPU[0]		: Card Model: 		0x7551
+torch.cuda.is_available()=True on attempt 1
+[gpu-visibility guard] CUDA_VISIBLE_DEVICES='0' HIP_VISIBLE_DEVICES=None is_available(before importing gen_sft_common)=True
+[gpu-visibility guard] CUDA_VISIBLE_DEVICES='0' HIP_VISIBLE_DEVICES='' is_available(before importing gen_sft_common)=True
+[gpu-visibility guard] HIP_VISIBLE_DEVICES(after importing gen_sft_common)=''  is_available(cached)=True
+[gpu-visibility guard] HIP_VISIBLE_DEVICES(after importing gen_sft_common)=''  is_available(cached)=True
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/train_gen_sft_dyn.py", line 264, in <module>
+    main()
+  File "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/train_gen_sft_dyn.py", line 112, in main
+    blob = torch.load(args.corpus, weights_only=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/venvs/lacot-rocm/lib/python3.12/site-packages/torch/serialization.py", line 1484, in load
+    with _open_file_like(f, "rb") as opened_file:
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/venvs/lacot-rocm/lib/python3.12/site-packages/torch/serialization.py", line 759, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/venvs/lacot-rocm/lib/python3.12/site-packages/torch/serialization.py", line 740, in __init__
+    super().__init__(open(name, mode))
+                     ^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'results/corpus_dyn_v1.pt'

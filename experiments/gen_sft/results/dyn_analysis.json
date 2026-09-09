@@ -1,0 +1,186 @@
+{
+  "criteria": {
+    "mean_delta_threshold": 0.02,
+    "std_clearly_smaller_ratio_selfdefined": 0.5,
+    "perturb_delta_threshold": 0.02
+  },
+  "baseline_2cut": {
+    "rows": [
+      {
+        "seed": 20260909,
+        "R8": 0.6898876404494382,
+        "Rinf": 0.59,
+        "source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_aug_s20260909_summary.json"
+      },
+      {
+        "seed": 20260910,
+        "R8": 0.6651376146788991,
+        "Rinf": 0.533678756476684,
+        "source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_aug_s20260910_summary.json"
+      },
+      {
+        "seed": 20260911,
+        "R8": 0.6367924528301887,
+        "Rinf": 0.5930521091811415,
+        "source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_aug_s20260911_summary.json"
+      }
+    ],
+    "r8_mean": 0.6639392359861753,
+    "r8_std": 0.026567871964069806,
+    "rinf_mean": 0.5722436218859418,
+    "rinf_std": 0.03343299980018293
+  },
+  "dyn_nopert": {
+    "r8_values": [
+      0.6344339622641509,
+      0.6635294117647059,
+      0.6526806526806527
+    ],
+    "r8_mean": 0.6502146755698366,
+    "r8_std": 0.014703641649031651,
+    "rinf_values": [
+      0.5945945945945946,
+      0.5416666666666666,
+      0.5818639798488665
+    ],
+    "rinf_mean": 0.5727084137033759,
+    "rinf_std": 0.027626249877052172,
+    "rows": [
+      {
+        "seed": 20260909,
+        "R8": 0.6344339622641509,
+        "Rinf": 0.5945945945945946,
+        "eval_source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_dyn_nopert_s20260909_summary.json",
+        "train_summary": {
+          "total_steps_run": 8500,
+          "best_step": 4500,
+          "smoke_drop": 0.9061405658721924,
+          "held_out_top1_codes": 0.26202086414325115,
+          "held_out_top1_eos": 0.6,
+          "cut_stats": {
+            "n_cut": 1088871,
+            "n_full": 1087129
+          }
+        }
+      },
+      {
+        "seed": 20260910,
+        "R8": 0.6635294117647059,
+        "Rinf": 0.5416666666666666,
+        "eval_source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_dyn_nopert_s20260910_summary.json",
+        "train_summary": {
+          "total_steps_run": 8000,
+          "best_step": 4000,
+          "smoke_drop": 0.8915789127349854,
+          "held_out_top1_codes": 0.2612414564930653,
+          "held_out_top1_eos": 0.6586080586080586,
+          "cut_stats": {
+            "n_cut": 1024831,
+            "n_full": 1023169
+          }
+        }
+      },
+      {
+        "seed": 20260911,
+        "R8": 0.6526806526806527,
+        "Rinf": 0.5818639798488665,
+        "eval_source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_dyn_nopert_s20260911_summary.json",
+        "train_summary": {
+          "total_steps_run": 8500,
+          "best_step": 4500,
+          "smoke_drop": 0.8747885227203369,
+          "held_out_top1_codes": 0.26304008953195573,
+          "held_out_top1_eos": 0.6278388278388278,
+          "cut_stats": {
+            "n_cut": 1088871,
+            "n_full": 1087129
+          }
+        }
+      }
+    ]
+  },
+  "dyn_pert": {
+    "r8_values": [
+      0.651270207852194,
+      0.6324582338902148,
+      0.6810933940774487
+    ],
+    "r8_mean": 0.6549406119399525,
+    "r8_std": 0.024524449050591354,
+    "rinf_values": [
+      0.5823095823095823,
+      0.5934343434343434,
+      0.6098765432098765
+    ],
+    "rinf_mean": 0.5952068229846007,
+    "rinf_std": 0.013868691219312931,
+    "rows": [
+      {
+        "seed": 20260909,
+        "R8": 0.651270207852194,
+        "Rinf": 0.5823095823095823,
+        "eval_source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_dyn_pert_s20260909_summary.json",
+        "train_summary": {
+          "total_steps_run": 8000,
+          "best_step": 4000,
+          "smoke_drop": 0.9088947772979736,
+          "held_out_top1_codes": 0.26475878332467323,
+          "held_out_top1_eos": 0.5582417582417583,
+          "cut_stats": {
+            "n_perturbed": 1024831,
+            "n_cut": 1024831,
+            "n_full": 1023169
+          }
+        }
+      },
+      {
+        "seed": 20260910,
+        "R8": 0.6324582338902148,
+        "Rinf": 0.5934343434343434,
+        "eval_source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_dyn_pert_s20260910_summary.json",
+        "train_summary": {
+          "total_steps_run": 8500,
+          "best_step": 4500,
+          "smoke_drop": 0.8823940753936768,
+          "held_out_top1_codes": 0.25982253487349616,
+          "held_out_top1_eos": 0.6402930402930402,
+          "cut_stats": {
+            "n_perturbed": 1088871,
+            "n_cut": 1088871,
+            "n_full": 1087129
+          }
+        }
+      },
+      {
+        "seed": 20260911,
+        "R8": 0.6810933940774487,
+        "Rinf": 0.6098765432098765,
+        "eval_source": "/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/rewrite_eval_dyn_pert_s20260911_summary.json",
+        "train_summary": {
+          "total_steps_run": 8500,
+          "best_step": 4500,
+          "smoke_drop": 0.8778347969055176,
+          "held_out_top1_codes": 0.261920940085535,
+          "held_out_top1_eos": 0.6358974358974359,
+          "cut_stats": {
+            "n_perturbed": 1088871,
+            "n_cut": 1088871,
+            "n_full": 1087129
+          }
+        }
+      }
+    ]
+  },
+  "q1_dyn_vs_2cut": {
+    "mean_diff": -0.013724560416338738,
+    "better": false,
+    "std_threshold": 0.013283935982034903,
+    "more_stable": false,
+    "verdict": "\u7121\u5dee"
+  },
+  "q2_perturb_vs_nopert": {
+    "mean_diff": 0.0047259363701158685,
+    "effective": false,
+    "verdict": "\u7121\u6548/\u7121\u5dee"
+  }
+}

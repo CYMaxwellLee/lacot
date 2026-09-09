@@ -1,0 +1,71 @@
+worktree: rewrite-dyn 730db5b2306647ae598e9e238874f89a7a783867
+node: zeldajr  corpus=/home/cymaxwelllee/Projects/lacot-dyn/experiments/gen_sft/results/corpus_dyn_v1.pt seed=20260910 steps=30000 tag=gensft_dyn_pert_s20260910 batch=256 perturb=1
+env(visible/gpu): CUDA_VISIBLE_DEVICES=0 GPU_DEVICE_ORDINAL=0 ROCR_VISIBLE_DEVICES=0 SLURM_GPUS_ON_NODE=1 SLURM_JOB_GPUS=1 
+
+
+============================ ROCm System Management Interface ============================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		Navi 48 [Radeon AI PRO R9700]
+GPU[0]		: Card Model: 		0x7551
+torch.cuda.is_available()=True on attempt 1
+[gpu-visibility guard] CUDA_VISIBLE_DEVICES='0' HIP_VISIBLE_DEVICES=None is_available(before importing gen_sft_common)=True
+[gpu-visibility guard] CUDA_VISIBLE_DEVICES='0' HIP_VISIBLE_DEVICES='' is_available(before importing gen_sft_common)=True
+[gpu-visibility guard] HIP_VISIBLE_DEVICES(after importing gen_sft_common)=''  is_available(cached)=True
+[gpu-visibility guard] HIP_VISIBLE_DEVICES(after importing gen_sft_common)=''  is_available(cached)=True
+corpus(dyn): n_train_episodes=4457  use_full_prob=0.5  dyn_cut_seed=20260909  perturb=True  perturb_seed=20260912  (訓練 seed=20260910 只管權重初始化/batch-order)
+perturb_cfg: xy_sigma=0.311195  other_coef=0.005  (drift_source=/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis/results/drift_summary.json  target_p75=0.357983)
+held-out（沿用 corpus_aug_v1.pt 的 val split）: n_val=1365  ⚠️ 跟 antmaze -val.npz 的 200 題接力 eval 是兩件事
+model: d_model=128 n_layers=3 n_heads=4 n_params=620577
+  step=    0  loss=3.6700  ema=3.6700  lr=1.20e-06
+  step=   20  loss=3.6575  ema=3.6692  lr=1.32e-05
+  step=   40  loss=3.6173  ema=3.6571  lr=2.52e-05
+  step=   60  loss=3.5615  ema=3.6309  lr=3.72e-05
+  step=   80  loss=3.5102  ema=3.5955  lr=4.92e-05
+  step=  100  loss=3.4509  ema=3.5553  lr=6.12e-05
+  step=  120  loss=3.3910  ema=3.5123  lr=7.32e-05
+  step=  140  loss=3.3270  ema=3.4634  lr=8.52e-05
+  step=  160  loss=3.2262  ema=3.4011  lr=9.72e-05
+  step=  180  loss=3.1362  ema=3.3219  lr=1.09e-04
+  step=  200  loss=3.0434  ema=3.2427  lr=1.21e-04
+  step=  220  loss=3.0110  ema=3.1705  lr=1.33e-04
+  step=  240  loss=3.0050  ema=3.1130  lr=1.45e-04
+  step=  260  loss=2.9443  ema=3.0645  lr=1.57e-04
+  step=  280  loss=2.9461  ema=3.0259  lr=1.69e-04
+  step=  300  loss=2.9348  ema=2.9968  lr=1.81e-04
+  step=  320  loss=2.8974  ema=2.9696  lr=1.93e-04
+  step=  340  loss=2.8943  ema=2.9451  lr=2.05e-04
+  step=  360  loss=2.8729  ema=2.9261  lr=2.17e-04
+  step=  380  loss=2.8919  ema=2.9092  lr=2.29e-04
+  step=  400  loss=2.8198  ema=2.8920  lr=2.41e-04
+  step=  420  loss=2.8356  ema=2.8771  lr=2.53e-04
+  step=  440  loss=2.8463  ema=2.8630  lr=2.65e-04
+  step=  460  loss=2.7942  ema=2.8491  lr=2.77e-04
+  step=  480  loss=2.8065  ema=2.8345  lr=2.89e-04
+[eval step=   500] train_loss(ema)=2.8245  held_out_loss=2.7978  top1_codes=18.68%  top1_all=19.67%  top1_eos=55.97%  cut_stats={'n_perturbed': 63961, 'n_cut': 63961, 'n_full': 64039}
+[eval step=  1000] train_loss(ema)=2.5524  held_out_loss=2.5443  top1_codes=23.33%  top1_all=24.58%  top1_eos=70.70%  cut_stats={'n_perturbed': 128034, 'n_cut': 128034, 'n_full': 127966}
+[eval step=  1500] train_loss(ema)=2.4623  held_out_loss=2.4846  top1_codes=24.90%  top1_all=25.73%  top1_eos=56.19%  cut_stats={'n_perturbed': 191959, 'n_cut': 191959, 'n_full': 192041}
+[eval step=  2000] train_loss(ema)=2.4084  held_out_loss=2.4543  top1_codes=25.57%  top1_all=26.45%  top1_eos=58.61%  cut_stats={'n_perturbed': 255879, 'n_cut': 255879, 'n_full': 256121}
+[eval step=  2500] train_loss(ema)=2.3742  held_out_loss=2.4297  top1_codes=25.88%  top1_all=26.72%  top1_eos=57.44%  cut_stats={'n_perturbed': 319953, 'n_cut': 319953, 'n_full': 320047}
+[eval step=  3000] train_loss(ema)=2.3452  held_out_loss=2.4202  top1_codes=25.73%  top1_all=26.96%  top1_eos=71.87%  cut_stats={'n_perturbed': 384177, 'n_cut': 384177, 'n_full': 383823}
+[eval step=  3500] train_loss(ema)=2.3205  held_out_loss=2.4138  top1_codes=26.22%  top1_all=26.99%  top1_eos=55.46%  cut_stats={'n_perturbed': 448031, 'n_cut': 448031, 'n_full': 447969}
+[eval step=  4000] train_loss(ema)=2.2995  held_out_loss=2.4131  top1_codes=26.11%  top1_all=27.09%  top1_eos=63.08%  cut_stats={'n_perturbed': 511882, 'n_cut': 511882, 'n_full': 512118}
+[eval step=  4500] train_loss(ema)=2.2792  held_out_loss=2.4125  top1_codes=25.98%  top1_all=26.99%  top1_eos=64.03%  cut_stats={'n_perturbed': 576012, 'n_cut': 576012, 'n_full': 575988}
+[eval step=  5000] train_loss(ema)=2.2580  held_out_loss=2.4141  top1_codes=25.97%  top1_all=26.94%  top1_eos=62.34%  cut_stats={'n_perturbed': 640213, 'n_cut': 640213, 'n_full': 639787}
+[eval step=  5500] train_loss(ema)=2.2428  held_out_loss=2.4204  top1_codes=26.07%  top1_all=26.93%  top1_eos=58.46%  cut_stats={'n_perturbed': 704470, 'n_cut': 704470, 'n_full': 703530}
+[eval step=  6000] train_loss(ema)=2.2247  held_out_loss=2.4352  top1_codes=26.05%  top1_all=26.71%  top1_eos=51.21%  cut_stats={'n_perturbed': 768551, 'n_cut': 768551, 'n_full': 767449}
+[eval step=  6500] train_loss(ema)=2.2060  held_out_loss=2.4322  top1_codes=25.76%  top1_all=26.79%  top1_eos=64.32%  cut_stats={'n_perturbed': 832249, 'n_cut': 832249, 'n_full': 831751}
+[eval step=  7000] train_loss(ema)=2.1904  held_out_loss=2.4437  top1_codes=25.44%  top1_all=26.69%  top1_eos=72.53%  cut_stats={'n_perturbed': 896154, 'n_cut': 896154, 'n_full': 895846}
+[eval step=  7500] train_loss(ema)=2.1720  held_out_loss=2.4554  top1_codes=25.52%  top1_all=26.50%  top1_eos=62.56%  cut_stats={'n_perturbed': 960324, 'n_cut': 960324, 'n_full': 959676}
+[eval step=  8000] train_loss(ema)=2.1560  held_out_loss=2.4639  top1_codes=25.41%  top1_all=26.34%  top1_eos=60.66%  cut_stats={'n_perturbed': 1024831, 'n_cut': 1024831, 'n_full': 1023169}
+[eval step=  8500] train_loss(ema)=2.1416  held_out_loss=2.4720  top1_codes=25.10%  top1_all=26.28%  top1_eos=69.45%  cut_stats={'n_perturbed': 1088871, 'n_cut': 1088871, 'n_full': 1087129}
+⏹ held-out loss 連續 8 次 eval（4000 steps）沒有改善 > 0.001，提早停在 step=8500（plateau）
+
+=== smoke（前 500 steps）: loss[0]=3.6700 -> loss[~500]=2.7876  drop=0.8824  (亂猜 CE 基準=ln(32)=3.4657) ===
+saved checkpoint (best held-out loss @ step=4500): experiments/gen_sft/results/gensft_dyn_pert_s20260910_best.pt
+saved: experiments/gen_sft/results/gensft_dyn_pert_s20260910_loss_curve.png
+saved: experiments/gen_sft/results/gensft_dyn_pert_s20260910_train_summary.json
+
+=== FINAL（best checkpoint @ step=4500）===
+held-out loss=2.4125  top1_codes_only=25.98%  (baseline 3.125%)  top1_all=26.99%  top1_eos=64.03%
+cut_stats(全訓練累計)={'n_perturbed': 1088871, 'n_cut': 1088871, 'n_full': 1087129}
+=== done wall=343.5s  total_steps_run=8500 stopped_early=True ===
