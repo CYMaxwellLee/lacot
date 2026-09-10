@@ -128,7 +128,7 @@ if __name__ == "__main__":
               p25=xs * 0.05, p50=xs * 0.08, p75=xs * 0.12)
     g2 = dict(label="fake stuck", color_idx=7, xs=xs,
               p25=xs * 0.08, p50=xs * 0.15, p75=xs * 0.25)
-    out = "/tmp/claude-2007/-home-cymaxwelllee-Projects-elsa-agent-workspaces-luna/f61430f0-e6b8-4dfe-93de-8859ae65c8e4/scratchpad/_smoke_band.png"
-    os.makedirs(os.path.dirname(out), exist_ok=True)
+    import tempfile
+    out = os.path.join(tempfile.gettempdir(), "drift_plots_smoke_band.png")
     draw_percentile_band([g1, g2], out, "smoke test", "chunk index j", "xy drift (m)")
     print("saved smoke plot:", out)
