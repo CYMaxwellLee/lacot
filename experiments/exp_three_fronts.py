@@ -20,6 +20,12 @@ C. 寬距離 — eval 是 OOD。
 
 用 MODE 環境變數選要跑哪一格。
 """
+
+# ⚠️ 2026-09-27 對抗複驗標記（主人裁「標記結案」）：uniform goal 模式拒收短距離
+# goal 時整筆重抽（:64 一帶），連帶改變起點分布（實測接受率差 14 倍）——
+# 當時 uniform vs geometric 的模式間比較混了起點分布變因，該比較的結論僅供
+# 當時參考。本腳本為 9/2 一次性診斷、已由行為字典線取代，⛔ 不再據以下結論。
+
 import os, sys, copy, json, numpy as np, torch
 from torch import nn
 import torch.nn.functional as F

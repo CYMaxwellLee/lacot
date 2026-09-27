@@ -38,7 +38,10 @@ class GeoEnergy:
     ⭐ 權重排序是主人 2026-08-26 的原話：「穿牆應該要有個大懲罰」⇒ w_wall 最大。
     ⚠️ w_len 最小是刻意的：先要求「走得通」，再要求「走得短」。
        （交接記著一條：validity 比 length 更該當第一個訊號。）
+    穿牆項每段預設插 7 點（分成 8 等份），與原點一起取平均；
+    可設定 wall_interp_k 調整密度，長線段或薄牆可用更大的值。
     """
+    wall_interp_k = 7
 
     def __init__(self, obs_xy, mu, sd, res=8, device="cpu",
                  w_wall=10.0, w_goal=3.0, w_start=3.0, w_len=0.3):
@@ -150,7 +153,10 @@ class GeoEnergy:
            energy 框架也自然接 score-based generative 那一族（引擎未必永遠是 NF）。
            更新式同步翻成下坡：u ← u + η[−clip(∇E) + λ clip(∇log p)]，行為逐位等價。
         """
-        wall = self.wall_depth(pts).mean(1)
+        t = torch.arange(1, self.wall_interp_k + 1, device=pts.device, dtype=pts.dtype) / (self.wall_interp_k + 1)
+        inner = pts[:, :-1, None] * (1 - t[None, None, :, None]) + pts[:, 1:, None] * t[None, None, :, None]
+        wall_pts = torch.cat((pts, inner.flatten(1, 2)), dim=1)
+        wall = self.wall_depth(wall_pts).mean(1)
         goal = (pts[:, -1] - g).norm(dim=-1)
         start = (pts[:, 0] - s).norm(dim=-1)
         length = (pts[:, 1:] - pts[:, :-1]).norm(dim=-1).sum(1)
