@@ -63,6 +63,32 @@ def get_code_embed(gk_model, idx):
     return z_q.detach()
 
 
+def subspace_indices(obs_dim):
+    """Return ant observation axes in qpos(15)|qvel(14) layout.
+
+    xy is qpos[0:2], yaw is the free-joint quaternion qpos[3:7], and gait
+    is the remaining shape/height/velocity coordinates. For tiny synthetic
+    fixtures without the ant layout, treat all dimensions as one subspace.
+    """
+    if obs_dim < 29:
+        return {"all": np.arange(obs_dim, dtype=np.int64)}
+    return {
+        "xy": np.array([0, 1]),
+        "yaw": np.arange(3, 7),
+        "gait": np.array([2, *range(7, 29)]),
+    }
+
+
+def subspace_mse(pred, target, obs_dim, seg_len):
+    """MSE over every timestep and only the requested state coordinates."""
+    pred = pred.reshape(len(pred), seg_len, obs_dim)
+    target = target.reshape(len(target), seg_len, obs_dim)
+    return {
+        name: float(np.mean((pred[:, :, dims] - target[:, :, dims]) ** 2))
+        for name, dims in subspace_indices(obs_dim).items()
+    }
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", type=str, required=True,
@@ -128,8 +154,12 @@ def main():
     val_z = get_code_embed(gk_model, idx_all[val_idx])           # (n_val, G*D)
     train_obs = T(obs_start_norm_all[train_idx])                 # (n_train, obs_dim)
     val_obs = T(obs_start_norm_all[val_idx])
-    train_target = T(s_next_norm_all[train_idx])                 # (n_train, seg_len*obs_dim)
-    val_target = T(s_next_norm_all[val_idx])
+    # Predict displacement from the current state. The normalized observation
+    # is still supplied as input; only the ŝ target is changed.
+    s_next_delta_norm_all = (s_next_norm_all.reshape(-1, seg_len, obs_dim)
+                             - obs_start_norm_all[:, None, :]).reshape(-1, seg_len * obs_dim)
+    train_target = T(s_next_delta_norm_all[train_idx])
+    val_target = T(s_next_delta_norm_all[val_idx])
     n_train = len(train_idx)
 
     # ------------------------------------------------------------
@@ -166,6 +196,22 @@ def main():
         loss.backward()
         obs_only_opt.step()
 
+    # Keep the pairing-only corruption control on its original absolute ŝ
+    # target. This control is orthogonal to the displacement probe above and
+    # preserves its established interpretation for state-determined codes.
+    train_target_absolute = T(s_next_norm_all[train_idx])
+    val_target_absolute = T(s_next_norm_all[val_idx])
+    pairing_probe = gkc.MLP(G * D + obs_dim, seg_len * obs_dim, hidden=args.hidden)
+    pairing_opt = torch.optim.Adam(pairing_probe.parameters(), lr=args.lr)
+    pairing_batch_rng = np.random.default_rng(args.seed + 1)
+    for _ in range(args.steps):
+        bidx = pairing_batch_rng.integers(0, n_train, size=args.batch)
+        pred = pairing_probe(torch.cat([train_z[bidx], train_obs[bidx]], dim=1))
+        loss = F.mse_loss(pred, train_target_absolute[bidx])
+        pairing_opt.zero_grad()
+        loss.backward()
+        pairing_opt.step()
+
     train_seconds = time.time() - t0
 
     # ------------------------------------------------------------
@@ -173,6 +219,7 @@ def main():
     # ------------------------------------------------------------
     probe.eval()
     obs_only_probe.eval()
+    pairing_probe.eval()
     with torch.no_grad():
         pred_val_real = probe(torch.cat([val_z, val_obs], dim=1))
         err_real = float(F.mse_loss(pred_val_real, val_target).item())
@@ -185,8 +232,26 @@ def main():
         # ------------------------------------------------------------
         bad_rng = np.random.default_rng(args.bad_anchor_seed)
         perm = bad_rng.permutation(len(val_idx))
-        pred_val_bad = probe(torch.cat([val_z[perm], val_obs], dim=1))
-        err_bad = float(F.mse_loss(pred_val_bad, val_target).item())
+        pred_val_pair_real = pairing_probe(torch.cat([val_z, val_obs], dim=1))
+        pred_val_bad = pairing_probe(torch.cat([val_z[perm], val_obs], dim=1))
+        err_pair_real = float(F.mse_loss(pred_val_pair_real, val_target_absolute).item())
+        err_bad = float(F.mse_loss(pred_val_bad, val_target_absolute).item())
+
+        # Retain full per-sample predictions so later comparisons need no retraining.
+        pred_val_obs_only = obs_only_probe(val_obs)
+
+    target_np = val_target.cpu().numpy()
+    pred_np = pred_val_real.cpu().numpy()
+    pred_bad_np = pred_val_bad.cpu().numpy()
+    pred_obs_np = pred_val_obs_only.cpu().numpy()
+    subspace_real = subspace_mse(pred_np, target_np, obs_dim, seg_len)
+    subspace_obs = subspace_mse(pred_obs_np, target_np, obs_dim, seg_len)
+    subspace_bad = subspace_mse(pred_bad_np, val_target_absolute.cpu().numpy(), obs_dim, seg_len)
+    subspace_code_information = {
+        name: subspace_real[name] < subspace_obs[name] * args.code_info_margin
+        for name in subspace_real
+    }
+    code_adds_information = any(subspace_code_information.values())
 
     # ------------------------------------------------------------
     # 參照 (a)：λ1 自帶頭的 ŝ 誤差，直接讀 json，不重跑
@@ -199,11 +264,10 @@ def main():
         f"⛔ λ1 參照 json 的 G/K={lam1_metrics['G']}/{lam1_metrics['K']} 跟本次探測的 λ0 ckpt "
         f"G/K={G}/{K} 對不上，停手回報，不准硬比")
 
-    ratio_bad_to_real = err_bad / max(err_real, 1e-12)
+    ratio_bad_to_real = err_bad / max(err_pair_real, 1e-12)
     measurement_suspect = ratio_bad_to_real < args.suspect_ratio_threshold
     ratio_to_lambda1 = err_real / max(ref_a_recon_s_val, 1e-12)
     ratio_full_vs_obsonly = err_obs_only / max(err_real, 1e-12)
-    code_adds_information = err_real < err_obs_only * args.code_info_margin
 
     if measurement_suspect:
         verdict = "shuffle 未顯示足夠配對依賴；碼的增量資訊另見 obs-only 判準"
@@ -220,11 +284,17 @@ def main():
     print(f"(real) val ŝ MSE (外掛頭，正確配對)     = {err_real:.6f}")
     print(f"(a)    λ1 自帶頭 ŝ MSE（參照上界，讀檔） = {ref_a_recon_s_val:.6f}  "
           f"(ratio real/lambda1 = {ratio_to_lambda1:.3f}, 越接近1越好)")
-    print(f"(b)    爛錨 control ŝ MSE（碼打亂）       = {err_bad:.6f}  "
+    print(f"(b)    爛錨 control absolute ŝ MSE（碼打亂） = {err_bad:.6f}  "
           f"(ratio bad/real = {ratio_bad_to_real:.3f}, [拍]門檻={args.suspect_ratio_threshold}；只檢查碼×狀態配對依賴)")
     print(f"(c)    obs-only ŝ MSE（只給狀態）         = {err_obs_only:.6f}  "
           f"(ratio obs-only/full = {ratio_full_vs_obsonly:.3f}；碼有增量資訊={code_adds_information}，"
           f"判準 err_real < err_obs_only × {args.code_info_margin})")
+    for name in subspace_real:
+        print(f"      {name}: real={subspace_real[name]:.6f} obs-only={subspace_obs[name]:.6f} "
+              f"code_adds_information={subspace_code_information[name]} "
+              f"pairing_shuffle_absolute={subspace_bad[name]:.6f}")
+    print(f"      pooled (附欄，不作判準): real={err_real:.6f} obs-only={err_obs_only:.6f} "
+          f"(displacement target)")
     print(f"判定：{verdict}")
 
     summary = dict(
@@ -236,7 +306,11 @@ def main():
                   input_dim=G * D + obs_dim, output_dim=seg_len * obs_dim,
                   input_recipe="concat(code_embed_from_frozen_dict, obs_t_norm)"),
         bad_anchor=dict(seed=args.bad_anchor_seed, method="permute code embedding pairing only, keep obs_t_norm true"),
-        results=dict(err_real_val=err_real, err_bad_val=err_bad, err_obs_only=err_obs_only,
+        results=dict(err_real_val=err_real, err_bad_val=err_bad,
+                    err_pair_real_absolute_val=err_pair_real, err_obs_only=err_obs_only,
+                    subspace_err_real=subspace_real, subspace_err_bad=subspace_bad,
+                    subspace_err_obs_only=subspace_obs,
+                    subspace_code_adds_information=subspace_code_information,
                     ref_a_lambda1_recon_s_val=ref_a_recon_s_val,
                     ratio_bad_to_real=ratio_bad_to_real, ratio_real_to_lambda1=ratio_to_lambda1,
                     ratio_full_vs_obsonly=ratio_full_vs_obsonly,
@@ -250,6 +324,22 @@ def main():
     js_path = os.path.join(args.out_dir, f"{args.tag}_summary.json")
     save_json(summary, js_path)
     print(f"saved: {js_path}")
+    npz_path = os.path.join(args.out_dir, f"{args.tag}_probe.npz")
+    np.savez_compressed(
+        npz_path,
+        **{f"probe_state::{k}": v.detach().cpu().numpy() for k, v in probe.state_dict().items()},
+        **{f"obs_only_state::{k}": v.detach().cpu().numpy()
+           for k, v in obs_only_probe.state_dict().items()},
+        **{f"pairing_state::{k}": v.detach().cpu().numpy()
+           for k, v in pairing_probe.state_dict().items()},
+        val_indices=val_idx,
+        val_target_displacement_normalized=target_np,
+        pred_val_real=pred_np,
+        pred_val_shuffled_code=pred_bad_np,
+        pred_val_pair_real=pred_val_pair_real.cpu().numpy(),
+        pred_val_obs_only=pred_obs_np,
+    )
+    print(f"saved: {npz_path}")
     print(f"=== done wall={time.time()-t0:.1f}s ===")
 
 
