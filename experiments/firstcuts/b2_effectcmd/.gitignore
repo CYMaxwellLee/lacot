@@ -1,0 +1,5 @@
+*.npz
+__pycache__/
+synthetic_wiring*/
+official_wiring*/
+results*/
