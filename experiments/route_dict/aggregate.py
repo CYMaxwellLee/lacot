@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""彙整路線字典 3 格結果成一份 summary.json（純數字彙整，不重跑模型）。"""
+"""彙整路線字典 3 格結果成 summary.json；只讀新參數 tag 的 K{K}_*.json。"""
+import glob
 import json
 import os
 import sys
@@ -15,10 +16,13 @@ def main():
     cells = []
     missing = []
     for K in KS:
-        path = os.path.join(RESULTS_DIR, f"K{K}.json")
-        if not os.path.exists(path):
+        paths = glob.glob(os.path.join(RESULTS_DIR, f"K{K}_*.json"))
+        if not paths:
             missing.append(f"K{K}")
             continue
+        if len(paths) != 1:
+            raise ValueError(f"K{K} 有 {len(paths)} 份結果，請只留一份再彙整：{sorted(paths)}")
+        path = paths[0]
         with open(path) as f:
             r = json.load(f)
         m = r["metrics"]

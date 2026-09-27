@@ -825,8 +825,11 @@ if not ok_ctrl:
 os.makedirs(OUT_DIR, exist_ok=True)
 out = os.path.join(OUT_DIR,
     f"value_u_{ENV_NAME}_T{T_FIX}_K{K}_e{EPS}_p{EVAL_PAIRS}_s1{STEPS1}_sv{STEPS_V}"
-    f"_wm{W_MSE:g}_wr{W_RANK:g}_wn{W_NEG:g}_sg{int(USE_SG)}"
-    f"_o{int(ORACLE)}_{SAMPLE}_q{int(SG_QUERY)}_s{SEED}.json")
+    f"_wm{W_MSE:.17g}_wr{W_RANK:.17g}_wn{W_NEG:.17g}_sg{int(USE_SG)}"
+    f"_o{int(ORACLE)}_{SAMPLE}_q{int(SG_QUERY)}_s{SEED}"
+    f"{'_wc'+repr(W_CTR2) if W_CTR2 != 0.3 else ''}"
+    f"{'_tp'+str(TRAIN_PAIRS) if TRAIN_PAIRS != 200000 else ''}"
+    f"{'_sh'+str(SHUFFLE_CTRL) if SHUFFLE_CTRL != 1 else ''}.json")
 with open(out, "w") as f:
     json.dump(report, f, indent=2, allow_nan=False)          # ⚠️ 裸 NaN 會讓 jq / JS 解析失敗
 print(f"存到 {out}", flush=True)

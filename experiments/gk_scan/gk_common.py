@@ -52,7 +52,11 @@ def hex_to_rgb(h):
 # ------------------------------------------------------------------
 # 資料：切動作段 + 段起點 obs
 # ------------------------------------------------------------------
-def load_segments_with_obs(data_path, seg_len=4, split_seed=42, val_frac=0.1):
+def load_segments_with_obs(data_path, seg_len=4, split_seed=42, val_frac=0.1, split_by="trajectory"):
+    """Split whole trajectories by default; val_frac is truncated from trajectory count.
+
+    split_by="segment" reproduces the former segment-level permutation and split.
+    """
     d = np.load(data_path)
     actions = np.asarray(d["actions"], dtype=np.float32)
     observations = np.asarray(d["observations"], dtype=np.float32)
@@ -97,10 +101,20 @@ def load_segments_with_obs(data_path, seg_len=4, split_seed=42, val_frac=0.1):
     obs_start = observations[seg_starts].astype(np.float32)  # (N, obs_dim)
 
     rng = np.random.default_rng(split_seed)
-    perm = rng.permutation(len(seg_starts))
-    n_val = int(len(perm) * val_frac)
-    val_idx = perm[:n_val]
-    train_idx = perm[n_val:]
+    if split_by == "segment":
+        perm = rng.permutation(len(seg_starts))
+        n_val = int(len(perm) * val_frac)
+        val_idx = perm[:n_val]
+        train_idx = perm[n_val:]
+    elif split_by == "trajectory":
+        perm = rng.permutation(n_ep)
+        n_val = int(n_ep * val_frac)
+        trajectory_ids = np.searchsorted(ends, seg_starts)
+        is_val = np.isin(trajectory_ids, perm[:n_val])
+        val_idx = np.flatnonzero(is_val)
+        train_idx = np.flatnonzero(~is_val)
+    else:
+        raise ValueError(f"Unknown split_by: {split_by!r}")
 
     return dict(
         segs=segs,

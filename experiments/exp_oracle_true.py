@@ -274,7 +274,11 @@ res["null"] = rollout("null", 0, "null-u floor (head(0))")
 
 import json as _json
 _out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                    f"results_oracle_K{K}_seed{SEED}_{model.head_kind}.json")
+                    f"results_oracle_K{K}_seed{SEED}_{model.head_kind}"
+                    f"{'_s1'+str(STEPS1) if STEPS1 != 1500 else ''}"
+                    f"{'_s2'+str(STEPS2) if STEPS2 != 4000 else ''}"
+                    f"{'_mh'+str(MAXH) if MAXH != 1000 else ''}"
+                    f"{'_ep'+str(EPISODES) if EPISODES != 20 else ''}.json")
 with open(_out, "w") as _f:
     _json.dump({"K": K, "dim": K * D_MODEL, "seed": SEED, "head": model.head_kind,
                 "steps1": STEPS1, "steps2": STEPS2, "match_acc": MATCH_ACC,

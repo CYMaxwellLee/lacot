@@ -199,7 +199,12 @@ best = min(rows, key=lambda r: r["info"])
 print(f"\n路徑資訊最好的是第 {best['round']} 輪（{best['info']:.4f}）")
 print(f"cos 最好的是第 {max(rows, key=lambda r: r['cos_et'])['round']} 輪")
 out = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                   "results", f"rounds_seed{SEED}.json")
+                   "results", f"rounds_seed{SEED}"
+                   f"{'_s1'+str(STEPS1) if STEPS1 != 1200 else ''}"
+                   f"{'_s2'+str(STEPS2) if STEPS2 != 3000 else ''}"
+                   f"{'_ps'+str(PROBE_STEPS) if PROBE_STEPS != 1200 else ''}"
+                   f"{'_em'+repr(EMA_M) if EMA_M != 0.996 else ''}"
+                   f"{'_mr'+str(MAX_ROUNDS) if MAX_ROUNDS != 12 else ''}.json")
 os.makedirs(os.path.dirname(out), exist_ok=True)
 with open(out, "w") as f:
     json.dump(dict(seed=SEED, ema_m=EMA_M, interp=interp, et_collapse=et_col,

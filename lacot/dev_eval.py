@@ -179,6 +179,7 @@ def paired_diff(rows_a, rows_b, boot=2000, seed=0):
     """配對差值 ＋ bootstrap CI。⚠️ 兩邊必須是同一批題、同樣的順序。"""
     assert len(rows_a) == len(rows_b), "⛔ 兩個 arm 的題數不一樣 ⇒ 不是配對的"
     assert all(x["idx"] == y["idx"] for x, y in zip(rows_a, rows_b)), "⛔ 題目順序對不上"
+    assert all(x.get("task_id") is not None and x["task_id"] == y.get("task_id") for x, y in zip(rows_a, rows_b)), "⛔ task_id 缺失或不一致 ⇒ 無法驗證配對"
     d = np.array([float(x["success"]) - float(y["success"]) for x, y in zip(rows_a, rows_b)])
     rng = np.random.default_rng(seed)
     bs = [d[rng.integers(0, len(d), len(d))].mean() for _ in range(boot)]

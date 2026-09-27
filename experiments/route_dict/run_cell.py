@@ -50,7 +50,10 @@ def main():
 
     torch.set_num_threads(max(1, args.threads))
 
-    tag = f"K{args.k}"
+    tag = (f"K{args.k}_s{args.seed}_ss{args.split_seed}_st{args.steps}_b{args.batch}"
+           f"_lr{repr(args.lr)}_be{repr(args.beta)}_ld{args.latent_dim}_h{args.hidden}"
+           f"_de{repr(args.decay)}_dead{args.dead_steps}_vf{repr(args.val_frac)}"
+           f"_ar{repr(args.arc_length)}_nr{args.n_resample}_ce{args.n_cluster_examples}")
     print(f"=== route_dict run {tag} (seed={args.seed}, split_seed={args.split_seed}) ===")
 
     data_path = os.path.join(args.data_dir, f"{rc.DATASET_NAME}.npz")

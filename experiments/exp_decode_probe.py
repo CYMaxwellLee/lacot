@@ -112,11 +112,15 @@ T_CAP = min(int(os.environ.get("LACOT_TCAP", 128)), MAX_TRAIN_T)
 B, D_MODEL = 64, 256
 # ⭐ held-out：整條軌跡切開，⛔ 不是切 row —— 切 row 的話同一條路會同時出現在兩邊。
 IS_HELD = (traj_id % HOLDOUT_MOD) == 0
+ELIGIBLE_ROW_COUNTS = {held: int(np.count_nonzero((traj_end - np.arange(N) >= CHUNK) & (IS_HELD == held)))
+                       for held in (False, True)}
 print(f"T_CAP={T_CAP}  K={K}  held-out 軌跡 {IS_HELD.sum()/N:.1%} 的 row", flush=True)
 
 
 def make_batch(rng, held=False, bs=None):
     """⛔ 抽樣邏輯與主線逐字相同，只多了 held-out 過濾。"""
+    if ELIGIBLE_ROW_COUNTS[held] == 0:
+        raise ValueError(f"no eligible rows for held={held} (LACOT_DP_HOLDOUT={HOLDOUT_MOD}, CHUNK={CHUNK})")
     bs = bs or B
     rows, goals = [], []
     while len(rows) < bs:

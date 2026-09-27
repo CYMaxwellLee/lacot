@@ -304,7 +304,7 @@ class LaCoTActorState(nn.Module):
 
     @torch.no_grad()
     def sample_u(self, cond: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
-        """Draw u ~ p(.|cond); `temperature` scales the base Gaussian (0 = the mode)."""
+        """Draw u ~ p(.|cond); `temperature` scales the base Gaussian (0 = inverse image of its mean, not necessarily the mode under a non-identity flow)."""
         z = torch.randn(cond.shape[0], self.k, self.d_model, device=cond.device) * temperature
         u = z
         for i in reversed(range(len(self.flow.blocks))):

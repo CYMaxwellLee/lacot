@@ -3127,7 +3127,7 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            sub_cap_chunks=SUB_CAP, sub_stuck_chunks=SUB_STUCK, dec_anchor=DEC_ANCHOR,
            teacher_mix=TEACHER_MIX,
            intent=INTENT, intent_ta=INTENT_TA, intent_src=INTENT_SRC,
-           # ⭐ 診斷旋鈕：⛔ 不進檔名（產物靠 OUT_DIR 分目錄）⇒ 收表時只有這一格認得出是哪個 w
+           # ⭐ 診斷旋鈕也記進身份欄；非預設值另進檔名，避免同目錄互蓋。
            intent_drop=INTENT_DROP, intent_zero=INTENT_ZERO, guid_w=INTENT_GUID_W,
            # ⭐ 續訓／L_div（9/5）：cont_steps 是【續了幾步】，steps2 在續訓模式恆 0
            cont_train=CONT_TRAIN, cont_steps=CONT_STEPS,
@@ -3135,9 +3135,8 @@ out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chun
            # ⭐ GRPO（9/6）：⛔ 只在開著時進 json ⇒ 預設輸出逐 key 不變
            **({"grpo_w": GRPO_W, "grpo_g": GRPO_G, "grpo_every": GRPO_EVERY, "grpo_bq": GRPO_BQ,
                "grpo_warm": GRPO_WARM, "grpo_stdnorm": GRPO_STDNORM} if GRPO_W > 0 else {}),
-           # ⭐ 推論期 BoN（9/6）：⛔ 同 GRPO 慣例 —— 只在開著時進 json ⇒ 預設輸出逐 key 不變。
-           #    ⭐ bon_n 是身份欄（跟 _bon{N} 檔名段同一件事）；bon 那包是統計，在 rollout 之後補。
-           **({"bon_n": BON_N, "bon_mode": BON_MODE} if BON_N > 0 else {}),
+           # ⭐ 推論期 BoN（9/6）：bon_mode 只在開著時記；bon_n 於存檔前必記作身份欄。
+           **({"bon_mode": BON_MODE} if BON_N > 0 else {}),
            # ⭐ 訓練側加速（9/6）：⛔ 同 GRPO 慣例 —— 只在開著時進 json ⇒ 預設輸出逐 key 不變。
            #    amp_skip/steps 是收斂比對的第一格：跳掉的步＝沒更新的步。
            **({"amp": AMP, "amp_skip": _AMP_ST["skip"], "amp_steps": _AMP_ST["steps"]} if AMP else {}),
@@ -3460,6 +3459,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
                CONT_TRAIN=0, STEPS2=2000, DIV_W=0.0, DIV_M=0.3,
                GRPO_W=0.0, GRPO_G=8, GRPO_EVERY=1, GRPO_BQ=4, GRPO_WARM=500, GRPO_STDNORM=1,
                AMP=0, COMPILE=0, BON_N=0,
+               INTENT_ZERO=0, INTENT_GUID_W=0.0,
                LO_W=0.0, LO_ADV=0, LO_ADV_BETA=1.0, LO_KMIN=10, LO_KMAX=60):
     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
 
@@ -3470,11 +3470,11 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
     if ENC_OBJ != "sg_infonce":
         x += f"_eo{ENC_OBJ}"
     if TEACHER_MIX > 0:                              # ⭐ P1b teacher 資料引擎
-        x += f"_tch{TEACHER_MIX:g}"
+        x += f"_tch{repr(TEACHER_MIX)}"
     if BOOT_TAG:                                     # ⭐ P2 自舉輪次（⛔ 沒有它自舉 ckpt 會蓋非自舉）
         x += f"_bt{BOOT_TAG}"
     if EMA_W > 0:                                    # ⭐ 權重 EMA 訓練檔（ckpt 內容多 ema 段）
-        x += f"_emw{EMA_W:g}"
+        x += f"_emw{repr(EMA_W)}"
     if LOAD_EMA:                                     # ⭐ eval 用影子權重（同顆 raw/ema 配對對照）
         x += "_ema"
     if BC_OWN:                                       # ⭐ 真獨立 GCBC（own 鏈、8/31）
@@ -3502,13 +3502,17 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
     if INTENT_TAG:                                   # ⭐ intent 三接法（9/4；⛔ 不進檔名三個接法會互蓋）
         x += INTENT_TAG
     if INTENT_DROP > 0:                              # ⭐ 內化錶（9/5；⛔ 不進檔名會蓋同 seed 無 drop 檔）
-        x += f"_idp{INTENT_DROP:g}"
+        x += f"_idp{repr(INTENT_DROP)}"
+    if INTENT_ZERO:
+        x += "_iz"
+    if INTENT_GUID_W != 0.0:
+        x += f"_igw{repr(INTENT_GUID_W)}"
     if CONT_TRAIN:                                   # ⭐ 續訓（9/5 warm-start；⛔ 不進檔名會蓋掉【來源那顆】）
         x += f"_ct{STEPS2}"                          # ⚠️ 這裡的 STEPS2＝續訓步數（主 tag 的 _st 段是 0）
     if DIV_W > 0:                                    # ⭐ L_div hinge（9/5 內化藥第一帖）
-        x += f"_dvw{DIV_W:g}" + (f"m{DIV_M:g}" if DIV_M != 0.3 else "")
+        x += f"_dvw{repr(DIV_W)}" + (f"m{repr(DIV_M)}" if DIV_M != 0.3 else "")
     if GRPO_W > 0:                                   # ⭐ GRPO-on-thoughts（9/6；⛔ 不進檔名會蓋掉純 FM 對照）
-        x += f"_grpo{GRPO_W:g}"
+        x += f"_grpo{repr(GRPO_W)}"
         if GRPO_G != 8:
             x += f"g{GRPO_G}"
         if GRPO_EVERY != 1:
@@ -3522,21 +3526,21 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
     if SUB_SNAP:                                     # ⭐ 路標吸附（9/2 晚）
         x += "_snap"
     if SUB_HEADGUARD > 0:                            # ⭐ 開頭守門（9/2 晚）
-        x += f"_hg{SUB_HEADGUARD:g}"
+        x += f"_hg{repr(SUB_HEADGUARD)}"
     if DEC_START:                                    # ⭐ 開頭綁定（9/2 晚；hard/soft）
         x += f"_ds{DEC_START}"
     if LR_SCALE != 1.0:                              # ⭐ lr 縮放（9/1 病因診斷）
-        x += f"_lrs{LR_SCALE:g}"
+        x += f"_lrs{repr(LR_SCALE)}"
     if not LEARNED_REFINE:
         x += "_norf"
     if COND_DROP > 0:
-        x += f"_cd{COND_DROP:g}"
+        x += f"_cd{repr(COND_DROP)}"
     if BC_INDEP:
         x += "_bci"
     if SUBGOAL:                                  # ⭐ S1 / S0 的分水嶺
         x += f"_sg{SUBGOAL}"
         if DELTA_SUB != 7.5:
-            x += f"_ds{DELTA_SUB:g}"
+            x += f"_ds{repr(DELTA_SUB)}"
         if SUB_CAP != 10:
             x += f"_sc{SUB_CAP}"
         if SUB_STUCK != 3:
@@ -3544,7 +3548,7 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
         if SUBGOAL.startswith("conf") and SUB_M != 4:
             x += f"_m{SUB_M}"
         if SUB_MAX_ARC > 0:                      # conf2 選點上限（DELTA_SUB 倍數）
-            x += f"_ma{SUB_MAX_ARC:g}"
+            x += f"_ma{repr(SUB_MAX_ARC)}"
         if SUB_POLICY:                           # 歸因對照：短程走 bc
             x += f"_sp{SUB_POLICY}"
         if DEC_ANCHOR:                           # eval-time 平移錨定（供點解碼路徑）
@@ -3554,17 +3558,17 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
             x += f"_sel{SEL_N}"
         x += f"_gr{GRAD_R}"
         if GRAD_ETA != 0.1:
-            x += f"e{GRAD_ETA:g}"
+            x += f"e{repr(GRAD_ETA)}"
         if GRAD_LAM != 0.3:
-            x += f"l{GRAD_LAM:g}"
+            x += f"l{repr(GRAD_LAM)}"
         if GRAD_R_WARM != 10:
             x += f"w{GRAD_R_WARM}"
         if W_LEN != 0.3:                         # 病一快篩（w_len 只在爬坡開著時有作用）
-            x += f"_wl{W_LEN:g}"
+            x += f"_wl{repr(W_LEN)}"
         if GRAD_PROJ:
             x += "_prj"
     if FINISH_R > 0.0:                           # 病二快篩（rs＝resample 模式）
-        x += f"_fin{FINISH_R:g}" + ("rs" if FINISH_MODE == "resample" else "")
+        x += f"_fin{repr(FINISH_R)}" + ("rs" if FINISH_MODE == "resample" else "")
     if DEV_TIERS:                                # 只跑部分 tier 的結果 ⛔ 不可跟全 tier 混
         x += "_dt" + DEV_TIERS.replace(",", "")
     # 🚨 BoN 一定要進檔名（防互蓋鐵則）：同一顆 ckpt、同一組 eval 參數，開不開 BoN／開幾條
@@ -3586,9 +3590,9 @@ def _tag_extra(ENC_OBJ="sg_infonce", LEARNED_REFINE=1, COND_DROP=0.0, BC_INDEP=0
     #    ⚠️ adv／k 範圍也一起帶 —— 它們改的是【權重本身】（同 GRPO 那段的慣例）。
     #    ⭐ 只有非預設（>0）才加 ⇒ 既有檔名一個字不變；eval 的 _splo 走 SUB_POLICY 那格。
     if LO_W > 0:
-        x += f"_loW{LO_W:g}"
+        x += f"_loW{repr(LO_W)}"
         if LO_ADV:
-            x += f"a{LO_ADV_BETA:g}"
+            x += f"a{repr(LO_ADV_BETA)}"
         if LO_KMIN != 10 or LO_KMAX != 60:
             x += f"k{LO_KMIN}-{LO_KMAX}"
     return x
@@ -3624,6 +3628,7 @@ _extra = _tag_extra(ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE, COND_DROP=CO
                     GRPO_W=GRPO_W, GRPO_G=GRPO_G, GRPO_EVERY=GRPO_EVERY, GRPO_BQ=GRPO_BQ,
                     GRPO_WARM=GRPO_WARM, GRPO_STDNORM=GRPO_STDNORM,
                     AMP=AMP, COMPILE=COMPILE, BON_N=BON_N,
+                    INTENT_ZERO=INTENT_ZERO, INTENT_GUID_W=INTENT_GUID_W,
                     LO_W=LO_W, LO_ADV=LO_ADV, LO_ADV_BETA=LO_ADV_BETA,
                     LO_KMIN=LO_KMIN, LO_KMAX=LO_KMAX)
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
@@ -3652,6 +3657,7 @@ if LO_ON:
 # ⭐ BoN 統計（9/6）：⛔ 0 也要落地 —— 「開著但一次都沒換過計畫」必須看得見。
 #    changed／degen 是判讀的第一格：degen 高＝閘把 N 條全打成同分（多半全 0）⇒ 沒得選；
 #    changed 低而成功率有動＝那個動不是 BoN 帶來的，要先懷疑別的東西。
+out["bon_n"] = BON_N  # 缺欄視為未知；新檔必記，讓下次同身份重跑可通過守門。
 if BON_N > 1:
     _bp = max(_BON_ST["plans"], 1)
     out["bon"] = dict(n=BON_N, mode=BON_MODE, rho_len=_BON_RHO, dstep=_BON_DSTEP,
@@ -3692,11 +3698,11 @@ if os.path.exists(dst):
             _old = json.load(_f)
     except Exception:
         _old = None
-    if _old is not None:
-        for _k in ("guid_w", "intent_zero", "intent_drop", "bon_n"):
-            _ov, _nv = _old.get(_k), out.get(_k)
-            assert _ov is None or _ov == _nv, \
-                f"⛔ {dst} 已存在且身份欄不同（{_k}: 舊={_ov} 新={_nv}）— OUT_DIR 用錯了，拒絕覆蓋"
+    assert _old is not None, f"⛔ {dst} 已存在但無法讀取身份欄 — 拒絕覆蓋"
+    for _k in ("guid_w", "intent_zero", "intent_drop", "bon_n"):
+        _ov, _nv = _old.get(_k), out.get(_k)
+        assert _ov is not None and _ov == _nv, \
+            f"⛔ {dst} 已存在且身份欄未知或不同（{_k}: 舊={_ov} 新={_nv}）— 拒絕覆蓋"
 with open(dst, "w") as f:
     json.dump(out, f, indent=1)
 if DIAG_DUMP and DIAG_ROWS:

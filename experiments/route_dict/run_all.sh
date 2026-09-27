@@ -20,5 +20,5 @@ done
 wait
 
 echo "=== run_all.sh done: $(date) ==="
-echo "cells expected: 3, jsons found: $(ls results/K*.json 2>/dev/null | wc -l)"
+echo "cells expected: 3, jsons found: $(ls results/K[0-9]*_*.json 2>/dev/null | wc -l)"
 grep -c '^EXIT=0' logs/_exit_codes.log 2>/dev/null | xargs -I{} echo "successful exits: {}"
