@@ -1,0 +1,149 @@
+{
+  "status": "NUMBERS_ONLY_LEAD_JUDGES",
+  "n_segments": 20,
+  "n_between_pairs": 190,
+  "same_segment_cosine_distance": {
+    "min": 0.02177686847817928,
+    "q25": 0.07972008721466345,
+    "median": 0.10356470724185834,
+    "q75": 0.13358034537320582,
+    "max": 0.3215464005958928
+  },
+  "different_segment_cosine_distance": {
+    "min": 0.010436688709792197,
+    "q25": 0.8995037410964397,
+    "median": 0.9876575215704118,
+    "q75": 1.077458407604201,
+    "max": 1.275855242059038
+  },
+  "median_ratio": 0.10485892627758928,
+  "segments": [
+    {
+      "episode": 0,
+      "start_row": 0,
+      "end_row": 75,
+      "n_cells": 5
+    },
+    {
+      "episode": 1,
+      "start_row": 200,
+      "end_row": 269,
+      "n_cells": 5
+    },
+    {
+      "episode": 2,
+      "start_row": 400,
+      "end_row": 481,
+      "n_cells": 5
+    },
+    {
+      "episode": 3,
+      "start_row": 600,
+      "end_row": 692,
+      "n_cells": 5
+    },
+    {
+      "episode": 4,
+      "start_row": 800,
+      "end_row": 861,
+      "n_cells": 5
+    },
+    {
+      "episode": 5,
+      "start_row": 1000,
+      "end_row": 1076,
+      "n_cells": 5
+    },
+    {
+      "episode": 6,
+      "start_row": 1200,
+      "end_row": 1284,
+      "n_cells": 5
+    },
+    {
+      "episode": 7,
+      "start_row": 1400,
+      "end_row": 1478,
+      "n_cells": 5
+    },
+    {
+      "episode": 8,
+      "start_row": 1600,
+      "end_row": 1677,
+      "n_cells": 5
+    },
+    {
+      "episode": 9,
+      "start_row": 1800,
+      "end_row": 1860,
+      "n_cells": 5
+    },
+    {
+      "episode": 10,
+      "start_row": 2000,
+      "end_row": 2080,
+      "n_cells": 5
+    },
+    {
+      "episode": 11,
+      "start_row": 2200,
+      "end_row": 2279,
+      "n_cells": 5
+    },
+    {
+      "episode": 12,
+      "start_row": 2400,
+      "end_row": 2438,
+      "n_cells": 5
+    },
+    {
+      "episode": 13,
+      "start_row": 2600,
+      "end_row": 2663,
+      "n_cells": 5
+    },
+    {
+      "episode": 14,
+      "start_row": 2800,
+      "end_row": 2878,
+      "n_cells": 5
+    },
+    {
+      "episode": 15,
+      "start_row": 3000,
+      "end_row": 3065,
+      "n_cells": 5
+    },
+    {
+      "episode": 16,
+      "start_row": 3200,
+      "end_row": 3264,
+      "n_cells": 5
+    },
+    {
+      "episode": 17,
+      "start_row": 3400,
+      "end_row": 3466,
+      "n_cells": 5
+    },
+    {
+      "episode": 18,
+      "start_row": 3600,
+      "end_row": 3670,
+      "n_cells": 5
+    },
+    {
+      "episode": 19,
+      "start_row": 3800,
+      "end_row": 3874,
+      "n_cells": 5
+    }
+  ],
+  "provenance": {
+    "split": "official validation (held-out)",
+    "native": "row-index linear resample to T=128",
+    "rebuilt": "traj_to_cells -> cells_to_anchors -> anchors_resample(T=128)",
+    "normalization": "training observations XY mean/std",
+    "weights": "raw"
+  }
+}
