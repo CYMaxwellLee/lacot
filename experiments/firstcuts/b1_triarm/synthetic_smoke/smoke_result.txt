@@ -1,0 +1,5 @@
+B1 SYNTHETIC PASS tests=10 n_tasks=1 n_arms=3 n_ulp=24 n_steps_total=6404
+B1 PRECISION PASS n_tasks=1 n_arms=3 n_ulp=0 n_steps_total=400 full_restore_max_error=0
+B1 PRECISION_STANDALONE PASS n_tasks=1 n_arms=3 n_ulp=0 n_steps_total=600 full_restore_max_error=0
+B1 MAIN NOT_RUN expected_L_failures=43/200
+B1 OFFICIAL_WIRING NOT_RUN synthetic_fixture_only=true

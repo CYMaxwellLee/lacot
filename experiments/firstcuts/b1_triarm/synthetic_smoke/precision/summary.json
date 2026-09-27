@@ -1,0 +1,189 @@
+{
+  "status": "complete",
+  "n_tasks": 1,
+  "n_arms": 3,
+  "n_ulp": 0,
+  "arm_names": [
+    "i",
+    "ii",
+    "iii"
+  ],
+  "n_data_comparators": 1,
+  "n_steps_total": 400,
+  "preregistered": {
+    "rho": 1.875,
+    "horizon": 200,
+    "leg": 1,
+    "outcome": "reached",
+    "expected_main_tasks": 200,
+    "expected_L_failures": 43,
+    "alpha": [
+      0.0,
+      0.1,
+      1.0
+    ],
+    "n_ulp": 24,
+    "stable_failure": "0 successes / 24",
+    "residual_reduction_max_ratio": 0.1,
+    "paired_bootstrap_confidence": 0.95,
+    "bootstrap_replicates": 10000,
+    "precision_e_data_fraction": 0.5,
+    "negative_offset_steps": 3,
+    "negative_action_linf_min": 1e-06,
+    "negative_qpos_linf_min": 1e-06,
+    "status": "preregistered",
+    "churn": {
+      "rescued_min": 12,
+      "harmed_max": 2,
+      "null_hits": "23/43",
+      "status": "churn-calibrated"
+    },
+    "old_new": {
+      "workorder": {
+        "alpha": [
+          0,
+          0.1,
+          1
+        ],
+        "CI": 0.95,
+        "precision": 0.5
+      },
+      "implemented": {
+        "alpha": [
+          0,
+          0.1,
+          1
+        ],
+        "CI": 0.95,
+        "precision": 0.5
+      }
+    }
+  },
+  "provenance": {
+    "mujoco": "3.11.0",
+    "hashes": {
+      "data": "SYNTHETIC_NOT_OFFICIAL"
+    },
+    "seed": 20260908,
+    "fixture": "synthetic engineering check only"
+  },
+  "primary_residual": "xy L2; criterion compares means of paired one-step residuals",
+  "e_data_definition": "at same dataset index: qpos/qvel from val; warmstart=0 (unobserved); same clipped action",
+  "controls": {
+    "i": "complete native-f64 restore",
+    "ii": "only qpos/qvel float64 -> float32 -> float64; no quaternion renormalization",
+    "iii": "native-f64 qpos/qvel; only warmstart zeroed"
+  },
+  "n_rollouts": 4,
+  "per_task": [
+    {
+      "ti": 0,
+      "episode": 0,
+      "mid_step": 100,
+      "controls": {
+        "i": {
+          "xy": {
+            "one_step": 0.0,
+            "full_segment_rms": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "qpos_linf": {
+            "one_step": 0.0,
+            "full_segment_rms": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "qvel_linf": {
+            "one_step": 0.0,
+            "full_segment_rms": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "initial_qpos_linf": 0.0,
+          "initial_qvel_linf": 0.0,
+          "initial_warmstart_linf": 0.0,
+          "one_step_fraction_of_e_data": null
+        },
+        "ii": {
+          "xy": {
+            "one_step": 2.9708226836971337e-08,
+            "full_segment_rms": 1.581083024261875e-07,
+            "final": 3.304632374606838e-07,
+            "max": 4.210098669482593e-07
+          },
+          "qpos_linf": {
+            "one_step": 3.2941214866966106e-08,
+            "full_segment_rms": 2.3685494620771302e-07,
+            "final": 4.864180417341046e-07,
+            "max": 7.655072169487909e-07
+          },
+          "qvel_linf": {
+            "one_step": 3.880806361822309e-07,
+            "full_segment_rms": 1.8771247678196343e-06,
+            "final": 3.4782240792008423e-06,
+            "max": 1.0301360237052748e-05
+          },
+          "initial_qpos_linf": 5.5035962454041965e-08,
+          "initial_qvel_linf": 1.426605606980047e-07,
+          "initial_warmstart_linf": 0.0,
+          "one_step_fraction_of_e_data": null
+        },
+        "iii": {
+          "xy": {
+            "one_step": 0.0,
+            "full_segment_rms": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "qpos_linf": {
+            "one_step": 0.0,
+            "full_segment_rms": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "qvel_linf": {
+            "one_step": 0.0,
+            "full_segment_rms": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "initial_qpos_linf": 0.0,
+          "initial_qvel_linf": 0.0,
+          "initial_warmstart_linf": 24.833824997549375,
+          "one_step_fraction_of_e_data": null
+        }
+      },
+      "e_data": {
+        "xy": {
+          "one_step": 0.0,
+          "full_segment_rms": 0.0,
+          "final": 0.0,
+          "max": 0.0
+        },
+        "qpos_linf": {
+          "one_step": 0.0,
+          "full_segment_rms": 0.0,
+          "final": 0.0,
+          "max": 0.0
+        },
+        "qvel_linf": {
+          "one_step": 0.0,
+          "full_segment_rms": 0.0,
+          "final": 0.0,
+          "max": 0.0
+        }
+      }
+    }
+  ],
+  "mean_one_step_xy": {
+    "i": 0.0,
+    "ii": 2.9708226836971337e-08,
+    "iii": 0.0,
+    "e_data": 0.0
+  },
+  "precision_fraction_of_e_data": null,
+  "precision_threshold_met": null,
+  "inferential_scope": "smoke_only_no_scientific_verdict",
+  "full_restore_max_error": 0.0
+}

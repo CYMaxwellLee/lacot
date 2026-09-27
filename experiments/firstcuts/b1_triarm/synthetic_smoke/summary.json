@@ -1,0 +1,324 @@
+{
+  "status": "complete",
+  "n_tasks": 1,
+  "n_arms": 3,
+  "n_ulp": 24,
+  "n_dose_arms": 3,
+  "n_control_rollouts_per_task": 2,
+  "arm_names": [
+    "T",
+    "N",
+    "L"
+  ],
+  "control_names": [
+    "T_replay",
+    "N_offset3"
+  ],
+  "n_steps_total": 6404,
+  "n_rollouts": 33,
+  "preregistered": {
+    "rho": 1.875,
+    "horizon": 200,
+    "leg": 1,
+    "outcome": "reached",
+    "expected_main_tasks": 200,
+    "expected_L_failures": 43,
+    "alpha": [
+      0.0,
+      0.1,
+      1.0
+    ],
+    "n_ulp": 24,
+    "stable_failure": "0 successes / 24",
+    "residual_reduction_max_ratio": 0.1,
+    "paired_bootstrap_confidence": 0.95,
+    "bootstrap_replicates": 10000,
+    "precision_e_data_fraction": 0.5,
+    "negative_offset_steps": 3,
+    "negative_action_linf_min": 1e-06,
+    "negative_qpos_linf_min": 1e-06,
+    "status": "preregistered",
+    "churn": {
+      "rescued_min": 12,
+      "harmed_max": 2,
+      "null_hits": "23/43",
+      "status": "churn-calibrated"
+    },
+    "old_new": {
+      "workorder": {
+        "alpha": [
+          0,
+          0.1,
+          1
+        ],
+        "CI": 0.95,
+        "precision": 0.5
+      },
+      "implemented": {
+        "alpha": [
+          0,
+          0.1,
+          1
+        ],
+        "CI": 0.95,
+        "precision": 0.5
+      }
+    }
+  },
+  "provenance": {
+    "mujoco": "3.11.0",
+    "hashes": {
+      "data": "SYNTHETIC_NOT_OFFICIAL"
+    },
+    "seed": 20260908,
+    "fixture": "synthetic engineering check only"
+  },
+  "baseline": {
+    "L_failures": 0,
+    "status": "not_evaluated_smoke_only"
+  },
+  "relay_check": {
+    "episode": 0,
+    "reached": true,
+    "original_reached": true,
+    "common_steps": 4,
+    "action_xy_bit_exact": true
+  },
+  "per_task": [
+    {
+      "ti": 0,
+      "episode": 0,
+      "T": true,
+      "N": true,
+      "L": true,
+      "T_replay_max_error": 0.0,
+      "negative_offset3": {
+        "action_linf": 1.4677090644836426,
+        "qpos_linf": 2.1102255275967092
+      },
+      "metrics": {
+        "T": {
+          "xy_error": {
+            "mean": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "yaw_error": {
+            "mean": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "shape_error": {
+            "mean": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          }
+        },
+        "N": {
+          "xy_error": {
+            "mean": 0.7883527174581793,
+            "final": 1.4776594196415735,
+            "max": 1.7560394938421313
+          },
+          "yaw_error": {
+            "mean": 1.4107570960793476,
+            "final": 2.425899300107651,
+            "max": 3.0866072046258965
+          },
+          "shape_error": {
+            "mean": 0.15570976940574494,
+            "final": 0.20409325836626643,
+            "max": 0.26746403538731633
+          }
+        },
+        "L": {
+          "xy_error": {
+            "mean": 1.3403515370560648,
+            "final": 3.135398034691959,
+            "max": 3.4869850363845996
+          },
+          "yaw_error": {
+            "mean": 1.4912933525542946,
+            "final": 0.532913326669066,
+            "max": 2.581315954114398
+          },
+          "shape_error": {
+            "mean": 0.16206275012461582,
+            "final": 0.2137838072108708,
+            "max": 0.30112038467931307
+          }
+        },
+        "N_offset3": {
+          "xy_error": {
+            "mean": 1.462965035005692,
+            "final": 3.2799733194920933,
+            "max": 3.3053535296667422
+          },
+          "yaw_error": {
+            "mean": 1.7175536268858052,
+            "final": 3.007191149888129,
+            "max": 3.1364742262032967
+          },
+          "shape_error": {
+            "mean": 0.17729502337732916,
+            "final": 0.1530167777499912,
+            "max": 0.26583893099693034
+          }
+        }
+      },
+      "doses": [
+        {
+          "alpha": 0.0,
+          "reached": true,
+          "action_rms_vs_T": 0.6846005063231756,
+          "xy_error": {
+            "mean": 0.7883527174581793,
+            "final": 1.4776594196415735,
+            "max": 1.7560394938421313
+          },
+          "yaw_error": {
+            "mean": 1.4107570960793476,
+            "final": 2.425899300107651,
+            "max": 3.0866072046258965
+          },
+          "shape_error": {
+            "mean": 0.15570976940574494,
+            "final": 0.20409325836626643,
+            "max": 0.26746403538731633
+          }
+        },
+        {
+          "alpha": 0.1,
+          "reached": true,
+          "action_rms_vs_T": 0.616140455690858,
+          "xy_error": {
+            "mean": 0.6522972115144632,
+            "final": 0.8531546779323521,
+            "max": 1.4967352706397867
+          },
+          "yaw_error": {
+            "mean": 1.7122930311716558,
+            "final": 2.829106610124291,
+            "max": 3.1353928020714616
+          },
+          "shape_error": {
+            "mean": 0.15037087080317543,
+            "final": 0.1965409619598466,
+            "max": 0.24765596442709745
+          }
+        },
+        {
+          "alpha": 1.0,
+          "reached": true,
+          "action_rms_vs_T": 0.0,
+          "xy_error": {
+            "mean": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "yaw_error": {
+            "mean": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          },
+          "shape_error": {
+            "mean": 0.0,
+            "final": 0.0,
+            "max": 0.0
+          }
+        }
+      ],
+      "ulp_successes": 24,
+      "ulp_success_probability": 1.0,
+      "stable_failure": false
+    }
+  ],
+  "rescue_table": {
+    "rows": "L fail, L success",
+    "columns": "N fail, N success",
+    "counts": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ]
+  },
+  "rescued": 0,
+  "harmed": 0,
+  "churn_threshold_met": null,
+  "dose_curve": [
+    {
+      "alpha": 0.0,
+      "failure_rate": 0.0,
+      "residual_ratios": [
+        1.0
+      ],
+      "failure_difference_vs_N": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "paired": true,
+        "n_pairs": 1
+      },
+      "continuous_means": {
+        "xy_error": 0.7883527174581793,
+        "yaw_error": 1.4107570960793476,
+        "shape_error": 0.15570976940574494
+      }
+    },
+    {
+      "alpha": 0.1,
+      "failure_rate": 0.0,
+      "residual_ratios": [
+        0.8999999999999999
+      ],
+      "failure_difference_vs_N": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "paired": true,
+        "n_pairs": 1
+      },
+      "continuous_means": {
+        "xy_error": 0.6522972115144632,
+        "yaw_error": 1.7122930311716558,
+        "shape_error": 0.15037087080317543
+      }
+    },
+    {
+      "alpha": 1.0,
+      "failure_rate": 0.0,
+      "residual_ratios": [
+        0.0
+      ],
+      "failure_difference_vs_N": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "paired": true,
+        "n_pairs": 1
+      },
+      "continuous_means": {
+        "xy_error": 0.0,
+        "yaw_error": 0.0,
+        "shape_error": 0.0
+      }
+    }
+  ],
+  "saturation_verdict": "not_identifiable: alpha=.1 leaves .9 residual; alpha=1 has zero residual; no nonzero tenfold dose",
+  "ulp_success_probability": [
+    1.0
+  ],
+  "stable_failure_rate": 0.0,
+  "inferential_scope": "smoke_only_no_scientific_verdict"
+}

@@ -1,0 +1,76 @@
+{
+  "status": "running",
+  "n_tasks": 1,
+  "n_arms": 3,
+  "n_ulp": 24,
+  "n_dose_arms": 3,
+  "n_control_rollouts_per_task": 2,
+  "arm_names": [
+    "T",
+    "N",
+    "L"
+  ],
+  "control_names": [
+    "T_replay",
+    "N_offset3"
+  ],
+  "n_steps_total": 0,
+  "n_rollouts": 0,
+  "preregistered": {
+    "rho": 1.875,
+    "horizon": 200,
+    "leg": 1,
+    "outcome": "reached",
+    "expected_main_tasks": 200,
+    "expected_L_failures": 43,
+    "alpha": [
+      0.0,
+      0.1,
+      1.0
+    ],
+    "n_ulp": 24,
+    "stable_failure": "0 successes / 24",
+    "residual_reduction_max_ratio": 0.1,
+    "paired_bootstrap_confidence": 0.95,
+    "bootstrap_replicates": 10000,
+    "precision_e_data_fraction": 0.5,
+    "negative_offset_steps": 3,
+    "negative_action_linf_min": 1e-06,
+    "negative_qpos_linf_min": 1e-06,
+    "status": "preregistered",
+    "churn": {
+      "rescued_min": 12,
+      "harmed_max": 2,
+      "null_hits": "23/43",
+      "status": "churn-calibrated"
+    },
+    "old_new": {
+      "workorder": {
+        "alpha": [
+          0,
+          0.1,
+          1
+        ],
+        "CI": 0.95,
+        "precision": 0.5
+      },
+      "implemented": {
+        "alpha": [
+          0,
+          0.1,
+          1
+        ],
+        "CI": 0.95,
+        "precision": 0.5
+      }
+    }
+  },
+  "provenance": {
+    "mujoco": "3.11.0",
+    "hashes": {
+      "data": "SYNTHETIC_NOT_OFFICIAL"
+    },
+    "seed": 20260908,
+    "fixture": "synthetic engineering check only"
+  }
+}
