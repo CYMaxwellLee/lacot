@@ -40,6 +40,35 @@ def _bound(node):
     return out
 
 
+def _module_bound(stmt):
+    """只收模組路徑的綁定，不洩漏區域作用域或可能零次執行的 body。"""
+    def collect(body):
+        return set().union(*(_module_bound(s) for s in body))
+
+    if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        return {stmt.name}
+    if isinstance(stmt, ast.If):
+        if isinstance(stmt.test, ast.Constant):
+            return collect(stmt.body if stmt.test.value else stmt.orelse)
+        return collect(stmt.body) & collect(stmt.orelse)
+    if isinstance(stmt, (ast.With, ast.AsyncWith)):
+        out = collect(stmt.body)
+        for item in stmt.items:
+            if item.optional_vars is not None:
+                out |= _bound(item.optional_vars)
+        return out
+    if isinstance(stmt, ast.Try):
+        # 保留成功路徑與 finally 的綁定，不收 except 的暫時名字。
+        return collect(stmt.body + stmt.orelse + stmt.finalbody)
+    if isinstance(stmt, (ast.For, ast.AsyncFor)):
+        # pragmatic（9/27 lead 裁）：模組層 for 實務上必然至少跑一次；
+        # 不收＝全倉 26 處誤報，誤報成本高於「理論上可能零次」的嚴格性。
+        return collect(stmt.body + stmt.orelse) | _bound(stmt.target)
+    if isinstance(stmt, ast.While):
+        return collect(stmt.body + stmt.orelse)
+    return _bound(stmt)
+
+
 def _eager_parts(stmt):
     """一個語句裡【在執行到它時就會求值】的子樹（⛔ 不含 body）。"""
     if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -75,7 +104,7 @@ def check(path):
                         problems.append((n.lineno, n.id))
                 elif isinstance(n, (ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)):
                     defined |= _bound(n)   # 這些自己會綁名字，別把它們的變數當未定義
-        defined |= _bound(stmt)
+        defined |= _module_bound(stmt)
     return problems
 
 
