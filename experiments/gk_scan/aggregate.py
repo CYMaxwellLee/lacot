@@ -106,18 +106,20 @@ def main():
 
     candidates = [c for c in cells if (not c["collapsed"]) and c["factor_healthy"]]
     fallback = False
-    if not candidates:
+    if not missing and not candidates:
         fallback = True
         candidates = [c for c in cells if not c["collapsed"]]
     reasoning_notes = []
+    if missing:
+        reasoning_notes.append(f"缺少 {len(missing)} 格，資料不完整，不提供推薦。")
     if fallback:
         reasoning_notes.append("沒有格同時滿足『未塌陷 + 因子有效』，退回只用『未塌陷』篩選，見 dead_factor/corr_ok 逐格數字。")
 
     recommended = None
-    if candidates and knee_capacity is not None:
+    if not missing and candidates and knee_capacity is not None:
         candidates_sorted = sorted(candidates, key=lambda c: (abs(c["capacity"] - knee_capacity), c["val_mse"]))
         recommended = candidates_sorted[0]
-    elif candidates:
+    elif not missing and candidates:
         recommended = sorted(candidates, key=lambda c: c["val_mse"])[0]
         reasoning_notes.append("knee 偵測失敗（點數不足或全部同容量），改用候選裡 val MSE 最低者。")
 
@@ -127,6 +129,7 @@ def main():
     summary = dict(
         cells=sorted(cells, key=lambda c: (c["G"], c["K"])),
         missing_cells=missing,
+        incomplete=bool(missing),
         knee_capacity_bits=knee_capacity,
         thresholds=dict(
             collapse_top1_thresh=0.5,

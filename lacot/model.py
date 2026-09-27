@@ -150,8 +150,8 @@ class LaCoTActor(nn.Module):
             l_cons = l_cons + (us[r] - us[r + 1].detach()).pow(2).mean()  # ||u^r - sg(u^{r+1})||^2
             l_act_refine = l_act_refine + self.action_head.nll(          # deep supervision every round
                 self.action_head(us[r + 1].reshape(b, -1)), actions).mean()
-        l_cons = l_cons / rounds
-        l_act_refine = l_act_refine / rounds
+        l_cons = l_cons / rounds if rounds else l_cons
+        l_act_refine = l_act_refine / rounds if rounds else l_act_refine
 
         total = l_nf + l_act_anchor + l_act_refine + lam_cons * l_cons
         return total, {
@@ -350,8 +350,8 @@ class LaCoTActorState(nn.Module):
             l_cons = l_cons + (us[r] - us[r + 1].detach()).pow(2).mean()
             l_act_refine = l_act_refine + self.action_head.nll(
                 self.action_head(cat(us[r + 1])), actions).mean()
-        l_cons = l_cons / rounds
-        l_act_refine = l_act_refine / rounds
+        l_cons = l_cons / rounds if rounds else l_cons
+        l_act_refine = l_act_refine / rounds if rounds else l_act_refine
 
         total = l_nf + l_act_anchor + l_act_refine + lam_cons * l_cons
         return total, {

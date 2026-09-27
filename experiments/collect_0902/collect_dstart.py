@@ -1,15 +1,15 @@
 """收開頭綁定批：dstart_hard（v4）/ dstart_soft 對 V8 同八顆；含 rt_gate 往返尺、flow_probe 進度、逐題失敗。"""
 import json,glob,os,re,collections
 import numpy as np
+from _collect_common import same_run, task_failures
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 V8={20:.696,21:.808,22:.728,23:.492,24:.724,25:.512,26:.492,27:.872}
 def pt(p):
     dg=p.replace('rollout_','diag_')
     if not os.path.exists(dg): return None
+    same_run(p,dg)
     eps=[e for e in json.load(open(dg)) if e['arm'].startswith('分段 conf2')]
-    c=collections.defaultdict(int)
-    for e in eps: c[e['task']]+=(0 if e['success'] else 1)
-    return [c[t] for t in range(1,6)]
+    return task_failures(eps)
 for name,d in (('hard(v4)','dstart_hard'),('soft','dstart_soft')):
     rows=[]
     print(f"== 開頭綁定 {name}（對 V8 同 seed；雜訊線 ±0.03）==")

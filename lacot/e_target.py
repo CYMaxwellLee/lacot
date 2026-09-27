@@ -45,6 +45,11 @@ class CrossAttention(nn.Module):
         # query [B, Q, D], context [B, T, D], key_padding_mask [B, T] (True == PAD).
         B, Q, D = query.shape
         T = context.shape[1]
+        if key_padding_mask is not None:
+            masked_rows = key_padding_mask.all(dim=-1)
+            if bool(masked_rows.any()):
+                indices = masked_rows.nonzero(as_tuple=False).flatten().tolist()
+                raise ValueError(f"key_padding_mask masks all context frames for batch indices {indices}")
         q = self.q_proj(query).view(B, Q, self.num_heads, self.d_head).transpose(1, 2)
         kv = self.kv_proj(context).view(B, T, 2, self.num_heads, self.d_head)
         k = kv[:, :, 0].transpose(1, 2)  # [B, H, T, d_head]

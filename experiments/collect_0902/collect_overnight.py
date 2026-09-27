@@ -1,11 +1,12 @@
 """收過夜 C/E/F：dshard_{HG,DA}（hard ckpt × 守門/純錨定；含 n_headguard 開火數）、heldout2_{base,hard}（s28~35）、medium_hard。"""
 import json,glob,os,re,collections
 import numpy as np
+from _collect_common import check_seed
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 def rates(d):
-    out={}
+    out={}; seen={}
     for p in glob.glob(f'results/night_0902/{d}/rollout_*.json'):
-        S=int(re.search(r'_s(\d+)\.json$',p).group(1)); out[S]=json.load(open(p))['rates']['subgoal']
+        S=int(re.search(r'_s(\d+)\.json$',p).group(1)); check_seed(seen,S,p); out[S]=json.load(open(p))['rates']['subgoal']
     return out
 def summ(name,r,ref=None):
     if not r: print(f"== {name}: 尚無"); return

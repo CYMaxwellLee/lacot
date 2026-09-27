@@ -55,6 +55,9 @@ class TokenVQ(nn.Module):
         訓練模式下同時做 EMA codebook 更新與死 code 重置。"""
         shp = u.shape
         flat = u.reshape(-1, self.D)
+        if flat.shape[0] == 0:
+            loss = u.sum() * 0
+            return u, loss, dict(perplexity=0.0, used=0, commit=0.0)
         if self.training and int(self.initialized) == 0:        # 第一批：codebook 用真資料初始化（防一開始全死）
             n = min(flat.shape[0], self.V)
             pick = torch.randperm(flat.shape[0], device=flat.device)[:n]

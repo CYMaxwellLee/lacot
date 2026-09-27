@@ -6,6 +6,9 @@
 """
 import json, glob, re, os
 import numpy as np
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'collect_0902'))
+from _collect_common import check_seed
 
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 
@@ -23,9 +26,10 @@ def stat(v):
     return f"{v.mean():.3f} sd {sd:.3f} 範圍 {v.min():.3f}~{v.max():.3f}"
 
 for name, d in ARMS.items():
-    rs = {}
+    rs = {}; seen = {}
     for p in glob.glob(f'{d}/rollout_*.json'):
         S = int(re.search(r'_s(\d+)\.json$', p).group(1))
+        check_seed(seen, S, p)
         rs[S] = json.load(open(p))['rates']
     ks = sorted(rs)
     print(f"== {name}  n={len(ks)} ==")

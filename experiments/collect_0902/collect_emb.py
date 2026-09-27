@@ -1,12 +1,13 @@
 """收 embedding 批：A 長 stage1（emb_s16000/）、B VQ64（emb_vq64/）對 V8（final8/ 與 v8diag/）。含 rt_gate 往返尺。"""
 import json,glob,os,re
 import numpy as np
+from _collect_common import check_seed
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 V8={20:.696,21:.808,22:.728,23:.492,24:.724,25:.512,26:.492,27:.872}
 def load_dir(d):
-    out={}
+    out={}; seen={}
     for p in glob.glob(f'results/night_0902/{d}/rollout_*.json'):
-        S=int(re.search(r'_s(\d+)\.json$',p).group(1)); j=json.load(open(p)); out[S]=j
+        S=int(re.search(r'_s(\d+)\.json$',p).group(1)); check_seed(seen,S,p); j=json.load(open(p)); out[S]=j
     return out
 def summarize(name,dd):
     print(f"== {name}（n={len(dd)}）==")

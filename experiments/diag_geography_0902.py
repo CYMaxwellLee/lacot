@@ -4,11 +4,13 @@
 座標：diag 的 start/goal/final 是【原始】座標（x∈[-1,37], y∈[-1,25]）；資料密度也在原始座標算。"""
 import json,glob,os,sys,re,collections,itertools
 import numpy as np
+from collect_0902._collect_common import unique_glob, same_run, check_task_counts
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 ARM='分段 conf2'; BCARM='誠實 BC'
 BIN=2.0; XR=(-3.0,39.0); YR=(-3.0,27.0)           # 原始座標、2 單位細格
 def load(p): return json.load(open(p))
-def per_task(eps):
+def per_task(eps,expected=None):
+    if expected: check_task_counts(eps,expected)
     c=collections.defaultdict(lambda:[0,0])
     for e in eps: c[e['task']][1]+=1; c[e['task']][0]+=(0 if e['success'] else 1)
     tot=sum(b for a,b in c.values()); fail=sum(a for a,b in c.values())
@@ -33,7 +35,7 @@ def report_A(files,keyfn):
     for p in sorted(files):
         k=keyfn(p); d=load(p)
         eps=[e for e in d if e['arm'].startswith(ARM)]; bc=[e for e in d if e['arm'].startswith(BCARM)]
-        sr,ft=per_task(eps); bsr,bft=per_task(bc); tv[k]=np.array([ft[t] for t in sorted(ft)])
+        sr,ft=per_task(eps,50); bsr,bft=per_task(bc,50); tv[k]=np.array([ft[t] for t in sorted(ft)])
         fails=[e for e in eps if not e['success']]
         line=f"{k:<10} conf2 {sr:.3f} fail/50 {ft} | BC {bsr:.3f}"
         if fails:
@@ -63,11 +65,12 @@ def report_B(dirs):
     rows=[]
     for dd in sorted(dirs,key=lambda x:int(re.search(r'_d(\d+)',x).group(1))):
         dseed=int(re.search(r'_d(\d+)',dd).group(1))
-        ro=glob.glob(dd+'/rollout_*_s2.json'); dg=glob.glob(dd+'/diag_*_s2.json')
+        ro=unique_glob(dd+'/rollout_*_s2.json'); dg=unique_glob(dd+'/diag_*_s2.json')
         if not ro: print(f"d{dseed}: (尚無 rollout)"); continue
-        r=load(ro[0])['rates']; line=f"d{dseed:<3} 主打 {r['subgoal']:.3f}  bc {r['bc']:.3f}  null_u {r['null_u']:.3f}"
+        same_run(ro,dg)
+        r=load(ro)['rates']; line=f"d{dseed:<3} 主打 {r['subgoal']:.3f}  bc {r['bc']:.3f}  null_u {r['null_u']:.3f}"
         if dg:
-            eps=[e for e in load(dg[0]) if e['arm'].startswith(ARM)]; sr,ft=per_task(eps); line+=f"   逐題失敗 {ft}"
+            eps=[e for e in load(dg) if e['arm'].startswith(ARM)]; sr,ft=per_task(eps); line+=f"   逐題失敗 {ft}"
         rows.append(r['subgoal']); print(line)
     if rows: print(f"n={len(rows)} mean={np.mean(rows):.3f} sd={np.std(rows,ddof=1) if len(rows)>1 else 0:.3f} min={min(rows):.3f} max={max(rows):.3f}   原 dz2=0.880（d2 是同 rng 對照）")
 mode=sys.argv[1] if len(sys.argv)>1 else 'both'; test='--test' in sys.argv

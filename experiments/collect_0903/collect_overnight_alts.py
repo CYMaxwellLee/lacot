@@ -1,12 +1,15 @@
 """收 9/2 過夜替代臂：B guard_{HG,DA,HGS} 八顆、C' dssoft_HG、E' heldout2_{base,soft}、F' medium_base。讀法同 collect_overnight.py（rates.subgoal）。"""
 import json,glob,os,re
 import numpy as np
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'collect_0902'))
+from _collect_common import check_seed
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 V8={20:.696,21:.808,22:.728,23:.492,24:.724,25:.512,26:.492,27:.872}
 def rates(d):
-    out={}
+    out={}; seen={}
     for p in glob.glob(f'results/night_0902/{d}/rollout_*.json'):
-        S=int(re.search(r'_s(\d+)\.json$',p).group(1)); out[S]=json.load(open(p))['rates']['subgoal']
+        S=int(re.search(r'_s(\d+)\.json$',p).group(1)); check_seed(seen,S,p); out[S]=json.load(open(p))['rates']['subgoal']
     return out
 def summ(name,r,ref=None,refname='對照'):
     if not r: print(f"== {name}: 尚無"); return

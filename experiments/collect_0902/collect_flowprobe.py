@@ -1,13 +1,15 @@
 """flow 探針校準：V8 八顆的 flow_probe（每題對路率／路徑距／穿牆／分散）對官方成功率與逐題失敗（v8diag 有 s23/25/26/27）。"""
 import json,glob,os,re,collections
 import numpy as np
+from _collect_common import unique_glob, check_task_counts
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 V8={20:.696,21:.808,22:.728,23:.492,24:.724,25:.512,26:.492,27:.872}
 pertask={}
 for S in (23,25,26,27):
-    dg=glob.glob(f'results/night_0902/v8diag/diag_*_s{S}.json')
+    dg=unique_glob(f'results/night_0902/v8diag/diag_*_s{S}.json')
     if dg:
-        eps=[e for e in json.load(open(dg[0])) if e['arm'].startswith('分段 conf2')]
+        eps=[e for e in json.load(open(dg)) if e['arm'].startswith('分段 conf2')]
+        check_task_counts(eps)
         c=collections.defaultdict(int)
         for e in eps: c[e['task']]+=(1 if e['success'] else 0)
         pertask[S]=[c[t]/50 for t in range(1,6)]

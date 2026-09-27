@@ -1,16 +1,16 @@
 """收路標吸附批：conf2（v8diag）vs snap+ma2 vs snap+ma1，同顆 ckpt；逐題失敗與死點口袋比。"""
 import json,glob,os,re,collections
 import numpy as np
+from _collect_common import unique_glob, same_run, task_failures
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 def rate(d,S):
-    p=glob.glob(f'results/night_0902/{d}/rollout_*_s{S}.json'); return json.load(open(p[0]))['rates']['subgoal'] if p else None
+    p=unique_glob(f'results/night_0902/{d}/rollout_*_s{S}.json'); return json.load(open(p))['rates']['subgoal'] if p else None
 def pt(d,S):
-    p=glob.glob(f'results/night_0902/{d}/diag_*_s{S}.json')
+    p=unique_glob(f'results/night_0902/{d}/diag_*_s{S}.json')
     if not p: return None
-    eps=[e for e in json.load(open(p[0])) if e['arm'].startswith('分段 conf2')]
-    c=collections.defaultdict(int)
-    for e in eps: c[e['task']]+=(0 if e['success'] else 1)
-    return [c[t] for t in range(1,6)]
+    same_run(unique_glob(f'results/night_0902/{d}/rollout_*_s{S}.json'),p)
+    eps=[e for e in json.load(open(p)) if e['arm'].startswith('分段 conf2')]
+    return task_failures(eps)
 print("== 路標吸附：同顆 ckpt、官方 250 集（雜訊線 ±0.03）==")
 f=lambda x: '  —  ' if x is None else f'{x:.3f}'
 rows=[]

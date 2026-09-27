@@ -3,10 +3,14 @@
 import json,glob,re
 import numpy as np
 import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'collect_0902'))
+from _collect_common import check_seed
 os.chdir(os.path.expanduser('~/Projects/lacot'))
-rs={}
+rs={}; seen={}
 for p in glob.glob('results/night_0903/dialect/rollout_*.json'):
     S=int(re.search(r'_s(\d+)\.json$',p).group(1))
+    check_seed(seen,S,p)
     rs[S]=json.load(open(p))['rates']
 ks=sorted(rs)
 v=[rs[k]['subgoal'] for k in ks]

@@ -748,8 +748,10 @@ print(f"\n=== 對照③  只用 s,g 直線距離 ===\n  {acc_d:.3f}  (n={n_d})"
 # ---------- verdict ----------
 real = report["runs"]["real"]["rank_acc"]["0"]["acc"]
 real_ci = report["runs"]["real"]["rank_acc"]["0"]["cluster_ci95"]
-ok_main = real_ci is not None and real_ci[0] > 0.8            # ⚠️ 用 CI 下界，⛔ 不是點估計
+ok_main = real_ci is not None and real_ci[0] > 0.8 and SG_SPREAD < EPS * 0.6  # ⚠️ 用 CI 下界，⛔ 不是點估計
 notes = []
+if not SG_SPREAD < EPS * 0.6:
+    notes.append(f"🚨 主指標失敗：組內 (s,g) 散布中位 {SG_SPREAD:.3f} 未低於 ε×0.6={EPS * 0.6:.3f}")
 # ⭐ 2026-08-26 加的第二道：光是贏過 0.5 不算數，要贏過【V 完全不訓練】那條線。
 beats_ut = None
 if "untrained_V" in report["runs"]:

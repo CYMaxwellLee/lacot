@@ -40,10 +40,13 @@ def main():
         summary_path = os.path.join(HERE, "results", "summary.json")
         with open(summary_path) as f:
             summary = json.load(f)
-        rec = summary["recommendation"]["cell"]
+        recommendation = summary["recommendation"]
+        missing = summary.get("missing_cells", [])
+        if summary.get("incomplete") or recommendation.get("incomplete") or missing:
+            raise ValueError(f"summary.json 網格不完整，缺少 {len(missing)} 格：{missing}，無法做 A/B render")
+        rec = recommendation["cell"]
         if rec is None:
-            print("⛔ summary.json 裡沒有推薦格（可能全部格都塌陷），無法做 A/B render")
-            sys.exit(1)
+            raise ValueError("summary.json 裡沒有推薦格（可能全部格都塌陷），無法做 A/B render")
         args.g, args.k = rec["G"], rec["K"]
         print(f"從 summary.json 讀到推薦格：G={args.g} K={args.k} "
               f"(fallback={summary['recommendation']['fallback']})")

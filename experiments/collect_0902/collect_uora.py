@@ -2,15 +2,17 @@
 判讀：oracle 高（≈ebfs 的 1.0）＝表示 enc/dec 沒歪、錯在 flow 生成；oracle 也低＝表示本身歪。"""
 import json,glob,os,re,sys,collections
 import numpy as np
+from _collect_common import unique_glob, same_run
 os.chdir(os.path.expanduser('~/Projects/lacot'))
 print("== oracle-u 探針：conf2(flow u) vs conf2(oracle u) vs ebfs(正確路標) ==")
 for S in (23,25,26,27):
     def r(d):
-        p=glob.glob(f'results/night_0902/{d}/rollout_*_s{S}.json'); return json.load(open(p[0]))['rates']['subgoal'] if p else None
+        p=unique_glob(f'results/night_0902/{d}/rollout_*_s{S}.json'); return json.load(open(p))['rates']['subgoal'] if p else None
     a,b,c=r('v8diag'),r('uora'),r('ebfs')
-    dg=glob.glob(f'results/night_0902/uora/diag_*_s{S}.json'); pt=None
+    dg=unique_glob(f'results/night_0902/uora/diag_*_s{S}.json'); pt=None
     if dg:
-        eps=[e for e in json.load(open(dg[0])) if e['arm'].startswith('分段 conf2')]
+        same_run(unique_glob(f'results/night_0902/uora/rollout_*_s{S}.json'),dg)
+        eps=[e for e in json.load(open(dg)) if e['arm'].startswith('分段 conf2')]
         cnt=collections.defaultdict(int)
         for e in eps: cnt[e['task']]+=(0 if e['success'] else 1)
         pt=[cnt[t] for t in sorted(cnt)]
