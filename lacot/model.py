@@ -21,13 +21,11 @@ Pieces, each already validated in isolation:
       directly on e_target. (DO-NOT-FORGET S8: swap for a shallow ARFlowBlock if
       the density underfits e_target.)
   (c) the refine loop starts from a SAMPLED u^0 ~ p(u|cond) (design Q1/Q3
-      "sampled-style u^0"); action loss is applied at the target-u anchor
-      (u_target, design Q3-A) AND at every refine round (deep supervision, S10 #2).
+      "sampled-style u^0"); DESIGN-v3 replaces mismatched sampled/data action
+      supervision with qualified same-plan quality and head exposure.
   (d) gradient routing (design Q2): the generator (incl. its encoder) is FROZEN;
-      the flow, refine op and action head train. At F=identity the action
-      gradient reaches the head + refine op, NOT the flow (u_target = e_target is
-      frozen and the refine u^0 is a no-grad sample) -- the action<->flow
-      end-to-end coupling turns on when F becomes a real warp (S8 TODO).
+      the flow, refine op and action head train. Quality trains the refiner;
+      anchor/exposure train the head. The sampled u^0 stops flow gradients.
   (e) SINGLE-STAGE joint training here; the two-stage curriculum (S7: density
       first, then joint) is deferred.
 """
@@ -39,6 +37,7 @@ from torch import nn
 from lacot.e_target import PerceiverPooler
 from lacot.heads import ContinuousActionHead, DiscretizedActionHead
 from lacot.nf_head import Flow
+from lacot import refine_training
 
 
 class RefineOperator(nn.Module):
@@ -123,43 +122,25 @@ class LaCoTActor(nn.Module):
         actions: torch.Tensor,
         rounds: int = 3,
         lam_cons: float = 0.5,
+        *,
+        training_services: refine_training.TrainingServices | None = None,
     ) -> tuple[torch.Tensor, dict[str, float]]:
-        """All three LaCoT losses given PRECOMPUTED (frozen) cond + u_target.
+        """Clean density/anchor plus qualified generated-plan supervision.
 
-        Split out so callers can cache the frozen front-end (encoder + generator)
-        for a fixed batch instead of re-encoding every step.
+        Old positional arguments remain valid. R>0 requires frozen qualified
+        services; inference and R0 have no oracle dependency.
         """
         b = cond.shape[0]
-        # ⚠️⚠️ 2026-08-23 未修：這個（影像版）的 action_head 仍然【只吃 u】。
-        # state 版已改成吃 [cond, u]，理由見 ContinuousActionHead 的 docstring
-        # （u 是未來軌跡的壓縮表徵，動作要回答「從現在這個位置往哪走」）。
-        # 影像版還沒在真資料上跑過，改動前先確認 cond_dim = 2*encoder_out 的寬度。
-        # ⚠️ 2026-08-23: flow.nll 是【整條 u】的 nats，量級 ~ k*d_model 倍於逐元素 loss。
-        # 未正規化時實測 l_nf ≈ -1479 而 l_act_anchor ≈ 5.0 —— action head 的梯度被
-        # 完全淹沒（訓練 2000 步後 anchor 4.98 仍【差於】action 的邊際熵 4.7736，
-        # 也就是比「什麼都不學」還糟）。除以維度讓三個 loss 回到同一個量級。
-        l_nf = self.flow.nll(u_target, cond) / (self.k * self.d_model)
-        l_act_anchor = self.action_head.nll(          # decode action from the clean target-u (Q3-A)
-            self.action_head(u_target.reshape(b, -1)), actions).mean()
-
-        u0 = self.flow.sample(b, cond).detach()       # sampled-style u^0 (Q1/Q3), no-grad
-        us = self.refine_rounds(cond, u0, rounds)
-        l_cons = u_target.new_zeros(())
-        l_act_refine = u_target.new_zeros(())
-        for r in range(rounds):
-            l_cons = l_cons + (us[r] - us[r + 1].detach()).pow(2).mean()  # ||u^r - sg(u^{r+1})||^2
-            l_act_refine = l_act_refine + self.action_head.nll(          # deep supervision every round
-                self.action_head(us[r + 1].reshape(b, -1)), actions).mean()
-        l_cons = l_cons / rounds if rounds else l_cons
-        l_act_refine = l_act_refine / rounds if rounds else l_act_refine
-
-        total = l_nf + l_act_anchor + l_act_refine + lam_cons * l_cons
-        return total, {
-            "l_nf": l_nf.item(),
-            "l_act_anchor": l_act_anchor.item(),
-            "l_act_refine": l_act_refine.item(),
-            "l_cons": l_cons.item(),
-        }
+        adapter = refine_training.Adapter(
+            density=lambda: self.flow.nll(u_target.detach(), cond) / (self.k * self.d_model),
+            features=lambda uu: uu.reshape(b, -1),
+            anchor=lambda features: self.action_head.nll(self.action_head(features), actions).mean(),
+            sample=lambda: self.flow.sample(b, cond),
+        )
+        total, logs, _ = refine_training.compose(
+            adapter, getattr(self, "refine", None), cond, u_target, rounds=rounds,
+            training_services=training_services, lam_cons=lam_cons)
+        return total, {name: value.item() for name, value in logs.items()}
 
     def training_losses(
         self,
@@ -169,11 +150,14 @@ class LaCoTActor(nn.Module):
         actions: torch.Tensor,
         rounds: int = 3,
         lam_cons: float = 0.5,
+        *,
+        training_services: refine_training.TrainingServices | None = None,
     ) -> tuple[torch.Tensor, dict[str, float]]:
         """All three LaCoT losses on one raw batch (encodes cond + e_target, then delegates)."""
         cond = self.encode_cond(s_frame, g_frame)     # frozen encoder
         u_target = self.e_target(future_frames)       # frozen; F=identity -> u=e_target
-        return self.losses_given(cond, u_target, actions, rounds, lam_cons)
+        return self.losses_given(cond, u_target, actions, rounds, lam_cons,
+                                 training_services=training_services)
 
     @torch.no_grad()
     def infer_action(
@@ -329,34 +313,22 @@ class LaCoTActorState(nn.Module):
         actions: torch.Tensor,
         rounds: int = 3,
         lam_cons: float = 0.5,
+        *,
+        training_services: refine_training.TrainingServices | None = None,
     ) -> tuple[torch.Tensor, dict[str, float]]:
-        """The same three losses as `LaCoTActor.losses_given`, on the state front-end.
+        """Clean density/anchor plus qualified generated-plan supervision.
 
-        Kept as its own copy rather than inherited because the two classes build
-        different front-ends; the loss bodies touch only flow / refine / action_head,
-        which are identical objects in both.
+        Old positional arguments remain valid. R>0 requires frozen qualified
+        services; inference and R0 have no oracle dependency.
         """
         b = cond.shape[0]
-        l_nf = self.flow.nll(u_target, cond) / (self.k * self.d_model)   # 見上：量級正規化
-        cat = lambda uu: torch.cat([cond, uu.reshape(b, -1)], dim=-1)   # head 吃 [cond, u]
-        l_act_anchor = self.action_head.nll(
-            self.action_head(cat(u_target)), actions).mean()
-
-        u0 = self.flow.sample(b, cond).detach()
-        us = self.refine_rounds(cond, u0, rounds)
-        l_cons = u_target.new_zeros(())
-        l_act_refine = u_target.new_zeros(())
-        for r in range(rounds):
-            l_cons = l_cons + (us[r] - us[r + 1].detach()).pow(2).mean()
-            l_act_refine = l_act_refine + self.action_head.nll(
-                self.action_head(cat(us[r + 1])), actions).mean()
-        l_cons = l_cons / rounds if rounds else l_cons
-        l_act_refine = l_act_refine / rounds if rounds else l_act_refine
-
-        total = l_nf + l_act_anchor + l_act_refine + lam_cons * l_cons
-        return total, {
-            "l_nf": l_nf.item(),
-            "l_act_anchor": l_act_anchor.item(),
-            "l_act_refine": l_act_refine.item(),
-            "l_cons": l_cons.item(),
-        }
+        adapter = refine_training.Adapter(
+            density=lambda: self.flow.nll(u_target.detach(), cond) / (self.k * self.d_model),
+            features=lambda uu: torch.cat([cond, uu.reshape(b, -1)], dim=-1),
+            anchor=lambda features: self.action_head.nll(self.action_head(features), actions).mean(),
+            sample=lambda: self.flow.sample(b, cond),
+        )
+        total, logs, _ = refine_training.compose(
+            adapter, getattr(self, "refine", None), cond, u_target, rounds=rounds,
+            training_services=training_services, lam_cons=lam_cons)
+        return total, {name: value.item() for name, value in logs.items()}

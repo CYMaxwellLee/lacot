@@ -1,0 +1,24 @@
+{
+ "provenance_note": "本機副本；未對 upstream 驗證 (local copies, UNVERIFIED against upstream).",
+ "datasets": {
+  "9add335e598e48ebc483447d61415a9755ffb738ddfc406cb9708b2a238992e8": {
+   "domain": "pointmaze",
+   "filename": "pointmaze-large-stitch-v0.npz",
+   "obs_dim": 2,
+   "act_dim": 2
+  },
+  "f688759187a2d193760eab70a66ec4f16aa5b20f953ebb63b1f1f4e8a5743cbf": {
+   "domain": "ant",
+   "filename": "antmaze-large-stitch-v0.npz",
+   "obs_dim": 29,
+   "act_dim": 8
+  },
+  "b3fa34eef8d24dc812d734abaf74db279a5f39cd63debf23961d62c314d71e99": {
+   "domain": "ant",
+   "filename": "antmaze-medium-stitch-v0.npz",
+   "obs_dim": 29,
+   "act_dim": 8,
+   "note": "v3 實驗 1 的 ant 主資料（字典線/C1/C2/16pp 包絡全帳所在域）；jasmine 本機 sha 親算 2026-09-28"
+  }
+ }
+}

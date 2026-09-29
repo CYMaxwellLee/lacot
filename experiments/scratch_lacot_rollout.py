@@ -12,8 +12,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) 
 from lacot.e_target import PerceiverPooler
 from lacot.nf_head import Flow
 from lacot.model import RefineOperator
+from lacot import refine_training
 from lacot import dev_eval as DE
 import ogbench
+
+# ucontrast1: opt-in instrumentation; flag-off does not import/create RNGs.
+ORACLE_ARM = os.environ.get("LACOT_ORACLE_ARM", "")
+ORACLE_COLLECTOR = None
+if ORACLE_ARM:
+    from experiments._workorders.ucontrast1.collector import Collector, write_result
+    if (not os.environ.get("LACOT_LOAD_CKPT")
+            or os.environ.get("LACOT_CONT_TRAIN", "0") != "0"
+            or os.environ.get("LACOT_BON_N", "0") != "0"):
+        raise SystemExit("Oracle collection requires LOAD_CKPT, CONT_TRAIN=0, BON_N=0")
+    ORACLE_COLLECTOR = Collector(ORACLE_ARM,
+                                 float(os.environ.get("LACOT_ORACLE_SIGMA", "0")),
+                                 int(os.environ.get("LACOT_ORACLE_DRAWS", "8")),
+                                 int(os.environ.get("LACOT_ORACLE_EPISODE_OFFSET", "0")),
+                                 int(os.environ.get("LACOT_ORACLE_STREAM_SALT", "0")))
 
 # 資料位置：預設走官方 OGBENCH_DATA_DIR，沒設才用本機 archive
 OGB_DATA = os.environ.get("OGBENCH_DATA_DIR", "/archive/cymaxwelllee/data/ogbench")
@@ -707,6 +723,16 @@ SEED = int(os.environ.get("LACOT_SEED", 0))
 # ⚠️ 但那次掃描 **每格只有 1 個 seed**，⇒ ema 內部 m99/m996/m999 誰最好還不算數，
 #    只有「ema 系列 vs byol 系列」那個差距大到不可能是 seed 噪聲。
 CONS = os.environ.get("LACOT_CONS", "self")
+OBJECTIVE_VERSION = refine_training.OBJECTIVE_VERSION if LEARNED_REFINE else "r0-baseline"
+
+
+def _cons_from_ckpt_cfg(cfg, env_cons):
+    """Eval filenames and JSON must describe the checkpoint, never an env default."""
+    saved = cfg.get("CONS")
+    assert saved in ("self", "ema"), "⛔ eval-only ckpt cfg 缺少有效 CONS，不能安全命名結果"
+    assert env_cons is None or env_cons == saved, (
+        f"⛔ LACOT_CONS={env_cons!r} 跟 ckpt cfg CONS={saved!r} 不一致，拒絕標錯名")
+    return saved
 EMA_M = float(os.environ.get("LACOT_EMA_M", 0.996))
 # ⭐ seed 拆分診斷（LACOT_DATA_SEED、9/1 seed 病因 2×2）：-1（預設）＝跟 SEED 走、行為不變；
 #    ≥0＝資料抽樣流（batch 順序）改用此值，model init／torch 訓練噪聲仍吃 SEED。
@@ -1135,6 +1161,10 @@ if u_dec is not None:
     u_dec.eval()
     for p in u_dec.parameters():
         p.requires_grad_(False)
+if LEARNED_REFINE and s_embed is not None:
+    s_embed.eval()
+    for p in s_embed.parameters():
+        p.requires_grad_(False)
 _ma = (float("nan") if (_S1 == 0 or logits is None)
        else (logits.argmax(1) == lab).float().mean().item())
 print(f"  e_target match-acc(train batch) {_ma:.3f}", flush=True)   # ⚠️ 訓練批的數字，⛔ 不是驗證指標
@@ -1172,6 +1202,10 @@ import copy
 refine_ema = copy.deepcopy(refine)
 for _p in refine_ema.parameters():
     _p.requires_grad_(False)
+refine_ema.eval()
+# Experiment 1 did not qualify Aω. No synthetic/default action teacher is built.
+# A future qualified integration must supply TrainingServices before stage 2.
+REFINE_TRAINING_SERVICES = None
 ahead = ActionMLP().to(device)
 
 # 🚨 誠實的 BC 地板（主人 2026-08-23 要求）。
@@ -1618,10 +1652,7 @@ def _amp_unscale(opt):
 
 
 def _amp_step(opt):
-    if _SCALER is not None:
-        _SCALER.step(opt)          # ⚠️ 這一步可能被 scaler 跳過（grad 有 inf/nan）
-    else:
-        opt.step()
+    return refine_training.optimizer_step(opt, _SCALER)
 
 
 def _amp_update(step_no):
@@ -1666,13 +1697,30 @@ def _flow_nll(u, cond):
     return flow.nll(u, cond)
 
 
-def _stage2_loop(n_steps, step_off=0):
+def _stage2_loop(n_steps, step_off=0, *, training_services=None):
     """stage 2 訓練迴圈。⭐ 抽成函式【只為了】讓續訓模式能在 ckpt 載入之後再跑一次【同一份】
     code —— ⛔ 兩份會分岔的訓練迴圈是這個 repo 絕對不要的東西（同族東西混版本已經咬過三次）。
 
-    ⚠️ 迴圈體逐行原樣（只換縮排）⇒ 預設路徑逐位元不變：RNG 消耗順序、op 順序、更新順序全同。
-    ⚠️ step_off 只餵給 warmup 與 log 的步號；預設 0 ⇒ `step_off + stp` 就是原本的 `stp`。
+    DESIGN-v3: one compose; R0 keeps the original density/anchor operations.
+    step_off 接續 warmup／log 與 v3 depth cycling；預設 0 從 R0 起步。
     """
+    services = training_services if training_services is not None else REFINE_TRAINING_SERVICES
+    if n_steps and LEARNED_REFINE:
+        if INTENT:
+            raise ValueError("⛔ intent 的 hindsight anchors 未過 same-intent-as-deployment 資格；見 VERDICT-EXP2-S2 M2。intent 線復活時另案")
+        refine_training.require_services(services)
+        if CONS != "ema":
+            raise ValueError("DESIGN-v3 training requires CONS=ema")
+        if services.teacher is not refine_ema:
+            raise ValueError("training services must use the checkpointed refine_ema")
+        if services.ema_decay != EMA_M:
+            raise ValueError("training services EMA decay differs from EMA_M")
+        if not callable(services.batch_factory):
+            raise ValueError("scratch R>0 requires a same-plan batch service binder")
+        # Existing frozen decoder path; s_embed also belongs to that reader.
+        for _reader in (u_dec, s_embed):
+            if _reader is not None:
+                refine_training.assert_frozen(_reader, "scratch decoder")
     for stp in range(n_steps):
         _gstp = step_off + stp
         # ⭐ AMP（LACOT_AMP=1）：整段 forward＋loss 在 autocast 裡；⛔ AMP=0 ⇒ nullcontext ⇒ 逐位元不變。
@@ -1697,10 +1745,12 @@ def _stage2_loop(n_steps, step_off=0):
             if fsq is not None and FSQ_SPACE == "z":
                 with torch.no_grad():
                     _et_nf = fsq.dequant_z(et) if FSQ_TGT == "dequant" else fsq.z_of(et)
-                l_nf = _flow_nll(_et_nf, flow_cond(cond, anc)) / (K * fsq.d)
+                _density = lambda: _flow_nll(_et_nf, flow_cond(cond, anc)) / (K * fsq.d)
             else:
                 _et_nf = fsq.dequant(et) if (fsq is not None and FSQ_TGT == "dequant") else et
-                l_nf = _flow_nll(_et_nf, flow_cond(cond, anc)) / DIM
+                _density = lambda: _flow_nll(_et_nf, flow_cond(cond, anc)) / DIM
+            # Keep density's RNG order before COND_DROP, including flow dropout.
+            _nf_value = _density()
             # ⭐ P1b：action loss 只算真樣本 —— teacher 樣本的 act 是零佔位，
             #    ⛔ 餵給 head/bc 等於教「這些 cond 下不要動」。_rw 全 1 時退化回原味。
             _rw = _REAL_W[0]
@@ -1716,22 +1766,20 @@ def _stage2_loop(n_steps, step_off=0):
                 _ca = cond * _keep
             # ⭐ VQ／FSQ：head 吃量化 u（與推論一致）；z 版顯式 snap（_q 對 z 版恆等——sample 端已字典化）
             _u_head = fsq.snap(et) if (fsq is not None and FSQ_SPACE == "z") else _q(et)
-            l_anchor = _wmse(ahead(_ca, _u_head), act)
-            if LEARNED_REFINE:
-                u = flow.sample(B, flow_cond(cond, anc)).detach(); us = [u]
-                for _ in range(3):
-                    u = refine(cond, u); us.append(u)
-                if CONS == "ema":
-                    with torch.no_grad():
-                        tgts = [refine_ema(cond, us[r]) for r in range(3)]
-                    l_cons = sum((us[r + 1] - tgts[r]).pow(2).mean() for r in range(3)) / 3
-                else:
-                    l_cons = sum((us[r] - us[r + 1].detach()).pow(2).mean() for r in range(3)) / 3
-                l_refine = sum(mse(ahead(cond, us[r + 1]), act) for r in range(3)) / 3
-            else:
-                # 🚨 l_refine 拿 flow 隨機抽的 u（很可能是另一條路），卻要求 head 輸出資料那條路的動作
-                #    ⇒ 明文教 head 無視 u。ENC_OBJ 一改好它會立刻變成第二個 bypass ⇒ 同一輪拿掉。
-                l_cons = l_refine = torch.zeros((), device=device)
+            _adapter = refine_training.Adapter(
+                density=lambda: _nf_value,
+                features=lambda uu: (_ca, uu),
+                anchor=lambda features: _wmse(ahead(*features), act),
+                sample=lambda: sample_plan(B, cond, anc, s, g),
+            )
+            _rounds = _gstp % 4 if LEARNED_REFINE else 0
+            _batch_services = (services.for_batch(state=s, goal=g, anchors=anc)
+                               if _rounds else None)
+            base_total, _refine_logs, us = refine_training.compose(
+                _adapter, refine, cond, _u_head,
+                rounds=_rounds, training_services=_batch_services, lam_cons=.1)
+            l_nf, l_anchor = _refine_logs["l_nf"], _refine_logs["l_act_anchor"]
+            l_cons, l_refine = _refine_logs["l_cons"], _refine_logs["l_act_refine"]
             # ⭐ 誠實地板：只吃 cond，跟 u 完全無關。
             # ⚠️ cond 要 detach —— 否則 l_bc 的梯度會流進 cond_enc/cond_head，
             #    把 cond 訓練得更會單獨預測動作 ⇒ ① 主模型被這個 baseline 改動了、
@@ -1776,7 +1824,7 @@ def _stage2_loop(n_steps, step_off=0):
                 torch.nn.utils.clip_grad_norm_([p for m in (lo_s_enc, lo_w_enc, lo_ch, lo_head)
                                                 for p in m.parameters()], 1.0)
                 _amp_step(opt_lo)
-            total = l_nf + l_anchor + l_refine + 0.5 * l_cons + (0.0 * l_bc if BC_INDEP else l_bc)
+            total = base_total + (0.0 * l_bc if BC_INDEP else l_bc)
             # ⭐ L_div hinge（LACOT_DIV_W>0）：⛔ 整段 gate 在 if 裡 —— DIV_W=0 時連 `+0*l_div`
             #    這種「數學上無害」的 op 都不加，⇒ 預設路徑的 graph 與數值逐位元不變。
             l_div = None
@@ -1910,14 +1958,13 @@ def _stage2_loop(n_steps, step_off=0):
         else:
             _amp_backward(total)
         _amp_unscale(opt2)
-        torch.nn.utils.clip_grad_norm_([p for m in f_mods for p in m.parameters()], 1.0); _amp_step(opt2)
+        torch.nn.utils.clip_grad_norm_([p for m in f_mods for p in m.parameters()], 1.0)
+        _opt2_succeeded = _amp_step(opt2)
         if opt_bc is not None:
             _amp_step(opt_bc)
         _amp_update(_gstp)                          # ⭐ scaler.update()＋skip 事件印一行（AMP=0 ⇒ 直接回）
-        if CONS == "ema" and LEARNED_REFINE:
-            with torch.no_grad():
-                for pe, pr in zip(refine_ema.parameters(), refine.parameters()):
-                    pe.mul_(EMA_M).add_(pr, alpha=1 - EMA_M)
+        if LEARNED_REFINE:
+            services.after_step(refine, succeeded=_opt2_succeeded)
         if _EMA_PAIRS:
             with torch.no_grad():
                 for _me, _ml in _EMA_PAIRS:
@@ -1941,10 +1988,28 @@ def _stage2_loop(n_steps, step_off=0):
                   + (f"  l_div {l_div.item():.4f}" if l_div is not None else ""), flush=True)
         if (_gstp + 1) % LOG_EVERY == 0:      # ⭐ 預設 1000 ⇒ 既有 log 逐行不變
             print(f"  step {_gstp+1}  l_nf/dim {l_nf.item():.3f} l_anchor {l_anchor.item():.4f} l_refine {l_refine.item():.4f}"
+                  + (f" l_plan_quality {_refine_logs['l_plan_quality'].item():.4f}"
+                     f" l_head_exposure {_refine_logs['l_head_exposure'].item():.4f}"
+                     f" quality_valid {_refine_logs['quality_valid_fraction'].item():.3f}" if LEARNED_REFINE else "")
                   + (f" l_div {l_div.item():.4f}" if l_div is not None else "")
                   + (f" l_lo {l_lo.item():.4f}" if l_lo is not None else ""), flush=True)
 
 
+# BEGIN opt-in W_phi quality builder (exposure remains unavailable).
+if (LEARNED_REFINE and (STEPS2 or CONT_STEPS)
+        and "LACOT_REFINE_QUALITY_CKPT" in os.environ):
+    if INTENT:
+        raise ValueError("intent hindsight anchors unqualified; VERDICT-EXP2-S2 M2")
+    if CONS != "ema":
+        raise ValueError("DESIGN-v3 training requires explicit LACOT_CONS=ema")
+    from lacot.refine_service_builder import build_from_env
+    REFINE_TRAINING_SERVICES = build_from_env(
+        domain=ENV_FAMILY, teacher=refine_ema, device=device, ema_decay=EMA_M,
+        decoder=lambda u, s: _dec(_q(u), s), intent_inverse=_intent_inv,
+        frozen_modules=tuple(m for m in (u_dec, s_embed, vq, fsq, intent_ad) if m is not None),
+        state_mean=MU, state_scale=SD, t_cap=T_CAP)
+    print("refine quality metadata:", REFINE_TRAINING_SERVICES.metadata(), flush=True)
+# END opt-in W_phi quality builder.
 _stage2_loop(STEPS2)
 if AMP and _AMP_ST["steps"]:
     # ⭐ 收工把 skip 率印出來：⛔ 「跑完沒炸」不等於「每一步都更新了」——
@@ -1966,6 +2031,11 @@ if LOAD_CKPT:
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), LOAD_CKPT)
     _ck = torch.load(_lp, map_location=device, weights_only=False)
     _cfg = _ck.get("cfg", {})
+    if not CONT_TRAIN:
+        CONS = _cons_from_ckpt_cfg(_cfg, os.environ.get("LACOT_CONS"))
+        OBJECTIVE_VERSION = (_cfg.get("OBJECTIVE_VERSION")
+                             or _ck.get("refine_training", {}).get("metadata", {}).get("objective_version")
+                             or "legacy-unspecified")
     # 🚨 逐項比對，⛔ 形狀對得上不代表是同一個模型 —— 這個 repo 已經被
     #    「同族東西混不同設定/架構」咬過三次（8/27 舊 code 版本、8/28 兩次不同 encoder 架構）。
     for _k, _v in (("K", K), ("COND", COND), ("T_CAP", T_CAP), ("CHUNK", CHUNK),
@@ -2046,6 +2116,8 @@ if LOAD_CKPT:
 # ⭐ 位置就是這裡：權重剛載完、f_mods 還沒 .eval()、_decoder_health 還沒量 ——
 #    ⛔ 放在上面那個 for 迴圈（L1224）等於訓練隨機初始化的權重。
 if CONT_TRAIN:
+    if LEARNED_REFINE:
+        refine_training.require_services(REFINE_TRAINING_SERVICES).restore(_ck.get("refine_training"))
     # ⛔ 來源檔名已經帶同一個 _ct{步數} ⇒ 這次算出來會是【同一個檔名】、把來源蓋掉。
     #    這一格擋在【訓練之前】，⛔ 不要等跑完四千步才在存檔那一行才發現。
     assert f"_ct{CONT_STEPS}" not in os.path.basename(_lp), (
@@ -2089,7 +2161,7 @@ if CONT_TRAIN:
     print(f"⭐ 續訓 {CONT_STEPS} 步（來源 {os.path.basename(_lp)}）"
           f"  INTENT_DROP={INTENT_DROP:g} DIV_W={DIV_W:g} DIV_M={DIV_M:g}"
           f" DIV_LOG_EVERY={DIV_LOG_EVERY}", flush=True)
-    _stage2_loop(CONT_STEPS)
+    _stage2_loop(CONT_STEPS, step_off=(REFINE_TRAINING_SERVICES.attempted_steps if LEARNED_REFINE else 0))
 
 for m in f_mods:
     m.eval()
@@ -2385,7 +2457,12 @@ def policy_chunk(obs, goal, R, use_u):
         a = ahead(cond, _foreign_u(R))[0].cpu().numpy()
         return np.clip(a, -1.0, 1.0).astype(np.float32)
     if use_u:
-        u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
+        if ORACLE_COLLECTOR is not None:
+            # Both arms replan each chunk. B replays draw-0's flow RNG stream
+            # each draw; only action noise changes between draws.
+            u = ORACLE_COLLECTOR.get_u(lambda: _bon_plan(1, cond, _anc, s, g))
+        else:
+            u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
         if u is None:
             # ⭐ 9/6 BoN：BON_N≤1 ⇒ _bon_plan 就是 sample_plan 本人（逐位元、連 RNG 都不變）；
             #    >1 ⇒ 抽 N 條、三項乘法閘打分、argmax ⇒ ⭐ 這一格就是設計卡 c 格的 R0 錶。
@@ -3052,15 +3129,27 @@ DIAG_DUMP = os.environ.get("LACOT_DIAG_DUMP", "0") == "1"
 DIAG_ROWS = []
 
 
-def rollout(R, use_u, tag, policy_fn=None, on_start=None):
+def rollout(R, use_u, tag, policy_fn=None, on_start=None, oracle_draw=None):
     """官方協定 rollout。policy_fn/on_start 給了就用它（分段臂），否則走 policy_chunk（flat）。"""
     succ, ep = 0, 0
     for task in range(1, N_TASKS + 1):
         for sd_ in range(SEEDS):
-            obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
+            if oracle_draw is not None:
+                _oracle_ep = sd_ + ORACLE_COLLECTOR.episode_offset
+                _oracle_reset_seed = ORACLE_COLLECTOR.reset_seed(task, _oracle_ep)
+                np.random.seed(_oracle_reset_seed)
+                try:
+                    env.action_space.seed(_oracle_reset_seed)
+                except Exception:
+                    pass
+                obs, info = env.reset(seed=_oracle_reset_seed, options={"task_id": task, "render_goal": False})
+            else:
+                obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
             goal = info["goal"]; success = False; steps = 0
             _st0 = np.asarray(obs[:2], np.float64).tolist()
             torch.manual_seed(7 * task + sd_)  # action-sampler stream
+            if oracle_draw is not None:
+                ORACLE_COLLECTOR.begin(task, _oracle_ep, oracle_draw, obs, goal)
             # 🚨 2026-08-28 修：這條官方路徑【從來沒有】重置過爬坡快取 —— 而 dev 那條有
             #    （dev_rollout 掛了 on_episode_start=_reset_grad_cache）。
             #    ⇒ 上一集爬出來的 u 會被下一集當 warm 起點，跨集、跨 task、跨 arm 互相汙染，
@@ -3073,13 +3162,19 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
             while steps < MAXH and not success:
                 for a in (policy_fn(obs, goal) if policy_fn is not None
                           else policy_chunk(obs, goal, R, use_u)):
+                    if oracle_draw is not None:
+                        a = ORACLE_COLLECTOR.action(a)
                     obs, rew, term, trunc, info = env.step(a)
+                    if oracle_draw is not None:
+                        ORACLE_COLLECTOR.step(a, obs, rew, term, trunc, info.get("success", False))
                     steps += 1
                     if info.get("success"):
                         success = True
                     if success or term or trunc or steps >= MAXH:
                         break
             succ += int(success); ep += 1
+            if oracle_draw is not None:
+                ORACLE_COLLECTOR.end(success, steps)
             if DIAG_DUMP:                    # 成功集也記 —— 讀屍體要有活人對照
                 _fp = np.asarray(obs[:2], np.float64)
                 _gl = np.asarray(goal[:2], np.float64)
@@ -3114,7 +3209,8 @@ if LOAD_CKPT and _TCH is not None and u_dec is not None and GEO is not None:
     print("  ⭐ embedding 往返尺（任務路徑→enc→dec；mse/穿牆/末點距）：" + "  ".join(
         (f"t{k+1}:{r['mse']:.4f}/{r['wall']:.3f}/{r['gdist']:.2f}" if r else f"t{k+1}:—") for k, r in enumerate(RT_GATE)), flush=True)
 print(f"\n==== SUCCESS RATE (env={ENV_NAME}, {N_TASKS} tasks x {SEEDS} seeds, MAXH {MAXH}) ====", flush=True)
-out = dict(env=ENV_NAME, seed=SEED, cons=CONS, ema_m=EMA_M, K=K, cond=COND, chunk=CHUNK, steps2=STEPS2,
+out = dict(env=ENV_NAME, seed=SEED, cons=CONS, objective_version=OBJECTIVE_VERSION,
+           ema_m=EMA_M, K=K, cond=COND, chunk=CHUNK, steps2=STEPS2,
            tcap=T_CAP, tcap_requested=T_CAP_REQ, max_train_T=MAX_TRAIN_T, goal_sampling="uniform-official",
            episodes=N_TASKS * SEEDS, maxh=MAXH, rates={},
            # 🚨 2026-08-28：這一整排以前【沒有】落進 json ⇒ 拿到一個結果檔也讀不出
@@ -3156,6 +3252,29 @@ RS_PRE = [int(x) for x in os.environ.get("LACOT_EVAL_RS", "0,1,3,5,8").split(","
 #    而炸點在 json 存檔【之前】⇒ 整輪訓練加 eval 的結果全部丟掉。
 if not RS_PRE:
     raise SystemExit("⛔ LACOT_EVAL_RS 不能是空的 —— 至少要有一個輪數（例如 \"0\"）")
+
+# Execute ALL draws through the same rollout above; bypass unrelated diagnostic
+# arms and legacy output. R1's reached bit is recorded before aggregation.
+if ORACLE_COLLECTOR is not None:
+    if (RS_PRE != [1] or GRAD_REFINE or LEARNED_REFINE or SUBGOAL or DEV_EVAL
+            or U_SOURCE != "flow" or INTENT or INTENT_GUID_W or FINISH_R
+            or BON_N != 0 or DIAG_DUMP or FLOW_PROBE or PREREQ):
+        raise SystemExit("ucontrast1 supports only flat flow T=1, R1, no refine/selection/probes")
+    for _draw in range(ORACLE_COLLECTOR.draws):
+        _rate = rollout(1, True, f"oracle {ORACLE_ARM} draw={_draw}", oracle_draw=_draw)
+        _rows = [r for r in ORACLE_COLLECTOR.rows if r["draw"] == _draw]
+        if len(_rows) != N_TASKS * SEEDS or _rate != sum(r["success"] for r in _rows) / len(_rows):
+            raise RuntimeError(f"Oracle draw {_draw} R1 disagrees with collector successes")
+    _oracle_dst = os.environ["LACOT_ORACLE_OUT"]
+    _oracle_meta = dict(ckpt=LOAD_CKPT, tag=os.environ["LACOT_BOOT_TAG"],
+                        config=out, env_config={k: v for k, v in os.environ.items()
+                                              if k.startswith("LACOT_")},
+                        u_semantics="A fresh flow stream per draw; B replays draw-0 flow stream, replans each chunk")
+    _oracle_result = write_result(_oracle_dst, _oracle_meta, ORACLE_COLLECTOR)
+    print(f"Oracle collection complete: {_oracle_dst} "
+          f"tasks={_oracle_result['n_tasks']} draws={_oracle_result['n_draws']} "
+          f"success={_oracle_result['n_success']}", flush=True)
+    raise SystemExit(0)
 
 # ================= 開發尺（DEV_EVAL）=================
 # 🚨 官方尺的獨立樣本數是 5 個 task，不是 250 集（2026-08-26 稽核＋實測複驗）。
@@ -3756,6 +3875,8 @@ if CONT_TRAIN:
          " ⚠️ rollout json 已經寫好了，⛔ 只有這顆 ckpt 沒存到")
 torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict(),
             "flow": flow.state_dict(), "refine": refine.state_dict(),
+            **({"refine_training": REFINE_TRAINING_SERVICES.checkpoint_state()}
+               if LEARNED_REFINE and REFINE_TRAINING_SERVICES is not None else {}),
             "ahead": ahead.state_dict(), "bc_head": bc_head.state_dict(),
             "traj_enc": traj_enc.state_dict(), "e_pooler": e_pooler.state_dict(),
             # ⭐ decoder 一定要跟著存：E_geo（幾何 energy）靠它把 u 解成可微的座標點，
@@ -3773,13 +3894,15 @@ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict
             # ⭐ B 案低層 π_lo 四模組（LO_ON 時；⛔ 沒有它 eval 端只能拿隨機權重跑到達率）
             **({"lo": {"s": lo_s_enc.state_dict(), "w": lo_w_enc.state_dict(),
                        "ch": lo_ch.state_dict(), "head": lo_head.state_dict()}} if LO_ON else {}),
-            # ⭐ optimizer 狀態只在續訓模式存（⛔ 預設路徑的 ckpt 內容逐 key 不變）——
+            # ⭐ optimizer 狀態：原續訓模式或 v3 qualified refine；R0 的存檔慣例維持原樣。
             #    有它，下一次續訓的 Adam m/v 才接得下去（沒有就 fresh，見載入端的警告）
             **({"opt2": opt2.state_dict(),
-                **({"opt_bc": opt_bc.state_dict()} if opt_bc is not None else {})} if CONT_TRAIN else {}),
+                **({"opt_bc": opt_bc.state_dict()} if opt_bc is not None else {})}
+               if CONT_TRAIN or (LEARNED_REFINE and REFINE_TRAINING_SERVICES is not None) else {}),
             "cfg": dict(K=K, COND=COND, CHUNK=CHUNK, D_MODEL=D_MODEL, STEPS2=STEPS2, T_CAP=T_CAP,
                         GOAL_SAMPLING="uniform-official", EVAL_EPISODES=SEEDS,
-                        CONS=CONS, EMA_M=EMA_M, SEED=SEED, EMA_W=EMA_W,
+                        CONS=CONS, OBJECTIVE_VERSION=OBJECTIVE_VERSION,
+                        EMA_M=EMA_M, SEED=SEED, EMA_W=EMA_W,
                         ENC_OBJ=ENC_OBJ, LEARNED_REFINE=LEARNED_REFINE,
                         COND_DROP=COND_DROP, BC_INDEP=BC_INDEP,
                         # ⭐ ant 移植 v1 血緣：⛔ 只在【非退化】env 進 cfg
