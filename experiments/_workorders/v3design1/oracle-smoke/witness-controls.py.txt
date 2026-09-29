@@ -1,0 +1,15 @@
+# Run with: .venv/bin/python < experiments/_workorders/v3design1/oracle-smoke/witness-controls.py.txt
+# Explicit in-memory negative controls; never edits production source.
+import sys, unittest
+from unittest.mock import patch
+sys.path.insert(0, 'tests')
+from test_refine_quality_v3 import OracleTests
+OracleTests.setUpClass()
+print('NEGATIVE CONTROL: bypass record validation at the REAL train_models API', flush=True)
+with patch('lacot.refine_models.validate_record', lambda record, **kwargs: record):
+    rejected = unittest.TextTestRunner(verbosity=2).run(OracleTests('test_eval_injection_rejected_at_training_api'))
+print('NEGATIVE CONTROL: replace W with the trained obs-only model', flush=True)
+OracleTests.models = dict(OracleTests.models, world=OracleTests.models['obs_only'])
+action_blind = unittest.TextTestRunner(verbosity=2).run(OracleTests('test_shuffled_actions_significantly_worse'))
+print('EXPECTED_FAILURES_DETECTED:', not rejected.wasSuccessful() and not action_blind.wasSuccessful())
+sys.exit(0 if not rejected.wasSuccessful() and not action_blind.wasSuccessful() else 1)

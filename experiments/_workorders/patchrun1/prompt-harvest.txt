@@ -1,0 +1,20 @@
+你是 F5 灑實驗艦隊的④收割官。兩個補跑 job 已結束，你的任務：harness 驗收——過了才准進判讀。⛔ 你只驗收不判科學結論。
+
+【對象】
+- 單 A：job 33852（g17-seedrep2、array 8-11、G32K32 兩 λ × seeds 80001/80002）
+- 單 B：job 33853（shat-obsonly2、G16K16 格新基準）
+發射單與預期 schema 在 experiments/_workorders/patchrun1/LAUNCH-CARD.md（注意 sbatch 已是 v2/v3 修正版：CPU-only 8 核、-t 90；smoke 33851 已另跑過、其產物在 seedrep/smoke0928/ 與本驗收無關）。
+
+【你在 zeldajr，產物在 jasmine 本機 /archive——用 ssh jasmine '<cmd>' 讀。】
+
+【驗收清單（逐格給證據）】
+1. 終態：sacct -j 33852,33853 全 task State/ExitCode/Elapsed。
+2. 完成錨：四份 G32K32 json（s80001/s80002 × lam0p0/lam1p0，在 /archive/cymaxwelllee/diag-g16/seedrep/s8000X/results/）各驗 metrics.steps 反映 50000、log 尾有「=== done ... (wall Xs) ===」＋兩行 saved:；shat3 的 log 有「=== 結果 ===」四行＋判定行、shat3-results/ 有 1 份 json。
+3. schema：G32K32 json 逐 key 對 G16K16 完成格（同目錄現成參照）：metrics 必含 G/K/recon_a_val/recon_s_val/any_group_collapsed/mean_active_codes/train_seconds；G=32、K=32、lam_s 對檔名。
+4. 負對照〔驗收器自驗〕：把你的檢查腳本餵一份壞檔（例如截斷的 json 或 G16K16 檔冒充 G32K32）——必須 FAIL；貼出 FAIL 證據。
+5. 正對照：餵 G16K16_lam0p0.json（已知完成好檔、按其自己的 G/K 預期）——必須 PASS。
+6. 數字抽驗：對每份 G32K32 json 讀出 recon_a_val/recon_s_val/any_group_collapsed/mean_active_codes/train_seconds，列成表（這是 lead 之後算 λ差的原料，逐位列出不四捨五入）。
+7. 健康格：any_group_collapsed 有沒有 True；mean_active_codes 是否 =32；wall 時間 vs smoke 外推（1500 步 66.5s ⇒ 50k ~36-37 分）偏差 >1.5× 就標註。
+8. shat3 stdout 判定行原文照錄（err_real/ref_a/err_bad/err_obs_only 四行＋verdict），⛔ 不解讀。
+【交付】寫 experiments/_workorders/patchrun1/HARVEST-REPORT.md：HARVEST-OK 或 HARVEST-FAIL(哪格)＋逐格證據＋自我懷疑欄（非空）＋STATUS: DONE。
+【紅線】唯讀（除交付檔）：不改產物、不 scancel、不重跑訓練；負對照的壞檔寫在 /tmp 下用完即棄、⛔ 不寫進 results/。查不到標明。努力預算 40 分。

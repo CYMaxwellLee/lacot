@@ -1,0 +1,24 @@
+{
+  "note": "TEMPLATE ONLY. Frozen input checkpoints use path and SHA256; GPU flag-off evidence is a separate gate.",
+  "anchor": {
+    "protocol": "official-flat-R1-reached-T1-EMA",
+    "expected_r1": 0.35,
+    "tolerance": 0.08,
+    "episodes_per_task": 40,
+    "source": "j_signal noclimb s33"
+  },
+  "checkpoints": {
+    "33": {
+      "path": "results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt",
+      "sha256": "88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787",
+      "training_started_unix": null,
+      "training_start_note": "frozen input asset; not applicable"
+    },
+    "35": {
+      "path": "results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s35.pt",
+      "sha256": "ba5009ec197d1d11b9902a2b92917d1ca9198e8b32882c442638380786ab0d7d",
+      "training_started_unix": null,
+      "training_start_note": "frozen input asset; not applicable"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+"""CPU-only v3 contract witnesses. Run with unittest; no pytest dependency."""
+import unittest
+import torch
+from lacot.refine_models import train_models, action_witness
+
+
+class RedContracts(unittest.TestCase):
+    def test_eval_injection_rejected_at_training_api(self):
+        for field in ("reward", "success", "oracle_index"):
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                train_models({field: torch.ones(2)})
+
+    def test_action_blind_witness_must_fail(self):
+        # A deliberately action-blind model must NOT pass this positive witness.
+        target = torch.arange(8).float()
+        prediction = torch.zeros_like(target)
+        self.assertGreater(action_witness(prediction, prediction, target), 0.1)
+
+
+if __name__ == "__main__":
+    unittest.main()

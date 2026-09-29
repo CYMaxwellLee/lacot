@@ -1,0 +1,120 @@
+diff --git a/experiments/scratch_lacot_rollout.py b/experiments/scratch_lacot_rollout.py
+index 50ed22f..c0dd35d 100644
+--- a/experiments/scratch_lacot_rollout.py
++++ b/experiments/scratch_lacot_rollout.py
+@@ -15,6 +15,21 @@ from lacot.model import RefineOperator
+ from lacot import dev_eval as DE
+ import ogbench
+ 
++# ucontrast1: opt-in instrumentation; flag-off does not import/create RNGs.
++ORACLE_ARM = os.environ.get("LACOT_ORACLE_ARM", "")
++ORACLE_COLLECTOR = None
++if ORACLE_ARM:
++    from experiments._workorders.ucontrast1.collector import Collector, write_result
++    if (not os.environ.get("LACOT_LOAD_CKPT")
++            or os.environ.get("LACOT_CONT_TRAIN", "0") != "0"
++            or os.environ.get("LACOT_BON_N", "0") != "0"):
++        raise SystemExit("Oracle collection requires LOAD_CKPT, CONT_TRAIN=0, BON_N=0")
++    ORACLE_COLLECTOR = Collector(ORACLE_ARM,
++                                 float(os.environ.get("LACOT_ORACLE_SIGMA", "0")),
++                                 int(os.environ.get("LACOT_ORACLE_DRAWS", "8")),
++                                 int(os.environ.get("LACOT_ORACLE_EPISODE_OFFSET", "0")),
++                                 int(os.environ.get("LACOT_ORACLE_STREAM_SALT", "0")))
++
+ # 資料位置：預設走官方 OGBENCH_DATA_DIR，沒設才用本機 archive
+ OGB_DATA = os.environ.get("OGBENCH_DATA_DIR", "/archive/cymaxwelllee/data/ogbench")
+ 
+@@ -2385,7 +2400,12 @@ def policy_chunk(obs, goal, R, use_u):
+         a = ahead(cond, _foreign_u(R))[0].cpu().numpy()
+         return np.clip(a, -1.0, 1.0).astype(np.float32)
+     if use_u:
+-        u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
++        if ORACLE_COLLECTOR is not None:
++            # Both arms replan each chunk. B replays draw-0's flow RNG stream
++            # each draw; only action noise changes between draws.
++            u = ORACLE_COLLECTOR.get_u(lambda: _bon_plan(1, cond, _anc, s, g))
++        else:
++            u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
+         if u is None:
+             # ⭐ 9/6 BoN：BON_N≤1 ⇒ _bon_plan 就是 sample_plan 本人（逐位元、連 RNG 都不變）；
+             #    >1 ⇒ 抽 N 條、三項乘法閘打分、argmax ⇒ ⭐ 這一格就是設計卡 c 格的 R0 錶。
+@@ -3052,15 +3072,27 @@ DIAG_DUMP = os.environ.get("LACOT_DIAG_DUMP", "0") == "1"
+ DIAG_ROWS = []
+ 
+ 
+-def rollout(R, use_u, tag, policy_fn=None, on_start=None):
++def rollout(R, use_u, tag, policy_fn=None, on_start=None, oracle_draw=None):
+     """官方協定 rollout。policy_fn/on_start 給了就用它（分段臂），否則走 policy_chunk（flat）。"""
+     succ, ep = 0, 0
+     for task in range(1, N_TASKS + 1):
+         for sd_ in range(SEEDS):
+-            obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
++            if oracle_draw is not None:
++                _oracle_ep = sd_ + ORACLE_COLLECTOR.episode_offset
++                _oracle_reset_seed = ORACLE_COLLECTOR.reset_seed(task, _oracle_ep)
++                np.random.seed(_oracle_reset_seed)
++                try:
++                    env.action_space.seed(_oracle_reset_seed)
++                except Exception:
++                    pass
++                obs, info = env.reset(seed=_oracle_reset_seed, options={"task_id": task, "render_goal": False})
++            else:
++                obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
+             goal = info["goal"]; success = False; steps = 0
+             _st0 = np.asarray(obs[:2], np.float64).tolist()
+             torch.manual_seed(7 * task + sd_)  # action-sampler stream
++            if oracle_draw is not None:
++                ORACLE_COLLECTOR.begin(task, _oracle_ep, oracle_draw, obs, goal)
+             # 🚨 2026-08-28 修：這條官方路徑【從來沒有】重置過爬坡快取 —— 而 dev 那條有
+             #    （dev_rollout 掛了 on_episode_start=_reset_grad_cache）。
+             #    ⇒ 上一集爬出來的 u 會被下一集當 warm 起點，跨集、跨 task、跨 arm 互相汙染，
+@@ -3073,13 +3105,19 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
+             while steps < MAXH and not success:
+                 for a in (policy_fn(obs, goal) if policy_fn is not None
+                           else policy_chunk(obs, goal, R, use_u)):
++                    if oracle_draw is not None:
++                        a = ORACLE_COLLECTOR.action(a)
+                     obs, rew, term, trunc, info = env.step(a)
++                    if oracle_draw is not None:
++                        ORACLE_COLLECTOR.step(a, obs, rew, term, trunc, info.get("success", False))
+                     steps += 1
+                     if info.get("success"):
+                         success = True
+                     if success or term or trunc or steps >= MAXH:
+                         break
+             succ += int(success); ep += 1
++            if oracle_draw is not None:
++                ORACLE_COLLECTOR.end(success, steps)
+             if DIAG_DUMP:                    # 成功集也記 —— 讀屍體要有活人對照
+                 _fp = np.asarray(obs[:2], np.float64)
+                 _gl = np.asarray(goal[:2], np.float64)
+@@ -3157,6 +3195,29 @@ RS_PRE = [int(x) for x in os.environ.get("LACOT_EVAL_RS", "0,1,3,5,8").split(","
+ if not RS_PRE:
+     raise SystemExit("⛔ LACOT_EVAL_RS 不能是空的 —— 至少要有一個輪數（例如 \"0\"）")
+ 
++# Execute ALL draws through the same rollout above; bypass unrelated diagnostic
++# arms and legacy output. R1's reached bit is recorded before aggregation.
++if ORACLE_COLLECTOR is not None:
++    if (RS_PRE != [1] or GRAD_REFINE or LEARNED_REFINE or SUBGOAL or DEV_EVAL
++            or U_SOURCE != "flow" or INTENT or INTENT_GUID_W or FINISH_R
++            or BON_N != 0 or DIAG_DUMP or FLOW_PROBE or PREREQ):
++        raise SystemExit("ucontrast1 supports only flat flow T=1, R1, no refine/selection/probes")
++    for _draw in range(ORACLE_COLLECTOR.draws):
++        _rate = rollout(1, True, f"oracle {ORACLE_ARM} draw={_draw}", oracle_draw=_draw)
++        _rows = [r for r in ORACLE_COLLECTOR.rows if r["draw"] == _draw]
++        if len(_rows) != N_TASKS * SEEDS or _rate != sum(r["success"] for r in _rows) / len(_rows):
++            raise RuntimeError(f"Oracle draw {_draw} R1 disagrees with collector successes")
++    _oracle_dst = os.environ["LACOT_ORACLE_OUT"]
++    _oracle_meta = dict(ckpt=LOAD_CKPT, tag=os.environ["LACOT_BOOT_TAG"],
++                        config=out, env_config={k: v for k, v in os.environ.items()
++                                              if k.startswith("LACOT_")},
++                        u_semantics="A fresh flow stream per draw; B replays draw-0 flow stream, replans each chunk")
++    _oracle_result = write_result(_oracle_dst, _oracle_meta, ORACLE_COLLECTOR)
++    print(f"Oracle collection complete: {_oracle_dst} "
++          f"tasks={_oracle_result['n_tasks']} draws={_oracle_result['n_draws']} "
++          f"success={_oracle_result['n_success']}", flush=True)
++    raise SystemExit(0)
++
+ # ================= 開發尺（DEV_EVAL）=================
+ # 🚨 官方尺的獨立樣本數是 5 個 task，不是 250 集（2026-08-26 稽核＋實測複驗）。
+ #    ⇒ 任何小於 0.2 的效應都看不見 ⇒ 先驗尺，再談實驗。

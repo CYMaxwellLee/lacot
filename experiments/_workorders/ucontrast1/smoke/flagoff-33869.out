@@ -1,0 +1,30 @@
+device: cuda
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/archive/cymaxwelllee/LaCoT/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.7971   用到的 u 值 +1.6989   ✓
+  flag-off task=1 episode=3: success 1/1 = 1.000
+  flag-off task=2 episode=7: success 0/1 = 0.000
+  flag-off task=4 episode=11: success 0/1 = 0.000
+device: cuda
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.7971   用到的 u 值 +1.6989   ✓
+  flag-off task=1 episode=3: success 1/1 = 1.000
+  flag-off task=2 episode=7: success 0/1 = 0.000
+  flag-off task=4 episode=11: success 0/1 = 0.000
+task=1 episode=3 baseline=03de2d06e6213fbc2f2e5a6e41be3d0596411c6b8e5f175c89034fac683c739e (506 steps) current=03de2d06e6213fbc2f2e5a6e41be3d0596411c6b8e5f175c89034fac683c739e (506 steps)
+task=2 episode=7 baseline=e1f7ca986d6d0e03747acc216a90cb4830dbf2cc296654eb73716cfadbae583a (1000 steps) current=e1f7ca986d6d0e03747acc216a90cb4830dbf2cc296654eb73716cfadbae583a (1000 steps)
+task=4 episode=11 baseline=8162a652097c81f6163d9a504ab9c15f193422e70ad98e770cba5b7ad3b79ed1 (1000 steps) current=8162a652097c81f6163d9a504ab9c15f193422e70ad98e770cba5b7ad3b79ed1 (1000 steps)
+Wrote /home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/flagoff-proof.json

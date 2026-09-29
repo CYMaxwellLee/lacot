@@ -1,0 +1,21 @@
+{
+  "status": "SELECTED",
+  "seed": 33,
+  "sigma": 0.05,
+  "metric": "pooled oracle@8",
+  "tie_break": "smaller sigma",
+  "ckpt_sha256": "88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787",
+  "inputs": {
+    "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/sweep/ucontrast1_smoke_s33_A_sig0.json": "f3c86ad9c62bbfdfa08b7524ae362c93a2e10e69a41b900cec4a4a3c6fcfbb3f",
+    "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/sweep/ucontrast1_smoke_s33_B_sig0.05.json": "6cc1bb2e2da595fad6390cfbb12b19ee10634e860c0f0128581bbb5bc853fbe3",
+    "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/sweep/ucontrast1_smoke_s33_B_sig0.1.json": "6a58a258b7cc78e1dad20e75f408c60c7ea21dd84802742ea5864215ec377a12",
+    "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/sweep/ucontrast1_smoke_s33_B_sig0.2.json": "2ec9572f34a495138a4aa54d56c73c78b5a8fe8f5924ca354c52e512445084d6"
+  },
+  "code_hashes": {
+    "experiments/scratch_lacot_rollout.py": "276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc",
+    "experiments/_workorders/ucontrast1/collector.py": "7d8e2bf3b8760388ffa0cdad5460b4ea298c738325d5bf25bc084a0a248c26a5",
+    "experiments/_workorders/ucontrast1/run.py": "e78e2a704317bf47bde81d6397c07dde4ddc9158a0f20df949baca1b3e7b7a06"
+  },
+  "note": "Selection only; no A-vs-B verdict",
+  "training_use_prohibited": true
+}

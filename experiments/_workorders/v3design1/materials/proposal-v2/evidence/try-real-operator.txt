@@ -1,0 +1,8 @@
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+{"seed": 0, "optimizer_steps": 700, "quality": [1.1944732666015625, 0.30660897493362427, 0.2959427535533905, 0.29581576585769653, 0.29581835865974426, 0.2958185076713562, 0.2958185076713562], "mode_error": [0.0, 0.083984375, 0.083984375, 0.083984375, 0.083984375, 0.083984375, 0.083984375]}
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+{"seed": 1, "optimizer_steps": 700, "quality": [1.1403101682662964, 0.04808411747217178, 0.04695659130811691, 0.04701881483197212, 0.04702075943350792, 0.04702082276344299, 0.04702082648873329], "mode_error": [0.0, 0.01171875, 0.01171875, 0.01171875, 0.01171875, 0.01171875, 0.01171875]}
+{"seed": 2, "optimizer_steps": 700, "quality": [1.193985939025879, 0.06680600345134735, 0.06151584908366203, 0.0614955760538578, 0.061495739966630936, 0.061495743691921234, 0.061495739966630936], "mode_error": [0.0, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625, 0.015625]}
+FAIL real RefineOperator analytic-world off-manifold CPU training; no feedback features added

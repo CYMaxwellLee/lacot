@@ -1,0 +1,13 @@
+{
+  "note": "TEMPLATE ONLY: lead-side GPU comparison of git HEAD versus flag-off worktree on three official questions. Hash each complete reset/action/observation/reward/term/trunc/reached trajectory.",
+  "device": "cuda",
+  "baseline_source_sha256": null,
+  "current_source_sha256": null,
+  "code_hashes": null,
+  "ckpt_sha256": "88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787",
+  "pairs": [
+    {"task": 1, "episode": 0, "baseline_trajectory_sha256": null, "current_trajectory_sha256": null},
+    {"task": 2, "episode": 0, "baseline_trajectory_sha256": null, "current_trajectory_sha256": null},
+    {"task": 3, "episode": 0, "baseline_trajectory_sha256": null, "current_trajectory_sha256": null}
+  ]
+}

@@ -1,0 +1,29 @@
+test_action_blind_witness_is_detected (test_refine_quality_v3.OracleTests.test_action_blind_witness_is_detected) ... ok
+test_all_invalid_exposure_has_explicit_reason (test_refine_quality_v3.OracleTests.test_all_invalid_exposure_has_explicit_reason) ... ok
+test_all_metadata_missing_fields_rejected (test_refine_quality_v3.OracleTests.test_all_metadata_missing_fields_rejected) ... ok
+test_calibration_fingerprint_detects_changed_scale (test_refine_quality_v3.OracleTests.test_calibration_fingerprint_detects_changed_scale) ... ok
+test_calibration_only_thresholds_and_locked (test_refine_quality_v3.OracleTests.test_calibration_only_thresholds_and_locked) ... ok
+test_checkpoint_roundtrip_and_candidate_coverage (test_refine_quality_v3.OracleTests.test_checkpoint_roundtrip_and_candidate_coverage) ... ok
+test_decoder_pairing_and_short_horizon_refusal (test_refine_quality_v3.OracleTests.test_decoder_pairing_and_short_horizon_refusal) ... ok
+test_episode_split_and_original_action_pairing (test_refine_quality_v3.OracleTests.test_episode_split_and_original_action_pairing) ... ok
+test_eval_injection_rejected_at_training_api (test_refine_quality_v3.OracleTests.test_eval_injection_rejected_at_training_api) ... ok
+test_executor_rereads_predicted_state_every_chunk (test_refine_quality_v3.OracleTests.test_executor_rereads_predicted_state_every_chunk) ... ok
+test_forward_and_backward_same_plan_bf16 (test_refine_quality_v3.OracleTests.test_forward_and_backward_same_plan_bf16) ... ok
+test_generated_candidate_reading_uses_model_report (test_refine_quality_v3.OracleTests.test_generated_candidate_reading_uses_model_report) ... ok
+test_hand_filled_qualification_readings_rejected (test_refine_quality_v3.OracleTests.test_hand_filled_qualification_readings_rejected) ... ok
+test_loader_whitelist_and_npz_eval_injection (test_refine_quality_v3.OracleTests.test_loader_whitelist_and_npz_eval_injection) ... ok
+test_model_seed_does_not_change_split (test_refine_quality_v3.OracleTests.test_model_seed_does_not_change_split) ... ok
+test_normalization_train_only (test_refine_quality_v3.OracleTests.test_normalization_train_only) ... ok
+test_offline_label_injection_rejected (test_refine_quality_v3.OracleTests.test_offline_label_injection_rejected) ... ok
+test_reference_nll_calibration (test_refine_quality_v3.OracleTests.test_reference_nll_calibration) ... ok
+test_report_schema_and_invalid_not_zero (test_refine_quality_v3.OracleTests.test_report_schema_and_invalid_not_zero) ... ok
+test_revised_qualification_gates (test_refine_quality_v3.OracleTests.test_revised_qualification_gates) ... ok
+test_same_plan_exposure_and_gauge (test_refine_quality_v3.OracleTests.test_same_plan_exposure_and_gauge) ... ok
+test_shuffled_actions_significantly_worse (test_refine_quality_v3.OracleTests.test_shuffled_actions_significantly_worse) ... ok
+test_sources_and_generated_parent (test_refine_quality_v3.OracleTests.test_sources_and_generated_parent) ... ok
+test_training_refused_without_qualification (test_refine_quality_v3.OracleTests.test_training_refused_without_qualification) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 2.033s
+
+OK

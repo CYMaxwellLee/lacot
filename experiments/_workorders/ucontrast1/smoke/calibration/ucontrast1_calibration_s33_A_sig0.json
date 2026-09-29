@@ -1,0 +1,5326 @@
+{
+  "ckpt": "results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt",
+  "tag": "ucontrast1_calibration_s33_A_sig0",
+  "config": {
+    "env": "pointmaze-large-stitch-v0",
+    "seed": 33,
+    "cons": "self",
+    "ema_m": 0.996,
+    "K": 8,
+    "cond": 256,
+    "chunk": 4,
+    "steps2": 0,
+    "tcap": 128,
+    "tcap_requested": 128,
+    "max_train_T": 201,
+    "goal_sampling": "uniform-official",
+    "episodes": 200,
+    "maxh": 1000,
+    "rates": {},
+    "enc_obj": "recon_ictr",
+    "learned_refine": 0,
+    "cond_drop": 0.1,
+    "bc_indep": 1,
+    "w_var": 0.0,
+    "w_cov": 0.0,
+    "subgoal": "",
+    "grad_refine": 0,
+    "grad_r": 50,
+    "grad_eta": 0.1,
+    "grad_lam": 0.3,
+    "grad_r_warm": 10,
+    "delta_sub": 7.5,
+    "sub_cap_chunks": 10,
+    "sub_stuck_chunks": 3,
+    "dec_anchor": 0,
+    "teacher_mix": 0.5,
+    "intent": "",
+    "intent_ta": 32,
+    "intent_src": "hindsight",
+    "intent_drop": 0.0,
+    "intent_zero": 0,
+    "guid_w": 0.0,
+    "cont_train": 0,
+    "cont_steps": 0,
+    "div_w": 0.0,
+    "div_m": 0.3,
+    "div_log_every": 0,
+    "dev_tiers": "",
+    "dev_eval": null,
+    "load_ckpt": "ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt",
+    "rt_gate": null,
+    "flow_probe": null
+  },
+  "env_config": {
+    "LACOT_ENV": "pointmaze-large-stitch-v0",
+    "LACOT_CONS": "self",
+    "LACOT_K": "8",
+    "LACOT_COND": "256",
+    "LACOT_CHUNK": "4",
+    "LACOT_TCAP": "128",
+    "LACOT_ENC_OBJ": "recon_ictr",
+    "LACOT_LEARNED_REFINE": "0",
+    "LACOT_COND_DROP": "0.1",
+    "LACOT_BC_INDEP": "1",
+    "LACOT_TEACHER_MIX": "0.5",
+    "LACOT_WARMUP": "500",
+    "LACOT_DEC_START": "soft",
+    "LACOT_LOAD_EMA": "1",
+    "LACOT_CONT_TRAIN": "0",
+    "LACOT_DEV_EVAL": "0",
+    "LACOT_PREREQ": "0",
+    "LACOT_EVAL_EPISODES": "40",
+    "LACOT_EVAL_RS": "1",
+    "LACOT_GRAD_REFINE": "0",
+    "LACOT_SUBGOAL": "",
+    "LACOT_FINISH_R": "0",
+    "LACOT_INTENT": "",
+    "LACOT_U_SOURCE": "flow",
+    "LACOT_SUB_ESEL": "0",
+    "LACOT_INTENT_GUID_W": "0",
+    "LACOT_DEC_ANCHOR": "0",
+    "LACOT_BON_MODE": "plan",
+    "LACOT_BON_N": "0",
+    "LACOT_BOOT_DATA": "",
+    "LACOT_S1_FROM": "",
+    "LACOT_FLOW_PROBE": "0",
+    "LACOT_DIAG_DUMP": "0",
+    "LACOT_LOAD_CKPT": "results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt",
+    "LACOT_SEED": "33",
+    "LACOT_BOOT_TAG": "ucontrast1_calibration_s33_A_sig0",
+    "LACOT_OUT_DIR": "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/calibration",
+    "LACOT_ORACLE_ARM": "A",
+    "LACOT_ORACLE_SIGMA": "0.0",
+    "LACOT_ORACLE_DRAWS": "1",
+    "LACOT_ORACLE_OUT": "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/calibration/ucontrast1_calibration_s33_A_sig0.json",
+    "LACOT_ORACLE_EPISODE_OFFSET": "0",
+    "LACOT_ORACLE_STREAM_SALT": "0"
+  },
+  "u_semantics": "A fresh flow stream per draw; B replays draw-0 flow stream, replans each chunk",
+  "schema_version": 1,
+  "arm": "A",
+  "sigma": 0.0,
+  "sigma_units": "fraction_of_action_half_range_1",
+  "temperature": 1.0,
+  "draws_per_task": 1,
+  "success_definition": "R1: any info.success reached",
+  "pooling": "any draw within each official (task,episode), then mean over episodes",
+  "offline_only": true,
+  "training_use_prohibited": true,
+  "leg_stats": [],
+  "leg_stats_reason": "flat policy has no subgoal legs",
+  "tasks": [
+    {
+      "task": 1,
+      "episode": 0,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 0,
+          "draw": 0,
+          "env_seed": 1000,
+          "stream_seed": 7,
+          "flow_seed": 7,
+          "initial_sha256": "a20b35d96361741953483351adca3c8c4eb176c9921a4ccf2595eb170d2fd954",
+          "goal_sha256": "d7c06f3432ec0e73153926aaaec1b5a2c2a4005ce7c3eabec8eb61a8f5ecfd10",
+          "success": true,
+          "steps": 544,
+          "first_u_sha256": "e0e9f0a140011d925931b2b2473c745ccd16ecfefff6aed8eac6033e0229d732",
+          "u_sequence_sha256": "04efa5a17f22843a532659454b4484a5af045dcbf2f15ed626d7e1544cde5d18",
+          "u_calls": 136,
+          "u_samples": 136,
+          "trajectory_sha256": "c6929550952e69049805e995f39b42725870e1c2b27822cdd28d2d817eca2be8"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 1,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 1,
+          "draw": 0,
+          "env_seed": 1001,
+          "stream_seed": 8,
+          "flow_seed": 8,
+          "initial_sha256": "05b35b788a56645546eb5e0df1da3f7fa5698b45394eb4e893f8d3a8de1391bd",
+          "goal_sha256": "46fbfaca4d17f2b54760ad9f94ae0cf30327dff9ffa7f4267209fdd8f5467c61",
+          "success": true,
+          "steps": 641,
+          "first_u_sha256": "2d707ed7ee8a260efa6b7bd3463d0358ee8c4fe1cd266f5886ff84fcbebea6ff",
+          "u_sequence_sha256": "4667e15f8fd77294d8cf19e41bc1c53d6d40fcef43a06ce9c55bf365b4706c25",
+          "u_calls": 161,
+          "u_samples": 161,
+          "trajectory_sha256": "2df4204560b052a1c9d18d6c0af219e213ca0ccf9ccbb6f93c64a75e79b244eb"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 2,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 2,
+          "draw": 0,
+          "env_seed": 1002,
+          "stream_seed": 9,
+          "flow_seed": 9,
+          "initial_sha256": "c249550dfe30275de3763559e36e509d361996cc4aca57d91b908edfd626b950",
+          "goal_sha256": "3d3f99a239ea25c7953e060bb07fd8ec0afbc04050303a5dbe0d98cfb0c79049",
+          "success": true,
+          "steps": 683,
+          "first_u_sha256": "cb270c7e57bcd1088d2087c73ef861d8b562ccc187c5c201b98d35c6e4fc1472",
+          "u_sequence_sha256": "896fcc23b06493ee945130f300dafece1b16099407a198b00ebac3edbb353bed",
+          "u_calls": 171,
+          "u_samples": 171,
+          "trajectory_sha256": "9ac6550773db3862610a1735d000079fa160532216bba871f4276819f46b586b"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 3,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 3,
+          "draw": 0,
+          "env_seed": 1003,
+          "stream_seed": 10,
+          "flow_seed": 10,
+          "initial_sha256": "f70e14107ee5fb4b4640e963d8ef1bae9d04779c0d2a7161fdc16b33570058b0",
+          "goal_sha256": "f526bb1cc43e0034e3f35796aeb06495234af134043fe9f7ef7e5ce01de51312",
+          "success": true,
+          "steps": 499,
+          "first_u_sha256": "f1006ced6dc623f8b4ee85110e381a15bfa6bc9b8a07b6361f46c783a6e1f33c",
+          "u_sequence_sha256": "9ee6a7eafe09c2f146473b6cff0f9f650f2fcefdb4735acc3293a43946560614",
+          "u_calls": 125,
+          "u_samples": 125,
+          "trajectory_sha256": "4c0fae1d6a07f5fa9b773339aea363e6e3b3783a3318216bb67b8eaeadf37c2a"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 4,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 4,
+          "draw": 0,
+          "env_seed": 1004,
+          "stream_seed": 11,
+          "flow_seed": 11,
+          "initial_sha256": "2c777fe305eeb3a67d8f5fbe70174c727a7d64db64556f09a0005c6917c43359",
+          "goal_sha256": "9a04ac8d3bab325309643fe8066631edb6634391aaf8c7acc69642e44d283a06",
+          "success": true,
+          "steps": 643,
+          "first_u_sha256": "8ec0c2238a6d7f755da373e7f1a3355a81ffdc99d45917f2339b07471665182b",
+          "u_sequence_sha256": "4086a7086b30c3720ac2d00809b02e53d0362c23d4ee8082e4560d065abae9c7",
+          "u_calls": 161,
+          "u_samples": 161,
+          "trajectory_sha256": "dd465e8ed099ed22b0254bd39a232271aa51009a8b0c0cc36b5282561fa7f9f0"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 5,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 5,
+          "draw": 0,
+          "env_seed": 1005,
+          "stream_seed": 12,
+          "flow_seed": 12,
+          "initial_sha256": "5fa0a9aa31f2ba50f80d9dc017c78fa995289b070501783278250c1fe3f92755",
+          "goal_sha256": "3022f0bded2514f7a8b838799ee08943fbb72a6a35b84a86959705251315e94d",
+          "success": true,
+          "steps": 567,
+          "first_u_sha256": "96f51236d5e93ef1bf471965c36ddd0bb89b4f545ea782b38299bcef50b8a0d6",
+          "u_sequence_sha256": "9e61d53b6f630e770abe032332eee7898ffb47c1d665e68a6a4c6da0a0e731b6",
+          "u_calls": 142,
+          "u_samples": 142,
+          "trajectory_sha256": "d1b8969338fbd2c86ee971d5a45191cf2f9785f45ae28b874785696da4fdebe5"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 6,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 6,
+          "draw": 0,
+          "env_seed": 1006,
+          "stream_seed": 13,
+          "flow_seed": 13,
+          "initial_sha256": "954fb2d3b26721576dccf1f012f6b7d4d4153c4340fe55eba46eda31cd0115f1",
+          "goal_sha256": "2bec9c29532248587e1a950c4c882da9a203772af7f247c7990b26b9098fc286",
+          "success": true,
+          "steps": 569,
+          "first_u_sha256": "f5d8d0c848bfd34d932c0352ffd1d09446dc484acb2b636927769c74496ee6c8",
+          "u_sequence_sha256": "5683de4678180f05c6125c82b758c1e6861393b1d590ed0b1ddf4ed09a33293e",
+          "u_calls": 143,
+          "u_samples": 143,
+          "trajectory_sha256": "c87ef1e48b24f3a2ce742aef1fbd42f86d036c3caca4dacb10072708bdaf6885"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 7,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 7,
+          "draw": 0,
+          "env_seed": 1007,
+          "stream_seed": 14,
+          "flow_seed": 14,
+          "initial_sha256": "7a6b4d352ec700b1f97f41fa4506d71fa0095570c44008cf8bd12025372f2099",
+          "goal_sha256": "f8d192a5118bbc8c5b11fad8dda25c23c073df808c2d22a5d5155c776a6fb1db",
+          "success": true,
+          "steps": 533,
+          "first_u_sha256": "f9705592de28a013544afdaede5e2c853c768254d3dd24285acf083c29fc3bbb",
+          "u_sequence_sha256": "9a66f604c3e304a476b7e9f6a4bf8cdcd093c819179cf67ef438b2a183feb29e",
+          "u_calls": 134,
+          "u_samples": 134,
+          "trajectory_sha256": "a501bf02a0ab96b31f391fe6d6b19a9cf4a37b43520199e512cdeba186c48e90"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 8,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 8,
+          "draw": 0,
+          "env_seed": 1008,
+          "stream_seed": 15,
+          "flow_seed": 15,
+          "initial_sha256": "330e592558120aaee2c59622f7226448cac51e2ff126c06f6940e843c0877fbd",
+          "goal_sha256": "9860799ae0ff86cb30c54466c549829bc2bfbd8038feb5fa3584d299a3478c93",
+          "success": true,
+          "steps": 620,
+          "first_u_sha256": "ae233f377d459d4e1859dac272b143b9f573c2c1a90c19aa4dcb83b4faa63b4a",
+          "u_sequence_sha256": "d115b8616f43d371f45ec7c567ef69bcc438d85140485d7015e7406080c07214",
+          "u_calls": 155,
+          "u_samples": 155,
+          "trajectory_sha256": "4fe6a566ad74d15c8d22a1fa999fb4df6b090c03df9990b6572afb37be1bc897"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 9,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 9,
+          "draw": 0,
+          "env_seed": 1009,
+          "stream_seed": 16,
+          "flow_seed": 16,
+          "initial_sha256": "e6c414421ede81353a4a97009d47893216b9ffcb167c7c0d25b0ae42d4cbd0f5",
+          "goal_sha256": "57f07757198b55f39a4df3c2bd165f44919d26a45069526e33a4c7c932c94d42",
+          "success": true,
+          "steps": 601,
+          "first_u_sha256": "6aefd31ac10045b9391c1afd0d153c962136b46b85b8fad2ee7029b11fb232a2",
+          "u_sequence_sha256": "0298ee43cd058001c2bc713eea1e965fb17f52a041e30c5f18c20906d3ec8cb8",
+          "u_calls": 151,
+          "u_samples": 151,
+          "trajectory_sha256": "05ce2d600d24feadbc83acbfc827d425a0474ce7f912384ba99d86222edca827"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 10,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 10,
+          "draw": 0,
+          "env_seed": 1010,
+          "stream_seed": 17,
+          "flow_seed": 17,
+          "initial_sha256": "dc0c81e627f0e64c959eb95bb6b06eb49044b8d97d6c9a9fd1db78ac83865748",
+          "goal_sha256": "9ea50d1273832af655311cac25e0716a70b53220cc77b7314e7429815d86b08b",
+          "success": true,
+          "steps": 527,
+          "first_u_sha256": "f708f6679634a3ecadd24deaedebc1f6e742bca1723ef3c80d4a273e6cef1f18",
+          "u_sequence_sha256": "3ca2b969c6067435eb7370b8f4dee86b91110ee1e6634b2ca2748a35dd588bcf",
+          "u_calls": 132,
+          "u_samples": 132,
+          "trajectory_sha256": "d396429bf655d74f3442ae4c9c5416f549d683b0e74eb70b49425e4c88a1b050"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 11,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 11,
+          "draw": 0,
+          "env_seed": 1011,
+          "stream_seed": 18,
+          "flow_seed": 18,
+          "initial_sha256": "b9e0b01f1225419e35ef594ef28cbec3b61223919c1b16daa4201276f203d249",
+          "goal_sha256": "5ebd5ce056ed9facd3a3d5693eb31c8aa0e9830ab73656c94d6df94720040c9e",
+          "success": true,
+          "steps": 685,
+          "first_u_sha256": "702e04cd7de817fbb5411b3a1b375bcb61bbd9b0e3a723b8b539d224a7006508",
+          "u_sequence_sha256": "9c8ca46543043ee7834e4785a3e3cbdaef41fdeb800a7dea0c338fa991bd6c5c",
+          "u_calls": 172,
+          "u_samples": 172,
+          "trajectory_sha256": "a25073ac463c59151c0008ad73ed7c456cbc9d8a83055237f6816bf2e1251e78"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 12,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 12,
+          "draw": 0,
+          "env_seed": 1012,
+          "stream_seed": 19,
+          "flow_seed": 19,
+          "initial_sha256": "7df3f90a91591ac58f1f763aea215845a1b87570ebc2d982d7746ef46dd7ce46",
+          "goal_sha256": "08ce899342599e38ca8baaa4febca3d47e4141812562811cb375c13eb2452b24",
+          "success": true,
+          "steps": 599,
+          "first_u_sha256": "58d50de3920d67996488b4c6637c12ca90872b5e4a5414cd7d7fb39e1c944bd8",
+          "u_sequence_sha256": "b44a534c4dfd5f836b087301f1151278e5cd4b8236d9ddbf0efb5aba9dde0dce",
+          "u_calls": 150,
+          "u_samples": 150,
+          "trajectory_sha256": "084d03d8e67b92eb69110783a35601c509a50d96eca31d881b859abfcd7a08e3"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 13,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 13,
+          "draw": 0,
+          "env_seed": 1013,
+          "stream_seed": 20,
+          "flow_seed": 20,
+          "initial_sha256": "74b0e626c34cb04f10f6456ccb8538730fb739ae4cbf063d0618aa3c3f8d5c5d",
+          "goal_sha256": "b84b689682bae2c62e358380f15bcdf9e9d55cf6cdb52211cb6f2edd177dd0bb",
+          "success": true,
+          "steps": 605,
+          "first_u_sha256": "afd210066ea860a7f6637860b292198ed7ad286a6010d0b4856ac984e1ec7f1c",
+          "u_sequence_sha256": "3206c8459d8986365cf7dc8db942ec79864c2e7560dfc5c1e5f2b6a40a3b266e",
+          "u_calls": 152,
+          "u_samples": 152,
+          "trajectory_sha256": "356a5f9e59b76bced5e88bbcf57a12833fe70ffa9f3e0234f905148610b41d63"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 14,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 14,
+          "draw": 0,
+          "env_seed": 1014,
+          "stream_seed": 21,
+          "flow_seed": 21,
+          "initial_sha256": "8e56808ba223612d1d2fc6f341793fa4fc20ff061fe5564235846b66633de873",
+          "goal_sha256": "c36c317cac23ac868c41d4af7041f83cfb9379b62955bfd7c33d90cce38627ca",
+          "success": true,
+          "steps": 629,
+          "first_u_sha256": "a99ef28cb933c6c033f639f2e23d7c43252ebfd54e54e70531353417a5edd33b",
+          "u_sequence_sha256": "23be037754ed6c78ca9dd05a0571c171df79de1a2441fb755138d94faf05426b",
+          "u_calls": 158,
+          "u_samples": 158,
+          "trajectory_sha256": "a452611c658b9340d0e1fda586636b517c99c6a9c2a9c8df3b624ff275fb60ed"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 15,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 15,
+          "draw": 0,
+          "env_seed": 1015,
+          "stream_seed": 22,
+          "flow_seed": 22,
+          "initial_sha256": "58216f0ad6cbd44ca101b81641cee5872a651b9c5b2162f2bca21afc5f3fb1c9",
+          "goal_sha256": "0922b1fe04690cd80e6dd91ee3623a365e1c474de06cb08fc0e72b5f91486b5a",
+          "success": true,
+          "steps": 562,
+          "first_u_sha256": "45454f3f7191ad116b7724948f948181e2019f738eaa080579fd0412f1216163",
+          "u_sequence_sha256": "1f5a8e68b4d6cefb25e39ded72d57f56951f7c24023726611fb3127334ea96e5",
+          "u_calls": 141,
+          "u_samples": 141,
+          "trajectory_sha256": "b20636bc8f37ccac896f2c5830c7a0f43f9eea18ae4f0e385fac6d468311c65b"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 16,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 16,
+          "draw": 0,
+          "env_seed": 1016,
+          "stream_seed": 23,
+          "flow_seed": 23,
+          "initial_sha256": "8fd622b0ecd21884c3259a9a7f95e19ef8a89cc4cb779331a578ad333101921e",
+          "goal_sha256": "0b85a8b5439b0ef04ec44379f0766ceb22947c611e3e5782d50bf109df86cb5c",
+          "success": true,
+          "steps": 599,
+          "first_u_sha256": "c45011a91f3cdce6bd1812e023f4fffbe9a65b276f0a3a6cb406745a2c6a36b6",
+          "u_sequence_sha256": "2cdf0d9d66fdc0f5496729cfa9ce8632830e752c0a67045a86c8f4c5271e42d8",
+          "u_calls": 150,
+          "u_samples": 150,
+          "trajectory_sha256": "a6ec4690f5bb449261f9cb50e0265b9d2379eec986506d5013d9f53bf90800e3"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 17,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 17,
+          "draw": 0,
+          "env_seed": 1017,
+          "stream_seed": 24,
+          "flow_seed": 24,
+          "initial_sha256": "ba7fecf483a80e7ee021778d4af25db2f6574858ca28f5fff3e1a0322bdc14ad",
+          "goal_sha256": "782011128408a1ec966d4c185011f93e21f6a9a6d38c9734926c446a749fe63c",
+          "success": true,
+          "steps": 687,
+          "first_u_sha256": "d29997a41d2f5a6f2302c4fcd4188b373cbb5e48f2d7204f8211c017fe62d532",
+          "u_sequence_sha256": "68d3baef5665fbfb782512f903d48c7c1cb1200dcb99e23588a843d87e36cecc",
+          "u_calls": 172,
+          "u_samples": 172,
+          "trajectory_sha256": "51f1505c5c283292e76c596a9f7a124bc86f3ef604a3fcbed8cb383fce39e9ff"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 18,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 18,
+          "draw": 0,
+          "env_seed": 1018,
+          "stream_seed": 25,
+          "flow_seed": 25,
+          "initial_sha256": "4c0492acf4e4e126ae1793ccc251988b60574908f5996961cd7d1b2df5123e06",
+          "goal_sha256": "fc43841fd1ed860fdea722904bc84226f2f479da468a75234a49b9987bd8f19a",
+          "success": true,
+          "steps": 655,
+          "first_u_sha256": "c5f5b31d577891ac6af4ddb95b43fd3a25690a058c39997ab98fa0771cff251f",
+          "u_sequence_sha256": "01a901954e5248c73c6591c603e0c068f1a05097174996f5bd01051c0b2d3594",
+          "u_calls": 164,
+          "u_samples": 164,
+          "trajectory_sha256": "fbb4322a80932eecf417a1924bcf9f910767492dc6532cf8332b253f38ffb1b6"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 19,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 19,
+          "draw": 0,
+          "env_seed": 1019,
+          "stream_seed": 26,
+          "flow_seed": 26,
+          "initial_sha256": "15da0984bda18eac26ea18b1a0ef600749c275ef8e06acda406423ee8caaa32e",
+          "goal_sha256": "13061a5b984a68ef5a8dd6cded76c6a8601a689e32e99e9482a5bfb08e829443",
+          "success": true,
+          "steps": 535,
+          "first_u_sha256": "50e3409a549716421d9be488a8ae1fcd1de775b0396a5febff8be23164330f23",
+          "u_sequence_sha256": "aab10acea948c0f9f4027df5bb58ace29a31c9a7f6f5c314fbdefc7057d83f6d",
+          "u_calls": 134,
+          "u_samples": 134,
+          "trajectory_sha256": "f26506095bcd1f089042273da2f5d05a0b990f9dd0c54938b851d1a01c8505fb"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 20,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 20,
+          "draw": 0,
+          "env_seed": 1020,
+          "stream_seed": 27,
+          "flow_seed": 27,
+          "initial_sha256": "f3deead011a08c921dc2e2ca668de72189c1219f93d4736bdefb578fb4edb2c8",
+          "goal_sha256": "7c7f867ccf63cbb4c60ded26f2e783b24b139dd37d48d162c4b56661ea21c344",
+          "success": true,
+          "steps": 597,
+          "first_u_sha256": "77d4d4ae02ba5e76d899fbd985153382f6f8c255fa20319213771b592ed9c568",
+          "u_sequence_sha256": "9e9a4702094780ffa38647a28e696eb005362eb4790205e1b246f346e5fc1eea",
+          "u_calls": 150,
+          "u_samples": 150,
+          "trajectory_sha256": "14ed4b8f1a76a54c28e2c63f8b7b9300b5f7cf7ffb033eb7562309eb0fc3649f"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 21,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 21,
+          "draw": 0,
+          "env_seed": 1021,
+          "stream_seed": 28,
+          "flow_seed": 28,
+          "initial_sha256": "99941db7d646e4b2805232336cd98954bad9fdbbc78ed9c3e453d9c945960fd7",
+          "goal_sha256": "eea003c5285b339fd20707e9c81d1689a7f1138e191d5d7c137c29a93feffc90",
+          "success": true,
+          "steps": 589,
+          "first_u_sha256": "93c1ee209fd8c3cddc8db6f1c6b9ebe36f074c2e67fa2327da33531ce80052c5",
+          "u_sequence_sha256": "cb9daaef76645bfeb86ad02c08ae0c6b0b0ece938fcd33ca6fba6679a4f9b5af",
+          "u_calls": 148,
+          "u_samples": 148,
+          "trajectory_sha256": "ca1754b79931720af66f1def4686dbe2c172c73b6d65638b39abf477f552eb36"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 22,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 22,
+          "draw": 0,
+          "env_seed": 1022,
+          "stream_seed": 29,
+          "flow_seed": 29,
+          "initial_sha256": "447928f6fecdcbf5431e2d5c9f7dad13ecb1480bc9e9e3a2da4ab5d407348cb0",
+          "goal_sha256": "0e87514c152dbd629b006f69e1cf1f8916c8477245c73ed37aefcc5b4ad3288c",
+          "success": true,
+          "steps": 562,
+          "first_u_sha256": "af2d2858430fefbbf2de3b0910ada011419694b9bfb7e161764ac3f09e9907cb",
+          "u_sequence_sha256": "80edf72a1231d7bc9e0c858602ad1f602d9f83dee9fc65fc4b4c59ee4483670a",
+          "u_calls": 141,
+          "u_samples": 141,
+          "trajectory_sha256": "67f46916d6a98699e94224777ac651c9b5e9ec381ec2b77e99ef4cdddf4a2021"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 23,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 23,
+          "draw": 0,
+          "env_seed": 1023,
+          "stream_seed": 30,
+          "flow_seed": 30,
+          "initial_sha256": "ea523dba5802e975fcafe786198b5313759ce4eea24a5b6e8c39d29b1cad816b",
+          "goal_sha256": "caf64275a42601ff11b4011ca0d8045ad8e0e14a3030a0da51910322f7d9bd70",
+          "success": true,
+          "steps": 523,
+          "first_u_sha256": "ac0e9be664558841eb662920a088f01635b7fd145fc79a9885a65d2b9a5e8938",
+          "u_sequence_sha256": "44fa29f59f286e6b00abca1130101b963ddf14a01b9dd886e34921e19014bbf8",
+          "u_calls": 131,
+          "u_samples": 131,
+          "trajectory_sha256": "4fbf5bfd6d69cc270407cfa4ed28960fb3966128cac46a03a46b6e0c7470386c"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 24,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 24,
+          "draw": 0,
+          "env_seed": 1024,
+          "stream_seed": 31,
+          "flow_seed": 31,
+          "initial_sha256": "f7f1f1f185fd0ccb44da749923584e57f8374dec678c39b365402b4b6de28c77",
+          "goal_sha256": "294f50ff40a80655af44e57a1e32bb5cd650501d4474b0ea10877dcc58786f73",
+          "success": true,
+          "steps": 636,
+          "first_u_sha256": "1027cd81be0080a8cda2540f9874b09cdd3b4081e57444c318a6c9340291384d",
+          "u_sequence_sha256": "087ae2bc41d951fb54586fc164704354a7c393387ea554721d5641974d285a93",
+          "u_calls": 159,
+          "u_samples": 159,
+          "trajectory_sha256": "738c23d0eca04dce60bffeec26b542297e002687597ff4554a9cc68907d6ae3c"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 25,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 25,
+          "draw": 0,
+          "env_seed": 1025,
+          "stream_seed": 32,
+          "flow_seed": 32,
+          "initial_sha256": "5518b947559a531ce5f1f8a07beff7e0da384876740dc96166511e0aafda976d",
+          "goal_sha256": "8e8838e31ca2104cac12184ad2f3ef88686cc5641ffaee163c6a30dfeb0e7f82",
+          "success": true,
+          "steps": 587,
+          "first_u_sha256": "110a67435da56e5640ee4212d530a3e85dab732dee253a5e21790c6d535a0b0e",
+          "u_sequence_sha256": "2d92de956cdb8bda72b557cbb0b8154cc2c74ac6bab23459f44c82cfc6d39920",
+          "u_calls": 147,
+          "u_samples": 147,
+          "trajectory_sha256": "8fb94a294fa4f1e0f2dbf6ce37f84cd568618c4b193de4700ce240cf666a0989"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 26,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 26,
+          "draw": 0,
+          "env_seed": 1026,
+          "stream_seed": 33,
+          "flow_seed": 33,
+          "initial_sha256": "9e35ab5f65484a351ec70c57255dd2d069f9e04288bd5167e8eac8e85da287f5",
+          "goal_sha256": "a579f758bd9f9550b311d36dac71b04dfd40732e264a92bc143613cd51fdd85c",
+          "success": true,
+          "steps": 809,
+          "first_u_sha256": "e091c61bde1c8f4a2a02195bc8b0f10b9b9b7e73a39ee4ae38915e888b522260",
+          "u_sequence_sha256": "afb4474d48e301f6634cc77edaf110e6a2fe02da12516968ff252460bf794717",
+          "u_calls": 203,
+          "u_samples": 203,
+          "trajectory_sha256": "379107dd647a9c29487f96f9a74c9ad848071e8b4b96ad35eb3ec9cd97ab9892"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 27,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 27,
+          "draw": 0,
+          "env_seed": 1027,
+          "stream_seed": 34,
+          "flow_seed": 34,
+          "initial_sha256": "23ee82db1f9aac47285399689d29e9939e381fe725d716c7e1b1e7f6642fc9e7",
+          "goal_sha256": "3651dc62920405bb047a0e31fe14e8d00c7abf3fd1309b66fc2de710bc8f971d",
+          "success": true,
+          "steps": 550,
+          "first_u_sha256": "64f6ec27ad3e7eff6ed5dbd1cfbed93d84e83bf0fead97f9321f117e09e2eb7f",
+          "u_sequence_sha256": "7dc05f6a18867aedc52b8036970571a6853f9edc1975e556f8c7f53acf06948d",
+          "u_calls": 138,
+          "u_samples": 138,
+          "trajectory_sha256": "1fcc47ba354dda77c903433eeb5ed5bb9f3ba79e130c342f286492b8e2289902"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 28,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 28,
+          "draw": 0,
+          "env_seed": 1028,
+          "stream_seed": 35,
+          "flow_seed": 35,
+          "initial_sha256": "a660c89047d3230c5a89458531b1cbfcc224882194507b0d290d50321826e2dd",
+          "goal_sha256": "b29573b17177d2a50ac8315e6e7d51efd1e43ad7b0cba02d0ff7086b6862e238",
+          "success": true,
+          "steps": 534,
+          "first_u_sha256": "ea66d1b54ae0fb65897d460b07198850b1c4f4a74a547a85768a08f01bd47b62",
+          "u_sequence_sha256": "c6dc02778dfe678c2a4e6eadfcd45e383fba4071fe46dbf7bdad3f8c5c2f1836",
+          "u_calls": 134,
+          "u_samples": 134,
+          "trajectory_sha256": "39d394814258ee4163543df40b95fd252a22f214d6f0f80da1502b4c04c3d86b"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 29,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 29,
+          "draw": 0,
+          "env_seed": 1029,
+          "stream_seed": 36,
+          "flow_seed": 36,
+          "initial_sha256": "f148923f01465601dcad5a8e2735c953b7ae595951d8fea8773c49a5170d8c95",
+          "goal_sha256": "fa6d014fc86e98b1b59924eeaebf24c45fbe1d51f551af86b3d37384f54a80a4",
+          "success": true,
+          "steps": 651,
+          "first_u_sha256": "177ed9602b5330f027375f15317527998bf41310ffe74814b5ff344aa3e3ea7d",
+          "u_sequence_sha256": "84caa9961a52e820c61f5123b732a40bbcff86a64713ed6428f4a4e79ed7ad35",
+          "u_calls": 163,
+          "u_samples": 163,
+          "trajectory_sha256": "e1edcf5ffceab39b3643fecafe7f6079a998617e52aa775ac763c8ad6c50c64b"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 30,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 30,
+          "draw": 0,
+          "env_seed": 1030,
+          "stream_seed": 37,
+          "flow_seed": 37,
+          "initial_sha256": "735f1e7e01d1f9cbe0a8ce8d616206e861e82838cb910990fe2c244c33836218",
+          "goal_sha256": "68089ae1fa1180680ec334815d8422a76b7fd09dcd23cfb636461b2472662570",
+          "success": true,
+          "steps": 670,
+          "first_u_sha256": "1c4353f37cf3c32eebfe3eabdb715507a9ad0ec5415b6e96f604417959a9dfd9",
+          "u_sequence_sha256": "106e951d3b8886cddc0139db24bee1af477a4d2cfad0a102300eb1472c739385",
+          "u_calls": 168,
+          "u_samples": 168,
+          "trajectory_sha256": "8b53c90df6b9c06a4dd240969ae54393adbb2b80a279585de2f562a79873086d"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 31,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 31,
+          "draw": 0,
+          "env_seed": 1031,
+          "stream_seed": 38,
+          "flow_seed": 38,
+          "initial_sha256": "98c7b50b6560602066cf45f5d6d76d3599c015b67707d9994dc824755f6aafec",
+          "goal_sha256": "66e498309a46f4d818a0920fde932d70de38511a4f973d60be6fd7847b72085f",
+          "success": true,
+          "steps": 689,
+          "first_u_sha256": "01c814fcc83de6a261d9111ee733fded2e2d6b186f6024edbf799c21b6d156f1",
+          "u_sequence_sha256": "5cb48d605d7cb4211ab1b58c6e036f135e9790306f3baddc5e59df8e72149248",
+          "u_calls": 173,
+          "u_samples": 173,
+          "trajectory_sha256": "ff2f652355f050425b0ec85f3a0052236f5890e7e2ac2ab78a09cd4ea0cd991a"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 32,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 32,
+          "draw": 0,
+          "env_seed": 1032,
+          "stream_seed": 39,
+          "flow_seed": 39,
+          "initial_sha256": "71601d9f5b3d6c5625f904d08fff745a9e4a7eadc3fd0d3faa89315969870a0a",
+          "goal_sha256": "e486782490c8197f5444f73b9af5050dcdd3de66a367f566b2880ea390d369bf",
+          "success": true,
+          "steps": 661,
+          "first_u_sha256": "09bb94a5e3c1544dd09988b6325abf6854c10a017f8cb818e25fe1b5626ad9fa",
+          "u_sequence_sha256": "1b957aa383dd1c0082a61d401dffc310675840bc708a83f74c261e0091b1f962",
+          "u_calls": 166,
+          "u_samples": 166,
+          "trajectory_sha256": "86e6d7c67de5ab6496718711b73f7537f2e1d41a1662aacef20b074e5cf0c08c"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 33,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 33,
+          "draw": 0,
+          "env_seed": 1033,
+          "stream_seed": 40,
+          "flow_seed": 40,
+          "initial_sha256": "8efffd0e86f1542a4cc4a701f4f9943a1f26c4eee12cdc604a2badd27b4da211",
+          "goal_sha256": "76ef5b7b57dddc26b2668c7aac6241093b3e82a042f1acb64cb39432f9b6f474",
+          "success": true,
+          "steps": 559,
+          "first_u_sha256": "f469d0574ad1d7c31f8535b335517af96e7eedf0bd97500a5221c0c4a7684699",
+          "u_sequence_sha256": "da25b112aeedce6e1abc2547cc967cd578853183d253e0d36f6a4a1729984837",
+          "u_calls": 140,
+          "u_samples": 140,
+          "trajectory_sha256": "3b83c8fba1fd4d765f0aa18cedc65e9e31d04a761d05daa262c49089cc998d7b"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 34,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 34,
+          "draw": 0,
+          "env_seed": 1034,
+          "stream_seed": 41,
+          "flow_seed": 41,
+          "initial_sha256": "390d1f77c349511106b17edb9a75fe0187e0a68dbf173b767bf085cb8aa941d2",
+          "goal_sha256": "bbfcce2b31d442d5056697d4b06ffef97b1db779697094b28448e9af835a92e2",
+          "success": true,
+          "steps": 699,
+          "first_u_sha256": "5a7aa2d42c868c1e3a2dd8497b74d9eacee5fc3034922c3cbe72f8b6bcbb76a5",
+          "u_sequence_sha256": "cc3a450ffbd04fde4707a78b099299ddf6efa09ac6de955afb7a9584bf5511ff",
+          "u_calls": 175,
+          "u_samples": 175,
+          "trajectory_sha256": "526f6b404973cf3c87035ccf142845c36ac2fb45329b0aadc0e5cee175371beb"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 35,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 35,
+          "draw": 0,
+          "env_seed": 1035,
+          "stream_seed": 42,
+          "flow_seed": 42,
+          "initial_sha256": "62718cc6b463ade86fa72dd466d69c42d09d03cad8837db3dea6a4a219ed801e",
+          "goal_sha256": "88726fbf19ba7db15763e03e3f5b7e494a587ccdc7a53b4b2a2e99c90cf3ad4a",
+          "success": true,
+          "steps": 728,
+          "first_u_sha256": "d0c724b2f5a3a3dbffcffec2224185dee87be0afce429bd8a0843a87d105e19e",
+          "u_sequence_sha256": "c30e0a54c5d701c363b3c1c2c526910641a030af36a18faeca92b0b18f993b9c",
+          "u_calls": 182,
+          "u_samples": 182,
+          "trajectory_sha256": "239884c9e6cefe80b82bba5e289f3e49f8df7e1f30ad1e80d7a046504f94dae0"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 36,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 36,
+          "draw": 0,
+          "env_seed": 1036,
+          "stream_seed": 43,
+          "flow_seed": 43,
+          "initial_sha256": "cd8e4fb931161f03dfaaf3cfdeda38c7a442789969ec236d840780ee1cf08ea5",
+          "goal_sha256": "900c4d4cabd6940d90cf70c728655c19c624d44892fe6050e619d671b506f92a",
+          "success": true,
+          "steps": 619,
+          "first_u_sha256": "c02621ccf64900b1122307f693142c282351fc0b822ebdb54c52e2496689540d",
+          "u_sequence_sha256": "d62615e4ff854474be6467aaeb68d075277361bfd84a718595af31d23b16caf2",
+          "u_calls": 155,
+          "u_samples": 155,
+          "trajectory_sha256": "4235451e69a317430e7c840e0358ffacef38ee147db50fd2a3e353c24170bcdb"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 37,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 37,
+          "draw": 0,
+          "env_seed": 1037,
+          "stream_seed": 44,
+          "flow_seed": 44,
+          "initial_sha256": "f05f400f44039847c303e79d09bee3bb66e77f363d470be78e933f090e046195",
+          "goal_sha256": "18b8691e3b0814c68e895a720f512fbfc237dc511876d7d20139aeb9b66c3fc6",
+          "success": true,
+          "steps": 556,
+          "first_u_sha256": "4f7fa25638ccf661e297b615c8b22a5635e1c0960a2a37477f83b825a821602d",
+          "u_sequence_sha256": "facc28896250115183d2fab5d41a34e91b9cd290781227e17a5eaac9bfb64aa6",
+          "u_calls": 139,
+          "u_samples": 139,
+          "trajectory_sha256": "59c30fc88f12ae292a2c0d421ebb5ee948cbeb85a83cb3e7ba957ae68af63be4"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 38,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 38,
+          "draw": 0,
+          "env_seed": 1038,
+          "stream_seed": 45,
+          "flow_seed": 45,
+          "initial_sha256": "0b64b38f409d2cfebf5c203b016d190f42bdbf4655edf1b163eedd87cd46412c",
+          "goal_sha256": "e4d12810bedb11a8b89f9a8547a4351f7c93b0cec0689cb11e62846b12638802",
+          "success": true,
+          "steps": 684,
+          "first_u_sha256": "3b9e977a174416b73f3578945e76811911cd3908dc5b264dc5facbd079077255",
+          "u_sequence_sha256": "d338f35b52abd24d4d25c6469170dc98c44ebf8058730a5c8e030f78a90ff8ed",
+          "u_calls": 171,
+          "u_samples": 171,
+          "trajectory_sha256": "c8ce5c3e88c3b3901c8bb0a1512f48f84c2f38decf1faec7e0d8043a51f9ec94"
+        }
+      ]
+    },
+    {
+      "task": 1,
+      "episode": 39,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 1,
+          "episode": 39,
+          "draw": 0,
+          "env_seed": 1039,
+          "stream_seed": 46,
+          "flow_seed": 46,
+          "initial_sha256": "ae955afdbeb0a0e3496929619c7b6ff52cf7a4dd6f49b64c9291de54b404014e",
+          "goal_sha256": "526cd907f43275816344e7655c3b72310afa212305f0cddae037003bd72d20ab",
+          "success": true,
+          "steps": 725,
+          "first_u_sha256": "9c302008e46f175a49e671e4d05fee0ad79babda1fb312f67c7c0a973ad03e05",
+          "u_sequence_sha256": "4115ecd1f9da6f07565ff1fea24b4d1311f663783b628c2887d79148e96b359e",
+          "u_calls": 182,
+          "u_samples": 182,
+          "trajectory_sha256": "028af31e4cc379666392e65987c0b5c62f0bade9a929d0a6022546f450103e93"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 0,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 0,
+          "draw": 0,
+          "env_seed": 2000,
+          "stream_seed": 14,
+          "flow_seed": 14,
+          "initial_sha256": "2066cc8fb30e1386bca86e38835f328385d73102a93ff2a108b340cc42203375",
+          "goal_sha256": "f97b648897b40d7ead49ad86347b5a2f6d0a43e94b1f50fabcafecb3802d931d",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "f9d0b47c6444e5a18002e3291bbf5888d45371b79b477457b43eecbee2592616",
+          "u_sequence_sha256": "5f24c759d52778586abe9f4cd155b7383d830e96ae340505125b608242850eaa",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "41127fbbca7be82cc1054f8c9292225d19157aedfa0d855304d0a864ed86689e"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 1,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 1,
+          "draw": 0,
+          "env_seed": 2001,
+          "stream_seed": 15,
+          "flow_seed": 15,
+          "initial_sha256": "97d28d69a8107e95ec42669b811419f4c24354f96cc131323a793333091f6570",
+          "goal_sha256": "b92203cf0d45045c502b0ebc981b8c0c68d042c5032167a6351b2dafb173c596",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "7a560c237cd0176a831ee07e4fcf793146860c62dcf4ca2cca70ffaa9e6ae65d",
+          "u_sequence_sha256": "84fa16f139b8db08ec125124b57b02bcf0139118e51926012b99bacf377d3dc4",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "37d3abdd486e0189d552faa7d4e2cd230798f3cbd2a56fe7315c761be325756d"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 2,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 2,
+          "draw": 0,
+          "env_seed": 2002,
+          "stream_seed": 16,
+          "flow_seed": 16,
+          "initial_sha256": "536b427e5cca21f194f7ec7c965bdf5f835fad3448ec602d87fb9fddb8cb2efe",
+          "goal_sha256": "82b5acaca14c124ab82781a6993e07e987709a3d314fb42f5d25a61f3a1b1954",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "02b8741543ba392c68caff75abef11aa41f12239a9b45bd65029603d6c7bde05",
+          "u_sequence_sha256": "e8b8dffd8b138904b638449c4006c090c23a88e6c7b1088e22260d4ed5a12b63",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "817bb87fc4d9df16c86a7ebae17d4d56e79b66cc9f00ae85290a1961a098dde0"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 3,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 3,
+          "draw": 0,
+          "env_seed": 2003,
+          "stream_seed": 17,
+          "flow_seed": 17,
+          "initial_sha256": "390585193edf13c14e5d896342c2313c1efe1bc4d3275e544ce70fc2ced2f431",
+          "goal_sha256": "96474468d9570b1aa46f1b8d73a8357601f8033ccc00433ea2149957987ff24a",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "2683410a3b729bdef96a060368d6781967ba1cd42cc4537364d9d14fdae9aaec",
+          "u_sequence_sha256": "deab270dcb218491889eeec9157d3471028cd95a0cb297f130724c774e8de37f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "26e6937bcbb6ba93d895eb4394f4c068c57a11a0cf41421c56c61968cded88ef"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 4,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 4,
+          "draw": 0,
+          "env_seed": 2004,
+          "stream_seed": 18,
+          "flow_seed": 18,
+          "initial_sha256": "39eb3db01aacd539b2c9aa3b164ffc0a42cbe8a7595b00fca28cd238a670b28c",
+          "goal_sha256": "f8ba20194ab8d3ea4632e8b302b1d7b79f380ab92c71d88cd300ad6688846c68",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "562d7136f93ea521108dc01d6b97126c79464feda681c69a8ff401a9f26e8607",
+          "u_sequence_sha256": "7b2dd12b8ac2db7631864e792269de388d818a9f1e1b42dd48fdcf4ecd028166",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "4b3aa92f8088e3f1d382da59148c3302d7b9b004f21598b99dc06eb9635bb9f1"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 5,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 5,
+          "draw": 0,
+          "env_seed": 2005,
+          "stream_seed": 19,
+          "flow_seed": 19,
+          "initial_sha256": "f5b647c3896226d3186a1d4df21602f20f09b371435cadc0164aefbbcbf61d58",
+          "goal_sha256": "09798957749ba1975983dec2862e3bff8bf2c5d06e965c10ff9d66904c1afb7c",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "0798a6cad54436ef21d119ba9802f886775690f23d9824c06bc613f13a92d6ac",
+          "u_sequence_sha256": "d846d17d7442c97452653cccfb037b9738cb8ab44dcbd5fad2cb54782edbc098",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "aa6549e04b702da6420e8a11f215dd179d830160c7d2c1bf1b6a9d195875fc00"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 6,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 6,
+          "draw": 0,
+          "env_seed": 2006,
+          "stream_seed": 20,
+          "flow_seed": 20,
+          "initial_sha256": "d0594a6bee9fee4bd15a3e3ae25d28b9213cd010d8e2fbaf4d6e90c3eb967340",
+          "goal_sha256": "2469d107d7c56e5c3db390f7294b969c7ffa886d9227f113a93a72cf6b4f3020",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "2b1042d3e844b2b776943cb37b34e65a756f3a387238fec64db5dd1162dc62fb",
+          "u_sequence_sha256": "6e96bd0a4eb1cf4aa5faa9eac3e9c4e8b364bc7f3a93225c954e86c5d613f4b3",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "6b2d0da3049c26e50c8e1f58dee7e4452ce291b3e98c336c7ca47c7d6094a65c"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 7,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 7,
+          "draw": 0,
+          "env_seed": 2007,
+          "stream_seed": 21,
+          "flow_seed": 21,
+          "initial_sha256": "3b343e4bea607ee36f24638a998d430a5eaaff7d0f0237f65b553b174eeb6024",
+          "goal_sha256": "2b93d406726e2cd86bb3b5fc2d40d51a8a497aba32ecf8136eebc28d99702903",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "4259400290db72f57f446d7509e20a0d1fadea13b068d261d4235e66d0aab5f9",
+          "u_sequence_sha256": "ab51e8529568d42d3b3d41cd85e6810edcd93bec3af6661cf2917e1cfde51f0a",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "32477f53bf6e58bd474b45924eafc5a4b9406a2da56f434261962c778d6bd6cc"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 8,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 8,
+          "draw": 0,
+          "env_seed": 2008,
+          "stream_seed": 22,
+          "flow_seed": 22,
+          "initial_sha256": "443365f0b5ed9cdb84de9f7449dee0520e1eef3d4fac13b67197881521b3670a",
+          "goal_sha256": "35838fa4965fcbf47da49d93043ae4b70be8c59f98ceccce4019306c1ef837e1",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "3d6a5a37d79cd2d330aca6925a7f3a53a55b20167cd368e3f0d2f8c2c00bb84f",
+          "u_sequence_sha256": "d1f1b5cca50dc0bd36126a56fc1d4bc50c1d105909afd30fed52a92aefa4da4e",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "3bb8bebaf9022027cc97d2df912f90b07f045e0e128662d708a79c10cef9e74a"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 9,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 9,
+          "draw": 0,
+          "env_seed": 2009,
+          "stream_seed": 23,
+          "flow_seed": 23,
+          "initial_sha256": "254aecc296d6d999b0c6d016436deadb23fce47fabc72999b5fd42e864f5016f",
+          "goal_sha256": "628679a66037142a3fd8165ad904c43068c84f0a133c46b32f7488f8b3afbb4e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "3739b6d6940d26eba6156be317b7374ad7d9bdaf06bb4d45ebd3a7ac67c5fee1",
+          "u_sequence_sha256": "a12f93b47fa532e03c0484fb0709ec3404b98b38c26f3a51c53d70db7a231b1d",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "2a38bbc35c661b6fb048365f36656c1aa2a2545579d57b2ec02911ba41f513e3"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 10,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 10,
+          "draw": 0,
+          "env_seed": 2010,
+          "stream_seed": 24,
+          "flow_seed": 24,
+          "initial_sha256": "a06fa2da7e458e2e9764403df7d0cf54522a41b6050d4b0699e4295b08c897e0",
+          "goal_sha256": "b8f466ce97de0fd03cad82c038e3fe47ab9ef864939d7e79c3436c914fb5ccdc",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "47645c851ace20c8ca03e5bd29be51d783885406cb0ba3cc6dc7143e37b482bb",
+          "u_sequence_sha256": "60601c15c25c8b4aea9e5fd2d188fab24270ecf80cc50a24c99d1ccdefe5cd88",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "3f36fef5a62866bacc8f8fc24d81b464565f0328868e3b37f730750480654d4a"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 11,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 11,
+          "draw": 0,
+          "env_seed": 2011,
+          "stream_seed": 25,
+          "flow_seed": 25,
+          "initial_sha256": "670c941bffb4654269e492ded97011317818c333deba9855327014e95d4418e3",
+          "goal_sha256": "b647ed57f416912c56dc217586cd0462b6ad699465087f758dd14e0eb2c471b3",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "58e959802b378998d53b9e70f138011f88f19858e5cf13a4680c559c1b1f8fa8",
+          "u_sequence_sha256": "af6507808fb3c061a2a04ce3c686221310ce859f7823026e3123e7a5f2c24947",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "1d7cfa528ec7f68762e226c477a3bf23ddba85bd45049c836a795492c9074c51"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 12,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 12,
+          "draw": 0,
+          "env_seed": 2012,
+          "stream_seed": 26,
+          "flow_seed": 26,
+          "initial_sha256": "84ed3db9488ca863302bc6ff76f3c571cbf327a56b9f497e1edf718398ee3bcc",
+          "goal_sha256": "77a054fbfd0f3e9b08364fb91657d75391e698cc8ff7669f4ee6703bcafeade3",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "4129d9d4b880ada889f147b7b64a17c303dc90c8c6ce61aca389217a8a65f199",
+          "u_sequence_sha256": "24414d626f66c9d4e62ac66d8cb6536c3e4ffd2237107a46c551e15a74de6a5e",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "f7e91093bdc417dd7bd87d5c2a7c8f7e9df2cfcca223a1fa572162588ecc0d0c"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 13,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 13,
+          "draw": 0,
+          "env_seed": 2013,
+          "stream_seed": 27,
+          "flow_seed": 27,
+          "initial_sha256": "eb145fe1d9054f028f01bd6b8d39acd0ce8274c8006de820fa2cbf7da7d512bf",
+          "goal_sha256": "5cdd55e9ef47952b339a1f4f7b98f6d6c65bb6789f3562ba2c3d0c34b30d6612",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "dfc89f8c0dd117ab55dc43a630f57daa029121f9d9d861335143492ae59eb440",
+          "u_sequence_sha256": "aa1ba32f76d45656f1d038cc86da2620bad8572acf8a542f1bfde0335aac410f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "9c75a2f1db282aa7cd1282c624c4f6efc86a6703193b48d501b8e28a6658470c"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 14,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 14,
+          "draw": 0,
+          "env_seed": 2014,
+          "stream_seed": 28,
+          "flow_seed": 28,
+          "initial_sha256": "a8f68e1d5c1488f4bce77f7f1917e0a2df463c9507ec7e25dcc7371d8e9b4ff8",
+          "goal_sha256": "096147a0e3cb0bb579106e60255a415d68dd7f6719c4da2a452b659510158ef3",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "a540edccacd65283a1074214ed22ae5fdcb767e9ab86ee277c7fc007f3f49234",
+          "u_sequence_sha256": "0b2b072c7c77636c02826ed83a346e1f30faa382128ee8e2dfb76cd334cc2791",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "77596dbf7c47ff445332a3ae2d249e4f83ac7f925744c7e57ffe2de0a3a6f1a0"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 15,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 15,
+          "draw": 0,
+          "env_seed": 2015,
+          "stream_seed": 29,
+          "flow_seed": 29,
+          "initial_sha256": "4e06de60e18b6c91d04fbf63e4586dc3e3909464203667c5679080b70f1bd15f",
+          "goal_sha256": "492c9389edbf71390b69e8cf815d552a2e8b77d1d60d255bac0c275bcbafb73e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "8a7ee12af690ff4e6fb429749153cb660d6f6dccae2981fa6e3b0cf5096ef6aa",
+          "u_sequence_sha256": "2473eca80aefba251c90a1e4bdad57632ba55fcbeac494618c36b7cc5f377e12",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "0e2387033500179ff5c81d99a697cc201c55c455db3e502a1fe443248333beec"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 16,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 16,
+          "draw": 0,
+          "env_seed": 2016,
+          "stream_seed": 30,
+          "flow_seed": 30,
+          "initial_sha256": "d5d49029d8594929fbb90f2b0041f495526a74e66c1ed523950ee7e265ce90d2",
+          "goal_sha256": "20b186f163cb4931939602d901ca5afc6283e8cd4b4dd06bc92f371acca39c8f",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "f00748dedf24a6648c53f215a64d594120260d73f7f4fafe1063ba3a34efa766",
+          "u_sequence_sha256": "eef88547e45ae560413aac3378f723473b844853f6cc7de7f3c99b0f439a0cbf",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "47627832770d3305f97385228aeea5c5ae3e6a8925087182b9b1cdec4fe5d279"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 17,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 17,
+          "draw": 0,
+          "env_seed": 2017,
+          "stream_seed": 31,
+          "flow_seed": 31,
+          "initial_sha256": "2d9fce2f55d71df45e3fddfc4fbc842ce861416527724e1f2d66312f71e1a720",
+          "goal_sha256": "d7144c75db89e3e114f2157637d64196b26aff53b9bef761e91d7f1adf28661f",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "f7712cfd809c72e71bd6649b18e334f2545086014f8a220092c926efbffc33b4",
+          "u_sequence_sha256": "836a3ac8712eef01374093ddda8199a4c04134138a17cb9a1708e935776919af",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "ab17722a85f1bf896075f132f63af9199c122928671ac86446ab13621db4446e"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 18,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 18,
+          "draw": 0,
+          "env_seed": 2018,
+          "stream_seed": 32,
+          "flow_seed": 32,
+          "initial_sha256": "043666f257915f20c5b9d011bdcbbb0b3ff63b7f95720fd8e1be0dfe0724faa9",
+          "goal_sha256": "1feb153e34daf7c18fef2d3d351412fe03dd58b937a820d550f45289c09ae0b9",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "0e7d2716fa7dccad2ff71035f191cb97d4f5781f8c7c79aa94c0ce7aad53f1c2",
+          "u_sequence_sha256": "16eaf2fa09593fac0cfb63548c417e73873f68e48749efba3fcfe254b73fe5e2",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "e07975ca386e461e72c5f3ef64ae11fb39e0394bcec29a981c19bf75c91d156d"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 19,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 19,
+          "draw": 0,
+          "env_seed": 2019,
+          "stream_seed": 33,
+          "flow_seed": 33,
+          "initial_sha256": "674190964c8127c644759ff1262b6a4acf87f5909c4015d55b3ff61b66e38aa8",
+          "goal_sha256": "c01025f192da36d38fbc0e5f75188f33902c7a0b052d8991e7f1a2ae01b7cb1f",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "f8768a606180ab410dea6a7a176c34fbbb16ad2b260737c6ab60c3b2b00f1ade",
+          "u_sequence_sha256": "ecd349b8e987d97c867dd7c88b3cc6834a75a13faaea723d3a3b58f9fb8cf0f4",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "833d5df3c9021d7298f4291e922c04fe6951fe1b1e4710a6e2fe092240158645"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 20,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 20,
+          "draw": 0,
+          "env_seed": 2020,
+          "stream_seed": 34,
+          "flow_seed": 34,
+          "initial_sha256": "96448361cd4cd8ad10bccebe89825d3a7ad2ff1b32f415e75e4cc8ff8406dab4",
+          "goal_sha256": "cbfdd86309c3d325f16826fa39cd22732a1c1b177e20d32a586061be065fdf5d",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "df7d371147bffa5b8bbf42c7a6157e4253d034f6484344cc8032cb3c8ac0924a",
+          "u_sequence_sha256": "04ce6ad12cea546113c2e9d6bb27d3fb51cfec300d4551429392786cf725589d",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "96810632ba0a6861e470b7f025422d538a6d0dff56dfccd30101c83efa38ad8b"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 21,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 21,
+          "draw": 0,
+          "env_seed": 2021,
+          "stream_seed": 35,
+          "flow_seed": 35,
+          "initial_sha256": "de02894c2ca75c9a7647872e84d886cacd2babc75368eb8245d570786bf47f87",
+          "goal_sha256": "30f9f75a18d2ab1c9b97a1685e3e816c06f7eee27da1c3111d587c801b4b9af3",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "42d3e30ee00f971114e4135686655b9cde1e5dbe7504223cc5feff2bf7ea5edf",
+          "u_sequence_sha256": "21a59bbae81fc9ff1fb4de4b455d03aaff9f3cf2a15e5fb4dfcc7fbd91a81a94",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "9f8a5128d1328b198ba5d8bc9c8654e64ea13a9e5c9d43463a5c119674cf2477"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 22,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 22,
+          "draw": 0,
+          "env_seed": 2022,
+          "stream_seed": 36,
+          "flow_seed": 36,
+          "initial_sha256": "7fd2cd20743cbf25ec2da6cac5fecdf9e2403790a667e2885541242c927bac84",
+          "goal_sha256": "db05d68019081a3a6617f12e4acb602f97fea8c85206527b460b334be665c1db",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "085d05366f08f8eff11385dc389c14315eadedd724d9381ec169606001e6240c",
+          "u_sequence_sha256": "f825f4cb12d0771fc3b8f096ec30c546beec0b1b92cfc9deca22155ef7b17fe9",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "be531686dfa4b2b3d91c9d77787c216c73a20f8beb7b539886679e4ce5f2c325"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 23,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 23,
+          "draw": 0,
+          "env_seed": 2023,
+          "stream_seed": 37,
+          "flow_seed": 37,
+          "initial_sha256": "b4058c9cda2bf3538516406a9d1917977f6ebd70bdb37b694200733522b472ec",
+          "goal_sha256": "28572aea668b757ab6fff9aa6c21872fce4e5770f5441563f53c4f30f3e64ce9",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "411fb2ea3472771a4dd918ef4b7746c7d158a31f95f0201355ed78c840feb3bc",
+          "u_sequence_sha256": "d0100b7d6f2f001c2b90572f8eeb691b21901daa392144163bf224f82169ef7b",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "fb803f31b0b436af0e244054babf5cb9674fed4a822cce6a9dd7d755eb9a91c7"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 24,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 24,
+          "draw": 0,
+          "env_seed": 2024,
+          "stream_seed": 38,
+          "flow_seed": 38,
+          "initial_sha256": "d4177b65d455d246caab41a6be8870eb538ddc07819b2485e4b6431a19578dde",
+          "goal_sha256": "d938d13ec11bfb3138b128215a3d74a06610e5e084c32e401b6a8eb59be9f64a",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "fdeae9e65000215b301b766cab3c02835dfba66bcef3b0652b087a04715d8dcc",
+          "u_sequence_sha256": "d824f09aa4d6d960c88dd905f375d8ea94d3ef3c9f4498f59a2612ce0cbed3ee",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "d70726c6363b5496ec35bcb2748f6fd619c3764a98518ed379a969796ed79985"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 25,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 25,
+          "draw": 0,
+          "env_seed": 2025,
+          "stream_seed": 39,
+          "flow_seed": 39,
+          "initial_sha256": "c62a2cf618c94cdc3191289c44a5aabc7fbf23fa2c929732bb4152e70e9acd65",
+          "goal_sha256": "aa89a366177e5db5d8335a5a037f2368738a3d8c8786c9a6afae047a4d87649d",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "b847dd942c309b20ebd486e2445b9f6cbc98d86fb378f461630bad7415f5aed8",
+          "u_sequence_sha256": "b76ca9fb0eac35e554b047afc0d109d3887cc3ae6934837635ede8f04d3e4af4",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "b6eb40f7982d9595b77d0de23d0148551a137849e0e1fd1edcf35ba9fffbaf9b"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 26,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 26,
+          "draw": 0,
+          "env_seed": 2026,
+          "stream_seed": 40,
+          "flow_seed": 40,
+          "initial_sha256": "b31085bb15166cc8cf32492ee46d2f76e2ef4f7cd9211364db6885caa3dc9766",
+          "goal_sha256": "376efb8fe4abf3efd95e6c1d065e255ee890fc4838eb632ac1d8f9fe6ea51010",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "82b1466a9630595218016b0710fd472b990ffa1709f4050bea1a6893c419a2df",
+          "u_sequence_sha256": "e300476518e5baa539dfc8e4d74640e4ced28fb5f02fe38bea46019072692cb4",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "f4a51926029b67c92a360cbbf47ec3a69e15eb78eab6592135841c228bcbd1b3"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 27,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 27,
+          "draw": 0,
+          "env_seed": 2027,
+          "stream_seed": 41,
+          "flow_seed": 41,
+          "initial_sha256": "122f4bf139fe0a7879cedac2a791af4a73eb44da4fe73130ac3c034cabb55294",
+          "goal_sha256": "d62626d0311a5b9792d7e276e7df5dfd4194ebe4dcddf1f1a664bfc78cf1f513",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c9f5248b3c01b828ac57f5d86d09afc4de7ea146ae185f1d0557758beae2e8b2",
+          "u_sequence_sha256": "0a7970a2471e026f4255d11b23aa8feead7dfe7c8360a99de3234cc034d1850c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "25d1477a10c7293083913004cf7949fac9bd8db86af7c130aead7027094ad877"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 28,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 28,
+          "draw": 0,
+          "env_seed": 2028,
+          "stream_seed": 42,
+          "flow_seed": 42,
+          "initial_sha256": "279c18d641d4fb28f7305184079c5343c929ce9a9b18b7f9c7dc9e8df0ad43bb",
+          "goal_sha256": "13f7db72f1c91ec30ad25e186626b940a572ece20dc9beb296352ade088b49d6",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "3bb1c2aea580e25ef863d2f166c2b1ab1a42a56546d3130872dd07b1e24a7137",
+          "u_sequence_sha256": "877d28c27ec070890e81005f588ebbc3e1618aa15a2a37ee8de0a0d833a73876",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "13a7239949f1f0d83773da422c92183a8c50e079b19b21c4fddc4bc5eb4a9b2f"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 29,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 29,
+          "draw": 0,
+          "env_seed": 2029,
+          "stream_seed": 43,
+          "flow_seed": 43,
+          "initial_sha256": "52b48d8cbfd19797e5cd23fadfd0e4df6f29ddea7881ea336800224bf5a823ab",
+          "goal_sha256": "a34812efef6fcc41aed9e9b84fe847d9f76b6c280056f140970c5b102e50bb88",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "e995937f26d8c66a5a6cbb90a0bdd256c4987c6d21a051292691432c9fc9c691",
+          "u_sequence_sha256": "0c092081b3f3ba24f7581364342a98637f91d90e241945b596aff8d5b6f10dfa",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "065b75b78563af5ad5a32ba87d293aa82c99ee7161027a203c837e23848607b0"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 30,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 30,
+          "draw": 0,
+          "env_seed": 2030,
+          "stream_seed": 44,
+          "flow_seed": 44,
+          "initial_sha256": "f6fca5c1da1e9fd70274f2e2ce7475e6c53749004172592df204a599bd083504",
+          "goal_sha256": "747764cd2b97bb90591628f456436b536244fd5f9db26a65b3eebbecd1a7e2b4",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "249ad5100967c71c7a2addee54a253fc45df6f472415a74f0af2cb6abf675824",
+          "u_sequence_sha256": "2370ecd418a95e651bcefe277c0cd688c916d8e4af19d123209b949f69ab74db",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "1e1e05a7e3d58c34ad2fb9794d4e2faa2964b24d3d74782ed07af9426ac66768"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 31,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 31,
+          "draw": 0,
+          "env_seed": 2031,
+          "stream_seed": 45,
+          "flow_seed": 45,
+          "initial_sha256": "2a99d0943d1202c8f1d9adc4e2b892080d9b85306af78010a202e9b8bcc2dcf4",
+          "goal_sha256": "29c38ceb2a877516ee83bd336c575a87dba2e25aff8a2127be160dd02d39b6e6",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c92e08f310c0b80f69ee1aabf07b9fa27c213e19af2e46db6c3a1b7e27f135cd",
+          "u_sequence_sha256": "13c3dd3fc9231d5cb05c6033a7301138e653d78ea50ef4d0e07f04dfc6b46c5c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "5dd5505fe382c443603223dde2c6daabf31eda27fb30784fd1e241518836c90a"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 32,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 32,
+          "draw": 0,
+          "env_seed": 2032,
+          "stream_seed": 46,
+          "flow_seed": 46,
+          "initial_sha256": "3e08d9895f59283b3380374c0e974892cc65efecca46b8bedce5647870626712",
+          "goal_sha256": "786cd39c6e638a2eb9edceb08c2b393756887ead995dfc59413efe0c3b95b88e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "a40721a5276b3f9fd8741c16c55408e59ab84c54da90468255216589914103a9",
+          "u_sequence_sha256": "0f9372fb36c40937e58ab3c6242ad2e2ebda159b13ae57a5d63341abee6aabee",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "1493f92e2a93a3733c0b5e513b3d5b02709307eb8bd6fea796ab7c3f379b6984"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 33,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 33,
+          "draw": 0,
+          "env_seed": 2033,
+          "stream_seed": 47,
+          "flow_seed": 47,
+          "initial_sha256": "6555bf3bb5a2f6f31e393390c1475acc8c73538c1907e9d807a62901ce2584ff",
+          "goal_sha256": "20fa4a5fb3a0ccfaa5157534c407273600927b3ba2e099188e18e97f079e8318",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "e99a4b05d97d8e934890de8163ca95d09d73205039264383c578748e168f35da",
+          "u_sequence_sha256": "a80ea364cbc111746ee80e8fc551959c1524db7f019139d20f932a6f3e05e679",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "815f46a3accadbf685d2980019c2c402dbc5eedb0076219ff05a8970672e4fb9"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 34,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 34,
+          "draw": 0,
+          "env_seed": 2034,
+          "stream_seed": 48,
+          "flow_seed": 48,
+          "initial_sha256": "4bf8cc59cd5e74cabc80801215416b18be8d3ec7dab086402371e9a327df5287",
+          "goal_sha256": "52d5a0d4cbc100ff2025d6dde3a4d7da55c5d65d21363b3a55c035b4af69395d",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "cf889cd120b49cffb1b607c633641b7e6298cd4345f525c6ed92424ec3d62883",
+          "u_sequence_sha256": "ddc6f11e9b2f050a48cd9edf037fb25e6392de89800c6c100e974f1e442ecdcf",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "c99b0eb7030ea173126a2bbc9d94161e2c3e6c7903b27ddaa51d212f41d43da5"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 35,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 35,
+          "draw": 0,
+          "env_seed": 2035,
+          "stream_seed": 49,
+          "flow_seed": 49,
+          "initial_sha256": "81958736695d40929040561c255de31db035212be67d01b8632a9d492b0bd040",
+          "goal_sha256": "14dbbc5ba043c52f2c184ab15ecf3c326e1c012c097b2a4007912708c06f3885",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "35b54d7d6ec1c5af7b069a17eb120e6c9ee20a8817c344dd9d896fd1b148f5c4",
+          "u_sequence_sha256": "c95a28cc58426cb3dfa597d847bbfd420394acabadd3d5a1242b3c5ee7c17c86",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "d08a67900ebf39190642bcad89b43f46ad85d509f8cee0fe6494ff834133ca86"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 36,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 36,
+          "draw": 0,
+          "env_seed": 2036,
+          "stream_seed": 50,
+          "flow_seed": 50,
+          "initial_sha256": "3afc91bc293a990a34a32759f2d77d8141d7a1ebd64eba96a030c0f3359300d6",
+          "goal_sha256": "d43e83a1390bc72264d4f7a0e226870cfbcc8250a916db7bcee82f726614a165",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "232d3cd06efb551ac301c322bfc0104dda632a7952c1723c1b5370c46d361b73",
+          "u_sequence_sha256": "995db87bb7afe617de49038e13873868aa0dd0095d512c3fbb10470e5b147a83",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "67d9042ef51c6a088e80ac9f3b6ec3688fe4d89b2d8f0d369cab419ce9fda64e"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 37,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 37,
+          "draw": 0,
+          "env_seed": 2037,
+          "stream_seed": 51,
+          "flow_seed": 51,
+          "initial_sha256": "45e949b4a072388cf78ad0664f52d6be640c0a5ae98f9e0ab2a23dcc7f4d5a91",
+          "goal_sha256": "570ab8016cb1a36120de32141e6da24f74e33a5855dcbe54b60693b91c60d8da",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "12283033aebd8e6961a14b57eb5838e3ebf27af69c9aa0873185266508db56d5",
+          "u_sequence_sha256": "1e6675ef6198cbd664e1dd6726233a5700459a74c45b92616bd6cea8e5b00ef3",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "c0c0c65cbdfe6b144893f2653859f506aa57f8f1149005750a513cdbb06745f3"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 38,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 38,
+          "draw": 0,
+          "env_seed": 2038,
+          "stream_seed": 52,
+          "flow_seed": 52,
+          "initial_sha256": "dc6fb7d96f7a426bf33d54c676a26e6777a1f369423965b58778a76aaad2548b",
+          "goal_sha256": "57443b217e680a02a03621252a20ccc40460e42706a9575afa17317d6770c4e0",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "a4d28c0586b87eaaf7a5044470d274695b11e662e1ee1c55ce5cf5e485b70189",
+          "u_sequence_sha256": "07b4a8b6e11945d019bd36318c88f4a6a304b64366be23eb5a61b48a11a0f9eb",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "eb7c65c4f063200525e9f1d32ee61e93bf8c4e6f1e21b51b8327d4b8b1fabc06"
+        }
+      ]
+    },
+    {
+      "task": 2,
+      "episode": 39,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 2,
+          "episode": 39,
+          "draw": 0,
+          "env_seed": 2039,
+          "stream_seed": 53,
+          "flow_seed": 53,
+          "initial_sha256": "612261e53899a994ba4250c548762e0d47339aecc6fe235d743bfa37feb89078",
+          "goal_sha256": "830ba047fe0abb8aed6ea6b41d9da9771c4029353bb5fb5e8f376c5f4ec98ff8",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "7d2361a8809536e1b3e86889f0ad7a1f3d147ba2979ea2d53dee54856077f3c1",
+          "u_sequence_sha256": "8697fdd31f9dfd7b31deed5f0e0a3f2c4df6d57592de17789a77d4fa36e1e2ab",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "9ba6301bab5aea4920570b5dd70c2aac7799da702d69cd7f2d46987e4fc49f6a"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 0,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 0,
+          "draw": 0,
+          "env_seed": 3000,
+          "stream_seed": 21,
+          "flow_seed": 21,
+          "initial_sha256": "32e2daedf347eba3c8759996b43e68e22e67597cc769ebaf4369e229eee27ba3",
+          "goal_sha256": "790f6b4c2ad4973aafa51a5c5c56a2a89ef26b39b1ebbae17eca73f3f2ff7ea3",
+          "success": true,
+          "steps": 401,
+          "first_u_sha256": "a606c775e9dd308374c4dc106854845558fe6b6ebaadec132aab1f26db379966",
+          "u_sequence_sha256": "feb09ad2210b2536a606a51aae9d5b29ca9a930b14d9a20d7edccf7fb37594d6",
+          "u_calls": 101,
+          "u_samples": 101,
+          "trajectory_sha256": "e62aa300a3929e4345b6d71986222bc9c2d3db19c646426ee4a27a8aa7dc2d4f"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 1,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 1,
+          "draw": 0,
+          "env_seed": 3001,
+          "stream_seed": 22,
+          "flow_seed": 22,
+          "initial_sha256": "2134ff3d6192b8f65da0a09594b3779b2caf5de0e1e6443d3ec3a05fba126b8e",
+          "goal_sha256": "34b0b93b449a11c7e9b19057a269519c0ffc0dfc0a546f00f79c3952b334fadf",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "fa4495af49d0ceffcb728368ed732dcada7a2fb3d80f9e7e7bcef744256bda0c",
+          "u_sequence_sha256": "db503b87e5dd6ca45edd24f59a8273847c7794f04095b7253e7772c23461b591",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "2b82d2dba48ebd2d3e03608988c4b6c07c9e56cc1bc484fe48adbcc2a02d033d"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 2,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 2,
+          "draw": 0,
+          "env_seed": 3002,
+          "stream_seed": 23,
+          "flow_seed": 23,
+          "initial_sha256": "de0506f69fc9369872a16a4b29e39033b865158e00108ac48bfcc70fae93244b",
+          "goal_sha256": "9a47b67896ed8120d87dff1a6c0cf3e47b441a02f851432d13cafe9911b8686d",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "21db4f863c4269ac5f604d0c5fe6bc81f78abb6f0a5f2c6cc7d805b0a76b1694",
+          "u_sequence_sha256": "263376da474bbeb061b12815f912aa49d04a9fc90978844b9573f20cee0f3d27",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "a5ec1d8116fdaf0054135c8ccad763a97183f5b7df25c651262b8c452b8fb2cb"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 3,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 3,
+          "draw": 0,
+          "env_seed": 3003,
+          "stream_seed": 24,
+          "flow_seed": 24,
+          "initial_sha256": "0469ed1e0c9dfcacb1af7638892067245b0d732e7d8eaa35321a705b56224955",
+          "goal_sha256": "2561a1e891810b5db198afc74225854ae3e2abf67b3a40af79385e2c16731641",
+          "success": true,
+          "steps": 563,
+          "first_u_sha256": "80900ccb5d615cc738bf0967be168000a3e25955930d670ad114c88db8623d9c",
+          "u_sequence_sha256": "20f7f37584e4308cc174ca2a9e63377046fa33846e2a1b9fdcd7d14b0bc59204",
+          "u_calls": 141,
+          "u_samples": 141,
+          "trajectory_sha256": "c7e46008eef0a76a2300775e23bb49b0db3d2040c15baf0fc950b11f70e61367"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 4,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 4,
+          "draw": 0,
+          "env_seed": 3004,
+          "stream_seed": 25,
+          "flow_seed": 25,
+          "initial_sha256": "2eefbbce8cb526655d38c650de86cb7e3eb8227723b19abb4c49996fb6448381",
+          "goal_sha256": "5300ccacbeb5f154c92064a13c917d823c0f10fe37902bea553951ab410e6851",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "2ad380e553bce784bbd07e6ce2f760e144ba51efa533fa8bad99244cdb6fb4f0",
+          "u_sequence_sha256": "c3a082e98b2ec1286dbe5a016512140966ed3e99d88eaae83a6eb89f24f4cfda",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "578d8da209146a43716d0004a95b111268f26dee45d7c56fc5f0ce0506d5f173"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 5,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 5,
+          "draw": 0,
+          "env_seed": 3005,
+          "stream_seed": 26,
+          "flow_seed": 26,
+          "initial_sha256": "c536d099ee756c5434f3780ccb0c6ac2fc02183c72235ab9a8c41930c11f5503",
+          "goal_sha256": "002c8921475fcce5ab3bdf2d4c8d2fb3499a38ee70de3ee7fcfc5d948b88c885",
+          "success": true,
+          "steps": 457,
+          "first_u_sha256": "1ff66a1f3d611041c9b60cbdd68618e397462613ef41203f2f9005d9553ee41f",
+          "u_sequence_sha256": "6a22d50d58fa0d64c79263a33cdb6c1a54de640347e254f499dc493fbd87b141",
+          "u_calls": 115,
+          "u_samples": 115,
+          "trajectory_sha256": "a17f37a320a6b9686d99e16d070478f53e888d4546edd7c5f1dde5ad22fada6e"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 6,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 6,
+          "draw": 0,
+          "env_seed": 3006,
+          "stream_seed": 27,
+          "flow_seed": 27,
+          "initial_sha256": "1ecd4a644442e194c82e7db1f663a4c63b18196f5cffef5b1d880157fc8b7f72",
+          "goal_sha256": "fd32cbeebc6bac1fe0045f378eb94586c7723ce7b31e6ebd7f153e7c0ed5b334",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "462bd06e5eadc0a2ae17506462fffade355e6581713edecd8b34e7420b4ef7a9",
+          "u_sequence_sha256": "3826b9bdd2875ff513927674fa44414bfee5beb9f1a98fc80286aff1859fb603",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "8f80915d3d06e8275be52e22c0ad71d4ed11c220f85e7fdd889bff0e55aa553f"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 7,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 7,
+          "draw": 0,
+          "env_seed": 3007,
+          "stream_seed": 28,
+          "flow_seed": 28,
+          "initial_sha256": "b72eb61a2fed38b17674dd2765ca7e7f987a41cbf4f66acbf125e58686d41856",
+          "goal_sha256": "5b837e1f4d5fbe05fa5dc5de206dfdc2c04c28ba0560847cc95ccfff3c6b0470",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "003c5c22d93c48964c6e64cb06d6b35c38ca993dd074cbd70b4f1b853ea950ea",
+          "u_sequence_sha256": "e58beb0eef4f4bda7014f99241ffe4171bbc8bbf22f56d8af2077d139b27cead",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "6e360ea2f1f57175212f7290ee53b645e6c62ccd46a8b56209898816d4174b81"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 8,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 8,
+          "draw": 0,
+          "env_seed": 3008,
+          "stream_seed": 29,
+          "flow_seed": 29,
+          "initial_sha256": "4d96a5b652cabd3385f68a78a72d05b2ba53a10bb2de8ec51ab3458bce9dfaf3",
+          "goal_sha256": "445a3eabe754e20d6f6ffec1570644495ea3f645778ad362c43a0d8d81d7fd7f",
+          "success": true,
+          "steps": 445,
+          "first_u_sha256": "2b23af7d13e507b96421851bacc266edf39ab0db662b6799db31a08a81a9b463",
+          "u_sequence_sha256": "230f302fe0c86990739700de638e154df9d0931d3303b0961fb3d4e31384d99d",
+          "u_calls": 112,
+          "u_samples": 112,
+          "trajectory_sha256": "0bbf621100dc307c6ea4df4034ac1bd06451f06004148070660d7c269166014c"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 9,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 9,
+          "draw": 0,
+          "env_seed": 3009,
+          "stream_seed": 30,
+          "flow_seed": 30,
+          "initial_sha256": "eba89e425a0c1f5333dd1c8b51ba84b72923e654759f97f8c538c174fa41b25d",
+          "goal_sha256": "d49120913083e6326363f1e2993a439d00e4b920a9893d493858b1d0e4ba9178",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "9faf5e93d3507797f3bae2883de2b7b66c6b0c7a3f5f3acd025cb6c3d41e31a4",
+          "u_sequence_sha256": "cee556c8094304c47aaef056e6c4b57ce18479abad94f1df5da98f2c333b7ea0",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "aa72050c08c9af21ccb580df9450d485497751b74b420b9d0b9d30994d0ef9bd"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 10,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 10,
+          "draw": 0,
+          "env_seed": 3010,
+          "stream_seed": 31,
+          "flow_seed": 31,
+          "initial_sha256": "1bac18c881be11dd3b7ad29ac1302fb77e19406abc70ec04cb6f8afc0507776c",
+          "goal_sha256": "4bde94ff78f48004c3eba0df000dcf88d8fd001be908008a0b1e25286a6535b3",
+          "success": true,
+          "steps": 473,
+          "first_u_sha256": "1c5cb6d4668a2524b47f4c56acf9d6259bf307edb73c38792e69823f9d563c3a",
+          "u_sequence_sha256": "1888b583408091af4e60e909fa69e6d2931659961ed15348aa267dcb90b942ae",
+          "u_calls": 119,
+          "u_samples": 119,
+          "trajectory_sha256": "dddc3e4cbce42db23110343d69c40a50a0d7c5c9d0c5b9134eb07cec663406e7"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 11,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 11,
+          "draw": 0,
+          "env_seed": 3011,
+          "stream_seed": 32,
+          "flow_seed": 32,
+          "initial_sha256": "85054bbf99e86f0c3f5700c03972e420b2153a10af3d9289b575b5a8a4ede915",
+          "goal_sha256": "4ccc98cd7c71bd2978b9b46fccf09ae9cda8335938fe6a445d45d6fe7c89866d",
+          "success": true,
+          "steps": 478,
+          "first_u_sha256": "3c6ebbaff7a05f1f13c42c9c1f45e3e27cbce2526bdd2a2ab7c8737494fa6a54",
+          "u_sequence_sha256": "2d282a5f143cf79c5fd7ba62d41cf6b42f3f1b47bdb972be0cbd68e7824603ce",
+          "u_calls": 120,
+          "u_samples": 120,
+          "trajectory_sha256": "3227c0b448f55157602ac858c1aa12aa343c10df8c5a55ba52dbf7c20ad45e3e"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 12,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 12,
+          "draw": 0,
+          "env_seed": 3012,
+          "stream_seed": 33,
+          "flow_seed": 33,
+          "initial_sha256": "2b984d1108d0368a12f7509e1b1ef947d2056c60572bfa937e1c2720ec0c8821",
+          "goal_sha256": "045efac8b0458b47588bb259b63e9bf84bc449468723708f35154b57dc0a3c4d",
+          "success": true,
+          "steps": 390,
+          "first_u_sha256": "12db69226fc0aca43d20d466d755c433c96351e087ac4d6545af098baf7b51d0",
+          "u_sequence_sha256": "8e057482674ebce5823095df3920f175c49541b09a5cc7d78905053095d281c2",
+          "u_calls": 98,
+          "u_samples": 98,
+          "trajectory_sha256": "6e9b9629a4b2438afbf1d34ba3a7fa9bf27c8203296b4569de4768dd0e4dc907"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 13,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 13,
+          "draw": 0,
+          "env_seed": 3013,
+          "stream_seed": 34,
+          "flow_seed": 34,
+          "initial_sha256": "e740bc3b8af04b66ad986f1bb5af4f988666ac9619a2d2ffef0ca85bdceac3be",
+          "goal_sha256": "5b40ced7a86d246bd802609708e457bf32ea64a261179b1b317af335c49e2c61",
+          "success": true,
+          "steps": 460,
+          "first_u_sha256": "1e82bc3b0ba32b8bbc9a45ea153a9017de7c7fd3452f891cd43c9fe1e650287d",
+          "u_sequence_sha256": "d73d09e2b8d5d3817b9cb761182d9d1706fb05910b0d97c37ac30478297fb81c",
+          "u_calls": 115,
+          "u_samples": 115,
+          "trajectory_sha256": "445c0622aa68dbc984b6f64d45abcf17ef94244d2a7c8a8ccf51d1d6ca65d6a9"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 14,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 14,
+          "draw": 0,
+          "env_seed": 3014,
+          "stream_seed": 35,
+          "flow_seed": 35,
+          "initial_sha256": "96f05dbbc8c795eac593358e21e466dee15cf37e17d9693464ae2b9e1cabcf63",
+          "goal_sha256": "214951492f807bd6541dfd6f2cf118e4bf6078082f844d4074292abc844816cd",
+          "success": true,
+          "steps": 357,
+          "first_u_sha256": "2dc754e6957460ad9c710e923d3cf8ca1ec6393b62b13f69460c89c34071323e",
+          "u_sequence_sha256": "64337b2b7066885a78774a52c503ec2233f9828b836ed1766963d116440a2860",
+          "u_calls": 90,
+          "u_samples": 90,
+          "trajectory_sha256": "91129107f9666f0ca6079735f16456fa650062968cb3932bc0ba3a601181824b"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 15,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 15,
+          "draw": 0,
+          "env_seed": 3015,
+          "stream_seed": 36,
+          "flow_seed": 36,
+          "initial_sha256": "18fe6c32da12014013f6c886343ca56fe9379e324854faebcfd4dcaa72e1cda4",
+          "goal_sha256": "5f86eeb78208323bae88031e3e39c7ece4e4e4364ad49e33b40d80ce2910b2f6",
+          "success": true,
+          "steps": 457,
+          "first_u_sha256": "e9b9454d6881ba13fba33a1ed88ec311e4d05ed5fdf8df1d208a8e38263feb4f",
+          "u_sequence_sha256": "d4a7e5c6b884cd934d6587c3024841ee48974e7f9c25ae3391bff2ecc8d4fd47",
+          "u_calls": 115,
+          "u_samples": 115,
+          "trajectory_sha256": "bfefdfd479f78a10d78eebf8add102a2009c2d9005102bffe0a31dec1f9186b2"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 16,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 16,
+          "draw": 0,
+          "env_seed": 3016,
+          "stream_seed": 37,
+          "flow_seed": 37,
+          "initial_sha256": "b0cae8c3be86614e37820fe2bf2e1035884a9b8d85dc074297a205263dc05351",
+          "goal_sha256": "bf7a00bbe127716287c6ae118093001c8411c6412bcf98e1d13554ed23c09da4",
+          "success": true,
+          "steps": 372,
+          "first_u_sha256": "bc07564d26c2e61823655b4d1f3d0c7a09b49c18e05f6ed19467f0efc4fdad1d",
+          "u_sequence_sha256": "a5b69024200f024ac0dd0d15ad105d5a224a32a4255fb42648263bb58bfea719",
+          "u_calls": 93,
+          "u_samples": 93,
+          "trajectory_sha256": "deff893830649b96c172d60a39ea5f136614a75602bf53b0427f88b06b961fdb"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 17,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 17,
+          "draw": 0,
+          "env_seed": 3017,
+          "stream_seed": 38,
+          "flow_seed": 38,
+          "initial_sha256": "261ecb18df0f0b36c70d1b9fd9867b782f02efb60121126a7745d29ea3a4c3c3",
+          "goal_sha256": "53d6fdf880f223f150f49817e32bebdd0cbc368d635f3a3411a7d26e4ed910fd",
+          "success": true,
+          "steps": 405,
+          "first_u_sha256": "e428774a5a510c53e3d2e7b7f23f302cfeaac2b18264c5b57791e359352e9dae",
+          "u_sequence_sha256": "46ec90ea442cd45399152473f29d97c17be97e874889770245c0b00f900efa0f",
+          "u_calls": 102,
+          "u_samples": 102,
+          "trajectory_sha256": "f48560b52c41ae96cf467224768cf7f6c9a48ffdcca8fac55aa55f7625225c19"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 18,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 18,
+          "draw": 0,
+          "env_seed": 3018,
+          "stream_seed": 39,
+          "flow_seed": 39,
+          "initial_sha256": "1303275fb44ae6cf5c09e974d6f835cd616e9403087a81be2334fcd604f233c2",
+          "goal_sha256": "b4da472b4a87f08994c00214a118608bcf5b5b46fa53b8404073c008a16fb056",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c55d00845bda7a8d8c6b7390569731079002f0f7cd70b8e929418e71c5cf5c20",
+          "u_sequence_sha256": "bca5a98056c06daf3cd28aac01ad175f9ef23bb0001f453807e15ccf5a6f517b",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "435a2b189def5a9853cb4c8a2053dab045c6ac22497978cfc50fb9d9ceabee25"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 19,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 19,
+          "draw": 0,
+          "env_seed": 3019,
+          "stream_seed": 40,
+          "flow_seed": 40,
+          "initial_sha256": "08c7f4250c1adff0a6f51f29c28167ca4ecc15b05d7728ce97191a0c2c8de7fe",
+          "goal_sha256": "72629298db91fa85f3ba81bf1fb45a61aee75506d9b3f0698ef9e317c1cc6fd9",
+          "success": true,
+          "steps": 433,
+          "first_u_sha256": "fe77723232b66e800c0d8337bb0b48155154ab4b3145e29bdc01f4cb664af42e",
+          "u_sequence_sha256": "5f9df31db06c7548d761caa81f24b69fd2bb0b0ee9a364a75485d1bc3e2040dc",
+          "u_calls": 109,
+          "u_samples": 109,
+          "trajectory_sha256": "4dad111a6c903452818f4775499e16ce1fa434fa4f073972b38f0972f235b525"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 20,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 20,
+          "draw": 0,
+          "env_seed": 3020,
+          "stream_seed": 41,
+          "flow_seed": 41,
+          "initial_sha256": "64603a6acd9245083ba8fcb5bf066b6ee401ae73e6ca296d9c49fb6870660a20",
+          "goal_sha256": "73d9f69dd1747cc67ee01c3330970ab15505aeb4e0593d312f5e85a5766afb9d",
+          "success": true,
+          "steps": 503,
+          "first_u_sha256": "3c80072fe65a42d10468e5bd68aae4ca289b4964d430fec290c6174dd86d2245",
+          "u_sequence_sha256": "30cfec48883e9e0e47b08e9c006e77edc46d615332ba4cb233fd7e0f158f1c88",
+          "u_calls": 126,
+          "u_samples": 126,
+          "trajectory_sha256": "6aed11c073dcdef4357484344f97664643ba1bf5611676d16ac9030ca3faeb86"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 21,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 21,
+          "draw": 0,
+          "env_seed": 3021,
+          "stream_seed": 42,
+          "flow_seed": 42,
+          "initial_sha256": "97f186f36221aea4e53de37be71913fa79ffb1c16aecb4bb9ef518bb2339de78",
+          "goal_sha256": "3a4a59ab68a00f752c5648cb01f71a24a810caf8fa0dd33e2d9e7e98b5c4027b",
+          "success": true,
+          "steps": 449,
+          "first_u_sha256": "7dc73137f8e32c392081bb4e55c571b1ac989d6ee4e1d54ea77c273a0e9f5327",
+          "u_sequence_sha256": "5619e7a083d291589a8a182873192408f5fa10e46f385e241f4fbb2386ee4498",
+          "u_calls": 113,
+          "u_samples": 113,
+          "trajectory_sha256": "cc2e4fa04e8753259de96a220a9d7fd8c5532b130d95b0ec0022b21d82088e28"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 22,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 22,
+          "draw": 0,
+          "env_seed": 3022,
+          "stream_seed": 43,
+          "flow_seed": 43,
+          "initial_sha256": "b434202c7329c31dc973ed8f28fa27271ffc2b6bb17fab82ca11dcee57dfa455",
+          "goal_sha256": "9f6ed7d0154fbfa7c5865af9d7bbd330a3b1fe6d50d8140661084d0863c5864b",
+          "success": true,
+          "steps": 413,
+          "first_u_sha256": "c3461b19360df8dd9ebec99593958da3df0232bf39a474f6cf94f69e6d1a2a87",
+          "u_sequence_sha256": "4006a5134a1b29edc358ddda250195bc93e24ce2c8a212f1f4b30f84447e38f9",
+          "u_calls": 104,
+          "u_samples": 104,
+          "trajectory_sha256": "e909bacfd96c69f35efa9db6298f398cc025d4aa938972a018c1d3361f4d65ee"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 23,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 23,
+          "draw": 0,
+          "env_seed": 3023,
+          "stream_seed": 44,
+          "flow_seed": 44,
+          "initial_sha256": "1f8048f471fd1c15d4df358e47ca4f00c33a8bde076c78be74905b495e3f91a9",
+          "goal_sha256": "1d29a02d5c4b8f19cec680987527b7db37b1e3c8d1481a0828bc83f19bdb9a1b",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "dbc27106c3369171c9bfbcf2e599d58dc3235e77400e8b51ef7c6c1a1e9f6bd1",
+          "u_sequence_sha256": "b8ae420938c36bd3dc5e4e35ee7f68c0fc8cf3c803849a219e01663602ce1d17",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "db1788297dbea7a58cd29311f77c8afdba5e0a6598b28e0856a22ce94455f04e"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 24,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 24,
+          "draw": 0,
+          "env_seed": 3024,
+          "stream_seed": 45,
+          "flow_seed": 45,
+          "initial_sha256": "549def952a9b29b65628127a20a6b9574a686c9318a2d4cbf14a13b6c8599870",
+          "goal_sha256": "3532271456091796012e62d303b82b484b47ba1f3f8a8b7fa97417658f6a6616",
+          "success": true,
+          "steps": 479,
+          "first_u_sha256": "63f274209ecb19e258dff1ed08691bb17943a3e24d5e2962fd8705cdc025343c",
+          "u_sequence_sha256": "4a51a3d98f5ac32f6a3a8f0602f9e7eaff5c958be45d42340b9ba47e7df25199",
+          "u_calls": 120,
+          "u_samples": 120,
+          "trajectory_sha256": "e143314beb7b1afdd8fd2c411e667ad9d091133b739bc40d46df62674b3ffb5d"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 25,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 25,
+          "draw": 0,
+          "env_seed": 3025,
+          "stream_seed": 46,
+          "flow_seed": 46,
+          "initial_sha256": "3e529334bd64acbcc30a21acbba79e5bd55e9498768ac08d7462ec0d55bec65d",
+          "goal_sha256": "101b23f3edee478dc53c087ad7d45f80d2ef02f7038afbce60ec233fd368e883",
+          "success": true,
+          "steps": 459,
+          "first_u_sha256": "306a46085f7caaf43f7d4a70b4e8123c1b2b43e70e6b1facce51d75a2f44f47b",
+          "u_sequence_sha256": "f8a522bfeaf7eef3ebc942ceeb7591c2b81b192de2bf0cc2b1d4d2d0ed567201",
+          "u_calls": 115,
+          "u_samples": 115,
+          "trajectory_sha256": "67b2095e517d679c5d51aed5e6194ea3e6008891798bea42d9bf7f0d625c0001"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 26,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 26,
+          "draw": 0,
+          "env_seed": 3026,
+          "stream_seed": 47,
+          "flow_seed": 47,
+          "initial_sha256": "a9d8b43823da5205f6fa2209a3b9f609ba1fc0570bf2469e906a3fe9568cb735",
+          "goal_sha256": "33856de8254cf5f7c3bcd7c725c69c9ea8c715ed18298ed98c83beff19ed7503",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "71b392621948702591309f17b8229a17020e17f75946e55b3619b1cdda89dd09",
+          "u_sequence_sha256": "667bf407dae483eb3664f6e350cfc574e35d41f50f2be640079338dc78a200d9",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "4b81ab6d99a894c7e2ab2d54762ab4732aa9d0b846bfac9c4e7e8b57a8e586cb"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 27,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 27,
+          "draw": 0,
+          "env_seed": 3027,
+          "stream_seed": 48,
+          "flow_seed": 48,
+          "initial_sha256": "0efeb47ea73e6a931038bf6810e7c79137cfc37a6ad707d97089d736b95b9871",
+          "goal_sha256": "3de12aa8b65e2cb35c423c3c1d2ecfed484a3b9a4361084233f76fec8c7fc04a",
+          "success": true,
+          "steps": 485,
+          "first_u_sha256": "80caf6974f5d9104755b30e597dd823d65e7f981bfccf0e4c357162b4686e923",
+          "u_sequence_sha256": "2b74ad31adfb9c185538a919d545a031c94882f7294f9917371e994e31850546",
+          "u_calls": 122,
+          "u_samples": 122,
+          "trajectory_sha256": "dc07a210fcea72b5310f96674a51b4f144e70644373b635001762342417bcea6"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 28,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 28,
+          "draw": 0,
+          "env_seed": 3028,
+          "stream_seed": 49,
+          "flow_seed": 49,
+          "initial_sha256": "9d93e1915add4a28302d63a5dc81ab45957882b98dc0b9566da48a2a018b523d",
+          "goal_sha256": "c0027513ace36522963f02d4b3c2a402cf1d1fbf242428578b2d0ce5e75180f6",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "b3e55e24c88afb51f76863c67e1bdd307b1485bc87cb56e4a304914e0423d7f1",
+          "u_sequence_sha256": "bfededa708cac4448940c2fb17242cb8c727cc754abb4e37feb392f323c4d25f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "0fcaf688a1a955ec9e882c0ad85a83f7d1f6c3cd3dddb5e2b86a30a31e64af95"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 29,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 29,
+          "draw": 0,
+          "env_seed": 3029,
+          "stream_seed": 50,
+          "flow_seed": 50,
+          "initial_sha256": "f0eb0fdfd6212cde963dbc483d7af893191026d50db90dab7e406b527087195d",
+          "goal_sha256": "9954074b8abff3f2a5d4165910638bd29404c3dc03b48a67390c922cfd08f914",
+          "success": true,
+          "steps": 494,
+          "first_u_sha256": "9800b7cd01ee81ac78164df644729d4e84b1be4bd3b0b44cd2e3dae51497e773",
+          "u_sequence_sha256": "3fc2565fa85406cf7bdbcff08bdd361dc735383b5b142eeb6e7d34d0006bf254",
+          "u_calls": 124,
+          "u_samples": 124,
+          "trajectory_sha256": "84915180909f213df76726dddea4291032ca59ded0e15828b9b7529c6943a7c2"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 30,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 30,
+          "draw": 0,
+          "env_seed": 3030,
+          "stream_seed": 51,
+          "flow_seed": 51,
+          "initial_sha256": "2bfe9fe012aa587b01028a5db6cd3f87b3025633e1c85ea6d651c729586bcef3",
+          "goal_sha256": "f0aac329bf0541eecba980b6a9521f33c2b74466fc5b331c10bc3410c5d4754d",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "d24acf848b389d3f9a5243be8572f1d927ffd1776853ff1e67edc876112c0ac6",
+          "u_sequence_sha256": "cbcceced924886eab9af8a6ba6df72cae3fd9cb628a4ef11705c91f3f7968af6",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "ff6f98bba08becebb3158bb8c886b56d7c89f417dd2f95ae963e64a513d63ddf"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 31,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 31,
+          "draw": 0,
+          "env_seed": 3031,
+          "stream_seed": 52,
+          "flow_seed": 52,
+          "initial_sha256": "055f05c998ab11a99f368fa5b50275110ccf550c8379f2831946e05e10d6afd5",
+          "goal_sha256": "71b9fb45ccc8711df469e2b465d8f3ac460e04b0f12de6df56bc90daed78f8a8",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "5ed92870c5471df8628e4225253b5ab5a41dcd705e4a321ae728c4c3d55f3e1d",
+          "u_sequence_sha256": "7d8fe6fca1f6845095911dc78202c334ea1d4d33ebcded7b1f52a3ac8a84998c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "09e30a22452997a73c85d82f88a7cd9438a68251cae5400eb2073e08e4254769"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 32,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 32,
+          "draw": 0,
+          "env_seed": 3032,
+          "stream_seed": 53,
+          "flow_seed": 53,
+          "initial_sha256": "25b8afde2935c17c267d808c47bc95d06969bf1f84d5a9cf0b63ec121c9612b3",
+          "goal_sha256": "4755c8f852b8bb08ff171c825cec76878b4a20a38368826a90ff0579c148efa2",
+          "success": true,
+          "steps": 426,
+          "first_u_sha256": "6ec9c94837d58716e708fcc8e5bb908d13a2c4c7e2abee4a36b2ce0fb3496a0c",
+          "u_sequence_sha256": "07830aedcf4a3c23a13838b02c793cc1206367322d0f8677af968fadcf26f75a",
+          "u_calls": 107,
+          "u_samples": 107,
+          "trajectory_sha256": "c99e05508afec41d5c6f82d01b1f0f2678ee13964502ccbb86f711af4a3e6071"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 33,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 33,
+          "draw": 0,
+          "env_seed": 3033,
+          "stream_seed": 54,
+          "flow_seed": 54,
+          "initial_sha256": "aeb55b4bcd871b4e8a99b6f7834d3d6a9b4b6d0a35cf688e4b686d79346217cc",
+          "goal_sha256": "0b27fe38e2f69d490a0a5ef67a90f61d34dc76e0223430297944c5e0d0e6a686",
+          "success": true,
+          "steps": 423,
+          "first_u_sha256": "100920584c2ca99bd7f04fbcfe2c3d428dbf7a52de6bb21347480f789d1e8235",
+          "u_sequence_sha256": "286abc575ad86d9022a91ada5578848c6438c34e3bdcd22d6e754269c6a58416",
+          "u_calls": 106,
+          "u_samples": 106,
+          "trajectory_sha256": "54dcbf0c7a33b8faa524f87e74d4f0721457fdfaf94f13130b0e3bc4d31fa75d"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 34,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 34,
+          "draw": 0,
+          "env_seed": 3034,
+          "stream_seed": 55,
+          "flow_seed": 55,
+          "initial_sha256": "0c0cdc2e8b4e3e8d80c4add1595ef5ba16dd213e4fa6fccbc971948807120512",
+          "goal_sha256": "c7b021d58b912b00fd04d1ea66e929545bd3d6dae68881440b2bc7decbd8edcf",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c41de01449f908a3255ea3db57645bd1d0cd38018743fa370161cf93ae391fec",
+          "u_sequence_sha256": "d7dd9091048b826376966cf06c1038f67440c176b1a502f03bcd0b08451b6a60",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "bb327410998cd0f664d40ad2e06c42d633191ff6a6ac29db9f888bb61efbf3e5"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 35,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 35,
+          "draw": 0,
+          "env_seed": 3035,
+          "stream_seed": 56,
+          "flow_seed": 56,
+          "initial_sha256": "4191d94bf4854c9a24eabf4ef0d4c5a08223b50e8b1101b3743f091f111d1c04",
+          "goal_sha256": "516844f02f65fc52fa004233f7ba690a482606e7b0d51ae5cafd478d5daa8fe7",
+          "success": true,
+          "steps": 465,
+          "first_u_sha256": "4fda7896eb177761b8e54dd0efdbb2c8c13056673dfc83b0a55c758b44a88c3b",
+          "u_sequence_sha256": "69a70ac8cdfe5041f8cc8b459914848817638d1697ecdbe9071b005851dd44fd",
+          "u_calls": 117,
+          "u_samples": 117,
+          "trajectory_sha256": "811bb9f0ce8ca53c20f33bef02667e5ce4add0db029e7fa9e870f9268b8d29b2"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 36,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 36,
+          "draw": 0,
+          "env_seed": 3036,
+          "stream_seed": 57,
+          "flow_seed": 57,
+          "initial_sha256": "0a601e9ab18e1847eac31fc36869f209c78662cf4c754d40164112bd04cd561b",
+          "goal_sha256": "a6c82ae584ecabca6ed797b2609d8a32c490f45e06f1945c23eec1c29c1392f8",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "8e629b0e0dd6d77e174a27306f59132ebd23fb74cd0c58a33ee3934e0a4ff1f3",
+          "u_sequence_sha256": "ffd41e4db4f63546b732ee7930f05254e856972fab284f3db3babd34a30309e2",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "0678d4c5b97a8a74a50e124becd3aa0bb56cb17b34e34e6c17e8c5eab0313172"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 37,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 37,
+          "draw": 0,
+          "env_seed": 3037,
+          "stream_seed": 58,
+          "flow_seed": 58,
+          "initial_sha256": "cef617c722fec881eb120c0754a92a57bf01130e03dd291f9b8bd1347a481e30",
+          "goal_sha256": "b6b3b085009a41c1d837e5048ebd04f40799a547a14a36212bd8c3e0486955fc",
+          "success": true,
+          "steps": 441,
+          "first_u_sha256": "27f9e5a1454f825bcaf35efb73efe4312144d3a37caac90fa269f5764339b927",
+          "u_sequence_sha256": "61615cb3b1b2c77cf058c2571a9b8d87fd5fc60528a3075046c5c59b09e5f7b6",
+          "u_calls": 111,
+          "u_samples": 111,
+          "trajectory_sha256": "43b39257d9bf799c21de2c806f5064c01d2a66af8b12d015a8921b6365d8cce2"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 38,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 38,
+          "draw": 0,
+          "env_seed": 3038,
+          "stream_seed": 59,
+          "flow_seed": 59,
+          "initial_sha256": "a9ea17baed491843fdc8ece6067fece38440966363453057cae5948bb7bccea4",
+          "goal_sha256": "85db669ced978461208c9b2c3dca1cbf88b3eec05cd8c23cb9ca231a07a79572",
+          "success": true,
+          "steps": 460,
+          "first_u_sha256": "75e117f76e185af37711d4e13713701c415a678463c558d3cca9cb0a9be9fc0b",
+          "u_sequence_sha256": "3f3376d1bfdedc7cc6ae1c03defa83cea58495ea4155851084f71e9057a1fa96",
+          "u_calls": 115,
+          "u_samples": 115,
+          "trajectory_sha256": "81696556b18a2feda1f10b992bd8d9429e53f610e99bd808af54324205a1162b"
+        }
+      ]
+    },
+    {
+      "task": 3,
+      "episode": 39,
+      "success_bits": [
+        1
+      ],
+      "draws": [
+        {
+          "task": 3,
+          "episode": 39,
+          "draw": 0,
+          "env_seed": 3039,
+          "stream_seed": 60,
+          "flow_seed": 60,
+          "initial_sha256": "079eb1f09f55310161fa04e138b6d13919e274e065a95c63cd8ff770f9d5eaac",
+          "goal_sha256": "7e7a99b23f8078902ccbcd8edc56c1ebb45566ab1d7b1a0c0c7f8e02c8c4db36",
+          "success": true,
+          "steps": 397,
+          "first_u_sha256": "0116596691e34c6734468c60017089632a0a22f6c9c23a28d7c7a0c5098d7b61",
+          "u_sequence_sha256": "d38f57f43905bcfaab001cb7b6fe10b0fcdf7ae664e1b4b9244ee446632085c6",
+          "u_calls": 100,
+          "u_samples": 100,
+          "trajectory_sha256": "cf0c15e655bd58e7ad2e3b157bafd7e33f7c3a8dfd5baf9f5bee320308d3515a"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 0,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 0,
+          "draw": 0,
+          "env_seed": 4000,
+          "stream_seed": 28,
+          "flow_seed": 28,
+          "initial_sha256": "12b3d6491cf40c5e38344956b36e416a4b96317412cd165157db0b04e3325768",
+          "goal_sha256": "fc7682a6e5d7028e59a6709a651515b5c2e9ac6b1d0149b39e21d7edee25983c",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "0db2da5ea8cda68845006853754d8592952be0e96af83883167bfa3b7266f239",
+          "u_sequence_sha256": "da5ed10ed93be72ab412ddab63e72ae056c25469197c2f736bccc5b78925c0d3",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "e3048f6468833344fb8fca2fa5b0dd5dd43f34a31fc5f7ff822f80af5d8f2b0b"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 1,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 1,
+          "draw": 0,
+          "env_seed": 4001,
+          "stream_seed": 29,
+          "flow_seed": 29,
+          "initial_sha256": "f26d7516bd037de40f02dbccd2cd2e34906de8f6ab4fcba7b298c9613f39f1df",
+          "goal_sha256": "0c3768c51e4a45a06089b4aae4955d2d3147e7601667f118ea6033a7a662e976",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "71da6a36158b8e3c762d976eec406ff763e105e900b1042890cf41997fcbe00d",
+          "u_sequence_sha256": "21da845469199db7313050a5d5f55f4344a71f03d17381cb77908a9dc754b011",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "fbe3aaa15a60365a69a1cabffd7f690871414a99b3af08483128ecc96a0027e2"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 2,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 2,
+          "draw": 0,
+          "env_seed": 4002,
+          "stream_seed": 30,
+          "flow_seed": 30,
+          "initial_sha256": "85ab7be7f74c3930d3f7d7e074d9c14869736e6cbb407db1d0b4da8e20795bd3",
+          "goal_sha256": "6b0827e2f3eade14b3d4afc37cb746166a2b8e7fb29fcb4f138e8733aa0c88b1",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "4b0230d535e4c62eea0f5928958871a0224f7544b645120a74009c8804a8b57d",
+          "u_sequence_sha256": "303327c6045366e234c52b9fec4e3f8c0d0087fa2403dbc60a1b91d9aac4d117",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "9a18aa0e95a9bbc59d72efed046bd782ffff7399e3861275d7d5a9e2d7fa8551"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 3,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 3,
+          "draw": 0,
+          "env_seed": 4003,
+          "stream_seed": 31,
+          "flow_seed": 31,
+          "initial_sha256": "7b6d0c8a44eeda28bafafd42c8cf64ad4df887f576d9da1ab7ccbabc34029ef3",
+          "goal_sha256": "eeea3a4f6a02a588363e40c36a7c6ebae5cd99e99636a4c3cbfbd67fd775d47a",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "8b013c525ab51623bdbf96d378b28d7a6b92d6de54bab6d6536db8fac1c8ec32",
+          "u_sequence_sha256": "bf4bdbbacad5d7cefc7a6d336c6fc09e2dea5c2ffa5eddbeee40dc199308c109",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "c1e3b653da084fd4ac762462627472492067b81be3e34fb8cc195c5771681856"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 4,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 4,
+          "draw": 0,
+          "env_seed": 4004,
+          "stream_seed": 32,
+          "flow_seed": 32,
+          "initial_sha256": "5455cd68bfc8448e7ed61ff1d0c4178efa7185aac6a57362f423fab45ac59fad",
+          "goal_sha256": "db66804ad166d7bdb3ac725517bf97227edd471348064b26d8cfcb4c0d7fa511",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "3d8866e854c1f1a29509023e5209cb2e31904a69307e43c2031d536d058344e1",
+          "u_sequence_sha256": "4e608b30854d044405d09471f24dd19cb92c292a4bbc0974ca516bb3c3cf39b1",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "b613a9879c768fa2f387abc1d62d57058ed9ea79ab617419a19a8512b343d2a3"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 5,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 5,
+          "draw": 0,
+          "env_seed": 4005,
+          "stream_seed": 33,
+          "flow_seed": 33,
+          "initial_sha256": "5bdf9fe807109d0b329f6bb3dcf78c96675acfd6e3bdcf42d36b41822449faa1",
+          "goal_sha256": "10da60fdd28eaea9f97551f500bf90235bb5ed9ef5f9b017d36299a89c0b9f26",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "dd1e34f4fc324fd8f3963a3b760b63758d8622bdd651d881d97e38218ceaac4e",
+          "u_sequence_sha256": "3425f57c89aeee618c1f626a75739a11417deb3c44cee4e88529333e43247533",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "3c95548d39da09aaf84359f4dd9389d2a4743cdd7a4b4df6fd42ef56db673a09"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 6,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 6,
+          "draw": 0,
+          "env_seed": 4006,
+          "stream_seed": 34,
+          "flow_seed": 34,
+          "initial_sha256": "1363599f6fedeb0df530a93b064fda1897e480fa0e358b25062252edcb1571b1",
+          "goal_sha256": "42f3d3fbe6579f5c24cc9eef1be649f2348b45ec4eec0ae403055899d7e62013",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "a795eaa511186094daa5df523493a144e4a8855ab564368feb701ac648c8824a",
+          "u_sequence_sha256": "0572243cdf305e9a5fe015edc7467d379a2dfefb0be8d81a9e7099d5d10c0cf6",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "ae0fee922951593e16d1547160b04453593c0700ad703bc120133ddf9855d177"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 7,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 7,
+          "draw": 0,
+          "env_seed": 4007,
+          "stream_seed": 35,
+          "flow_seed": 35,
+          "initial_sha256": "7cadc93948df20acb20f97ce7ed80a4d400dacfa23d7701c525240a1e6f55413",
+          "goal_sha256": "7846c809b77ee37fe2afef6857ecc42b0e64e88ebc32f05589763e650d2a23ff",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "72c04ae46bba70b4c3bef51058cae92fe5876575364f7a0dcbfa2e067f664fce",
+          "u_sequence_sha256": "b26d174ca4f3417c1fe7ca0c5351c4251676fb0b8ea43d7c472f760507af0253",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "4c9b72d9cf477af53ed4cac8023a0db42412fca0856e5021279fb4935e768cc0"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 8,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 8,
+          "draw": 0,
+          "env_seed": 4008,
+          "stream_seed": 36,
+          "flow_seed": 36,
+          "initial_sha256": "4e480a9cfb873f0e597c28bf403002e6cf6f1e176c0dd424d762c4adf909a261",
+          "goal_sha256": "b244d5a1918f24e64d07156b796fd09c80bc456c7292d5697e65bc317f68b347",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "859521aaa394366aa362bfb8aac1de2db16191891737ec20fe800e30172cedcc",
+          "u_sequence_sha256": "8bf79306166322f1bcac39af7dae8d170910b26c9c8117dfc6fb564ed72533a0",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "2fd3f4937c97319dd6afc5bf8a6cc9a6e85645c65f0ccf7efcde6fa1bc58da3e"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 9,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 9,
+          "draw": 0,
+          "env_seed": 4009,
+          "stream_seed": 37,
+          "flow_seed": 37,
+          "initial_sha256": "bcc5c7917282919a0c7b5a8897743c848fa91d6d16d3188f746484b4ae709ac3",
+          "goal_sha256": "cb6dd04a5fe10973e30096c53e98fadbc69bb9c14bee86faa6220954ba454dde",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "8174d922c38019a62b36645fd87f307f3c89a0db9562707aeb3510f6ac9d7920",
+          "u_sequence_sha256": "e27338e44c6ba78c73da46e39d457bfda4e03b8e505d3a49d1bb41a8eb925f79",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "4a93731e63747ddbe42b9b41d9899f82202cd08c95ae855504e31f28f209c09c"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 10,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 10,
+          "draw": 0,
+          "env_seed": 4010,
+          "stream_seed": 38,
+          "flow_seed": 38,
+          "initial_sha256": "b065b0aa627a2e57cf33cbeb331c0decfc15fedc05ffb2e988aa7994e1f28631",
+          "goal_sha256": "22ce8410136c0103c644c91be5245298b5e617fd27218eaa362d17fb45b4f242",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "1cbf1be8e9ceea30c4bf1b0d6106f01f38c2cea3defde9ad119fd3573748b5ec",
+          "u_sequence_sha256": "742c4a06ae4b4f3f1fec70b1f2249c4ab4022230977c18c5266e525bc02d107c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "058d43fcfa9639a51e5fe772a63c93e1c4a1b359569938f9bf3a962a91ffc753"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 11,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 11,
+          "draw": 0,
+          "env_seed": 4011,
+          "stream_seed": 39,
+          "flow_seed": 39,
+          "initial_sha256": "3bc3bb6c2fa664f780c73516f981fed3115ba17f363341b05dc8a18c9afa2f41",
+          "goal_sha256": "de73c03c838dcdf3aa797e5c766777cab3e6fcdd54cc0767fa4a7c4cf2e1c95e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "1e0220abc274c3ac33800926f60ae251b88296ef212b0de4c78517f3d7696cda",
+          "u_sequence_sha256": "eafddb6ebcd74d46c38f3cfdf432ae69a76f0ad0bc2957663b4affd9a6efb16d",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "bd0910e80429834205611ff90856b49db17814da22150db6edfd5952aa32d68f"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 12,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 12,
+          "draw": 0,
+          "env_seed": 4012,
+          "stream_seed": 40,
+          "flow_seed": 40,
+          "initial_sha256": "484ac2ae7d53593afb72137969c315484f4da603ddef71ecc3dcbc0487443fe4",
+          "goal_sha256": "99a7b924781d265175bea8df2ba3fe14df256c3bcb8f01ce1db4596f49e328e6",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "1af2861cb766878a61e9b357916e2369244a02ccf401148db5fe205bf3cf84fd",
+          "u_sequence_sha256": "60b66647249b1d699781d3e6d2673b181617e5f891a60437a934e385ba077610",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "360cb49714facafba6f22acf74fc40464e1561e257c074749d48949045d219db"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 13,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 13,
+          "draw": 0,
+          "env_seed": 4013,
+          "stream_seed": 41,
+          "flow_seed": 41,
+          "initial_sha256": "3e375d31b5bbca092955edc327ee298cd90423f35bc3ae8c40574eb4f4052cbf",
+          "goal_sha256": "c000e680a02f9066136106372b59e50153a944da2ee4055cda2da49b201e6cfd",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "e4b7e89ed977b6cbd43df02dadc676d528612053d51452f0761cc2b4b4f9a8d4",
+          "u_sequence_sha256": "eb3f5d136ba1bad2ae47bf22ff2492c815e51b4479828910277ee03bffbe4fb1",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "ec0c1865ba3dc59c654f4bbd27e2e831744f47bc5d42ecfb12641950a9655269"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 14,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 14,
+          "draw": 0,
+          "env_seed": 4014,
+          "stream_seed": 42,
+          "flow_seed": 42,
+          "initial_sha256": "cfc2f5ab196ce98f3d33970a3e468f9f1a08a6a0cc05a86112fe624b00842d6b",
+          "goal_sha256": "1066156f0a77f1826a188ee4f7b9089abc0e2b5a455aca9477ad7ea3b383a7d0",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "fdcd76777029335130d02d9a5bb02a8ade094d61913bcdf9c4f7670473013d35",
+          "u_sequence_sha256": "72afd03f6da928090ef5bec1a4a8d76578b2a7f52d7b898e747cabafe5c6f805",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "b204093378a66bfb90816ac0c3db0557df8149fb8c10fb733f4da5cc7df18b6b"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 15,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 15,
+          "draw": 0,
+          "env_seed": 4015,
+          "stream_seed": 43,
+          "flow_seed": 43,
+          "initial_sha256": "1fa8a08678920edf77f690d9ad78a4cf6e0f19e85593749e2bdfed243d06d480",
+          "goal_sha256": "3567755ceeafba19532f253380eeaa89452e95850edb30dcbd46196c7b963e59",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "823f9d403a19097d75b8ba9f139bccde3511c5c18bffd33928e22bfac3df074e",
+          "u_sequence_sha256": "b69daaa5548890051ef52a2e753ba0557a173e889f0f3de2e149a3c1e5440cce",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "698fe538dc89bbe45b8ebcefdaae961a42251c2e4b1b10cda95d2571a038516c"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 16,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 16,
+          "draw": 0,
+          "env_seed": 4016,
+          "stream_seed": 44,
+          "flow_seed": 44,
+          "initial_sha256": "325440d1a60d62a745970b0aa81bf94683af1aa1ddb69b4cf2dcdb579f2f1ff6",
+          "goal_sha256": "d56f76c4926e6f4cd5eb893554248ac046485a82e28acef861a4f20a4efdd055",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "d1c8ddd67201a9a55d604d669017d177218a897787cc0727c1f8042944bc7e4d",
+          "u_sequence_sha256": "d0425708f2c84d5357219e044dcef7b0949dc724bd9f4c9e69ecd0d70cec30de",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "6b13c660c05e484cc76e2bf17ea110246d3b033eb6e06eed8fac2175530ce872"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 17,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 17,
+          "draw": 0,
+          "env_seed": 4017,
+          "stream_seed": 45,
+          "flow_seed": 45,
+          "initial_sha256": "7f462f1c022ee48073a521b27b3113984472a065626e80a1f837f159945112e3",
+          "goal_sha256": "d04fcd0f830e96456a93a3a4ad2e4e0e23a73e87f779ee9ab780333532e0e38f",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "b9809818beb6f6ac7f3e6056c26fc584b0ce65601ec720688e76f069d629bd75",
+          "u_sequence_sha256": "e4296877c74a1868ec4db3ae702bd65322a2cd76d0c9bfe70db85e5a0fcc994e",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "24bac7562ac7eab33cad678b9a00d3d818bfb7bf76c958d6edeb209beeb1963a"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 18,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 18,
+          "draw": 0,
+          "env_seed": 4018,
+          "stream_seed": 46,
+          "flow_seed": 46,
+          "initial_sha256": "4656fca40412c1bd00455b19dcc57be8791b30def9395e43acde97df39035ab5",
+          "goal_sha256": "2b2010b208fe296203994028ee7c6e5f3760c987960e3e09f48fdf98e064b9e9",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "e5c8840d90d75a242b083cc81c740622cd66983ca6d8e5d8cb88f196534f8af2",
+          "u_sequence_sha256": "9630ea8c2164dd610e9a123222135dc851edc4bee7ba6731e33abcd354e2ac7e",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "d9921f917190c84c00199eb9858deab9193c3cebc64d01c198150da14281a4f5"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 19,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 19,
+          "draw": 0,
+          "env_seed": 4019,
+          "stream_seed": 47,
+          "flow_seed": 47,
+          "initial_sha256": "6cbbf9377464754454260049caab07a47cce01ed8def853e72630dc2038ed77e",
+          "goal_sha256": "cdc0880de418616e77178a91e7d5136b5e32b483241e67d1109599130b42d8a8",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "b33f2c3dac09e96d4de3ceba80152193bf5711d3151f889f665d93e9f38a1de5",
+          "u_sequence_sha256": "9498dac7d8bfbb58804b987cad7bf178474ed30440b4a3b6ca21d2a9b42f8b27",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "06354bf533c69e0f87b89ec9d2bfb3e1686370ce4a4052cf472fb157b66ea86c"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 20,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 20,
+          "draw": 0,
+          "env_seed": 4020,
+          "stream_seed": 48,
+          "flow_seed": 48,
+          "initial_sha256": "8e2026d2318e562fb8b38b90bb8a743863a4cd9e89ade197acc193d3a4488719",
+          "goal_sha256": "18b7ccd04dac0c53efe5ca46115cb96489462b682ecf71364ba6b471a8b5076a",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "352763dca73862efffaeb1f41c4f9f1b380920861ae64a14d16225ea7bd15b40",
+          "u_sequence_sha256": "1db04d7fa7e88f02e2a4ecdfc5600f2266e5d3d33b65d5e14d19e193a3e9eddc",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "d933a6a710f48c3470db63a1ad61c2a1d81a16d1d2a64818b3c3c07109d34646"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 21,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 21,
+          "draw": 0,
+          "env_seed": 4021,
+          "stream_seed": 49,
+          "flow_seed": 49,
+          "initial_sha256": "ac6c5c56a65d3439d46b15466649edef1fc4cdaf6cd90cfdc9c2e91729a7a66e",
+          "goal_sha256": "03d3595718b66b3dd970918028a25f47d21fe2c187065526e3d3f5a92c515a06",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "920c524b7e689237ed492ee9b129a3b65a318b120e2df1f0a26369ef2deb735d",
+          "u_sequence_sha256": "621d2dec1007a886232509274b7e6a6fad953473122e5a1c7fceea792e62154f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "4e4e9a18647360ff5badebd134dc514d9b3413bb2d5d8cd11201440ef2bd7ace"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 22,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 22,
+          "draw": 0,
+          "env_seed": 4022,
+          "stream_seed": 50,
+          "flow_seed": 50,
+          "initial_sha256": "4b51edbc938c07ee0367d8f436343304ddb1919fd7ab4d46e7453f3a2f148e28",
+          "goal_sha256": "6fa99857e8aab796629323ca0780dc2248a0f884411cada5231288d53bfe8c07",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "7eee34b9b2b73262915ac206fac0bcb0fc4b4b8140754c9529960232d067ad9c",
+          "u_sequence_sha256": "c408831cd4a140df100d4dd9d15a3c3ae964f24a61292dc7c276d731d3b4ede1",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "e867be78a5d73dba0d8c10c32b1fd1f03be1d90ee8b2bbb7b3374b40af8a595f"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 23,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 23,
+          "draw": 0,
+          "env_seed": 4023,
+          "stream_seed": 51,
+          "flow_seed": 51,
+          "initial_sha256": "7b25868309a69770ae64f70ac41154f94adec8f091e7de37da89c5d9cc3e4b3b",
+          "goal_sha256": "ec48297281ae5882dce619aec98bc42ec0ebe2d3929ff7225ac8b5c715ad46e4",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "732949226a7f77431775ac1b045ffa7c6e474bb840e491161f5f84e8da18d5fb",
+          "u_sequence_sha256": "5bda99142d3e206173ed5887c8e8f5e3311c3033f9cedbe2ca19f8e9b5df4c2f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "c1ee01d4fde1abf27b520b38ba88330b9a70debd685e2c806bfe0cbc6524eafb"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 24,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 24,
+          "draw": 0,
+          "env_seed": 4024,
+          "stream_seed": 52,
+          "flow_seed": 52,
+          "initial_sha256": "2cecc73f26573786dcce1787776705a33a77ad836d97eb43c5d166d804858dc2",
+          "goal_sha256": "b2288aa726589c3a5bb6b6e126fc880a90f6ed6735d87883d1b4b1f4835c7d9b",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "238f250099be9a70918ea1323433ea7bd45faaa3ba6249e05389021d83c323ff",
+          "u_sequence_sha256": "e2890c87d10860f3edb117afccd21a902d547bc38559ccf9a3785fe083bc229c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "8564312e2d7ebe4488f3c99303c31014a8e671678ea5e739e44bc7fac0c7be1f"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 25,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 25,
+          "draw": 0,
+          "env_seed": 4025,
+          "stream_seed": 53,
+          "flow_seed": 53,
+          "initial_sha256": "c277c11a69a753a935a93cfe0548bc1a8e3e03a829949b90072fade7d8f8eeb4",
+          "goal_sha256": "978f1c8ec4226590c3e11330f291b113a89372ffab413627ca20f947d010c714",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "861adea382a351f83714cdcb9242b733ce94c5cd6751df2ca2bd83cb6addccbf",
+          "u_sequence_sha256": "cf2c80ca2f5046d0a38afeb3b233ab87c9a0657653a4d33d7214cc82405ce94c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "8aec143d3c60f647674f88a32c062ee526333d04fb855688d299a49b86b12b98"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 26,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 26,
+          "draw": 0,
+          "env_seed": 4026,
+          "stream_seed": 54,
+          "flow_seed": 54,
+          "initial_sha256": "1a031c50b12957acb4eb2d723c84c76189225b247ee80020e953de96d807c8a9",
+          "goal_sha256": "f9a572c09d74558c650f2b95e968cdd8ccbb5c60aab3d467113f64d8d5a6bae7",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "047a4ebaf9dd21c0620c42703274d182807a657f521d4199b8702b4ca884c9e0",
+          "u_sequence_sha256": "15b6ccf6321ff16333841a07a3f2cd1aa3ac7d7df438126329b65c9ebe121528",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "dc2563c40e4e8c5afb2a5c9550364032ff8b1d214996393b5d9deb9b329e061c"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 27,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 27,
+          "draw": 0,
+          "env_seed": 4027,
+          "stream_seed": 55,
+          "flow_seed": 55,
+          "initial_sha256": "d1b9829895b803384aadb25a961d9bd0e1430bd258c07089d5ce99c1e0c6b38e",
+          "goal_sha256": "e906efbb18bdc02be063bb3f85cf192dc8ee7f4eeff18737944757855e3e1a98",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "cad0810f4b652224ca25e312b14fdd81f3725047ef2b3003b76319f1c92c256e",
+          "u_sequence_sha256": "c340816f2fc1c58aec7bd81c6620a7047156841a24fef5901fb75401fcc230c8",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "1780d50f2d1a7fb18cbab5a79d3a77e0075a1cc4f8e97dec9dc4fcf59929df53"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 28,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 28,
+          "draw": 0,
+          "env_seed": 4028,
+          "stream_seed": 56,
+          "flow_seed": 56,
+          "initial_sha256": "48c4e2db6eda348c67be71bdecfb0ca5b82adf06fc4f16bf83fe681926f716db",
+          "goal_sha256": "66ead9567fc4f0dd6ceeadb59421ba323246ddabec492b775847b7112fc35ced",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "65763f08ef707af9579f857080d40a7afdcfd5f3cf275ddb1c0d87ba67c65edf",
+          "u_sequence_sha256": "4d274abb85a37496c8c9aba0dc01857df052d96558b4d02039b3de65d684886e",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "7ee73d499c8cb376ef86b5578598f6199afd0c17aa5adb43aa9af54279d5d2b4"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 29,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 29,
+          "draw": 0,
+          "env_seed": 4029,
+          "stream_seed": 57,
+          "flow_seed": 57,
+          "initial_sha256": "17f7b227094e25414c1f0b6e1c186272b104c415bb474a88ee1860b1f27c152d",
+          "goal_sha256": "fef90bf31c047a01667beba1b51bb4ed4b6725beabf63a412defeefa01c5b923",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "1ab4750e53c4130fb543f933f88ca1e18c7ce4380863f564a27aa887e400289c",
+          "u_sequence_sha256": "32293a7b1f77dc02410a2cf4a746a26abb2be1c1f2186c6492980e9017190e9b",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "58c1fee36d6baafa277283c36b9ff6c33d548366523e37516f5fdcaa3369655b"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 30,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 30,
+          "draw": 0,
+          "env_seed": 4030,
+          "stream_seed": 58,
+          "flow_seed": 58,
+          "initial_sha256": "8b8990984ef1d4843474824933a4160f474a6ca1662bf9607c885e4df9f5f5cd",
+          "goal_sha256": "acb8778f1935eab7b389079fa0059f47797eea331d87ee0231d8eb613cb7f4fc",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "7d52c3e11575a12a4098220c736f6b02cbf35be3b1775c762a62f9f407928f9f",
+          "u_sequence_sha256": "5f1017a1aa4e5a8c0bb28716fe2e4e0ade866e0934bc888bf0899b5c53c704b6",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "3ffa8e2514bee1db0343411a030eaf615568cf979bff1fd9ccad1d4c49904258"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 31,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 31,
+          "draw": 0,
+          "env_seed": 4031,
+          "stream_seed": 59,
+          "flow_seed": 59,
+          "initial_sha256": "c35e92fa1a5c2c7dd1ea8caae54fb57b07c938fd7628cad69619b227e0482f4d",
+          "goal_sha256": "7b41b17c7ef257c6b1ae529848ee16892bd1498eb5cf0a4484cc3d9fa90f7f3b",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "08e60321169ddafc0ae108747312224f8e52a3563886e8e1f2fe77339502f53b",
+          "u_sequence_sha256": "d3f8f3fe54803352cc8cc65953cc07ee4ce4ab9b5c3554a7eda97f10c90bd531",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "3c86653be93d5615d9a0da4a69ec9c6214dd17c74fe9c11cfff81a7f863eead1"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 32,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 32,
+          "draw": 0,
+          "env_seed": 4032,
+          "stream_seed": 60,
+          "flow_seed": 60,
+          "initial_sha256": "003152c62ec06342787aca6e79d081e7dbe4272b07bcb781f97a3facec8a98ae",
+          "goal_sha256": "bce13caadf424629d1d7a61e9878dd128fd90d07c66b121b815f0fd710724a1e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c17c50adbb16c11841a0e52648e8335dcabb8d84d1ad88e9170b59d2acbb15e9",
+          "u_sequence_sha256": "3c64d2bd0696c0efeb6bd83967f00cc85ae6c539530ff92ec620e9ecec5a6c61",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "98ee661868fe0cff72f5e3dcd1ee09e095cd16104515eed790eaf968220044f0"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 33,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 33,
+          "draw": 0,
+          "env_seed": 4033,
+          "stream_seed": 61,
+          "flow_seed": 61,
+          "initial_sha256": "f2b8c2e5f2f68d460e621c6e02911323ef99d43a419fc3e6fa41f8c0119082fb",
+          "goal_sha256": "30b21a1b341aa7c6a364bd4ba5f81b25c90711b07e8e6ebbcfb49e6f5cce2768",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "11de9c504f81d7ec32443183ef309c00e472100c8915c039578ffee40211b035",
+          "u_sequence_sha256": "5a3686c139c7f473ef839c1fa9cd188dcee6ae94848c407c82a2392dcb0873a7",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "3fd4573e0524aa76677a6b9edbcfe4876ef5bbffd6d9d037b01864f3fe4a81be"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 34,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 34,
+          "draw": 0,
+          "env_seed": 4034,
+          "stream_seed": 62,
+          "flow_seed": 62,
+          "initial_sha256": "e37e1b661ab6ce65b006c1603176571feaed878021cd4c9cc69daa90af3b335f",
+          "goal_sha256": "4b6978178749e3cbc265841f496b63775ca05ff60f2c120f4b45565c657af171",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "9c6974e914d9845df82433082b7dabd19e33b2121b6272c90abe021184ea713b",
+          "u_sequence_sha256": "1a5628124b7d1996a2de1ec43bb5f8533b11c6e1c105029de7a0f0b29665406c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "03276a017f225e153c0af95faaa3e1ee6d83bd94871b807d05c5d8ba18e6bff7"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 35,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 35,
+          "draw": 0,
+          "env_seed": 4035,
+          "stream_seed": 63,
+          "flow_seed": 63,
+          "initial_sha256": "2dbbdc91e6895acf62fe80a568fe72bfeb88d09e746d5a4a3b399250b4c74899",
+          "goal_sha256": "49a7ff908d9c59ece0b8ea392ed4fbed53dde2c333856b9fc6a968c28a34a680",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c260b6a153ee82bcdcd6cdf7d6a2e2da9697438b186826c79c888bf62283f4f9",
+          "u_sequence_sha256": "7fa85ff255b9aa7b4426c1e19b34ce1db5f64df91f90d0a72c91eaf8c1292d86",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "15189e5ff569ef9f5e6ac72c5e59bcc44b2f9d878b78fdb7587f0281d0ea3abd"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 36,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 36,
+          "draw": 0,
+          "env_seed": 4036,
+          "stream_seed": 64,
+          "flow_seed": 64,
+          "initial_sha256": "8611e7c68af6d0747f87485772dbc0127f579c0ecaf56f06fdd1a92a295cf4bb",
+          "goal_sha256": "3e1e9484f5a9045a18b0dba3f984cafaf6d8ed6ce11255407ac493fbb1129ba2",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "7a419b2d41c6ba91338e1b5125614ee3a2a348916e10acc751b4c5b67b27953f",
+          "u_sequence_sha256": "7bfe8a323522173b558073edaea3d3c00bfa7ac8767a3fd2f2ad25e006d3650d",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "d9fc0658b29307a4cb6914d0b569a3567e93efb48a580bd037efe18d74929cf3"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 37,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 37,
+          "draw": 0,
+          "env_seed": 4037,
+          "stream_seed": 65,
+          "flow_seed": 65,
+          "initial_sha256": "aa675e7c02c4eb7893f8f13ee96ce933d7d96e46003f2d5197b9f227ed9b6213",
+          "goal_sha256": "d1fbfa59f4d3b029567962cf2bbe5ab8a35f7acdb5eb5a65684fce43d854e1c8",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "4bcb353d0f35f9da1fd9d03baf386d59bbe0f4079a2d5bbeab9fff9e4450bf28",
+          "u_sequence_sha256": "2e8fac8afc892720175d0f9ba1aad8bbddc5c615c7ab3070332a9f0a6ad48397",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "ec2e7c9e63491316fbd62c3942fb5bbf9e29c5bd6175e233bc0c88bb5ce29e08"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 38,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 38,
+          "draw": 0,
+          "env_seed": 4038,
+          "stream_seed": 66,
+          "flow_seed": 66,
+          "initial_sha256": "0de3344db23bcab6bae2b2561ce22dbde300a6bf0161a95c2efd3fe14a84823e",
+          "goal_sha256": "6eed8aac20ac0d95dfa2cbb9734bd610537c46cbde81f5bb4e7def192ad6385e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "42011f8abafaaeb41e0f94ecf286da7c47034ad233591fe142388b64449749dc",
+          "u_sequence_sha256": "5c88d7a751dcc5faa9815a6ead9e614fc6ad3cdd35d88cca397f784ce1a0a7a4",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "6c11f235fade58f719da299d6a4e398260fea7322be326804fb5d325517c1983"
+        }
+      ]
+    },
+    {
+      "task": 4,
+      "episode": 39,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 4,
+          "episode": 39,
+          "draw": 0,
+          "env_seed": 4039,
+          "stream_seed": 67,
+          "flow_seed": 67,
+          "initial_sha256": "7a0e5c7bb3f11d7111847845d6325781904c2e7134b90e74c43b4ecf28d5a08f",
+          "goal_sha256": "bef12f787e74eff4961ebd31e1d8155761328038728d35061b94078a70e166b4",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "7ab25cd2458eb3978b8550e3bae90c2208c9089b2059b882e95b9cd8cf655f33",
+          "u_sequence_sha256": "0815ffe9ec19a7ef81ae759e4feec4bb2e04ca843cc7a0b78df73b617c0dd2ef",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "f18a1540b813f0694653589ebda36f30660bf83a02e4b99222ce2640ceeba6d9"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 0,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 0,
+          "draw": 0,
+          "env_seed": 5000,
+          "stream_seed": 35,
+          "flow_seed": 35,
+          "initial_sha256": "21a9aef8c102becfd030fee30daa5ca5f7f1c3b75e2f27209ee4d16b4fed3de5",
+          "goal_sha256": "b1672daf94091a12546e745798230effdee522c01575e090c0b15216fd59e6b3",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "7057e64dd8087f121b6373780f1977995cd2606ad9e140437e1aca218983a59f",
+          "u_sequence_sha256": "8c4453f89bf1c4e3525e05f1270810803aa203207a70f12699da4c8f013f0847",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "dd06dd05d3ee81d7395cc90b70d4562a7134aeca4abd818dad120c8d5685ea68"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 1,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 1,
+          "draw": 0,
+          "env_seed": 5001,
+          "stream_seed": 36,
+          "flow_seed": 36,
+          "initial_sha256": "eb9a0dbeff3990f5b8cbc8e603cf4a869eb09ae4937aef78e46de52003a9da6a",
+          "goal_sha256": "412a92f699622985e8f3605c816feec602b158ffe77877892334cc635baacfa6",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "f8d9a39676ea6f5c9816b5f805410374a406bf941d9ceaa8f8abb05afa219093",
+          "u_sequence_sha256": "ad37da1280b37b8bf516377f927914d7585f89afe61b616c404b81f11edcb61f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "932216fbfb47feb3349fe3c6fec35a0a51f1dd394f9f5dcab6977a5300033337"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 2,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 2,
+          "draw": 0,
+          "env_seed": 5002,
+          "stream_seed": 37,
+          "flow_seed": 37,
+          "initial_sha256": "73364ef8cd26b269a252aca30a51abe68465373090cae4b823e2426591c15efe",
+          "goal_sha256": "81d214b7544bdfc3c1bc827d6f020f308ae7b8d436affaadbfbab6eb29bb3bc6",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "1c2a076d9c552463373c76a2771952ca9d2ae7a8bbc0b1a5018b6b56b1c4339e",
+          "u_sequence_sha256": "81e623e949cc1b2dc42aecc7fe6f8038321e93a93098b61f572942177ee01fe7",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "04b5a99f95e37e3abd7e60459a5a06f087c9cdf0891a951ad8992c50a49c6bc9"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 3,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 3,
+          "draw": 0,
+          "env_seed": 5003,
+          "stream_seed": 38,
+          "flow_seed": 38,
+          "initial_sha256": "14bdd8d7108cc286e0c618be6b7a3e9c71f91bbccf6c0586f9d04ff85ccea140",
+          "goal_sha256": "e1875712d67ad4124eb22ad58a6bb43bca1bb5a01e3640d8b9d6b6870d0acc4a",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "e34a026265fa79e9d28c9beebad33844e8763ee942d7bfc5577366c8823e13f2",
+          "u_sequence_sha256": "a01bf7bd6f822593025df0c65df756c893a62a23922ed08ec31b6f35a355a078",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "4cac605bd5c2a677b09cbc0c4b4ba01e8c7a4064e4fb320ecebaa692352e622c"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 4,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 4,
+          "draw": 0,
+          "env_seed": 5004,
+          "stream_seed": 39,
+          "flow_seed": 39,
+          "initial_sha256": "2dfacb16683aeaa1279037f0a756fe02d1689bba3f920a14c9020c6a60d1a1f8",
+          "goal_sha256": "1c342fd59b33ed71b6f11cfe5411aff7cb8fb9d4e0a33205839262fc4352bc4a",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "bb3b7b10a592a9be7d58d973141a8adae9ae3ecb74e240a602da5b4aefd178c3",
+          "u_sequence_sha256": "977d6dda64999003aa33c389e632ea6941092605ee46396caedc230b188e0305",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "cd521bad598e1a7f70c048b0b9bdc05604e7dbb1a7a288713043dd4d079da96d"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 5,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 5,
+          "draw": 0,
+          "env_seed": 5005,
+          "stream_seed": 40,
+          "flow_seed": 40,
+          "initial_sha256": "1ec7a9d40f3a4ce9fee57da0b3008750ee9b5c36412cfcea52ae6bce2db41edc",
+          "goal_sha256": "57387d29981837186dccb938e2d3c07104efe66c7850c4f51714d8255492c8b9",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "19d736aae7c017222daebec873c830ad3131856b8638ee78f804dbf2b80bc446",
+          "u_sequence_sha256": "086ae18575b9e16ba6dc7ec000cfe506cb7ab84e0ab482efc50f5f162b34eda4",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "f50f7f2e71abff681cdf45f86f50ccfee5f29e8f10a49a19099692f221c2a19b"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 6,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 6,
+          "draw": 0,
+          "env_seed": 5006,
+          "stream_seed": 41,
+          "flow_seed": 41,
+          "initial_sha256": "aed08087ca12e76762c259473aa249f9ce5a18cc122e301e1b8003adae3f3556",
+          "goal_sha256": "eef12c58cc4f0c6fdeb691a6e9d3e3527701af2bbdbb11056e85f9deeecc4084",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "33473bc462e1692083105eff3ee22b0dea7125b96c9f5ea422482ec7bb3ac1fe",
+          "u_sequence_sha256": "30b1b8b16cb63ecafc3bef9b9cbfc7cf3d13273e7cd9541f6f1e8ef45d92244c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "b9f93ccbeb0e10b2c3cba71da1b85798451249f20e9ce768dbfd1b761d8ede31"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 7,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 7,
+          "draw": 0,
+          "env_seed": 5007,
+          "stream_seed": 42,
+          "flow_seed": 42,
+          "initial_sha256": "3f30467e8cee372fe46d7e4861d6cc641bbbdd987006a80de80c12f0ffc3e2d8",
+          "goal_sha256": "9e28a480ec0f14b769da2c14e1bdc0213d86dce2625073f1426d95706d8ae5d5",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c375f068b0aaed56b8f38150482d5d10471402630ebbeb2ca9e9762c64212abe",
+          "u_sequence_sha256": "c6b556ba6d9845b059915a91027313d102ad5e4400c06ec719f883dd23920052",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "a5ca527a2160d2f715cb2f795a11e1c94016c39ecabf2bccf5470cf7796a5970"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 8,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 8,
+          "draw": 0,
+          "env_seed": 5008,
+          "stream_seed": 43,
+          "flow_seed": 43,
+          "initial_sha256": "1068b5942280d56062b42b1f9ac1263181b9bda26f867648ec957b28222c01d8",
+          "goal_sha256": "c7df0efe228fa343532b7882959c689a143d6001a8cec2d3ab6ef9c849948cc5",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "b2d07c56e40515cb361618e90df860db2749f1dce406ff3163dca2c7bf67da36",
+          "u_sequence_sha256": "629495d0cc97c3decd8e9c199ef17f20303bd4ecbac8c62b4c0cb677430d9411",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "fb926019a6260dff14238f359ef2cc5d40d2dc5f52f5de06324d7748686225a9"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 9,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 9,
+          "draw": 0,
+          "env_seed": 5009,
+          "stream_seed": 44,
+          "flow_seed": 44,
+          "initial_sha256": "1c200609ebfa4601f737877eb81ba1adad26a9a748656b8a10e6e2aa4e3084b2",
+          "goal_sha256": "b692dec7aef37b1055d4c393312de2680487142a4cb360ff2a9ecb0a7a9e89ca",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "31e2205a91dff36c0db6f9afef0e84ccc501fa71737ddfa82dc91d2a918d78f3",
+          "u_sequence_sha256": "ab492fcd997e897dc28520231278a58f44be0e8054cf346f3ceb2853e64cd84c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "8a86a2a5b89e75f491440f6c4617bcabe67f3a5a1886cc6a4edd2cb07badeca7"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 10,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 10,
+          "draw": 0,
+          "env_seed": 5010,
+          "stream_seed": 45,
+          "flow_seed": 45,
+          "initial_sha256": "fde2e8cd171516b554077b5d2801544af660126a4378f824db96fb601aab6f82",
+          "goal_sha256": "4a743dc50d25a1a3667b87367569936406cb9544e298a40bfc945a1d197860e9",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c3d372ef5555556de34cb3b9df8f6211c44656010bf5b2a426cacaf119b13435",
+          "u_sequence_sha256": "07e3b23462c45af9627ebc616900c29524b73e178bde8848c5a1d85532647392",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "29e3157ff74c642a428888dd0e625d285e6ced023da4c95b52eccac5c85bc908"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 11,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 11,
+          "draw": 0,
+          "env_seed": 5011,
+          "stream_seed": 46,
+          "flow_seed": 46,
+          "initial_sha256": "59efe6b66a886b85548d87c389b3d6f05833facce842892192da66ea033f69df",
+          "goal_sha256": "4f1ffbd4f451450346b766e01eece5c7eb22a660a3acbf659928dd0a0652a3b4",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "519db337870584af84434677c9fbe188aed465a28a5495d805726ff0c2aaa507",
+          "u_sequence_sha256": "c9d758b539353d72f0010d79569d6837e5d10569bb51f714e68ce44a8566ac32",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "ae1eb1478b722d63fc71e07fd9664b49fd10337e85dbd3762f66406a6bc28df3"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 12,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 12,
+          "draw": 0,
+          "env_seed": 5012,
+          "stream_seed": 47,
+          "flow_seed": 47,
+          "initial_sha256": "fa9205060ea2b0f5b7531d3529bf59a7379a6e02a77cff2dd7cc991d9c6cb85d",
+          "goal_sha256": "d385dbd564517bb0f5c3b9840d570eb5584bf5d85f50d0667c7cd2d7f17395a0",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "70cc6268035b81d28a74c2dd789e48fc4355b6132c31d87409a49186855d9ddf",
+          "u_sequence_sha256": "676be9795a3e4a8a86e393ddb05da223bc9b5e63b2aa8cd7e544bfb9715a1065",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "e00dd34f59194211a4960d263273da3c0c0bfe2dfc84be5abaecc2adf088c13a"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 13,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 13,
+          "draw": 0,
+          "env_seed": 5013,
+          "stream_seed": 48,
+          "flow_seed": 48,
+          "initial_sha256": "223c998004ae8389de696089a0372ec137ce6ca6480c7de233de68b3e55b9931",
+          "goal_sha256": "bfa7f14557d64cead826b98fb67c3bf666100c21c26d7e759047e38c1469b9bd",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "823fbb3f0d0dc5d5165d054faea94421af0f523c1dbd7a643de5a5c695028285",
+          "u_sequence_sha256": "630f35b5a48fa92d95d064ef1bcbefa3ec4484a8a4b06b312b1a4ca3be579288",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "dcaa46e395b4642d67b724d138f34086c22f5f26478af309c227756f7f5f5f1f"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 14,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 14,
+          "draw": 0,
+          "env_seed": 5014,
+          "stream_seed": 49,
+          "flow_seed": 49,
+          "initial_sha256": "08ade7ebe114abf129570dd38325dea6df25a37bec79a653160b703984dc1998",
+          "goal_sha256": "bbf78f4604061267216db991f40210d0c81fd0052c403cec9162d7fcb6cd98e7",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "d6d229a8521955ac79dffd023363b87327486090c69b255ea63ebafb8b19d7fb",
+          "u_sequence_sha256": "9c139de410c1925db58d8868097543ad1e7386c5002898e479a12a538db3eb7e",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "bdeef56579c630555dc55a585be402e2a1adc26a280b1b7863972733973612d2"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 15,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 15,
+          "draw": 0,
+          "env_seed": 5015,
+          "stream_seed": 50,
+          "flow_seed": 50,
+          "initial_sha256": "7e3ae4cc906a3b87099229b8ac2f83bdfb0736508ce4067182d523033527f40f",
+          "goal_sha256": "7f974eb98b3a4697bd3b5db2eba70f8f62cee8301ab789ea474fd84730dd4670",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "a52af976af48ee4a348911e9cb4ec3f9d8b95dcfcd4ef103a491d01087e34597",
+          "u_sequence_sha256": "c9eef2cfa6130ae3f36ef897807d87d2054e0eb625fc16f0babae48c370347db",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "0424137d81027afdd72284c827baa20977e7996c447b156285906bad81e012dc"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 16,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 16,
+          "draw": 0,
+          "env_seed": 5016,
+          "stream_seed": 51,
+          "flow_seed": 51,
+          "initial_sha256": "112fdd46785197e41ae761b16121f742e618e6092600a66a0fe40f6a3d133749",
+          "goal_sha256": "71710ae52291fb8ce548654874b70f21257e7a9824f8466bab761e26921e35f3",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "fbb6982df7d79a67835d4f0c56a0e126b062ed7c4d91090b15dbb78d0fa08df4",
+          "u_sequence_sha256": "186130a12faba57a832e3ec061fe0e1ee06c354c75ca3beca7442eb5aa01347f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "a7b6505dc108f8727fa0c31177342dd5ff219f4ba2e36236831c5f1a8444e1c3"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 17,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 17,
+          "draw": 0,
+          "env_seed": 5017,
+          "stream_seed": 52,
+          "flow_seed": 52,
+          "initial_sha256": "1344362730c1aa448e4e5a52f77e273c89f7252238980434b244332bec2f4f31",
+          "goal_sha256": "a6d0216de4fe692cf0473f85a6b6c64f30e572d5d007dc25e0fb251e94904264",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "1a402fe72654cb0bd9d28edb1ac616f1225f15b3c1d02ef3618b989c17b4c5aa",
+          "u_sequence_sha256": "f2ae9940d885620790e9b0c8a1786b70e282f583a70c8856be4ae726609d0815",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "7f5d2ae410eb9d9962453e558f80939b4ed97233fd3eaeb9cec29ce903ba82aa"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 18,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 18,
+          "draw": 0,
+          "env_seed": 5018,
+          "stream_seed": 53,
+          "flow_seed": 53,
+          "initial_sha256": "ebd4e61dea4a4341b9d2e826d2be57633e68a1f01d8851b34c606d2e614924c5",
+          "goal_sha256": "b9ee33c60a800169fb529b446f4adeb440fe280d8226b58c336bae8da6c6c1fc",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "8a786a541764f365d80e5de0ef906ada796eca51c74b11f2130a6e64008d3031",
+          "u_sequence_sha256": "a125d5475549ca15ca40b9eed3e518b85d4a4a43156c3a085ef14f520859c79a",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "01bc2416b5633ec43e00de1f9958492c0d1abfcb0a7cfb2d7a2b713355e1b767"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 19,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 19,
+          "draw": 0,
+          "env_seed": 5019,
+          "stream_seed": 54,
+          "flow_seed": 54,
+          "initial_sha256": "0cfc51e49749720be1b076301d63e74826bd48b4e92e3c9922b681cb4b683546",
+          "goal_sha256": "8ed7e5fb14013245772882532286aa8cdb11633bc74e4fb2901598554b161c1b",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "79eff6bf7d90d227807668a199e3dfe8d70f9ade5074dd94035c7164d9b7a7f5",
+          "u_sequence_sha256": "8578728a1f86c0ef477ab41f131e0ad84a03e2a586856596c69eba2144c392bd",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "9faea8dad2ea2b4d3138434d403f1e1936782e05a22f89cec73c60bf62c7760a"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 20,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 20,
+          "draw": 0,
+          "env_seed": 5020,
+          "stream_seed": 55,
+          "flow_seed": 55,
+          "initial_sha256": "c7bb9dc459f6314ee9c844786506268605c053d7d06d65262cf63f6ca967c708",
+          "goal_sha256": "45954f6715ef65fee4f6a38e6cf427418a66918b0dc6be84098f49f469105fe5",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "35cd704e8a3cfaa3a3a403ab5693ead4f15671938bf55f55077ce2d4921ab6fe",
+          "u_sequence_sha256": "899acbdb4d7f3cd0ea3b60636b6440763db3157987372dc37fcb0eff383a34db",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "7ba604d524676cbbddb52d866007dd673784f5900655ad01727c8a2f57cb1138"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 21,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 21,
+          "draw": 0,
+          "env_seed": 5021,
+          "stream_seed": 56,
+          "flow_seed": 56,
+          "initial_sha256": "3528376aecdb025a39dcc954e4f7a71e6685925b3c1f5f5c4130aa754493cd5d",
+          "goal_sha256": "cdb6cd0ae3973d433e68f4eda37d092ed0c8a594cf9ddd5497226a1255c1f7d3",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "b46700a95be51dcc78fa08e4aa760cde0c1240e8a4c466dcbfbaf9b60ea25640",
+          "u_sequence_sha256": "cc104bb3dc96fcef11ef95da948417afb652228f1692961493eacc36ee20acfd",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "8db94c6782eaee7cff27ef5e46df3ce8782eda46a535a76cc1fd3aeafac9c74c"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 22,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 22,
+          "draw": 0,
+          "env_seed": 5022,
+          "stream_seed": 57,
+          "flow_seed": 57,
+          "initial_sha256": "d4db6dcc3bfd92c7a42bf2e4b417758773b69a698dc14d4809e50c3178e56224",
+          "goal_sha256": "8921b2c881b677bf259cb1919d10ccd063726102f705b50f38380c71c77a4158",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "f60dc43a8c9e692b039a0187d578092a1bf4c22189d28087395cfb0daa222945",
+          "u_sequence_sha256": "e607bd612bb1c37e90d9182122576bd4db68874482618017231528ec493d6cd3",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "0e00076a3d5298447d8e9ea97767a23ffd770ee5935f936926807d783b4ed044"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 23,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 23,
+          "draw": 0,
+          "env_seed": 5023,
+          "stream_seed": 58,
+          "flow_seed": 58,
+          "initial_sha256": "470880ffafdb080ec4e6518579d3fe30048b79faf1957ae4497fb0ac3bf57ccf",
+          "goal_sha256": "22f5268ef0af2a740814547b1d27a986e18e1358c85f68d25a4a0ef0fbf12664",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "bad9d42f0ad4fc76841e657612d6bee4ae06dc6dd3ae9d8fa72c06840f9d4994",
+          "u_sequence_sha256": "6d6a5e4ffe9265e2920e51d5ee642d0bc17e3430aa9aad1b2c5fd960df4e0da6",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "34bdad5a25866c318cecba855be2941b013402d0dc80f2acd51d59bab0c2f4c9"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 24,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 24,
+          "draw": 0,
+          "env_seed": 5024,
+          "stream_seed": 59,
+          "flow_seed": 59,
+          "initial_sha256": "db39b7508a2f52db027e937286d997f97082ab2ff062fa96b6a923a7c702a957",
+          "goal_sha256": "c5814df359cb7d3f8b9a9b74ab4d66b3251075f497a6245b4a2646b534e8f21a",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "4bd11659630296f91e5692a8cf87f92faf664e15b62d4992db93df768fe16b47",
+          "u_sequence_sha256": "f6a59f03c2ac982454dc05fca0158d863a797236f038a2b9c51a53ddc72c24a4",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "1453c6b187300a0435557474dc37b31c24d8395173dde14001a2a0c296f31708"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 25,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 25,
+          "draw": 0,
+          "env_seed": 5025,
+          "stream_seed": 60,
+          "flow_seed": 60,
+          "initial_sha256": "f31648cc639f8c35a6de35d8e64a7018bcd0b7a51de470c74c86f1f6b6b2b46d",
+          "goal_sha256": "8cfe307641e371d65c0f808d00d1a34845db51b20560d16abdaec6f2db010a7b",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "c08cef3d946d598ea7a32bd73b3e1e0f700d7de8df237eb7ebd53bc2d20ce5a1",
+          "u_sequence_sha256": "71a8837283f1a800a64cd6a56358482424e3920a57496c33908d0b1dba420b5f",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "60e2a1a16811c6b1f589d7a8dcc68749f80762bcc7b54ec62df30c104ca8bbc8"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 26,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 26,
+          "draw": 0,
+          "env_seed": 5026,
+          "stream_seed": 61,
+          "flow_seed": 61,
+          "initial_sha256": "5cbd2b6cb2250e94c48a2e952e7461f35d27eea4aaf2710c36c3428d61eb5388",
+          "goal_sha256": "40669432dd90735dd69ec820754bc2f1685fc16326e531e27bb882cd366f5776",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "8c6a493d72891d601d71c06978dabb9a3b8fdddbf097a8b8e2f4fd660d426e65",
+          "u_sequence_sha256": "f92232ac81df9ba621814ae590291dca673954103a5b3c958384a2468ab838e9",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "c05a0a9e49032d5bac0ac1bc8a1f587cccb343774b31d0685577ccb676318a77"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 27,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 27,
+          "draw": 0,
+          "env_seed": 5027,
+          "stream_seed": 62,
+          "flow_seed": 62,
+          "initial_sha256": "709340c83190e55586bb4588aa305a1aa5d3cc7b68a7f52243334f8f2f0cdb9c",
+          "goal_sha256": "8eee5f1a6dda4c566f18071bbd667b713c56b29f73530d83bb06db9290839bf6",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "346ced748ffcbde220610d9c51e4bc4c6c5540c490c316674925fc2b8a7fe820",
+          "u_sequence_sha256": "0fcb499a5ba4d97d7ace1150ded4dede73f528853bdb66f014c70ac318c36f36",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "633d410e95c5ce30613a79337028829668b4fcf012eab790c4ce8c755a5c1ba6"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 28,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 28,
+          "draw": 0,
+          "env_seed": 5028,
+          "stream_seed": 63,
+          "flow_seed": 63,
+          "initial_sha256": "6a5be7a39ab732307eae5b60a5ceac73c0107e96b3fb301e1c88d76dbbf813b2",
+          "goal_sha256": "4174ce2b92ddca64dd92afbed85afafc0c276a4f418e2cdafb6bea1c310f2630",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "030d26df2668753be7ed9db1cf1e9828caa6d559da1dac31ce02c16f410130ae",
+          "u_sequence_sha256": "846e95d5a791c35ac6bd4243cabc419b0ca243369ebcd7af92842abcb8872339",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "f6a610fc69cf41c17f500ef1450e749cb1c9f59129efd0faab8eed093269764b"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 29,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 29,
+          "draw": 0,
+          "env_seed": 5029,
+          "stream_seed": 64,
+          "flow_seed": 64,
+          "initial_sha256": "2daa7bd1b953035c500165ec9bee9fe34b1d0f0642c0651074c5c5ddf0a02568",
+          "goal_sha256": "e02be8eb781ff4360373dc74ff186bb0b789012c2e018a50b4b6a66ff05c2937",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "377a712a44af01cfe6685a922918bbb1591e9c61969e1e125648a400428d0c15",
+          "u_sequence_sha256": "e278c58f84d71920cfe08399c1c5c8ec9745a08adbfd703fd380f16c3a315507",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "c6ab4539666b739b84ed08e17a7c3f685d8c65837cd9e11ec4c162239dd47253"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 30,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 30,
+          "draw": 0,
+          "env_seed": 5030,
+          "stream_seed": 65,
+          "flow_seed": 65,
+          "initial_sha256": "1f4015dac50bf08c860d892176b3550c6ba1d23b39fe7fc815bad81c65295fd5",
+          "goal_sha256": "30b73386db51d3baf91f3df7599109e580bf5fedc32557ea120cbae5033eb7ec",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "aaba858dfd22af6d85795cfba3c89c81d42fb95218db992a2b25c925cd4573e1",
+          "u_sequence_sha256": "b350407886bf29e5dbe86eb4627c680df47395d188e8c5fd323f4aa2c65207d5",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "e10ba8cfffb168a57aa94032f5ef1058c6dabc5da99ffac213f21c8cc7e394d9"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 31,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 31,
+          "draw": 0,
+          "env_seed": 5031,
+          "stream_seed": 66,
+          "flow_seed": 66,
+          "initial_sha256": "5a0ea718ec3439b44e4eb65679c51aaac63ff520a102cf9535c018fd52ee06c1",
+          "goal_sha256": "803a5dda70f941fe5feaefe04274b0d41c18b83a2d8e5e32b43e3808236cd519",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "e1f006041ae0d2cab1a55dc1e8616e5b7e98b2e04df459887cdcbc90ffc04495",
+          "u_sequence_sha256": "eafd72296733ec1a37a4ad384892b58cfe3c65c996cd7395db3b529b5c01617d",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "4c706adb403427baff1e5e4330518a6897bea5ad592de14255031422f0a76a94"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 32,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 32,
+          "draw": 0,
+          "env_seed": 5032,
+          "stream_seed": 67,
+          "flow_seed": 67,
+          "initial_sha256": "87f72a4109011e82dcc47185ffd152938e2a905622487543a9a69041ac86e734",
+          "goal_sha256": "6d712e119d4321d5134734a6aa334a02639186906c6d5b1d6a606e984c0aa43e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "88fa0f49b6cc3a647944a4bd5dd9271b66a5c869d9248ea68434f089cdbe09bf",
+          "u_sequence_sha256": "f3b50fb138beb55ef55afebf1fbd6c338f87fa766d1b97445985768b553b2fd7",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "936e7ce6bf79eafa8cfdddfa08925c2d987d3fc39d9acf5fc9f1d8a61d007c14"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 33,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 33,
+          "draw": 0,
+          "env_seed": 5033,
+          "stream_seed": 68,
+          "flow_seed": 68,
+          "initial_sha256": "9cdd56d083e2c9966d2884d95603831bca67f64e323eccdc31e9edbaa5ef55aa",
+          "goal_sha256": "a77d845634632f3837b5f667553258f0fa284e3fbafec084b20d8db8f896442c",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "56e65bece7389c89691df3d80459d5708ef117ba2c35f03b1ca566753933a7e1",
+          "u_sequence_sha256": "ccf0f440749e2762f5c1b997d94e92a72d78755c09766ee34da9ed511cde9ce0",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "e4b6cdb1ea72f02d7d69b3fcaf109f3d1850c5e42880346cf104a22732570ea9"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 34,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 34,
+          "draw": 0,
+          "env_seed": 5034,
+          "stream_seed": 69,
+          "flow_seed": 69,
+          "initial_sha256": "6c61ac7545012ff901ebabc1a8be519aaa6a35adacf836cd2eedd61393e8194a",
+          "goal_sha256": "291a25c12fb7dfce52987eeb9be6a4f03859c78fd89e0af4bf816f4be43e1375",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "0e2a41fbd4e76573c5e7701ae2c7d5d530e89778936aa0b8eadc494ccfc5b109",
+          "u_sequence_sha256": "ade5d98f9a9506bbba00f6febbe0e251ec0202204da1f2edf60308f801596bb3",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "8ecce9eb404ebfceb2d8ef7a36a1ee338e36b16f26ccec0f2d02a1f71ca5c105"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 35,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 35,
+          "draw": 0,
+          "env_seed": 5035,
+          "stream_seed": 70,
+          "flow_seed": 70,
+          "initial_sha256": "4bf89741882a44498690533d16d63023c96c4f8ec3f99a44dc81d99337d1fa68",
+          "goal_sha256": "d7287e2b1b1b73a7cae369f5c1486cf997ac17fcc905b97127605a7fb08c1403",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "2a12d9e84c3cf23026508d09bd81cc9d85889b7977fbe1a974b8fe738f013f38",
+          "u_sequence_sha256": "27e484446d0db69806a6b38e4064801367c051195c644d50dad1e284547cb4ca",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "beff2f6eed5365c27428f93a116e2e51cf6d54d815eefbe0ca34540f26fa1ce6"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 36,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 36,
+          "draw": 0,
+          "env_seed": 5036,
+          "stream_seed": 71,
+          "flow_seed": 71,
+          "initial_sha256": "36c6ef20416816eec387b9411f7e00493abb92f43526221ee7e724e8bfa73051",
+          "goal_sha256": "90b49f5ab17a9c6c9a6dfc0f36b82930dd77dc0c792337c1ae17a0bef44d2205",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "d75812f115028effa49b7131806c5ee6068985711d9f5ae44885015ec15f107a",
+          "u_sequence_sha256": "abdd5d5304f66881854f6103e0949aeb5768b16fc3d1a499e5bbd5cf3316c25d",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "cbe4a4c99aec50767697c4a87f764b6bdde684e9016a7f2d10ba9a70e56cf6a1"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 37,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 37,
+          "draw": 0,
+          "env_seed": 5037,
+          "stream_seed": 72,
+          "flow_seed": 72,
+          "initial_sha256": "75a5011cbc47660b0a062f4a981bca6905ffcac36592b34fc24d130a9512c2d0",
+          "goal_sha256": "e9162272084c0198828a70d72ba53aedb00bdf813a4ceb2dd4e4a5ec8321b7f5",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "abe8599659d8186e4fd3de5562b1876b4e67d516adb4ae1efaf6599b398a41f1",
+          "u_sequence_sha256": "4efe22b0b89761ea1ab6902f5a4b3e2f1946be26def3c650d2e4a02f024439b5",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "0f8fbcb7d4c982f354ef85dbbbcbc5962b4190ec33b442f3458adebdbc28c670"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 38,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 38,
+          "draw": 0,
+          "env_seed": 5038,
+          "stream_seed": 73,
+          "flow_seed": 73,
+          "initial_sha256": "e893703af5c74a6ba9eecb1c1df9c4810eb2f1b5f9c6d01b621ce0172fce2bc8",
+          "goal_sha256": "9ca438fc2f286c36e1fedd0fed6876299d9a9d8db8ae99b38bc1c1f2d1180f37",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "1856626fd5b039922c72185511e5c170d82264dfb07f148f1c37196ca3f5888a",
+          "u_sequence_sha256": "8a231b179716a18baa82af54ffbcf391eac24d322c6162b79cc63fe9f122189c",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "32bb263b6bb6612582efffee6a780636b1ffa780f3623f06b2196dff8e1da0aa"
+        }
+      ]
+    },
+    {
+      "task": 5,
+      "episode": 39,
+      "success_bits": [
+        0
+      ],
+      "draws": [
+        {
+          "task": 5,
+          "episode": 39,
+          "draw": 0,
+          "env_seed": 5039,
+          "stream_seed": 74,
+          "flow_seed": 74,
+          "initial_sha256": "72d398048db2de220c6bcd068060ae6dd6f9304df4732bc004a515522310c4b5",
+          "goal_sha256": "a5457c730e49bdfadf5db591473a790f116e57f2be276875516548b8bd5e255e",
+          "success": false,
+          "steps": 1000,
+          "first_u_sha256": "78d5c17a125166520814d3a5995f8479f6c1af37e917dca86d3dc8aa3e4e1d3a",
+          "u_sequence_sha256": "95cc53521dfa6a89f9ad8c649125dd24aaa566a1fcb5ecaa34b63a2b65daca15",
+          "u_calls": 250,
+          "u_samples": 250,
+          "trajectory_sha256": "362ce13df60cb81986bd3b405d0b7f424b6ac0cf917152f94ca38a330d3efeea"
+        }
+      ]
+    }
+  ],
+  "oracle_at_k": {
+    "1": 0.33
+  },
+  "pooled_oracle": 0.33,
+  "per_draw_quality": [
+    0.33
+  ],
+  "negative_mutant_passed": false,
+  "n_oracle_success": 66,
+  "n_tasks": 200,
+  "n_draws": 200,
+  "n_success": 66
+}

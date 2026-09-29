@@ -1,0 +1,4 @@
+PASS objective: C1 mixed dtype/autocast/nonfinite; target/noise/R0/1/3/full BPTT/cond
+PASS composition: total, anchor-gradient attribution, clean/sample separation, R2
+PASS F5 real RefineOperator R1 stale EMA target -> nonzero student gradient; teacher detached
+NOTE synchronized teacher/student may have zero consistency gradient; quality must teach first

@@ -1,0 +1,7 @@
+CAUGHT total-missing-quality: total includes all weighted terms
+CAUGHT wrong-u_target: quality recurrence/target/noise/rounds
+CAUGHT ignore-rounds: quality recurrence/target/noise/rounds
+CAUGHT zero-noise: quality recurrence/target/noise/rounds
+CAUGHT truncated-BPTT: full BPTT gradient
+CAUGHT detach-cond: cond gradient
+PASS 6/6 mutation kill matrix

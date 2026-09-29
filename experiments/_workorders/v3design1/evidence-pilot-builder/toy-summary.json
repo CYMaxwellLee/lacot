@@ -1,0 +1,93 @@
+{
+  "scope": "CPU toy wiring only",
+  "domain": "pointmaze",
+  "seed": 0,
+  "split_hash": "e88f477a9b9825448f0a417b400b87c19fdd5c8e80d157757287b8265b58624e",
+  "dataset_hash": "f728f62d3dd7ccdcc536814be5cbe8e400240b37654a1060ddc8e5ebafdde5fc",
+  "steps_per_model": 200,
+  "wiring": {
+    "action_to_quality_backward": true,
+    "teachers_frozen": true,
+    "same_plan_backward": true,
+    "ant_refine_rejected": null
+  },
+  "qualification_blocks": {
+    "4": [
+      "toy records cannot qualify production",
+      "generated validity missing/below threshold",
+      "generated nominal_plus_alternative_coverage missing/below threshold",
+      "A action NMSE >.1"
+    ],
+    "16": [
+      "toy records cannot qualify production",
+      "generated validity missing/below threshold",
+      "generated nominal_plus_alternative_coverage missing/below threshold",
+      "A action NMSE >.1"
+    ],
+    "32": [
+      "toy records cannot qualify production",
+      "generated validity missing/below threshold",
+      "generated nominal_plus_alternative_coverage missing/below threshold",
+      "A action NMSE >.1"
+    ]
+  },
+  "world_measurements": {
+    "4": {
+      "xy": {
+        "world_nmse": 0.0025956600438803434,
+        "obs_only_nmse": 0.5614672303199768,
+        "paired_improvement_ci95": [
+          0.47742448190889425,
+          0.6416404167459243
+        ]
+      },
+      "velocity": {
+        "world_nmse": 0.00546590331941843,
+        "obs_only_nmse": 0.3610583543777466,
+        "paired_improvement_ci95": [
+          0.311865993708993,
+          0.39761364235480623
+        ]
+      }
+    },
+    "16": {
+      "xy": {
+        "world_nmse": 0.0032869945280253887,
+        "obs_only_nmse": 0.9430473446846008,
+        "paired_improvement_ci95": [
+          0.7161045758753563,
+          1.187279575337289
+        ]
+      },
+      "velocity": {
+        "world_nmse": 0.0077631110325455666,
+        "obs_only_nmse": 0.5981458425521851,
+        "paired_improvement_ci95": [
+          0.458354224566596,
+          0.7259482734672951
+        ]
+      }
+    },
+    "32": {
+      "xy": {
+        "world_nmse": 0.0034793675877153873,
+        "obs_only_nmse": 1.0882744789123535,
+        "paired_improvement_ci95": [
+          0.7796273800248609,
+          1.4894714107145282
+        ]
+      },
+      "velocity": {
+        "world_nmse": 0.008271358907222748,
+        "obs_only_nmse": 0.6972488164901733,
+        "paired_improvement_ci95": [
+          0.5104961604975603,
+          0.8985460265199927
+        ]
+      }
+    }
+  },
+  "teacher_fingerprint": "682eede7b068b6bac7650e1259ddac7060661dbe6a6526bba99386e4335dd597",
+  "controller_action_nmse": 0.8197417259216309,
+  "checkpoint_sha256": "df6608c0f2c70540766f781e617f168fb5ea68cf56a2f2cb57aa4d97416d04a9"
+}

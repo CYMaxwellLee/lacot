@@ -1,0 +1,21 @@
+EXAM_SELF_CHECK (fixtures only, no worker completion)
+PASS objective: C1 mixed dtype/autocast/nonfinite; target/noise/R0/1/3/full BPTT/cond
+PASS independent mod-objective: identical contract, /tmp relocation, stub fails closed
+EXAM_SELF_CHECK (fixtures only, no worker completion)
+PASS composition: total, anchor-gradient attribution, clean/sample separation, R2
+PASS independent mod-actor: identical contract, /tmp relocation, stub fails closed
+EXAM_SELF_CHECK (fixtures only, no worker completion)
+PASS oracle: same-plan labels, frozen differentiable decoder, no-grad exposure gauge
+PASS independent mod-oracle: identical contract, /tmp relocation, stub fails closed
+EXAM_SELF_CHECK (fixtures only, no worker completion)
+PASS acceptance schema: identity, bad scaling, mode collapse, exposure failure rejected
+CAUGHT total-missing-quality: total includes all weighted terms
+CAUGHT wrong-u_target: quality recurrence/target/noise/rounds
+CAUGHT ignore-rounds: quality recurrence/target/noise/rounds
+CAUGHT zero-noise: quality recurrence/target/noise/rounds
+CAUGHT truncated-BPTT: full BPTT gradient
+CAUGHT detach-cond: cond gradient
+PASS 6/6 mutation kill matrix
+PASS independent mod-verification: identical contract, /tmp relocation, stub fails closed
+PASS wiring M4 oracle -> M1 objective -> M2 composition -> M3 observed gauge
+PASS smoke_wiring: four zero-wait exams; reference wiring only, not production repair

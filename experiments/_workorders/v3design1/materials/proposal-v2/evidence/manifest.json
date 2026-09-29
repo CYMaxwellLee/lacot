@@ -1,0 +1,242 @@
+{
+  "time_utc": "2026-09-27T06:13:28.922655+00:00",
+  "python": "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+  "device": "CPU",
+  "gpu_used": false,
+  "production_training": false,
+  "head": "f496406ec6be113b05eb23e09a731e5564de91aa",
+  "materials_before": {
+    "experiments/scratch_lacot_rollout.py": "21f4cf306a2987241114fe41339eb830f88249bf3fa565dab35fe69016fa6705",
+    "lacot/model.py": "e08ac760e018742a632c175fef98083f1040b59e9317a121e85e17db3490bfdd",
+    "lacot/nf_head.py": "9cf255a31a8c274306c6730e768eaa13fad38b6f28fbbc8e07535908732255da",
+    "lacot/traj_decoder.py": "f370f818b1bf735a86a19e1eff5629796a9832bad1ace2c3e33aeb3ebc4d6855",
+    "lacot/refine_grad.py": "c6a4790878dfcac7cd6176f28cc907ff35dc09555a19a5bb3b010efb4ae28a45",
+    "tests_repair/test_model_zero_rounds.py": "43d8831192b77a2c2fbab041e308a46dccb2b5dc7895f5fbe7ef3a717ed868e3",
+    "docs/CANON-u-semantics.md": "cf9a56d1baf1c7c27fc982f33b0dc7e3fbafc339e11e6424d224b8f78785c32b",
+    "docs/LaCoT-NF-latent-planning-design.md": "b4021d7376a87170d05dc364f1eef0852fa1f3d08049e52ad79fa5dc2883b7c1"
+  },
+  "materials_after": {
+    "experiments/scratch_lacot_rollout.py": "21f4cf306a2987241114fe41339eb830f88249bf3fa565dab35fe69016fa6705",
+    "lacot/model.py": "e08ac760e018742a632c175fef98083f1040b59e9317a121e85e17db3490bfdd",
+    "lacot/nf_head.py": "9cf255a31a8c274306c6730e768eaa13fad38b6f28fbbc8e07535908732255da",
+    "lacot/traj_decoder.py": "f370f818b1bf735a86a19e1eff5629796a9832bad1ace2c3e33aeb3ebc4d6855",
+    "lacot/refine_grad.py": "c6a4790878dfcac7cd6176f28cc907ff35dc09555a19a5bb3b010efb4ae28a45",
+    "tests_repair/test_model_zero_rounds.py": "43d8831192b77a2c2fbab041e308a46dccb2b5dc7895f5fbe7ef3a717ed868e3",
+    "docs/CANON-u-semantics.md": "cf9a56d1baf1c7c27fc982f33b0dc7e3fbafc339e11e6424d224b8f78785c32b",
+    "docs/LaCoT-NF-latent-planning-design.md": "b4021d7376a87170d05dc364f1eef0852fa1f3d08049e52ad79fa5dc2883b7c1"
+  },
+  "source_unchanged": true,
+  "records": [
+    {
+      "name": "smoke_wiring",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "integration/smoke_wiring.py"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 7.664760245999787
+    },
+    {
+      "name": "current_mainline",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "integration/integration_test.py"
+      ],
+      "exit": 1,
+      "expected": 1,
+      "seconds": 2.86278303200379
+    },
+    {
+      "name": "proposal_reference",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "integration/integration_test.py",
+        "--reference"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 3.369834885990713
+    },
+    {
+      "name": "b_consistency",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "integration/consistency_test.py"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 0.8017047040048055
+    },
+    {
+      "name": "six_mutations",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "integration/mutations.py"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 0.7891873090411536
+    },
+    {
+      "name": "b1_baselines",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "integration/b1_baselines.py"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 1.9775114780059084
+    },
+    {
+      "name": "r2_zero_rounds",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "/home/cymaxwelllee/Projects/lacot/tests_repair/test_model_zero_rounds.py"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 0.7247170170303434
+    },
+    {
+      "name": "real_operator_diagnostic",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "integration/real_operator_training.py"
+      ],
+      "exit": 1,
+      "expected": 1,
+      "seconds": 3.5991076420177706
+    },
+    {
+      "name": "m3_independent",
+      "command": [
+        "/home/cymaxwelllee/Projects/lacot/.venv/bin/python3",
+        "-B",
+        "mod-verification/integration/integration_test.py",
+        "--reference"
+      ],
+      "exit": 0,
+      "expected": 0,
+      "seconds": 3.364632129028905
+    }
+  ],
+  "training": {
+    "refiner": "24 hidden + explicit toy decoder sign feedback",
+    "flow": "frozen real Flow 1 block hidden8",
+    "final_steps_per_seed": 600,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "real_operator_diagnostic_steps_per_seed": 700,
+    "raw_feature_failed_attempts": [
+      "try-reference.txt",
+      "try-reference-600.txt"
+    ]
+  },
+  "proposal_code_sha256": {
+    "mod-actor/solution.py": "92f4d1e146744dd67014c76d19373ddc55e3e5abc3e02f04419ac46877caedd8",
+    "mod-actor/neighbors.py": "825d69954b0fe2c6f86be79c741de5604dab2e06589738a36789f908baae7022",
+    "mod-actor/tests.py": "7aa4c9652db28750e3c6f0921997f128c537e8fa5057b62cd021fd50dfd0d785",
+    "mod-actor/contracts/oracle_fake.py": "1ab728b4e2077c207869af54a57c325bc1404df61d814d72fb3bfb84f85e4961",
+    "mod-actor/contracts/metrics.py": "fad0d1c6c2725a87fd503bae00b68cb33305630e8aa9f5c0d10492c1c55d1743",
+    "mod-actor/contracts/acceptance.py": "4e037e9e52d77c61c0a31a8fc2efc9a7e87f5581fe3ce72fd9a34daa63df4643",
+    "mod-actor/contracts/conformance.py": "f2e180cba759f9ec4ac040632dbd08732955931cf894cdbb40fd3658cfeda359",
+    "mod-actor/contracts/api.py": "f257197b535a8035cd350ee2599a0b24693d9e2af2581643de333fee7205714f",
+    "mod-actor/contracts/fakes.py": "07b3c4df89e5d1a779c2f3d8ae6530eef929f35a3d26e3fbf73386be6ece19a8",
+    "contracts/oracle_fake.py": "1ab728b4e2077c207869af54a57c325bc1404df61d814d72fb3bfb84f85e4961",
+    "contracts/metrics.py": "fad0d1c6c2725a87fd503bae00b68cb33305630e8aa9f5c0d10492c1c55d1743",
+    "contracts/acceptance.py": "4e037e9e52d77c61c0a31a8fc2efc9a7e87f5581fe3ce72fd9a34daa63df4643",
+    "contracts/conformance.py": "f2e180cba759f9ec4ac040632dbd08732955931cf894cdbb40fd3658cfeda359",
+    "contracts/api.py": "f257197b535a8035cd350ee2599a0b24693d9e2af2581643de333fee7205714f",
+    "contracts/fakes.py": "07b3c4df89e5d1a779c2f3d8ae6530eef929f35a3d26e3fbf73386be6ece19a8",
+    "mod-verification/solution.py": "9f281a9032123193ede87357fa85ed112377b6653401e1ecfa57ec5a329d120d",
+    "mod-verification/neighbors.py": "825d69954b0fe2c6f86be79c741de5604dab2e06589738a36789f908baae7022",
+    "mod-verification/tests.py": "699704193406fb980ca7dc3de93b484c1814c51bfb75ad61fbdaaf0c1d4af6a3",
+    "mod-verification/contracts/oracle_fake.py": "1ab728b4e2077c207869af54a57c325bc1404df61d814d72fb3bfb84f85e4961",
+    "mod-verification/contracts/metrics.py": "fad0d1c6c2725a87fd503bae00b68cb33305630e8aa9f5c0d10492c1c55d1743",
+    "mod-verification/contracts/acceptance.py": "4e037e9e52d77c61c0a31a8fc2efc9a7e87f5581fe3ce72fd9a34daa63df4643",
+    "mod-verification/contracts/conformance.py": "f2e180cba759f9ec4ac040632dbd08732955931cf894cdbb40fd3658cfeda359",
+    "mod-verification/contracts/api.py": "f257197b535a8035cd350ee2599a0b24693d9e2af2581643de333fee7205714f",
+    "mod-verification/contracts/fakes.py": "07b3c4df89e5d1a779c2f3d8ae6530eef929f35a3d26e3fbf73386be6ece19a8",
+    "mod-verification/integration/consistency_test.py": "29bd7c06fe0a1adcf12c312fb04157bb931368b87b698d04f5054153d7b7bcdb",
+    "mod-verification/integration/integration_test.py": "a73b04c0575ec9853b3a356af08c2fb1a230a9702cb266dffc1cfb63b9c6d2a0",
+    "mod-verification/integration/toy.py": "c09a6d4bffc0202d56e6b3c6cc42bfee053eea1322d9aafd7361698f33fb44f5",
+    "mod-verification/integration/b1_baselines.py": "9ee1c8d0a5e1f18a9813073db2042076b47ecf6b633271a79a0a4281a07e504a",
+    "mod-verification/integration/current_inline.py": "7c1156c6e591971b7a77666e363f460196b93e8ca2a61a8e05a239e74585a5d0",
+    "mod-verification/integration/real_operator_training.py": "519573e2f03221529efdb6bd887105104390ac10127dcd1e124c6b27a4fca4df",
+    "mod-verification/integration/mutations.py": "555eb2d7bcd9f20399b0f1862a52be2bfaff3f52b6d064babb74d829624841c5",
+    "mod-oracle/solution.py": "8060a1dc19882e16170a22681bfca06b31ba597f3f05f98edb9df6f189509564",
+    "mod-oracle/neighbors.py": "825d69954b0fe2c6f86be79c741de5604dab2e06589738a36789f908baae7022",
+    "mod-oracle/tests.py": "37824298439aa9ad84ff4ca9514036995193b0c764f9c92e0a927e1295726474",
+    "mod-oracle/contracts/oracle_fake.py": "1ab728b4e2077c207869af54a57c325bc1404df61d814d72fb3bfb84f85e4961",
+    "mod-oracle/contracts/metrics.py": "fad0d1c6c2725a87fd503bae00b68cb33305630e8aa9f5c0d10492c1c55d1743",
+    "mod-oracle/contracts/acceptance.py": "4e037e9e52d77c61c0a31a8fc2efc9a7e87f5581fe3ce72fd9a34daa63df4643",
+    "mod-oracle/contracts/conformance.py": "f2e180cba759f9ec4ac040632dbd08732955931cf894cdbb40fd3658cfeda359",
+    "mod-oracle/contracts/api.py": "f257197b535a8035cd350ee2599a0b24693d9e2af2581643de333fee7205714f",
+    "mod-oracle/contracts/fakes.py": "07b3c4df89e5d1a779c2f3d8ae6530eef929f35a3d26e3fbf73386be6ece19a8",
+    "mod-objective/solution.py": "9c8a15b4148cc995298186e32bb58c90cd3e91706955865d3fac953f5e91cc2b",
+    "mod-objective/neighbors.py": "825d69954b0fe2c6f86be79c741de5604dab2e06589738a36789f908baae7022",
+    "mod-objective/tests.py": "42a22d6ffbc23862e3f511e67e50ac6567d780dbfbb9e25fc125b2161a15a09f",
+    "mod-objective/contracts/oracle_fake.py": "1ab728b4e2077c207869af54a57c325bc1404df61d814d72fb3bfb84f85e4961",
+    "mod-objective/contracts/metrics.py": "fad0d1c6c2725a87fd503bae00b68cb33305630e8aa9f5c0d10492c1c55d1743",
+    "mod-objective/contracts/acceptance.py": "4e037e9e52d77c61c0a31a8fc2efc9a7e87f5581fe3ce72fd9a34daa63df4643",
+    "mod-objective/contracts/conformance.py": "f2e180cba759f9ec4ac040632dbd08732955931cf894cdbb40fd3658cfeda359",
+    "mod-objective/contracts/api.py": "f257197b535a8035cd350ee2599a0b24693d9e2af2581643de333fee7205714f",
+    "mod-objective/contracts/fakes.py": "07b3c4df89e5d1a779c2f3d8ae6530eef929f35a3d26e3fbf73386be6ece19a8",
+    "integration/consistency_test.py": "29bd7c06fe0a1adcf12c312fb04157bb931368b87b698d04f5054153d7b7bcdb",
+    "integration/integration_test.py": "a73b04c0575ec9853b3a356af08c2fb1a230a9702cb266dffc1cfb63b9c6d2a0",
+    "integration/toy.py": "c09a6d4bffc0202d56e6b3c6cc42bfee053eea1322d9aafd7361698f33fb44f5",
+    "integration/refresh_exam_snapshots.py": "2a336d1e787a7bf738fcf64f47416123ba25a9671f4eb80b9e21b3fad38276e2",
+    "integration/b1_baselines.py": "9ee1c8d0a5e1f18a9813073db2042076b47ecf6b633271a79a0a4281a07e504a",
+    "integration/run_evidence.py": "bf0f93102b75876af7969161d1f64ec1340f5984e4de4e38d4e1d71dd8707a26",
+    "integration/current_inline.py": "7c1156c6e591971b7a77666e363f460196b93e8ca2a61a8e05a239e74585a5d0",
+    "integration/real_operator_training.py": "519573e2f03221529efdb6bd887105104390ac10127dcd1e124c6b27a4fca4df",
+    "integration/mutations.py": "555eb2d7bcd9f20399b0f1862a52be2bfaff3f52b6d064babb74d829624841c5",
+    "integration/smoke_wiring.py": "e8e344fbb47a8e2c619676770feaf5aa5265d4acfab5fee46092958bc25da175"
+  },
+  "raw_output_sha256": {
+    "smoke_wiring.exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "b1_baselines.stdout.txt": "1488e8274386409687248111c8af015c6b70c99b289bbe6fef79210708fc43ae",
+    "m3_independent.stdout.txt": "a9353e601f5c3f7519f3c89bd755f3be227c494c58e59e8bda6dea02ffc76acc",
+    "smoke_wiring.stdout.txt": "74bffe88ad5cf7c71040602e1cc44147b295f81e7431424d7a2eaec521805a26",
+    "try-reference.txt": "bb5deddf9c697ab2697d8ad08289e6bd9bf261ad5240764d144f1695ec283488",
+    "real_operator_diagnostic.exit.txt": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "try-smoke.txt": "74bffe88ad5cf7c71040602e1cc44147b295f81e7431424d7a2eaec521805a26",
+    "r2_zero_rounds.stdout.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "r2_zero_rounds.stderr.txt": "d10ffbd9f0faa72cd6837063279524e199b59fbc3d035051302a1e8dbc4b36ad",
+    "current_mainline.exit.txt": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+    "proposal_reference.exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "current_mainline.stderr.txt": "d43d63607bd4b5ef0fb601699965df83e065d81dddffe7d5d74f131607afc7b5",
+    "b_consistency.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "proposal_reference.stdout.txt": "a9353e601f5c3f7519f3c89bd755f3be227c494c58e59e8bda6dea02ffc76acc",
+    "current_mainline.stdout.txt": "dadf85c7088222cf87d8ffc127f3779c99635e364d2fa39a40840228ec48f4df",
+    "r2_zero_rounds.exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "try-reference-600.txt": "2d87c3b609e0db4b3ec804d13a4cbdf7b31fd59146169188ccd0610c590b2ea5",
+    "try-real-operator.txt": "b27b9e460c7cc1d096477f0c26b6ae256d74e585586e23c327276772b0c7a2f5",
+    "b1_baselines.stderr.txt": "5ebd22726e75b47d3400ff9c5402f3d461e3aa899303fcf39e5b01fbc966ff18",
+    "b1_baselines.exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "m3_independent.stderr.txt": "d43d63607bd4b5ef0fb601699965df83e065d81dddffe7d5d74f131607afc7b5",
+    "smoke_wiring.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "six_mutations.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "six_mutations.stdout.txt": "4cb993fefd79e178f3f699aabf4e39df9969acdccd3af0d3d815d24d1ad5b5f0",
+    "real_operator_diagnostic.stdout.txt": "d97bf719afa50de92b36861e8138992760c3140da8da2861d315d1a18e401da7",
+    "six_mutations.exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "m3_independent.exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "b_consistency.exit.txt": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "try-feedback.txt": "a5c6a0f20218fd1ea7e088443313bc10a448348b6efc76a65d4911a9a65bc8ce",
+    "proposal_reference.stderr.txt": "d43d63607bd4b5ef0fb601699965df83e065d81dddffe7d5d74f131607afc7b5",
+    "b_consistency.stdout.txt": "b4802bea0362ff2e5371d0adf899f4837661e4b4b6323cde59f5b95f4d81a0c6",
+    "real_operator_diagnostic.stderr.txt": "d43d63607bd4b5ef0fb601699965df83e065d81dddffe7d5d74f131607afc7b5"
+  }
+}

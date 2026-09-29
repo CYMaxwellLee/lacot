@@ -1,0 +1,116 @@
+**The strongest evidence supports training on sampler-generated inputs and the refiner’s own subsequent iterates. It does not establish that learned refinement universally beats gradient descent or selection.** Your coverage failure is usually called **covariate shift / train–test distribution mismatch**; when iterative models consume their own imperfect outputs, **exposure bias** and **compounding errors** are more specific terms. The independently paired action loss is a separate target-coupling problem. [DAgger](https://proceedings.mlr.press/v15/ross11a/ross11a.pdf), [Input Perturbation](https://arxiv.org/html/2301.11706)
+
+Below, comparisons involving one-step distillation are explicitly distinguished from iterative correction. Your approximately \(10^{-6}\) coverage estimate is treated as supplied context.
+
+1. **WHAT — FQL beats best-of-N on average, but loses badly on some OGBench mazes.**  
+   Across 50 state-based OGBench tasks, mean success is **44% FQL versus 30% IFQL rejection sampling and 29% FBRAC**. However, on `humanoidmaze-medium…task1`, IFQL achieves **69±19% versus FQL’s 19±12%**. Results use eight seeds; ± denotes standard deviation.
+
+   **HOW THEY DO IT**  
+   Train a behavioral flow using dataset state–action pairs, Gaussian noise, and uniformly sampled interpolation time.  
+   For dataset state \(s\), draw \(z\sim\mathcal N(0,I)\); train a separate actor with \(-Q(s,\mu_\omega(s,z))+\alpha\|\mu_\omega(s,z)-\mu_\theta(s,z)\|^2\). Teacher and student share **the same noise draw**.  
+   IFQL selects the highest-Q flow sample, tuning \(N\in\{32,64,128\}\); FBRAC differentiates through flow generation during training.
+
+   **MAPS-TO** — Strong support for coupled targets and value-driven improvement. FQL is a one-step actor, not an iterative plan corrector. FBRAC is also **not** test-time gradient refinement. The task-level reversal makes best-of-N an essential baseline.
+
+   **SOURCE** — [Flow Q-Learning, 2025; Fig. 5, Tables 3/6, Algorithm 1](https://arxiv.org/html/2502.02538).
+
+2. **WHAT — Learned MPC updates help under tight sampling budgets; sampling more can erase the advantage.**  
+   Franka Reacher success: **100% learned versus 63.33% MPPI at 16 samples**; MPPI reaches **100% at 64 samples**. Franka Obstacles: **66.67% versus 33.33% at 32 samples**, but both reach **80% at 512**. Each comparison uses 30 fixed test scenarios.
+
+   **HOW THEY DO IT**  
+   Bootstrap with a high-sample MPPI expert, then collect rollouts mixing expert and learner control with expert probability \(\beta_k=p^k\).  
+   At each visited state, sample trajectories from the current warm-started control distribution. The expert sees \(N\) samples; the learner sees an \(M\)-sample subset of those same samples.  
+   Aggregate inputs—current distribution parameters and sample costs—with the expert’s updated distribution parameters as corrective targets.
+
+   **MAPS-TO** — Probably the closest operational precedent: label corrections **at learner-generated optimizer inputs**. Their preliminary expert-only behavioral cloning failed from covariate shift. Gains concern sample efficiency, not a universally better final solution.
+
+   **SOURCE** — [Learning to Optimize in Model Predictive Control, 2022; Algorithms 1–2, Table I](https://arxiv.org/html/2212.02603).
+
+3. **WHAT — A learned iterative optimizer reaches comparable value objectives in over 10× fewer iterations than Adam or CEM.**  
+   IAPO evaluates 100 states per seed/environment from MuJoCo experiments using five training seeds. Comparisons start from identical initialization; gradients use 10 action samples, while CEM draws 100 and retains 10. This is **estimated-objective optimization efficiency**, not a 10× return improvement.
+
+   **HOW THEY DO IT**  
+   Sample states from an off-policy replay buffer; initialize Gaussian action-distribution parameters with \(\mu=0,\sigma=1\).  
+   Run five learned gated updates receiving the state, current distribution parameters, and gradients of the entropy-regularized Q objective.  
+   Train the optimizer through the objective evaluated on its own generated action distributions; there are no independently assigned demonstration-action targets.
+
+   **MAPS-TO** — Supports learning an update rule over actual optimization iterates, potentially with value gradients as inputs. It still requires gradients during deployment. The paper warns that stronger optimization increases value-overestimation exploitation and does not always reach the asymptotically best estimate.
+
+   **SOURCE** — [Iterative Amortized Policy Optimization, NeurIPS 2021; §3, Appendix A.4/B.4](https://arxiv.org/html/2010.10670).
+
+4. **WHAT — Latent-plan refinement can outperform search, yet fail when run beyond its trained depth.**  
+   LePlanner’s paired 50-episode PushT ablation reports **94% versus CEM’s 34%** when replanning every block; executing all five blocks gives **88% versus CEM’s 90%**. Its depth diagnostic reports predicted cost improving through iteration 5, then worsening from iteration 6.
+
+   **HOW THEY DO IT**  
+   Sample offline observation histories and hindsight goals from the same trajectory, with goal offset \(q\in\{1,\ldots,5\}\).  
+   Generate initial plan tokens from learned queries; repeatedly decode actions, roll them through a frozen differentiable world model, and feed predicted consequences back into the refiner.  
+   Supervise every generated iterate with goal-arrival cost at offset \(q\), a subsequent hold cost, and a behavior-support penalty.
+
+   **MAPS-TO** — Direct support for training on self-generated plans throughout refinement. Also a negative result: weight sharing does not guarantee convergence or useful additional iterations. The search comparison depends strongly on execution horizon; this is a September 2026 preprint with small evaluation counts.
+
+   **SOURCE** — [LePlanner, arXiv:2609.13845; §3, Appendix C, Table 8](https://arxiv.org/html/2609.13845).
+
+5. **WHAT — A single learned generation step can match many learned denoising steps.**  
+   On visual Robomimic `Square-ph`, OneDP-S achieves **92.6±1.8%** success with one network evaluation versus **92.6±2.3%** for 100-step DDPM. On `ToolHang-ph`, results are **85.0±3.3% versus 82.2±1.6%**. These are peak-checkpoint results over five training runs, each evaluated on 100 initializations.
+
+   **HOW THEY DO IT**  
+   Condition on demonstration observations, draw Gaussian noise, and generate actions with the **current student**.  
+   Add diffusion noise to those generated actions; an auxiliary denoiser learns the current student distribution’s score.  
+   Update the student using the difference between student and frozen-teacher scores, minimizing reverse KL across noise levels. DDPM distillation samples timesteps 2–95.
+
+   **MAPS-TO** — A useful construction for matching the generator’s actual output distribution. The matching result undermines the assumption that repeated correction is necessary: improvement may be amortized into one pass. This is behavioral-policy distillation, not return-guided latent-plan repair.
+
+   **SOURCE** — [One-Step Diffusion Policy, 2024/2025; Algorithm 1, Table 1, §3.1](https://arxiv.org/html/2410.21257).
+
+6. **WHAT — Learned energy descent works on OGBench, but its headline result combines refinement with substantial candidate selection.**  
+   PaD reports **95±2% versus GCIQL’s 68±6%** on `cube-single-play`, averaged across five goals and eight seeds. PaD uses 20 episodes per goal per seed; baseline numbers come from the different, full OGBench evaluation protocol.
+
+   **HOW THEY DO IT**  
+   Encode hindsight-relabeled trajectory windows; initialize future latents as \(\sqrt{\beta}z_{\rm data}+\sqrt{1-\beta}\epsilon\), with \(\beta\sim U(0,1)\) and Gaussian \(\epsilon\).  
+   Run energy-gradient descent followed by a learned projection; apply clean-latent reconstruction loss after every update and stop gradients between updates.  
+   Defaults use two refinement steps, **768 temporal hypotheses**, and a top-five candidate set.
+
+   **MAPS-TO** — Broad corruption plus training on subsequent generated iterates is closer to deployment than a tiny noise band. However, the reported comparison does **not isolate refinement from sampling/selection**, nor compare a direct refiner against energy descent at matched compute.
+
+   **SOURCE** — [Planning as Descent, arXiv:2512.17846; Algorithm 1, §5, Table 1](https://arxiv.org/html/2512.17846).
+
+7. **WHAT — Simple sampler changes can explain most of an apparent refinement improvement.**  
+   On Adroit Hammer with two denoising steps, reported success is **0.00 vanilla DDPM → 0.87 adapted schedule → 0.98 schedule plus reduced noise → 1.00 population selection**. Each configuration uses 100 evaluation seeds. For Robomimic, the authors explicitly report that population selection mostly fails to improve significantly over the adapted schedule.
+
+   **HOW THEY DO IT**  
+   Train ordinary diffusion policies on demonstration observation/action windows, with Gaussian-corrupted actions and noise-prediction targets.  
+   Keep the checkpoint fixed across DDPM, DDIM, and Genetic Diffusion Policy; alter inference schedule and injected-noise scale.  
+   The population method scores partially denoised candidates, resamples half with fitness-weighted multinomial sampling, duplicates survivors, and continues denoising.
+
+   **MAPS-TO** — Requires no new corrector training. It argues for checking the sampler and selection baseline before attributing gains to a learned repair mechanism. Population size consumes additional batch compute; two sequential evaluations do not mean two single-candidate evaluations.
+
+   **SOURCE** — [Two-Steps Diffusion Policy via Genetic Denoising, 2025; Tables 1–3, §3–4](https://arxiv.org/html/2510.21991).
+
+8. **WHAT — DAgger formalizes the coverage failure and its fix; the quantitative result is theoretical.**  
+   Expert-distribution supervised learning can incur **\(O(T^2\epsilon)\)** task-cost degradation. With error measured under the learner’s own visited-state distribution, the paper bounds degradation by **\(uT\epsilon\)**, where \(u\) bounds the cost of an incorrect action followed by expert recovery. Linear scaling requires bounded \(u\).
+
+   **HOW THEY DO IT**  
+   Roll out the current learner, optionally mixed with the expert according to a decaying schedule.  
+   Query the expert for the correct action **at every visited learner state**, aggregate those labeled inputs with previous rounds, and retrain.  
+   Repeat as the learner changes, rather than relying on a fixed expert-state dataset.
+
+   **MAPS-TO** — Treat \((\text{context},z_k,k)\) as the corrector’s state: start from real flow samples, unroll current refinement, and query a stronger optimizer at those exact latents. This is a proposed adaptation; offline latent rollouts address corrector-input shift, while environment-state shift remains separate.
+
+   **SOURCE** — [Ross, Gordon & Bagnell, DAgger, AISTATS 2011; Theorem 2.2, Algorithm 3.1](https://proceedings.mlr.press/v15/ross11a/ross11a.pdf).
+
+9. **WHAT — Input perturbation can mitigate exposure bias, but supports only an approximate error model.**  
+   For unconditional CIFAR-10 generation with 1,000 sampling steps, ADM’s **FID 2.99 falls to 2.76** with input perturbation. This is image-generation evidence, not planning success.
+
+   **HOW THEY DO IT**  
+   Sample clean data \(x_0\), uniform diffusion timestep \(t\), and independent Gaussian \(\epsilon,\xi\).  
+   Feed \(y_t=\sqrt{\bar\alpha_t}x_0+\sqrt{1-\bar\alpha_t}(\epsilon+0.1\xi)\), but retain **\(\epsilon\)** as the regression target.  
+   The extra perturbation appears only in the input; simply increasing noise variance and changing the target accordingly performs worse.
+
+   **MAPS-TO** — Establishes the term *exposure bias* and a cheap robustness fix. It does not justify your narrow uniform band: its success depends on synthetic perturbations being useful proxies for deployment errors. Actual flow samples and their subsequent refinement iterates give a more direct training distribution.
+
+   **SOURCE** — [Input Perturbation Reduces Exposure Bias in Diffusion Models, ICML 2023; Algorithm 3, Table 2, §5.2](https://arxiv.org/html/2301.11706).
+
+My inference for your redesign: construct paired corrections from **actual flow proposals**, then refresh training with **the current refiner’s intermediate outputs**. Use either optimizer-generated targets at those inputs or a differentiable objective evaluated on the resulting plan. Compare against gradient refinement, best-of-N, and increased sampling at matched wall-clock budgets; report actual maze success alongside predicted value. None of the sources establishes that correcting sampler errors alone guarantees better control.
+
+STATUS: DONE  
+VERIFIED: Opened full texts: [FQL](https://arxiv.org/html/2502.02538), [L2O-MPC](https://arxiv.org/html/2212.02603), [IAPO](https://arxiv.org/html/2010.10670), [LePlanner](https://arxiv.org/html/2609.13845), [OneDP](https://arxiv.org/html/2410.21257), [PaD](https://arxiv.org/html/2512.17846), [Genetic Denoising](https://arxiv.org/html/2510.21991), [DAgger](https://proceedings.mlr.press/v15/ross11a/ross11a.pdf), [Input Perturbation](https://arxiv.org/html/2301.11706).

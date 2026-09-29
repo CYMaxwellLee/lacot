@@ -1,0 +1,61 @@
+test_offline_label_injection_rejected (test_refine_quality_v3.OracleTests.test_offline_label_injection_rejected) ... FAIL
+
+======================================================================
+FAIL: test_offline_label_injection_rejected (test_refine_quality_v3.OracleTests.test_offline_label_injection_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/tests/test_refine_quality_v3.py", line 204, in test_offline_label_injection_rejected
+    with self.assertRaisesRegex(ValueError, "verified loader"):
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 1.735s
+
+FAILED (failures=1)
+test_hand_filled_qualification_readings_rejected (test_refine_quality_v3.OracleTests.test_hand_filled_qualification_readings_rejected) ... FAIL
+
+======================================================================
+FAIL: test_hand_filled_qualification_readings_rejected (test_refine_quality_v3.OracleTests.test_hand_filled_qualification_readings_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/tests/test_refine_quality_v3.py", line 238, in test_hand_filled_qualification_readings_rejected
+    with self.assertRaisesRegex(ValueError, "readings were not produced"):
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 1.285s
+
+FAILED (failures=1)
+test_action_blind_witness_is_detected (test_refine_quality_v3.OracleTests.test_action_blind_witness_is_detected) ... FAIL
+
+======================================================================
+FAIL: test_action_blind_witness_is_detected (test_refine_quality_v3.OracleTests.test_action_blind_witness_is_detected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/tests/test_refine_quality_v3.py", line 165, in test_action_blind_witness_is_detected
+    self.assertGreater(action_witness(pred, shuffled, r["future"][:, :4]), .1)
+AssertionError: 0.0 not greater than 0.1
+
+----------------------------------------------------------------------
+Ran 1 test in 1.254s
+
+FAILED (failures=1)
+test_offline_label_injection_rejected (test_refine_quality_v3.OracleTests.test_offline_label_injection_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.246s
+
+OK
+test_hand_filled_qualification_readings_rejected (test_refine_quality_v3.OracleTests.test_hand_filled_qualification_readings_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.281s
+
+OK
+test_action_blind_witness_is_detected (test_refine_quality_v3.OracleTests.test_action_blind_witness_is_detected) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.247s
+
+OK
+EXPECTED_THREE_RED_THREE_GREEN: True

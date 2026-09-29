@@ -1,0 +1,17 @@
+"""Initial executable red-phase scaffold; completed after contract witnesses."""
+import torch
+
+
+def validate_record(record, *, split=None):
+    return record
+
+
+def train_models(record, **kwargs):
+    validate_record(record, split="train")
+    return record
+
+
+def action_witness(prediction, shuffled_prediction, target):
+    good = (prediction.float() - target.float()).square().mean()
+    bad = (shuffled_prediction.float() - target.float()).square().mean()
+    return float(bad - good)

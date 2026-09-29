@@ -1,0 +1,1006 @@
+diff --git a/experiments/scratch_lacot_rollout.py b/experiments/scratch_lacot_rollout.py
+index 50ed22f..c0dd35d 100644
+--- a/experiments/scratch_lacot_rollout.py
++++ b/experiments/scratch_lacot_rollout.py
+@@ -15,6 +15,21 @@ from lacot.model import RefineOperator
+ from lacot import dev_eval as DE
+ import ogbench
+ 
++# ucontrast1: opt-in instrumentation; flag-off does not import/create RNGs.
++ORACLE_ARM = os.environ.get("LACOT_ORACLE_ARM", "")
++ORACLE_COLLECTOR = None
++if ORACLE_ARM:
++    from experiments._workorders.ucontrast1.collector import Collector, write_result
++    if (not os.environ.get("LACOT_LOAD_CKPT")
++            or os.environ.get("LACOT_CONT_TRAIN", "0") != "0"
++            or os.environ.get("LACOT_BON_N", "0") != "0"):
++        raise SystemExit("Oracle collection requires LOAD_CKPT, CONT_TRAIN=0, BON_N=0")
++    ORACLE_COLLECTOR = Collector(ORACLE_ARM,
++                                 float(os.environ.get("LACOT_ORACLE_SIGMA", "0")),
++                                 int(os.environ.get("LACOT_ORACLE_DRAWS", "8")),
++                                 int(os.environ.get("LACOT_ORACLE_EPISODE_OFFSET", "0")),
++                                 int(os.environ.get("LACOT_ORACLE_STREAM_SALT", "0")))
++
+ # 資料位置：預設走官方 OGBENCH_DATA_DIR，沒設才用本機 archive
+ OGB_DATA = os.environ.get("OGBENCH_DATA_DIR", "/archive/cymaxwelllee/data/ogbench")
+ 
+@@ -2385,7 +2400,12 @@ def policy_chunk(obs, goal, R, use_u):
+         a = ahead(cond, _foreign_u(R))[0].cpu().numpy()
+         return np.clip(a, -1.0, 1.0).astype(np.float32)
+     if use_u:
+-        u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
++        if ORACLE_COLLECTOR is not None:
++            # Both arms replan each chunk. B replays draw-0's flow RNG stream
++            # each draw; only action noise changes between draws.
++            u = ORACLE_COLLECTOR.get_u(lambda: _bon_plan(1, cond, _anc, s, g))
++        else:
++            u = _oracle_u(obs, goal, 1) if U_SOURCE == "oracle" else None   # ⭐ 9/2 探針
+         if u is None:
+             # ⭐ 9/6 BoN：BON_N≤1 ⇒ _bon_plan 就是 sample_plan 本人（逐位元、連 RNG 都不變）；
+             #    >1 ⇒ 抽 N 條、三項乘法閘打分、argmax ⇒ ⭐ 這一格就是設計卡 c 格的 R0 錶。
+@@ -3052,15 +3072,27 @@ DIAG_DUMP = os.environ.get("LACOT_DIAG_DUMP", "0") == "1"
+ DIAG_ROWS = []
+ 
+ 
+-def rollout(R, use_u, tag, policy_fn=None, on_start=None):
++def rollout(R, use_u, tag, policy_fn=None, on_start=None, oracle_draw=None):
+     """官方協定 rollout。policy_fn/on_start 給了就用它（分段臂），否則走 policy_chunk（flat）。"""
+     succ, ep = 0, 0
+     for task in range(1, N_TASKS + 1):
+         for sd_ in range(SEEDS):
+-            obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
++            if oracle_draw is not None:
++                _oracle_ep = sd_ + ORACLE_COLLECTOR.episode_offset
++                _oracle_reset_seed = ORACLE_COLLECTOR.reset_seed(task, _oracle_ep)
++                np.random.seed(_oracle_reset_seed)
++                try:
++                    env.action_space.seed(_oracle_reset_seed)
++                except Exception:
++                    pass
++                obs, info = env.reset(seed=_oracle_reset_seed, options={"task_id": task, "render_goal": False})
++            else:
++                obs, info = env.reset(seed=1000 * task + sd_, options={"task_id": task, "render_goal": False})
+             goal = info["goal"]; success = False; steps = 0
+             _st0 = np.asarray(obs[:2], np.float64).tolist()
+             torch.manual_seed(7 * task + sd_)  # action-sampler stream
++            if oracle_draw is not None:
++                ORACLE_COLLECTOR.begin(task, _oracle_ep, oracle_draw, obs, goal)
+             # 🚨 2026-08-28 修：這條官方路徑【從來沒有】重置過爬坡快取 —— 而 dev 那條有
+             #    （dev_rollout 掛了 on_episode_start=_reset_grad_cache）。
+             #    ⇒ 上一集爬出來的 u 會被下一集當 warm 起點，跨集、跨 task、跨 arm 互相汙染，
+@@ -3073,13 +3105,19 @@ def rollout(R, use_u, tag, policy_fn=None, on_start=None):
+             while steps < MAXH and not success:
+                 for a in (policy_fn(obs, goal) if policy_fn is not None
+                           else policy_chunk(obs, goal, R, use_u)):
++                    if oracle_draw is not None:
++                        a = ORACLE_COLLECTOR.action(a)
+                     obs, rew, term, trunc, info = env.step(a)
++                    if oracle_draw is not None:
++                        ORACLE_COLLECTOR.step(a, obs, rew, term, trunc, info.get("success", False))
+                     steps += 1
+                     if info.get("success"):
+                         success = True
+                     if success or term or trunc or steps >= MAXH:
+                         break
+             succ += int(success); ep += 1
++            if oracle_draw is not None:
++                ORACLE_COLLECTOR.end(success, steps)
+             if DIAG_DUMP:                    # 成功集也記 —— 讀屍體要有活人對照
+                 _fp = np.asarray(obs[:2], np.float64)
+                 _gl = np.asarray(goal[:2], np.float64)
+@@ -3157,6 +3195,29 @@ RS_PRE = [int(x) for x in os.environ.get("LACOT_EVAL_RS", "0,1,3,5,8").split(","
+ if not RS_PRE:
+     raise SystemExit("⛔ LACOT_EVAL_RS 不能是空的 —— 至少要有一個輪數（例如 \"0\"）")
+ 
++# Execute ALL draws through the same rollout above; bypass unrelated diagnostic
++# arms and legacy output. R1's reached bit is recorded before aggregation.
++if ORACLE_COLLECTOR is not None:
++    if (RS_PRE != [1] or GRAD_REFINE or LEARNED_REFINE or SUBGOAL or DEV_EVAL
++            or U_SOURCE != "flow" or INTENT or INTENT_GUID_W or FINISH_R
++            or BON_N != 0 or DIAG_DUMP or FLOW_PROBE or PREREQ):
++        raise SystemExit("ucontrast1 supports only flat flow T=1, R1, no refine/selection/probes")
++    for _draw in range(ORACLE_COLLECTOR.draws):
++        _rate = rollout(1, True, f"oracle {ORACLE_ARM} draw={_draw}", oracle_draw=_draw)
++        _rows = [r for r in ORACLE_COLLECTOR.rows if r["draw"] == _draw]
++        if len(_rows) != N_TASKS * SEEDS or _rate != sum(r["success"] for r in _rows) / len(_rows):
++            raise RuntimeError(f"Oracle draw {_draw} R1 disagrees with collector successes")
++    _oracle_dst = os.environ["LACOT_ORACLE_OUT"]
++    _oracle_meta = dict(ckpt=LOAD_CKPT, tag=os.environ["LACOT_BOOT_TAG"],
++                        config=out, env_config={k: v for k, v in os.environ.items()
++                                              if k.startswith("LACOT_")},
++                        u_semantics="A fresh flow stream per draw; B replays draw-0 flow stream, replans each chunk")
++    _oracle_result = write_result(_oracle_dst, _oracle_meta, ORACLE_COLLECTOR)
++    print(f"Oracle collection complete: {_oracle_dst} "
++          f"tasks={_oracle_result['n_tasks']} draws={_oracle_result['n_draws']} "
++          f"success={_oracle_result['n_success']}", flush=True)
++    raise SystemExit(0)
++
+ # ================= 開發尺（DEV_EVAL）=================
+ # 🚨 官方尺的獨立樣本數是 5 個 task，不是 250 集（2026-08-26 稽核＋實測複驗）。
+ #    ⇒ 任何小於 0.2 的效應都看不見 ⇒ 先驗尺，再談實驗。
+diff --git a/experiments/_workorders/ucontrast1/collector.py b/experiments/_workorders/ucontrast1/collector.py
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/collector.py
+@@ -0,0 +1,151 @@
++"""Instrumentation for the existing rollout; deliberately contains no env loop."""
++import hashlib
++import json
++import math
++import os
++from pathlib import Path
++
++
++def digest_array(value):
++    h = hashlib.sha256()
++    h.update(str(value.dtype).encode())
++    h.update(str(value.shape).encode())
++    h.update(value.tobytes())
++    return h.hexdigest()
++
++
++class Collector:
++    def __init__(self, arm, sigma, draws, episode_offset=0, stream_salt=0):
++        import numpy as np
++        import torch
++        if arm not in ("A", "B") or draws < 1 or not math.isfinite(sigma) or sigma < 0:
++            raise ValueError("Invalid oracle arm/sigma/draw count")
++        if arm == "A" and sigma != 0:
++            raise ValueError("A must have sigma=0")
++        self.np, self.torch = np, torch
++        self.arm, self.sigma, self.draws = arm, sigma, draws
++        self.episode_offset, self.stream_salt = episode_offset, stream_salt
++        self.rows = []
++
++    def reset_seed(self, task, episode):
++        return 1000 * task + episode + self.stream_salt
++
++    def begin(self, task, episode, draw, obs, goal):
++        self.key = (task, episode)
++        self.draw = draw
++        # Same historical per-episode torch seed for draw 0. Other draws change
++        # only sampler stream; env.reset seed stays fixed across all arms/draws.
++        self.base_seed = 7 * task + episode + self.stream_salt
++        self.stream_seed = self.base_seed + 1_000_003 * draw
++        # B' replans every chunk, replaying draw-0's flow stream each draw.
++        # The draw-specific stream remains dedicated to paired action noise.
++        self.flow_seed = self.base_seed if self.arm == "B" else self.stream_seed
++        self.torch.manual_seed(self.flow_seed)
++        # Dedicated generator: action noise cannot advance the flow RNG.
++        # Same seed and generator in A/B/all sigma bins (paired common stream).
++        self.noise = self.torch.Generator(device="cpu").manual_seed(self.stream_seed)
++        self.trace = hashlib.sha256()
++        self.u_trace = hashlib.sha256()
++        self.first_u = None
++        self.u_calls, self.u_samples = 0, 0
++        self.initial = digest_array(self.np.asarray(obs))
++        self.goal = digest_array(self.np.asarray(goal))
++        self.trace.update(bytes.fromhex(self.initial))
++        self.trace.update(bytes.fromhex(self.goal))
++
++    def get_u(self, sample):
++        u = sample()
++        self.u_samples += 1
++        uh = digest_array(u.detach().cpu().numpy())
++        self.first_u = self.first_u or uh
++        self.u_trace.update(bytes.fromhex(uh))
++        self.u_calls += 1
++        return u
++
++    def action(self, action):
++        # Noise is applied to the policy's clipped action immediately before
++        # env.step, then clipped again to the SAME [-1,1] action range.
++        eps = self.torch.randn(action.shape, generator=self.noise).numpy()
++        if self.arm == "B" and self.sigma > 0:
++            return self.np.clip(action + self.sigma * eps, -1., 1.).astype(self.np.float32)
++        return action
++
++    def step(self, action, obs, reward, terminated, truncated, reached):
++        for value in (self.np.asarray(action), self.np.asarray(obs)):
++            self.trace.update(bytes.fromhex(digest_array(value)))
++        self.trace.update(json.dumps([float(reward), bool(terminated),
++                                      bool(truncated), bool(reached)]).encode())
++
++    def end(self, success, steps):
++        self.rows.append(dict(task=self.key[0], episode=self.key[1], draw=self.draw,
++                              env_seed=self.reset_seed(*self.key),
++                              stream_seed=self.stream_seed, flow_seed=self.flow_seed,
++                              initial_sha256=self.initial,
++                              goal_sha256=self.goal, success=bool(success), steps=steps,
++                              first_u_sha256=self.first_u, u_sequence_sha256=self.u_trace.hexdigest(),
++                              u_calls=self.u_calls, u_samples=self.u_samples,
++                              trajectory_sha256=self.trace.hexdigest()))
++
++
++def summarize(rows, draws, arm, sigma):
++    """R1 reached bits only. Prefix oracle, never preselection/completed."""
++    groups = {}
++    for row in rows:
++        groups.setdefault((row["task"], row["episode"]), []).append(row)
++    if not groups:
++        raise ValueError("No completed rollouts")
++    tasks = []
++    for key, group in sorted(groups.items()):
++        group.sort(key=lambda r: r["draw"])
++        if [r["draw"] for r in group] != list(range(draws)):
++            raise ValueError(f"Missing/duplicate draw: {key}")
++        for field in ("env_seed", "initial_sha256", "goal_sha256"):
++            if len({r[field] for r in group}) != 1:
++                raise ValueError(f"Unpaired resets: {key} {field}")
++        if arm == "B":
++            if len({r["first_u_sha256"] for r in group}) != 1:
++                raise ValueError(f"B first u differs across draws: {key}")
++            if any(r["u_samples"] != r["u_calls"] for r in group):
++                raise ValueError(f"B skipped chunk replanning: {key}")
++            if len({r["flow_seed"] for r in group}) != 1:
++                raise ValueError(f"B flow stream differs across draws: {key}")
++            if sigma == 0:
++                for field in ("trajectory_sha256", "success", "steps", "u_sequence_sha256"):
++                    if len({r[field] for r in group}) != 1:
++                        raise ValueError(f"Sigma-zero mutant differs: {key} {field}")
++        bits = [int(r["success"]) for r in group]
++        tasks.append(dict(task=key[0], episode=key[1], success_bits=bits, draws=group))
++    n = len(tasks)
++    oracle = {str(k): sum(any(t["success_bits"][:k]) for t in tasks) / n
++              for k in range(1, draws + 1)}
++    if any(oracle[str(k)] > oracle[str(k + 1)] for k in range(1, draws)):
++        raise ValueError("oracle@k decreased")
++    if arm == "B" and sigma == 0 and oracle[str(draws)] != oracle["1"]:
++        raise ValueError("Sigma-zero oracle leak")
++    return dict(tasks=tasks, oracle_at_k=oracle, pooled_oracle=oracle[str(draws)],
++                per_draw_quality=[sum(t["success_bits"][d] for t in tasks) / n
++                                  for d in range(draws)],
++                negative_mutant_passed=(arm == "B" and sigma == 0 and draws == 8),
++                n_tasks=n, n_draws=len(rows),
++                n_success=sum(int(r["success"]) for r in rows),
++                n_oracle_success=sum(any(t["success_bits"]) for t in tasks))
++
++
++def write_result(path, metadata, collector):
++    summary = summarize(collector.rows, collector.draws, collector.arm, collector.sigma)
++    result = dict(metadata, schema_version=1, arm=collector.arm, sigma=collector.sigma,
++                  sigma_units="fraction_of_action_half_range_1", temperature=1.0,
++                  draws_per_task=collector.draws, success_definition="R1: any info.success reached",
++                  pooling="any draw within each official (task,episode), then mean over episodes",
++                  offline_only=True, training_use_prohibited=True,
++                  leg_stats=[], leg_stats_reason="flat policy has no subgoal legs",
++                  **summary)
++    # Completion counts MUST be the final keys in JSON, written only on success.
++    counts = {k: result.pop(k) for k in ("n_tasks", "n_draws", "n_success")}
++    result.update(counts)
++    dst = Path(path)
++    dst.parent.mkdir(parents=True, exist_ok=True)
++    with dst.open("x") as f:
++        json.dump(result, f, indent=2, allow_nan=False)
++        f.write("\n")
++    return result
+diff --git a/experiments/_workorders/ucontrast1/run.py b/experiments/_workorders/ucontrast1/run.py
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/run.py
+@@ -0,0 +1,298 @@
++"""Slurm stage launcher and gates. Evaluation stays in scratch_lacot_rollout.py."""
++import argparse
++import hashlib
++import json
++import math
++import os
++from pathlib import Path
++import subprocess
++import sys
++import time
++
++ROOT = Path(__file__).resolve().parents[3]
++WORK = ROOT / "experiments/_workorders/ucontrast1"
++SIGMAS = (0.05, 0.10, 0.20)
++CKPTS = {s: f"results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s{s}.pt"
++         for s in (33, 35)}
++PROTOCOL = "official-flat-R1-reached-T1-EMA"
++SWEEP_SALT = 2_000_011
++SWEEP_EPISODE_OFFSET = 40
++ANCHOR_R1 = .350
++ANCHOR_TOLERANCE = .08
++SMOKE_R1_RANGE = (.15, .6)
++CKPT_SHA256 = {
++    33: "88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787",
++    35: "ba5009ec197d1d11b9902a2b92917d1ca9198e8b32882c442638380786ab0d7d",
++}
++
++
++def read(path):
++    with Path(path).open() as f:
++        return json.load(f)
++
++
++def sha(path):
++    h = hashlib.sha256()
++    with Path(path).open("rb") as f:
++        for chunk in iter(lambda: f.read(1024 * 1024), b""):
++            h.update(chunk)
++    return h.hexdigest()
++
++
++def write(path, obj):
++    Path(path).parent.mkdir(parents=True, exist_ok=True)
++    with Path(path).open("x") as f:
++        json.dump(obj, f, indent=2, allow_nan=False)
++        f.write("\n")
++
++
++def code_hashes():
++    paths = [ROOT / "experiments/scratch_lacot_rollout.py", WORK / "collector.py", WORK / "run.py"]
++    return {str(p.relative_to(ROOT)): sha(p) for p in paths}
++
++
++def checkpoint(seed, provenance):
++    """Frozen input asset: exact path and SHA256, with no training-time gate."""
++    entry = provenance["checkpoints"][str(seed)]
++    if (entry["path"] != CKPTS[seed] or entry["sha256"] != CKPT_SHA256[seed]
++            or entry["training_started_unix"] is not None):
++        raise ValueError("Frozen checkpoint path/SHA256/provenance mismatch")
++    pinned = ROOT / CKPTS[seed]
++    actual = sha(pinned)
++    if actual != CKPT_SHA256[seed]:
++        raise ValueError("Frozen checkpoint bytes differ from pinned SHA256")
++    return dict(path=CKPTS[seed], sha256=actual, mtime=pinned.stat().st_mtime,
++                training_started_unix=None, training_start_note="frozen input asset; not applicable")
++
++
++def calibration_contract(provenance):
++    anchor = provenance["anchor"]
++    if (anchor["protocol"] != PROTOCOL or anchor["expected_r1"] != ANCHOR_R1
++            or anchor["tolerance"] != ANCHOR_TOLERANCE
++            or anchor["episodes_per_task"] != 40
++            or anchor["source"] != "j_signal noclimb s33"):
++        raise ValueError("J-signal R1 anchor contract mismatch")
++    return anchor
++
++
++def flagoff_contract(path, seed):
++    """Check lead-side GPU baseline/current bitwise trajectory evidence."""
++    proof = read(path)
++    pairs = proof.get("pairs", [])
++    baseline = subprocess.check_output(
++        ["git", "show", "HEAD:experiments/scratch_lacot_rollout.py"], cwd=ROOT)
++    if (proof.get("code_hashes") != code_hashes()
++            or proof.get("ckpt_sha256") != CKPT_SHA256[seed]
++            or proof.get("device") != "cuda"
++            or proof.get("baseline_source_sha256") != hashlib.sha256(baseline).hexdigest()
++            or proof.get("current_source_sha256") != code_hashes()["experiments/scratch_lacot_rollout.py"]
++            or len(pairs) != 3
++            or len({(p["task"], p["episode"]) for p in pairs}) != 3
++            or any(not p["baseline_trajectory_sha256"]
++                   or p["baseline_trajectory_sha256"] != p["current_trajectory_sha256"]
++                   for p in pairs)):
++        raise ValueError("GPU flag-off three-question bitwise proof missing/mismatched")
++    return dict(path=str(path), sha256=sha(path))
++
++
++def independent_oracle(tasks, draws):
++    """Recompute from raw draw successes without calling collector.summarize."""
++    if not tasks:
++        raise ValueError("Empty oracle tasks")
++    sums = [0] * draws
++    quality = [0] * draws
++    for task in tasks:
++        raw = sorted(task["draws"], key=lambda d: d["draw"])
++        if [d["draw"] for d in raw] != list(range(draws)):
++            raise ValueError("Missing oracle draw")
++        bits = [int(d["success"]) for d in raw]
++        if bits != task["success_bits"]:
++            raise ValueError("Stored success bits differ from draws")
++        seen = 0
++        for i, bit in enumerate(bits):
++            quality[i] += bit
++            seen |= bit
++            sums[i] += seen
++    n = len(tasks)
++    return ({str(k + 1): sums[k] / n for k in range(draws)},
++            [q / n for q in quality], sum(quality))
++
++
++def gate(path, stage):
++    obj = read(path)
++    if (obj.get("stage") != stage or obj.get("status") != "PASS"
++            or obj.get("code_hashes") != code_hashes()):
++        raise ValueError(f"Missing, failed, or stale {stage} gate")
++    if sha(obj["result_path"]) != obj["result_sha256"]:
++        raise ValueError(f"Changed {stage} evidence")
++    return obj
++
++
++def launch(args):
++    if not os.environ.get("SLURM_JOB_ID") or not os.environ.get("CUDA_VISIBLE_DEVICES"):
++        raise ValueError("GPU eval requires sbatch allocation (gpu:1)")
++    stage = args.stage
++    provenance = read(args.provenance)
++    anchor = calibration_contract(provenance)
++    flagoff = flagoff_contract(args.flagoff_proof, 33)
++    if stage != "calibration":
++        cg = gate(args.calibration_gate, "calibration")
++        if cg["provenance_sha256"] != sha(args.provenance):
++            raise ValueError("Calibration provenance changed")
++        if cg["flagoff_proof"] != flagoff:
++            raise ValueError("GPU flag-off evidence changed")
++    if stage in ("smoke", "main"):
++        mg = gate(args.mutant_gate, "mutant")
++        if mg["provenance_sha256"] != sha(args.provenance):
++            raise ValueError("Mutant provenance changed")
++    seed = 33 if stage == "calibration" else args.seed
++    ck = checkpoint(seed, provenance)
++    if stage in ("smoke", "main") and mg["checkpoint"]["sha256"] != ck["sha256"]:
++        raise ValueError("Sigma-zero mutant used a different checkpoint")
++    arm, sigma, draws, episodes = "A", 0., 8, 5
++    if stage == "calibration":
++        draws, episodes = 1, anchor["episodes_per_task"]
++    elif stage == "mutant":
++        arm = "B"
++    elif stage == "smoke":
++        if not 0 <= args.index <= 3:
++            raise ValueError("Smoke array index must be 0..3")
++        arm = "A" if args.index == 0 else "B"
++        sigma = 0. if args.index == 0 else SIGMAS[args.index - 1]
++    elif stage == "main":
++        # A review artifact; this work order never invokes this stage.
++        selection = read(args.selection)
++        if (selection["code_hashes"] != code_hashes() or selection["status"] != "SELECTED"
++                or selection["sigma"] not in SIGMAS or selection["seed"] != seed
++                or selection["ckpt_sha256"] != ck["sha256"]):
++            raise ValueError("Missing/stale sigma selection for this checkpoint")
++        for path, hashed in selection["inputs"].items():
++            if sha(path) != hashed:
++                raise ValueError("Sigma sweep evidence changed")
++        if args.index not in (0, 1):
++            raise ValueError("Main array index must be 0..1")
++        episodes, arm = 40, ("A" if args.index == 0 else "B")
++        sigma = 0. if arm == "A" else selection["sigma"]
++    episode_offset = SWEEP_EPISODE_OFFSET if stage in ("mutant", "smoke") else 0
++    stream_salt = SWEEP_SALT if stage in ("mutant", "smoke") else 0
++    tag = f"ucontrast1_{stage}_s{seed}_{arm}_sig{sigma:g}"
++    outdir = Path(args.outdir).resolve()
++    result = outdir / f"{tag}.json"
++    if result.exists():
++        raise ValueError(f"Refusing to overwrite {result}")
++    env = {k: v for k, v in os.environ.items() if not k.startswith("LACOT_")}
++    config = dict(ENV="pointmaze-large-stitch-v0", CONS="self", K=8, COND=256,
++                  CHUNK=4, TCAP=128, ENC_OBJ="recon_ictr", LEARNED_REFINE=0,
++                  COND_DROP=0.1, BC_INDEP=1, TEACHER_MIX=0.5, WARMUP=500,
++                  DEC_START="soft", LOAD_EMA=1,
++                  CONT_TRAIN=0, DEV_EVAL=0, PREREQ=0, EVAL_EPISODES=episodes,
++                  EVAL_RS=1, GRAD_REFINE=0, SUBGOAL="", FINISH_R=0, INTENT="",
++                  U_SOURCE="flow", SUB_ESEL=0, INTENT_GUID_W=0, DEC_ANCHOR=0,
++                  BON_MODE="plan", BON_N=0, BOOT_DATA="", S1_FROM="", FLOW_PROBE=0,
++                  DIAG_DUMP=0, LOAD_CKPT=CKPTS[seed], SEED=seed, BOOT_TAG=tag,
++                  OUT_DIR=str(outdir), ORACLE_ARM=arm, ORACLE_SIGMA=sigma,
++                  ORACLE_DRAWS=draws, ORACLE_OUT=str(result),
++                  ORACLE_EPISODE_OFFSET=episode_offset, ORACLE_STREAM_SALT=stream_salt)
++    env.update({"LACOT_" + k: str(v) for k, v in config.items()})
++    metadata = dict(stage=stage, arm=arm, sigma=sigma, ckpt=CKPTS[seed], tag=tag,
++                    checkpoint=ck, code_hashes=code_hashes(),
++                    flagoff_proof=flagoff,
++                    provenance_sha256=sha(args.provenance),
++                    submitted_job=os.environ["SLURM_JOB_ID"], config=config,
++                    started_unix=time.time(), training_use_prohibited=True)
++    write(outdir / f"{tag}.preflight.json", metadata)
++    subprocess.run([sys.executable, "-u", "experiments/scratch_lacot_rollout.py"],
++                   cwd=ROOT, env=env, check=True)
++    data = read(result)
++    if data["n_tasks"] != 5 * episodes or data["n_draws"] != 5 * episodes * draws:
++        raise ValueError("Abnormal smoke result shape")
++    if stage in ("calibration", "mutant"):
++        passed = (abs(data["per_draw_quality"][0] - ANCHOR_R1) <= ANCHOR_TOLERANCE
++                  if stage == "calibration" else data["negative_mutant_passed"])
++        record = dict(metadata, status="PASS" if passed else "BLOCKED",
++                      result_path=str(result), result_sha256=sha(result),
++                      observed=data["per_draw_quality"][0] if stage == "calibration" else data["pooled_oracle"],
++                      anchor=anchor if stage == "calibration" else None)
++        write(outdir / f"{stage}-gate.json", record)
++        if not passed:
++            raise ValueError(f"{stage} failed; STOP, no subsequent stages")
++
++
++def select(args):
++    """CPU-only aggregation. Select only among the three 25-question B bins."""
++    files = [Path(p).resolve() for p in args.results]
++    rows = [read(p) for p in files]
++    if len(rows) != 4:
++        raise ValueError("Need A and all three B sigma bins")
++    a = [r for r in rows if r["arm"] == "A"]
++    b = [r for r in rows if r["arm"] == "B"]
++    if len(a) != 1 or sorted(r["sigma"] for r in b) != list(SIGMAS):
++        raise ValueError("Incomplete/duplicate sigma sweep")
++    zero = read(gate(args.mutant_gate, "mutant")["result_path"])
++    if zero["ckpt"] != CKPTS[args.seed]:
++        raise ValueError("Sigma-zero mutant checkpoint differs from sweep")
++    def paired(r):
++        return [(t["task"], t["episode"], [(d["env_seed"], d["stream_seed"],
++                  d["initial_sha256"], d["goal_sha256"]) for d in t["draws"]]) for t in r["tasks"]]
++    proof = []
++    for path, row in zip(files, rows):
++        p = read(path.with_name(path.stem + ".preflight.json"))
++        if p["code_hashes"] != code_hashes() or p["stage"] != "smoke":
++            raise ValueError("Not current smoke evidence")
++        proof.append(p)
++        if (row["n_tasks"] != 25 or row["n_draws"] != 200 or row["draws_per_task"] != 8
++                or row["ckpt"] != CKPTS[args.seed] or paired(row) != paired(a[0])):
++            raise ValueError("Unpaired/wrong-size smoke evidence")
++        oracle, quality, n_success = independent_oracle(row["tasks"], 8)
++        if (oracle != row["oracle_at_k"] or oracle["8"] != row["pooled_oracle"]
++                or quality != row["per_draw_quality"] or n_success != row["n_success"]):
++            raise ValueError("Oracle differs from raw draw successes")
++        if any(not (SWEEP_EPISODE_OFFSET <= t["episode"] < SWEEP_EPISODE_OFFSET + 5)
++               for t in row["tasks"]):
++            raise ValueError("Sweep overlaps main episode IDs")
++    if len({p["checkpoint"]["sha256"] for p in proof}) != 1:
++        raise ValueError("Different checkpoint bytes")
++    for row in b:
++        if [t["draws"][0]["first_u_sha256"] for t in row["tasks"]] != [
++                t["draws"][0]["first_u_sha256"] for t in a[0]["tasks"]]:
++            raise ValueError("B first u not paired with A draw 0")
++        if [(t["task"], t["episode"]) for t in zero["tasks"]] != [
++                (t["task"], t["episode"]) for t in row["tasks"]]:
++            raise ValueError("Positive-sigma and sigma-zero questions differ")
++        changed = sum(any(d["trajectory_sha256"] != z["draws"][i]["trajectory_sha256"]
++                          for i, d in enumerate(t["draws"]))
++                      for t, z in zip(row["tasks"], zero["tasks"]))
++        if changed == 0:
++            raise ValueError("B positive sigma matched sigma-zero trajectories")
++    if not SMOKE_R1_RANGE[0] <= a[0]["per_draw_quality"][0] <= SMOKE_R1_RANGE[1]:
++        raise ValueError("A smoke draw-0 R1 outside sanity band")
++    winner = max(b, key=lambda r: (r["pooled_oracle"], -r["sigma"]))
++    write(args.output, dict(status="SELECTED", seed=args.seed, sigma=winner["sigma"],
++                           metric="pooled oracle@8", tie_break="smaller sigma",
++                           ckpt_sha256=proof[0]["checkpoint"]["sha256"],
++                           inputs={str(p): sha(p) for p in files}, code_hashes=code_hashes(),
++                           note="Selection only; no A-vs-B verdict", training_use_prohibited=True))
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("stage", choices=("calibration", "mutant", "smoke", "main", "select"))
++    parser.add_argument("--provenance", default=str(WORK / "provenance.json"))
++    parser.add_argument("--flagoff-proof", default=str(WORK / "smoke/flagoff-proof.json"))
++    parser.add_argument("--calibration-gate", default=str(WORK / "smoke/calibration/calibration-gate.json"))
++    parser.add_argument("--mutant-gate", default=str(WORK / "smoke/mutant/mutant-gate.json"))
++    parser.add_argument("--selection", default=str(WORK / "smoke/sigma-selection.json"))
++    parser.add_argument("--seed", type=int, choices=(33, 35), default=33)
++    parser.add_argument("--index", type=int, default=0)
++    parser.add_argument("--outdir", default=str(WORK / "smoke"))
++    parser.add_argument("--results", nargs="*", default=[])
++    parser.add_argument("--output", default=str(WORK / "smoke/sigma-selection.json"))
++    args = parser.parse_args()
++    try:
++        select(args) if args.stage == "select" else launch(args)
++    except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as exc:
++        parser.exit(2, f"BLOCKED: {exc}\n")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/experiments/_workorders/ucontrast1/test_wiring.py b/experiments/_workorders/ucontrast1/test_wiring.py
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/test_wiring.py
+@@ -0,0 +1,245 @@
++"""CPU-only integration of actual policy_chunk/rollout AST with a toy env/head.
++
++These checks are NOT the s13 calibration or the real-decoder sigma-zero smoke.
++"""
++import ast
++import copy
++import json
++import os
++from pathlib import Path
++import subprocess
++import tempfile
++import unittest
++
++os.environ["CUDA_VISIBLE_DEVICES"] = ""
++import numpy as np
++import torch
++from collector import Collector, summarize, write_result
++from run import (ROOT, SWEEP_EPISODE_OFFSET, SWEEP_SALT, calibration_contract,
++                 checkpoint, flagoff_contract, independent_oracle)
++
++torch.set_num_threads(1)
++SOURCE = ROOT / "experiments/scratch_lacot_rollout.py"
++
++
++class ToyEnv:
++    def __init__(self):
++        self.history = []
++        self.action_space = self
++
++    def seed(self, value):
++        self.action_seed = value
++
++    def reset(self, seed, options):
++        # ogbench reset jitter uses legacy global NumPy, not reset(seed=).
++        self.obs = np.array([.38, .28] if seed % 2 else [0., 0.], np.float32)
++        self.obs += np.random.uniform(-.01, .01, 2).astype(np.float32)
++        self.goal = np.array([.4, .3], np.float32)
++        self.goal += np.random.uniform(-.01, .01, 2).astype(np.float32)
++        self.history.append(("reset", seed))
++        return self.obs.copy(), {"goal": self.goal.copy()}
++
++    def step(self, action):
++        self.obs += action * .25
++        reached = bool(np.linalg.norm(self.obs - self.goal) < .12)
++        self.history.append((action.tobytes(), self.obs.tobytes(), reached))
++        return self.obs.copy(), 0., reached, False, {"success": reached}
++
++
++def harness(collector=None, source=None):
++    """Load function bodies, never import the heavyweight/training main script."""
++    tree = ast.parse(source if source is not None else SOURCE.read_text())
++    funcs = [n for n in tree.body if isinstance(n, ast.FunctionDef)
++             and n.name in ("policy_chunk", "rollout")]
++    env = ToyEnv()
++    def state(x):
++        return torch.as_tensor(x, dtype=torch.float32)[None]
++    def head(cond, u):
++        act = torch.tanh(.5 * (cond[:, 2:] - cond[:, :2]) + .3 * u[:, 0])
++        return act[:, None].expand(-1, 2, -1)
++    ns = dict(torch=torch, np=np, env=env, N_TASKS=2, SEEDS=3, MAXH=8,
++              FINISH_ON=False, FINISH_R=0., U_SOURCE="flow", GRAD_REFINE=False,
++              ORACLE_COLLECTOR=collector, DIAG_DUMP=True, DIAG_ROWS=[],
++              _intent_anchor_eval=lambda o, g: None, normstate=state,
++              _intent_cond_arm=lambda a: None, condvec=lambda s, g, i: torch.cat((s, g), -1),
++              _bon_plan=lambda n, *args: torch.randn(n, 2, 2),
++              _apply_refine=lambda c, u, r: u, _q=lambda u: u, ahead=head,
++              _reset_grad_cache=lambda: None, _reseed_shuf=lambda s: None)
++    exec(compile(ast.Module(body=funcs, type_ignores=[]), str(SOURCE), "exec"), ns)
++    return ns
++
++
++def run_arm(arm, sigma, draws=8, offset=0, salt=0):
++    c = Collector(arm, sigma, draws, offset, salt)
++    h = harness(c)
++    for d in range(draws):
++        h["rollout"](1, True, f"cpu toy {arm} {d}", oracle_draw=d)
++    return c, summarize(c.rows, draws, arm, sigma)
++
++
++def run_oracle_loop(source=None):
++    """Execute the production draw loop AST, including its R1 cross-check."""
++    c = Collector("A", 0., 2)
++    text = source if source is not None else SOURCE.read_text()
++    h = harness(c, text)
++    tree = ast.parse(text)
++    loop = next(n for n in ast.walk(tree) if isinstance(n, ast.For)
++                and isinstance(n.iter, ast.Call)
++                and isinstance(n.iter.func, ast.Name) and n.iter.func.id == "range"
++                and any(isinstance(x, ast.Attribute) and x.attr == "draws"
++                        for x in ast.walk(n.iter)))
++    h.update(ORACLE_ARM="A")
++    exec(compile(ast.Module(body=[loop], type_ignores=[]), str(SOURCE), "exec"), h)
++    return c
++
++
++class Wiring(unittest.TestCase):
++    def test_sigma_zero_full_trajectory_and_counts(self):
++        c, s = run_arm("B", 0.)
++        self.assertTrue(s["negative_mutant_passed"])
++        self.assertEqual((s["n_tasks"], s["n_draws"]), (6, 48))
++        self.assertEqual(s["oracle_at_k"]["1"], s["oracle_at_k"]["8"])
++        self.assertTrue(all(r["u_samples"] == r["u_calls"] for r in c.rows))
++
++    def test_a_fresh_b_replayed_flow_and_paired_first_u(self):
++        a, sa = run_arm("A", 0.)
++        b, sb = run_arm("B", .1)
++        self.assertTrue(all(r["u_samples"] == r["u_calls"] for r in a.rows))
++        for ta, tb in zip(sa["tasks"], sb["tasks"]):
++            self.assertEqual(ta["draws"][0]["first_u_sha256"], tb["draws"][0]["first_u_sha256"])
++            self.assertGreater(len({r["first_u_sha256"] for r in ta["draws"]}), 1)
++            self.assertEqual(len({r["first_u_sha256"] for r in tb["draws"]}), 1)
++            self.assertTrue(all(r["u_samples"] == r["u_calls"] for r in tb["draws"]))
++            for ra, rb in zip(ta["draws"], tb["draws"]):
++                for key in ("env_seed", "stream_seed", "initial_sha256", "goal_sha256"):
++                    self.assertEqual(ra[key], rb[key])
++
++    def test_sigma_stream_common_and_does_not_consume_flow_rng(self):
++        cs = [Collector("B", sigma, 8) for sigma in (.05, .1, .2)]
++        for c in cs:
++            c.begin(1, 0, 2, np.zeros(2), np.ones(2))
++        before = torch.random.get_rng_state().clone()
++        samples = [c.action(np.zeros(2, np.float32)) / c.sigma for c in cs]
++        np.testing.assert_allclose(samples[0], samples[1])
++        np.testing.assert_allclose(samples[1], samples[2])
++        self.assertTrue(torch.equal(before, torch.random.get_rng_state()))
++
++    def test_leak_and_resample_mutants_rejected(self):
++        c, _ = run_arm("B", 0.)
++        for field, value in (("trajectory_sha256", "corrupt"), ("u_samples", 1),
++                             ("first_u_sha256", "changed"), ("env_seed", 999),
++                             ("success", not c.rows[-1]["success"])):
++            rows = copy.deepcopy(c.rows)
++            rows[-1][field] = value
++            with self.subTest(field=field), self.assertRaises(ValueError):
++                summarize(rows, 8, "B", 0.)
++
++    def test_missing_duplicate_and_monotone_bits(self):
++        c, s = run_arm("A", 0.)
++        for rows in (c.rows[:-1], c.rows + [c.rows[0]]):
++            with self.assertRaises(ValueError):
++                summarize(rows, 8, "A", 0.)
++        vals = list(s["oracle_at_k"].values())
++        self.assertEqual(vals, sorted(vals))
++
++    def test_flag_off_matches_original_rollout_bitwise(self):
++        old = subprocess.check_output(["git", "show", "HEAD:experiments/scratch_lacot_rollout.py"],
++                                      cwd=ROOT, text=True)
++        a, b = harness(source=old), harness()
++        np.random.seed(123)
++        ra = a["rollout"](1, True, "unchanged")
++        np.random.seed(123)
++        rb = b["rollout"](1, True, "unchanged")
++        self.assertEqual(ra, rb)
++        self.assertEqual(a["env"].history, b["env"].history)
++        self.assertEqual(a["DIAG_ROWS"], b["DIAG_ROWS"])
++
++    def test_b_sigma_zero_matches_a_draw_zero_bitwise(self):
++        a, _ = run_arm("A", 0., 1)
++        b, _ = run_arm("B", 0., 1)
++        self.assertEqual([r["trajectory_sha256"] for r in a.rows],
++                         [r["trajectory_sha256"] for r in b.rows])
++        self.assertEqual([r["u_sequence_sha256"] for r in a.rows],
++                         [r["u_sequence_sha256"] for r in b.rows])
++
++    def test_output_counts_and_exclusive_write(self):
++        c, _ = run_arm("B", 0.)
++        # Isolated CPU fixture artifact, never mixed into real smoke outputs.
++        temp = tempfile.mkdtemp(prefix="ucontrast-cpu-")  # retain fixtures; no deletes
++        p = Path(temp) / "result.json"
++        r = write_result(p, dict(ckpt="TOY", tag="CPU_ONLY"), c)
++        self.assertEqual(list(r)[-3:], ["n_tasks", "n_draws", "n_success"])
++        self.assertTrue(r["training_use_prohibited"])
++        with self.assertRaises(FileExistsError):
++            write_result(p, dict(ckpt="TOY", tag="CPU_ONLY"), c)
++
++    def test_frozen_checkpoint_and_new_anchor(self):
++        p = json.loads((ROOT / "experiments/_workorders/ucontrast1/provenance.template.json").read_text())
++        self.assertEqual(calibration_contract(p)["expected_r1"], .35)
++        self.assertEqual(checkpoint(33, p)["sha256"], p["checkpoints"]["33"]["sha256"])
++
++    def test_frozen_checkpoint_rejects_wrong_path_or_hash(self):
++        p = json.loads((ROOT / "experiments/_workorders/ucontrast1/provenance.template.json").read_text())
++        p["checkpoints"]["33"]["sha256"] = "0" * 64
++        with self.assertRaises(ValueError):
++            checkpoint(33, p)
++        p["checkpoints"]["33"]["sha256"] = checkpoint(33, json.loads(
++            (ROOT / "experiments/_workorders/ucontrast1/provenance.template.json").read_text()))["sha256"]
++        p["checkpoints"]["33"]["path"] = "wrong.pt"
++        with self.assertRaises(ValueError):
++            checkpoint(33, p)
++
++    def test_gpu_flagoff_proof_missing_blocks(self):
++        missing = Path(tempfile.mkdtemp(prefix="ucontrast-no-gpu-proof-")) / "proof.json"
++        with self.assertRaises(FileNotFoundError):
++            flagoff_contract(missing, 33)
++
++    def test_sweep_task_and_seed_triples_disjoint(self):
++        c, _ = run_arm("B", .1, 2, SWEEP_EPISODE_OFFSET, SWEEP_SALT)
++        main = {(t, e, 7 * t + e + 1_000_003 * d)
++                for t in (1, 2) for e in range(40) for d in range(2)}
++        self.assertFalse(main.intersection((r["task"], r["episode"], r["stream_seed"])
++                                           for r in c.rows))
++        self.assertTrue(all(r["env_seed"] == c.reset_seed(r["task"], r["episode"])
++                            for r in c.rows))
++
++    def test_reset_global_jitter_is_paired(self):
++        a, _ = run_arm("A", 0., 3)
++        b, _ = run_arm("B", .1, 3)
++        self.assertEqual([(r["initial_sha256"], r["goal_sha256"]) for r in a.rows],
++                         [(r["initial_sha256"], r["goal_sha256"]) for r in b.rows])
++
++    def test_positive_sigma_changes_real_step_trajectory(self):
++        zero, _ = run_arm("B", 0., 3)
++        noisy, _ = run_arm("B", .1, 3)
++        self.assertTrue(any(a["trajectory_sha256"] != b["trajectory_sha256"]
++                            for a, b in zip(zero.rows, noisy.rows)))
++
++    def test_independent_oracle_all_draws(self):
++        _, summary = run_arm("A", 0., 8)
++        oracle, quality, n_success = independent_oracle(summary["tasks"], 8)
++        self.assertEqual(oracle, summary["oracle_at_k"])
++        self.assertEqual(quality, summary["per_draw_quality"])
++        self.assertEqual(n_success, summary["n_success"])
++
++    def test_r1_rollout_rate_equals_collector_per_draw(self):
++        c = run_oracle_loop()
++        self.assertEqual(len(c.rows), 2 * 2 * 3)
++
++    def test_oracle_independent_formula_catches_draw0_only(self):
++        c, summary = run_arm("A", 0., 3)
++        rows = copy.deepcopy(c.rows)
++        # Force a valid task whose draw 1 alone succeeds; the independent
++        # oracle must count it at @2 and @3.
++        key = (rows[0]["task"], rows[0]["episode"])
++        for r in rows:
++            if (r["task"], r["episode"]) == key:
++                r["success"] = r["draw"] == 1
++        altered = summarize(rows, 3, "A", 0.)
++        oracle, _, _ = independent_oracle(altered["tasks"], 3)
++        self.assertEqual(oracle["2"], altered["oracle_at_k"]["2"])
++        self.assertGreater(oracle["2"], oracle["1"])
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/experiments/_workorders/ucontrast1/provenance.template.json b/experiments/_workorders/ucontrast1/provenance.template.json
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/provenance.template.json
+@@ -0,0 +1,24 @@
++{
++  "note": "TEMPLATE ONLY. Frozen input checkpoints use path and SHA256; GPU flag-off evidence is a separate gate.",
++  "anchor": {
++    "protocol": "official-flat-R1-reached-T1-EMA",
++    "expected_r1": 0.35,
++    "tolerance": 0.08,
++    "episodes_per_task": 40,
++    "source": "j_signal noclimb s33"
++  },
++  "checkpoints": {
++    "33": {
++      "path": "results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt",
++      "sha256": "88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787",
++      "training_started_unix": null,
++      "training_start_note": "frozen input asset; not applicable"
++    },
++    "35": {
++      "path": "results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s35.pt",
++      "sha256": "ba5009ec197d1d11b9902a2b92917d1ca9198e8b32882c442638380786ab0d7d",
++      "training_started_unix": null,
++      "training_start_note": "frozen input asset; not applicable"
++    }
++  }
++}
+diff --git a/experiments/_workorders/ucontrast1/flagoff-proof.template.json b/experiments/_workorders/ucontrast1/flagoff-proof.template.json
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/flagoff-proof.template.json
+@@ -0,0 +1,13 @@
++{
++  "note": "TEMPLATE ONLY: lead-side GPU comparison of git HEAD versus flag-off worktree on three official questions. Hash each complete reset/action/observation/reward/term/trunc/reached trajectory.",
++  "device": "cuda",
++  "baseline_source_sha256": null,
++  "current_source_sha256": null,
++  "code_hashes": null,
++  "ckpt_sha256": "88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787",
++  "pairs": [
++    {"task": 1, "episode": 0, "baseline_trajectory_sha256": null, "current_trajectory_sha256": null},
++    {"task": 2, "episode": 0, "baseline_trajectory_sha256": null, "current_trajectory_sha256": null},
++    {"task": 3, "episode": 0, "baseline_trajectory_sha256": null, "current_trajectory_sha256": null}
++  ]
++}
+diff --git a/experiments/_workorders/ucontrast1/batch.sh b/experiments/_workorders/ucontrast1/batch.sh
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/batch.sh
+@@ -0,0 +1,12 @@
++#!/bin/bash
++# Common deployment skeleton from experiments/j_signal_trial/run_三臂.sbatch.
++set -euo pipefail
++cd "$HOME/Projects/lacot"
++UCONTRAST_ARCHIVE=/archive/cymaxwelllee
++UCONTRAST_PY="$UCONTRAST_ARCHIVE/LaCoT/.venv/bin/python"
++UCONTRAST_DATA="$UCONTRAST_ARCHIVE/data/ogbench"
++test -n "${SLURM_JOB_ID:-}" || { echo 'BLOCKED: sbatch allocation required'; exit 2; }
++test -x "$UCONTRAST_PY" || { echo "BLOCKED: missing venv $UCONTRAST_PY"; exit 2; }
++test -f "$UCONTRAST_DATA/pointmaze-large-stitch-v0.npz" || { echo 'BLOCKED: missing dataset'; exit 2; }
++export OGBENCH_DATA_DIR="$UCONTRAST_DATA" MUJOCO_GL=osmesa PYTHONUNBUFFERED=1
++exec "$UCONTRAST_PY" -u experiments/_workorders/ucontrast1/run.py "$@"
+diff --git a/experiments/_workorders/ucontrast1/calibration.sbatch b/experiments/_workorders/ucontrast1/calibration.sbatch
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/calibration.sbatch
+@@ -0,0 +1,12 @@
++#!/bin/bash
++#SBATCH --job-name=ucontrast-cal
++#SBATCH --partition=ada-lite
++#SBATCH --nodelist=jasmine
++#SBATCH --time=02:00:00
++#SBATCH --gres=gpu:1
++#SBATCH --cpus-per-task=8
++#SBATCH --output=experiments/_workorders/ucontrast1/smoke/calibration-%j.out
++set -euo pipefail
++cd "$HOME/Projects/lacot"
++bash experiments/_workorders/ucontrast1/batch.sh calibration \
++  --outdir experiments/_workorders/ucontrast1/smoke/calibration "$@"
+diff --git a/experiments/_workorders/ucontrast1/mutant.sbatch b/experiments/_workorders/ucontrast1/mutant.sbatch
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/mutant.sbatch
+@@ -0,0 +1,12 @@
++#!/bin/bash
++#SBATCH --job-name=ucontrast-zero
++#SBATCH --partition=ada-lite
++#SBATCH --nodelist=jasmine
++#SBATCH --time=02:00:00
++#SBATCH --gres=gpu:1
++#SBATCH --cpus-per-task=8
++#SBATCH --output=experiments/_workorders/ucontrast1/smoke/mutant-%j.out
++set -euo pipefail
++cd "$HOME/Projects/lacot"
++bash experiments/_workorders/ucontrast1/batch.sh mutant \
++  --outdir experiments/_workorders/ucontrast1/smoke/mutant "$@"
+diff --git a/experiments/_workorders/ucontrast1/smoke.sbatch b/experiments/_workorders/ucontrast1/smoke.sbatch
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/smoke.sbatch
+@@ -0,0 +1,14 @@
++#!/bin/bash
++#SBATCH --job-name=ucontrast-smoke
++#SBATCH --array=0-3
++#SBATCH --partition=ada-lite
++#SBATCH --nodelist=jasmine
++#SBATCH --time=02:00:00
++#SBATCH --gres=gpu:1
++#SBATCH --cpus-per-task=8
++#SBATCH --output=experiments/_workorders/ucontrast1/smoke/sweep-%A_%a.out
++set -euo pipefail
++cd "$HOME/Projects/lacot"
++# 0=A; 1/2/3=B at sigma .05/.10/.20. 5 official tasks x 5 episodes x 8 draws.
++bash experiments/_workorders/ucontrast1/batch.sh smoke \
++  --index "$SLURM_ARRAY_TASK_ID" --outdir experiments/_workorders/ucontrast1/smoke/sweep "$@"
+diff --git a/experiments/_workorders/ucontrast1/main.sbatch b/experiments/_workorders/ucontrast1/main.sbatch
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/main.sbatch
+@@ -0,0 +1,16 @@
++#!/bin/bash
++# REVIEW ARTIFACT ONLY: do not submit during the implementation/smoke work order.
++#SBATCH --job-name=ucontrast-main
++#SBATCH --array=0-1
++#SBATCH --partition=ada-lite
++#SBATCH --nodelist=jasmine
++#SBATCH --time=24:00:00
++#SBATCH --gres=gpu:1
++#SBATCH --cpus-per-task=8
++#SBATCH --output=experiments/_workorders/ucontrast1/main-%A_%a.out
++set -euo pipefail
++cd "$HOME/Projects/lacot"
++# Default s33. Later s35: pass --seed 35 and its separately selected sigma file.
++# Each index executes 200 questions x 8 complete rollouts, A or winning-sigma B.
++bash experiments/_workorders/ucontrast1/batch.sh main \
++  --index "$SLURM_ARRAY_TASK_ID" --outdir experiments/_workorders/ucontrast1/main "$@"
+diff --git a/experiments/_workorders/ucontrast1/README.md b/experiments/_workorders/ucontrast1/README.md
+new file mode 100644
+--- /dev/null
++++ b/experiments/_workorders/ucontrast1/README.md
+@@ -0,0 +1,34 @@
++在證明什麼：pointmaze 的 u 抽樣執行變體是否優於同預算的動作噪音變體。此包只交付實作與 gate；GPU 評估及科學判決尚未執行。所有結果為 offline 評估產物，禁止作訓練資料。
++
++## 預註冊判準
++
++固定 s33 後補 s35；每 seed 5 official tasks × 40 episodes = 200 題，每題 8 條完整 rollout。Primary = pooled oracle@8：每題任一 draw 的 R1 `info.success` 為真，然後按題平均。A − 所選 B σ ≥5pp 且兩 seed 各自同號，才支持 u 的執行變體抽樣器角色；否則降級。兩 seed 合成分母為 400 題。per-draw quality、oracle@k 與 leg 統計只作 secondary；flat policy 的 leg_stats 為空。
++
++## 臂、題集與隨機流
++
++A 與 B′ 都在每個 policy chunk 根據當下 obs/goal 重新抽 u 並解碼。A 的每條 draw 用獨立 flow stream；B′ 每條 draw 從該題 draw-0 的 flow seed 重新起播，所以相同條件下逐 chunk 的 u 序列相同，跨 draw 的唯一外加差異是動作噪音。B′ 不快取一顆 u。σ0 時 B′ 的八條完整軌跡逐位元相同，且 B′ draw0 與 A draw0 逐位元相同。
++
++σ = 0.05、0.10、0.20 × 動作半幅；當前 action range [-1,1]，半幅=1。Gaussian 加在 policy clip 後、env.step 前，再 clip 回 [-1,1]。noise 用獨立 CPU torch.Generator，不推進 flow RNG。A 也消耗配對 noise stream，但係數為零。
++
++主實驗題號 ep 0–39、salt=0；σ 粗掃及 σ0 mutant 題號 ep 40–44、`SWEEP_SALT=2000011`。每題 reset seed=`1000*task+ep+salt`，noise/draw stream seed=`7*task+ep+salt+1000003*draw`；B′ flow seed 固定為同題 draw0 的 `7*task+ep+salt`，A flow seed為各 draw stream seed。故粗掃任何 rollout 均不與主實驗共用 `(task,ep,seed)` 三元組；env reset、flow 及 noise 三條 stream 均隔離。每次 oracle reset 前還以 reset seed 釘住 legacy 全域 `np.random` 和 `env.action_space`，因 ogbench 的 init/goal 抖動先於 `reset(seed=...)` 取全域 NumPy RNG。這只在 `LACOT_ORACLE_ARM` 啟用時生效；flag-off 官方 rollout 保持原行為。
++
++主檔只加 opt-in hook 與外層 draw 收集；env.step、MAXH、R1 reached 仍走官方 `rollout()`。`LACOT_ORACLE_ARM=A/B`、`LACOT_ORACLE_DRAWS`、`LACOT_ORACLE_SIGMA`、`LACOT_ORACLE_OUT` 控制收集；`LACOT_ORACLE_EPISODE_OFFSET` 和 `LACOT_ORACLE_STREAM_SALT` 由 launcher 固定。要求 flat、EMA、R1、no refine、flow、BON_N=0；拒絕 DEV_EVAL、SUBGOAL、INTENT、FINISH、probe。`run.py` 清除父行程 LACOT_* 後重建配置。
++
++## Gate 順序
++
++1. 建立 `provenance.json`（格式見 `provenance.template.json`）。s33、s35 是凍結輸入資產：checkpoint gate 逐字比對路徑和完整 SHA256，分別為 `88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787`、`ba5009ec197d1d11b9902a2b92917d1ca9198e8b32882c442638380786ab0d7d`；`training_started_unix=null`，註明不適用。沒有訓練起跑時間或 mtime gate。
++2. lead 側提供 GPU flag-off 三題逐位元等價證據 `smoke/flagoff-proof.json`（欄位見 `flagoff-proof.template.json`）：含 `device="cuda"`、baseline/current source SHA256、目前 `code_hashes`、s33 `ckpt_sha256`、三個相異 `(task,episode)` 的 `baseline_trajectory_sha256` / `current_trajectory_sha256`，兩側逐題相同。`run.py` 先驗這份證據，沒有則 BLOCKED。CPU 版 flag-off 等價已在 wiring test；GPU 版尚待執行。
++3. `calibration.sbatch`：s33、A、draw0、200 題 R1 與 j_signal noclimb s33=.350 差值 ≤.08〔拍、預註冊〕。200 題的 naive binomial SE 約 .034；五個 official task 相關，.08 是保守放大。只比整體率，因釘 reset 抖動後逐題 RNG 消耗可不同。未過即停。
++4. `mutant.sbatch`：B′ σ0、ep 40–44 × 8 draws。逐題檢查 reset/goal、flow 首 u、完整 trajectory、steps、成功位元相同，oracle@8=@1。真 GPU 結果未取得。
++5. `smoke.sbatch`：A 和 B′ 三 σ 檔，各 ep 40–44 × 8 draws。A draw0 R1 必須在 .15–.60 sanity 帶。select 用獨立公式從每條 draw success 重算 oracle@k 與 per-draw quality；B 各正 σ 至少一題 trajectory hash 與同題 σ0 mutant 不同，且檢查 A/B reset、noise seed 和首 u 配對。選 B pooled oracle@8 最大者，平手取最小 σ；不產 A/B 判決。
++6. `main.sbatch` 只供審查，不由本包提交。s33 的 A/B 各 200 題×8；s35 須另跑其 σ0 mutant、獨立粗掃與選檔，再用其 selection。
++
++所有 gate 綁定 code hash、provenance hash 和結果 SHA256；結果 exclusive write。部署沿 J-signal 的 ada-lite/jasmine、指定 venv/ogbench 資料及 gpu:1。CPU 無 allocation 不能 launch GPU stage。
++
++## 結果帳
++
++`tasks[]` 每題含 task、episode、success_bits、八條 draws；每條記 env_seed、stream_seed、flow_seed、success、steps、reset/goal/first-u/u-sequence/trajectory SHA256、u_calls/u_samples。頂層存 oracle_at_k、pooled_oracle、per_draw_quality、n_oracle_success；末三欄依序為 `n_tasks,n_draws,n_success`。`n_tasks` 是 task/episode 題對，不是獨立 official task 數。R1 是任一步 `info.success`，不讀 `per_task.completed`。主檔每 draw 將 rollout 回傳率與 collector 位元平均交叉核；不符立即失敗。
++
++## 自我懷疑
++
++GPU 上 decoder/模擬器逐位元確定性與 flag-off 三題仍待 lead 實跑。σ 粗掃只有 25 題，最佳 σ 有取樣誤差；.08 錨容忍帶是依五個 task 相關性放大後的預註冊判準，並非已量得的 CI。既有 rollout 在 term/trunc 時只跳出 action 內圈，未在本回鍋範圍修正。真 env 驗證器用玩具 flow/head，能驗 reset 配對與 B σ0 確定性，不能替代真模型 GPU smoke。

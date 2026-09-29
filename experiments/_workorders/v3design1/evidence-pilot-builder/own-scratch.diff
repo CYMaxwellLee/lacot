@@ -1,0 +1,24 @@
+--- scratch-before-builder.py
++++ scratch-with-builder.py
+@@ -1995,6 +1995,21 @@
+                   + (f" l_lo {l_lo.item():.4f}" if l_lo is not None else ""), flush=True)
+ 
+ 
++# BEGIN opt-in W_phi quality builder (exposure remains unavailable).
++if (LEARNED_REFINE and (STEPS2 or CONT_STEPS)
++        and "LACOT_REFINE_QUALITY_CKPT" in os.environ):
++    if INTENT:
++        raise ValueError("intent hindsight anchors unqualified; VERDICT-EXP2-S2 M2")
++    if CONS != "ema":
++        raise ValueError("DESIGN-v3 training requires explicit LACOT_CONS=ema")
++    from lacot.refine_service_builder import build_from_env
++    REFINE_TRAINING_SERVICES = build_from_env(
++        domain=ENV_FAMILY, teacher=refine_ema, device=device, ema_decay=EMA_M,
++        decoder=lambda u, s: _dec(_q(u), s), intent_inverse=_intent_inv,
++        frozen_modules=tuple(m for m in (u_dec, s_embed, vq, fsq, intent_ad) if m is not None),
++        state_mean=MU, state_scale=SD, t_cap=T_CAP)
++    print("refine quality metadata:", REFINE_TRAINING_SERVICES.metadata(), flush=True)
++# END opt-in W_phi quality builder.
+ _stage2_loop(STEPS2)
+ if AMP and _AMP_ST["steps"]:
+     # ⭐ 收工把 skip 率印出來：⛔ 「跑完沒炸」不等於「每一步都更新了」——

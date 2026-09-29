@@ -1,0 +1,138 @@
+{
+  "tag": "bcodec_shat_gk16_obsonly_srep80001",
+  "ckpt": "/archive/cymaxwelllee/diag-g16/seedrep/s80001/ckpt/G16K16_lam0p0.pt",
+  "lam1_ref_json": "/archive/cymaxwelllee/diag-g16/seedrep/s80001/results/G16K16_lam1p0.json",
+  "dict_cfg": {
+    "G": 16,
+    "K": 16,
+    "D": 8,
+    "obs_dim": 29,
+    "act_dim": 8,
+    "seg_len": 4,
+    "lam_s": 0.0
+  },
+  "data": {
+    "data_path": "/archive/cymaxwelllee/data/ogbench/antmaze-medium-stitch-v0.npz",
+    "split_seed": 42,
+    "val_frac": 0.1,
+    "n_total": 250000,
+    "n_train": 225000,
+    "n_val": 25000
+  },
+  "probe": {
+    "hidden": 256,
+    "steps": 20000,
+    "batch": 512,
+    "lr": 0.0003,
+    "seed": 0,
+    "input_dim": 157,
+    "output_dim": 116,
+    "input_recipe": "concat(code_embed_from_frozen_dict, obs_t_norm)"
+  },
+  "bad_anchor": {
+    "seed": 20260913,
+    "method": "permute code embedding pairing only, keep obs_t_norm true"
+  },
+  "results": {
+    "err_real_val": 0.11907157301902771,
+    "err_bad_val": 0.5334208011627197,
+    "err_obs_only": 0.23451310396194458,
+    "ref_a_lambda1_recon_s_val": 0.052034828811883926,
+    "ratio_bad_to_real": 4.479833327451538,
+    "ratio_real_to_lambda1": 2.2883052704851727,
+    "ratio_full_vs_obsonly": 1.9695137807952636,
+    "code_info_margin": 0.9,
+    "code_adds_information": true,
+    "suspect_ratio_threshold": 2.0,
+    "measurement_suspect": false,
+    "verdict": "\u78bc\u6709\u589e\u91cf\u8cc7\u8a0a\uff0c\u4f46\u96e2\u03bb1\u81ea\u5e36\u982d\u6709\u8ddd\u96e2\uff0c\u898b\u6578\u5b57\uff0c\u4eba\u5de5\u5224\u8b80"
+  },
+  "loss_curve": [
+    [
+      0,
+      1.01846182346344
+    ],
+    [
+      1000,
+      0.21604788303375244
+    ],
+    [
+      2000,
+      0.19305822253227234
+    ],
+    [
+      3000,
+      0.1693471372127533
+    ],
+    [
+      4000,
+      0.16283370554447174
+    ],
+    [
+      5000,
+      0.15288902819156647
+    ],
+    [
+      6000,
+      0.14341619610786438
+    ],
+    [
+      7000,
+      0.1434827744960785
+    ],
+    [
+      8000,
+      0.13806013762950897
+    ],
+    [
+      9000,
+      0.13407105207443237
+    ],
+    [
+      10000,
+      0.13694195449352264
+    ],
+    [
+      11000,
+      0.12889018654823303
+    ],
+    [
+      12000,
+      0.1291680783033371
+    ],
+    [
+      13000,
+      0.12708094716072083
+    ],
+    [
+      14000,
+      0.12274117022752762
+    ],
+    [
+      15000,
+      0.12370175123214722
+    ],
+    [
+      16000,
+      0.12114454060792923
+    ],
+    [
+      17000,
+      0.124181367456913
+    ],
+    [
+      18000,
+      0.11824364215135574
+    ],
+    [
+      19000,
+      0.1139381006360054
+    ],
+    [
+      19999,
+      0.121449314057827
+    ]
+  ],
+  "train_seconds": 205.02901124954224,
+  "wall_seconds": 205.29368805885315
+}

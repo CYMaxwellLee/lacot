@@ -1,0 +1,7 @@
+B1 KD=1024 sigma=0.02 box_probability=2.7689971e-06 logP=-12.7970
+B1 KD=1024 sigma=0.05 box_probability=1.7562063e-170 logP=-390.8763
+B1 KD=1024 sigma=0.1 box_probability=0 logP=-982.9543
+PASS B1 old population optimum correction_ratio=0.999992; identity rejected by same gate
+BASELINES [{"compute": {"flow": 1, "refine": 0}, "cost": 1.3734239339828491, "method": "learned-R0", "positive_mode_fraction": 0.509765625, "seconds_excluding_shared_initial_flow": 5.259993486106396e-06}, {"compute": {"flow": 1, "refine": 1}, "cost": 0.0037182834930717945, "method": "learned-R1", "positive_mode_fraction": 0.509765625, "seconds_excluding_shared_initial_flow": 5.403999239206314e-05}, {"compute": {"flow": 1, "refine": 3}, "cost": 0.0004537811619229615, "method": "learned-R3", "positive_mode_fraction": 0.509765625, "seconds_excluding_shared_initial_flow": 0.00012556900037452579}, {"compute": {"decoder_backward": 3, "decoder_forward": 3, "flow": 1}, "cost": 0.02145974710583687, "method": "gradient-3", "positive_mode_fraction": 0.509765625, "seconds_excluding_shared_initial_flow": 0.0003840560093522072}, {"compute": {"decoder_forward": 4, "flow": 4}, "cost": 0.6880272626876831, "method": "best-of-4-same-mode", "positive_mode_fraction": 0.509765625, "seconds_excluding_shared_initial_flow": 0.0009747300064191222}]
+NOTE toy oracle exact; BoN mode mask uses toy branch identity. Production BoN uses qualified quality scorer and must also report unrestricted mode coverage.
+PASS B1/scaling/baselines probe (no universal learned-vs-selection claim)

@@ -1,0 +1,121 @@
+{
+  "calibration": {
+    "metadata": {
+      "source_kind": "toy_offline",
+      "dataset_hash": "9fdd5d17bc937f5eb58842e2e5b85cf38d082a6ba30b53b12d72405324f78226",
+      "episode_split": "calibration",
+      "parent_model_hash": null,
+      "candidate_id": null,
+      "noise_seed": 0,
+      "iteration": 0,
+      "domain": "pointmaze",
+      "horizon": 32,
+      "representation_version": "refine-v3/raw-state-interpolated-xy-v1",
+      "eval_only": false
+    },
+    "episodes": [
+      2,
+      3,
+      4,
+      18,
+      20,
+      23,
+      24,
+      26,
+      34,
+      36
+    ],
+    "n_windows": 450,
+    "short_windows": {
+      "4": 0,
+      "16": 120,
+      "32": 280
+    }
+  },
+  "test": {
+    "metadata": {
+      "source_kind": "toy_offline",
+      "dataset_hash": "9fdd5d17bc937f5eb58842e2e5b85cf38d082a6ba30b53b12d72405324f78226",
+      "episode_split": "test",
+      "parent_model_hash": null,
+      "candidate_id": null,
+      "noise_seed": 0,
+      "iteration": 0,
+      "domain": "pointmaze",
+      "horizon": 32,
+      "representation_version": "refine-v3/raw-state-interpolated-xy-v1",
+      "eval_only": false
+    },
+    "episodes": [
+      1,
+      6,
+      10,
+      11,
+      21,
+      22,
+      27,
+      30,
+      45,
+      47
+    ],
+    "n_windows": 450,
+    "short_windows": {
+      "4": 0,
+      "16": 120,
+      "32": 280
+    }
+  },
+  "train": {
+    "metadata": {
+      "source_kind": "toy_offline",
+      "dataset_hash": "9fdd5d17bc937f5eb58842e2e5b85cf38d082a6ba30b53b12d72405324f78226",
+      "episode_split": "train",
+      "parent_model_hash": null,
+      "candidate_id": null,
+      "noise_seed": 0,
+      "iteration": 0,
+      "domain": "pointmaze",
+      "horizon": 32,
+      "representation_version": "refine-v3/raw-state-interpolated-xy-v1",
+      "eval_only": false
+    },
+    "episodes": [
+      0,
+      5,
+      7,
+      8,
+      9,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      19,
+      25,
+      28,
+      29,
+      31,
+      32,
+      33,
+      35,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      46,
+      48,
+      49
+    ],
+    "n_windows": 1024,
+    "short_windows": {
+      "4": 0,
+      "16": 272,
+      "32": 626
+    }
+  }
+}

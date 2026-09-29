@@ -1,0 +1,22 @@
+device: cuda
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/archive/cymaxwelllee/LaCoT/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.7971   用到的 u 值 +1.6989   ✓
+
+==== SUCCESS RATE (env=pointmaze-large-stitch-v0, 5 tasks x 5 seeds, MAXH 1000) ====
+  oracle A draw=0: success 10/25 = 0.400
+  oracle A draw=1: success 9/25 = 0.360
+  oracle A draw=2: success 9/25 = 0.360
+  oracle A draw=3: success 9/25 = 0.360
+  oracle A draw=4: success 10/25 = 0.400
+  oracle A draw=5: success 10/25 = 0.400
+  oracle A draw=6: success 9/25 = 0.360
+  oracle A draw=7: success 9/25 = 0.360
+Oracle collection complete: /home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/sweep/ucontrast1_smoke_s33_A_sig0.json tasks=25 draws=200 success=75
