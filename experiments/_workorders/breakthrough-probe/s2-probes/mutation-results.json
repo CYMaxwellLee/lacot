@@ -1,0 +1,624 @@
+[
+ [
+  "C1",
+  "verify_source never raises",
+  "KILLED",
+  [
+   "test_01_pin_guard_rejects_before_import"
+  ]
+ ],
+ [
+  "C2",
+  "draw guard admits 63 (old stream)",
+  "SURVIVED",
+  []
+ ],
+ [
+  "C3",
+  "stream multiplier changed",
+  "KILLED",
+  [
+   "test_23_production_adapter_REQUIRED",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "C4",
+  "base_seed off by one (reported only)",
+  "KILLED",
+  [
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "C5",
+  "injected rows get flow seed",
+  "KILLED",
+  [
+   "test_04_draw_plans_streams",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "C6",
+  "noise seed differs from stream",
+  "KILLED",
+  [
+   "test_04_draw_plans_streams",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "C7",
+  "reset order swapped",
+  "KILLED",
+  [
+   "test_05_reset_three_lines_and_collector_digest"
+  ]
+ ],
+ [
+  "C8",
+  "reset seed off by one",
+  "KILLED",
+  [
+   "test_05_reset_three_lines_and_collector_digest"
+  ]
+ ],
+ [
+  "R1",
+  "classify: equal-step counts as bypass",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R2",
+  "classify: budget boundary 252 invalid",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R3",
+  "classify: crossing False -> d4",
+  "KILLED",
+  [
+   "test_06_d1_d5_and_251_calls"
+  ]
+ ],
+ [
+  "R4",
+  "insufficient threshold 7",
+  "KILLED",
+  [
+   "test_07_invalid_draw_denominators_and_c_priority"
+  ]
+ ],
+ [
+  "R5",
+  "w_unreliable >= 50%",
+  "KILLED",
+  [
+   "test_07_invalid_draw_denominators_and_c_priority"
+  ]
+ ],
+ [
+  "R6",
+  "C success no longer first",
+  "KILLED",
+  [
+   "test_07_invalid_draw_denominators_and_c_priority"
+  ]
+ ],
+ [
+  "R7",
+  "tie not ambiguous",
+  "KILLED",
+  [
+   "test_08_grids_v5_tie_and_d5"
+  ]
+ ],
+ [
+  "R8",
+  "d5 dominance folded into DEEP",
+  "KILLED",
+  [
+   "test_08_grids_v5_tie_and_d5"
+  ]
+ ],
+ [
+  "R9",
+  "A_only/B_only swapped",
+  "KILLED",
+  [
+   "test_08_grids_v5_tie_and_d5"
+  ]
+ ],
+ [
+  "R10",
+  "behavior gate floor instead of ceil",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R11",
+  "R threshold >=2",
+  "KILLED",
+  [
+   "test_11_behavior_delivery_gates_separate"
+  ]
+ ],
+ [
+  "R12",
+  "gate min qualified 4",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R13",
+  "E2 >= 50%",
+  "KILLED",
+  [
+   "test_13_e2_pair_denominator_and_e3"
+  ]
+ ],
+ [
+  "R14",
+  "E3 task5 threshold 4",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R15",
+  "E4 dominance margin 1",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R16",
+  "follower threshold 4",
+  "KILLED",
+  [
+   "test_12_paired_response_nine_cells"
+  ]
+ ],
+ [
+  "R17",
+  "adsorption floor threshold",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R18",
+  "stop-loss <2",
+  "SURVIVED",
+  []
+ ],
+ [
+  "R19",
+  "p threshold .5",
+  "KILLED",
+  [
+   "test_14_e4_first_match_v4_and_d5"
+  ]
+ ],
+ [
+  "R20",
+  "E0 disabled",
+  "KILLED",
+  [
+   "test_15_exit_priority"
+  ]
+ ],
+ [
+  "S1",
+  "reach <= rho",
+  "KILLED",
+  [
+   "test_10_strict_reach_and_bypass"
+  ]
+ ],
+ [
+  "S2",
+  "cap off by one",
+  "KILLED",
+  [
+   "test_09_state_machine_reach_cap_stuck_and_midchunk",
+   "test_23_production_adapter_REQUIRED"
+  ]
+ ],
+ [
+  "S3",
+  "noop sentinel",
+  "SURVIVED",
+  []
+ ],
+ [
+  "S4",
+  "stuck labeled cap",
+  "KILLED",
+  [
+   "test_09_state_machine_reach_cap_stuck_and_midchunk"
+  ]
+ ],
+ [
+  "S5",
+  "noise zeroed (draws kept)",
+  "SURVIVED",
+  []
+ ],
+ [
+  "S6",
+  "collector arm B",
+  "KILLED",
+  [
+   "test_23_production_adapter_REQUIRED"
+  ]
+ ],
+ [
+  "S7",
+  "task2 gets B arm",
+  "KILLED",
+  [
+   "test_04_draw_plans_streams",
+   "test_21_gate_source_and_smoke_coverage",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "S8",
+  "only 15 draws",
+  "KILLED",
+  [
+   "test_04_draw_plans_streams",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "S9",
+  "PRODUCTION_READY gate removed (m3)",
+  "KILLED",
+  [
+   "test_23_production_adapter_REQUIRED"
+  ]
+ ],
+ [
+  "M1",
+  "warn_only=True",
+  "KILLED",
+  [
+   "test_22_deterministic_flags_mock"
+  ]
+ ],
+ [
+  "M2",
+  "tf32 on",
+  "SURVIVED",
+  []
+ ],
+ [
+  "M3",
+  "pre-head hash check removed",
+  "SURVIVED",
+  []
+ ],
+ [
+  "M4",
+  "post-head hash check removed",
+  "SURVIVED",
+  []
+ ],
+ [
+  "M5",
+  "gate P/R not conditional on N",
+  "KILLED",
+  [
+   "test_24_move1_108_limit_and_conditional_rows",
+   "test_28_full_artifact_conditional_coverage_and_donors",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "M6",
+  "P/Q not conditional on representation",
+  "KILLED",
+  [
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "M7",
+  "zero-length points kept",
+  "SURVIVED",
+  []
+ ],
+ [
+  "M8",
+  "manipulation check ignores round trip",
+  "KILLED",
+  [
+   "test_16_fixed_head_input_mutation_and_manipulation"
+  ]
+ ],
+ [
+  "M9",
+  "PRODUCTION_READY gate removed (m1)",
+  "KILLED",
+  [
+   "test_23_production_adapter_REQUIRED"
+  ]
+ ],
+ [
+  "M10",
+  "only P reruns",
+  "KILLED",
+  [
+   "test_04_draw_plans_streams",
+   "test_24_move1_108_limit_and_conditional_rows",
+   "test_28_full_artifact_conditional_coverage_and_donors",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "M11",
+  "gate P source route-A",
+  "KILLED",
+  [
+   "test_04_draw_plans_streams",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "H1",
+  "trace hash check removed",
+  "KILLED",
+  [
+   "test_17_harvester_negative_matrix"
+  ]
+ ],
+ [
+  "H2",
+  "steps<=H check removed",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H3",
+  "head chunk count check removed",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H4",
+  "crossing ignores other-arm visit",
+  "KILLED",
+  [
+   "test_26_d4_exclusive_crossing_symmetric"
+  ]
+ ],
+ [
+  "H5",
+  "crossing ignores own-arm visit",
+  "KILLED",
+  [
+   "test_26_d4_exclusive_crossing_symmetric"
+  ]
+ ],
+ [
+  "H6",
+  "harvest budget +3",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H7",
+  "harvest equal-step bypass",
+  "KILLED",
+  [
+   "test_26_d4_exclusive_crossing_symmetric"
+  ]
+ ],
+ [
+  "H8",
+  "ledger anomaly check removed",
+  "KILLED",
+  [
+   "test_18_independent_recompute_all_d_and_switch_mutant"
+  ]
+ ],
+ [
+  "H9",
+  "expected schedule ignores mid-chunk reswitch",
+  "KILLED",
+  [
+   "test_18_independent_recompute_all_d_and_switch_mutant",
+   "test_26_d4_exclusive_crossing_symmetric"
+  ]
+ ],
+ [
+  "H10",
+  "seed check removed",
+  "KILLED",
+  [
+   "test_17_harvester_negative_matrix"
+  ]
+ ],
+ [
+  "H11",
+  "polluted check removed",
+  "KILLED",
+  [
+   "test_17_harvester_negative_matrix"
+  ]
+ ],
+ [
+  "H12",
+  "post-success observation check removed",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H13",
+  "reproduction ignores success",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H14",
+  "all gate Qs qualified",
+  "KILLED",
+  [
+   "test_28_full_artifact_conditional_coverage_and_donors"
+  ]
+ ],
+ [
+  "H15",
+  "main skip threshold 4",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H16",
+  "donor check removed",
+  "KILLED",
+  [
+   "test_28_full_artifact_conditional_coverage_and_donors"
+  ]
+ ],
+ [
+  "H17",
+  "gate P source check removed",
+  "KILLED",
+  [
+   "test_28_full_artifact_conditional_coverage_and_donors"
+  ]
+ ],
+ [
+  "H18",
+  "n_diff forced 0",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H19",
+  "conformance always true",
+  "SURVIVED",
+  []
+ ],
+ [
+  "H20",
+  "A/B fingerprint agreement removed",
+  "SURVIVED",
+  []
+ ],
+ [
+  "B1",
+  "w depth ceil",
+  "CRASH",
+  [
+   "py\", line 128, in build |     raise ValueError('derived waypoint disagrees with card') | ValueError: derived waypoint disagrees with card |  | ---------------------------------------------------------------------- | Ran 0 tests in 0.008s |  | FAILED (errors=1) | STATUS: BLOCKED — mandatory acceptance checks failed | "
+  ]
+ ],
+ [
+  "B2",
+  "route naming reversed",
+  "KILLED",
+  [
+   "test_03_geometry_and_machine_question_sets",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "B3",
+  "task 2 donor added",
+  "KILLED",
+  [
+   "test_03_geometry_and_machine_question_sets",
+   "test_29_generated_contract_snapshots"
+  ]
+ ],
+ [
+  "X1",
+  "no mid-chunk re-plan on reach",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X2",
+  "cap factor 1 not 2",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X3",
+  "R injects own route A instead of donor",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X4",
+  "Move3 without noise",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X5",
+  "stuck never fires",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X6",
+  "conditions always on goal",
+  "BAD-PATTERN count=0",
+  []
+ ],
+ [
+  "X7",
+  "conditions always on goal (alt indent)",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X8",
+  "policy RNG/caches not reset",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X9",
+  "N-failed gate rows run anyway",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X10",
+  "main never gated by >=5",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X11",
+  "gate P uses route not self-rollout",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X12",
+  "interface check skipped",
+  "SURVIVED",
+  []
+ ],
+ [
+  "X13",
+  "reset_env bypassed (no np/action_space seeds)",
+  "KILLED",
+  [
+   "test_23_production_adapter_REQUIRED"
+  ]
+ ],
+ [
+  "X14",
+  "routes encoded reversed (goal->start)",
+  "SURVIVED",
+  []
+ ]
+]
