@@ -1,0 +1,51 @@
+CPU contract selftest; mock tests are not GPU smoke evidence.
+Frozen source expected=276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc
+Frozen source actual=276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc
+test_00_actual_frozen_source_pin_REQUIRED (__main__.ContractTests.test_00_actual_frozen_source_pin_REQUIRED) ... ok
+test_01_pin_guard_rejects_before_import (__main__.ContractTests.test_01_pin_guard_rejects_before_import) ... ok
+test_02_builder_double_run_bytes (__main__.ContractTests.test_02_builder_double_run_bytes) ... ok
+test_03_geometry_and_machine_question_sets (__main__.ContractTests.test_03_geometry_and_machine_question_sets) ... ok
+test_04_draw_plans_streams (__main__.ContractTests.test_04_draw_plans_streams) ... ok
+test_05_reset_three_lines_and_collector_digest (__main__.ContractTests.test_05_reset_three_lines_and_collector_digest) ... ok
+test_06_d1_d5_and_251_calls (__main__.ContractTests.test_06_d1_d5_and_251_calls) ... ok
+test_07_invalid_draw_denominators_and_c_priority (__main__.ContractTests.test_07_invalid_draw_denominators_and_c_priority) ... ok
+test_08_grids_v5_tie_and_d5 (__main__.ContractTests.test_08_grids_v5_tie_and_d5) ... ok
+test_09_state_machine_reach_cap_stuck_and_midchunk (__main__.ContractTests.test_09_state_machine_reach_cap_stuck_and_midchunk) ... ok
+test_10_strict_reach_and_bypass (__main__.ContractTests.test_10_strict_reach_and_bypass) ... ok
+test_11_behavior_delivery_gates_separate (__main__.ContractTests.test_11_behavior_delivery_gates_separate) ... ok
+test_12_paired_response_nine_cells (__main__.ContractTests.test_12_paired_response_nine_cells) ... ok
+test_13_e2_pair_denominator_and_e3 (__main__.ContractTests.test_13_e2_pair_denominator_and_e3) ... ok
+test_14_e4_first_match_v4_and_d5 (__main__.ContractTests.test_14_e4_first_match_v4_and_d5) ... ok
+test_15_exit_priority (__main__.ContractTests.test_15_exit_priority) ... ok
+test_16_fixed_head_input_mutation_and_manipulation (__main__.ContractTests.test_16_fixed_head_input_mutation_and_manipulation) ... ok
+test_17_harvester_negative_matrix (__main__.ContractTests.test_17_harvester_negative_matrix) ... ok
+test_18_independent_recompute_all_d_and_switch_mutant (__main__.ContractTests.test_18_independent_recompute_all_d_and_switch_mutant) ... ok
+test_19_overwritten_injection_rejected (__main__.ContractTests.test_19_overwritten_injection_rejected) ... ok
+test_20_representation_pass_does_not_hide_rollout_failure (__main__.ContractTests.test_20_representation_pass_does_not_hide_rollout_failure) ... ok
+test_21_gate_source_and_smoke_coverage (__main__.ContractTests.test_21_gate_source_and_smoke_coverage) ... ok
+test_22_deterministic_flags_mock (__main__.ContractTests.test_22_deterministic_flags_mock) ... ok
+test_23_production_adapter_REQUIRED (__main__.ContractTests.test_23_production_adapter_REQUIRED) ... 
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+REAL_CPU_PASS: M9 import, s33/EMA, encode_u false mask, head, decode, four P/Q same-u reruns, fresh-flow seed, legal-w short cap; GPU evidence=false
+{"ckpt_sha256": "88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787", "encoded_u_sha256": "fd89a90c7385dfd5c57288d7a2511b188fcb03c867cdf5e23bc0ab72ebb961a9", "encoder_shape": [1, 8, 256], "head_shape": [1, 4, 2], "head_u_hashes": ["fd89a90c7385dfd5c57288d7a2511b188fcb03c867cdf5e23bc0ab72ebb961a9"], "mask_all_false": true, "production_evidence": false, "source_sha256": "276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc"}
+ok
+test_24_move1_108_limit_and_conditional_rows (__main__.ContractTests.test_24_move1_108_limit_and_conditional_rows) ... ok
+test_25_short_trace_contract (__main__.ContractTests.test_25_short_trace_contract) ... ok
+test_26_d4_exclusive_crossing_symmetric (__main__.ContractTests.test_26_d4_exclusive_crossing_symmetric) ... ok
+test_27_m9_pin_and_import_boundary (__main__.ContractTests.test_27_m9_pin_and_import_boundary) ... ok
+test_28_full_artifact_conditional_coverage_and_donors (__main__.ContractTests.test_28_full_artifact_conditional_coverage_and_donors) ... ok
+test_29_generated_contract_snapshots (__main__.ContractTests.test_29_generated_contract_snapshots) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 4.718s
+
+OK
+STATUS: DONE

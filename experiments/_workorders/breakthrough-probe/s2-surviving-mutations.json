@@ -1,0 +1,254 @@
+[
+  [
+    "C2",
+    "common.py",
+    "if draw not in range(64, 80):",
+    "if draw not in range(63, 80):",
+    "draw guard admits 63 (old stream)"
+  ],
+  [
+    "R1",
+    "rules.py",
+    "(w_step is None or g_step < w_step)",
+    "(w_step is None or g_step <= w_step)",
+    "classify: equal-step counts as bypass"
+  ],
+  [
+    "R2",
+    "rules.py",
+    "if calls > ceil(H/chunk_steps)+2:",
+    "if calls >= ceil(H/chunk_steps)+2:",
+    "classify: budget boundary 252 invalid"
+  ],
+  [
+    "R10",
+    "rules.py",
+    "elif p_reproduced < ceil(qualified*3/4):",
+    "elif p_reproduced < int(qualified*3/4):",
+    "behavior gate floor instead of ceil"
+  ],
+  [
+    "R12",
+    "rules.py",
+    "    if qualified < 5:",
+    "    if qualified < 4:",
+    "gate min qualified 4"
+  ],
+  [
+    "R14",
+    "rules.py",
+    "{4: 11, 5: 5}[task]",
+    "{4: 11, 5: 4}[task]",
+    "E3 task5 threshold 4"
+  ],
+  [
+    "R15",
+    "rules.py",
+    "ordered[0][1] -\n                (ordered[1][1] if len(ordered) > 1 else 0) >= 2",
+    "ordered[0][1] -\n                (ordered[1][1] if len(ordered) > 1 else 0) >= 1",
+    "E4 dominance margin 1"
+  ],
+  [
+    "R17",
+    "rules.py",
+    "threshold = ceil(len(pairs)/2)",
+    "threshold = len(pairs)//2",
+    "adsorption floor threshold"
+  ],
+  [
+    "R18",
+    "rules.py",
+    "axis1_deprioritized=forward < 3",
+    "axis1_deprioritized=forward < 2",
+    "stop-loss <2"
+  ],
+  [
+    "S3",
+    "harness_move3.py",
+    "RHO\n",
+    "RHO\n",
+    "noop sentinel"
+  ],
+  [
+    "S5",
+    "harness_move3.py",
+    "eps = torch.randn(action.shape, generator=collector.noise).numpy()\n    return np.clip(action + SIGMA*eps, -1., 1.).astype(np.float32)",
+    "eps = torch.randn(action.shape, generator=collector.noise).numpy()\n    return np.clip(action + 0*eps, -1., 1.).astype(np.float32)",
+    "noise zeroed (draws kept)"
+  ],
+  [
+    "M2",
+    "harness_move1.py",
+    "torch.backends.cuda.matmul.allow_tf32 = False",
+    "torch.backends.cuda.matmul.allow_tf32 = True",
+    "tf32 on"
+  ],
+  [
+    "M3",
+    "harness_move1.py",
+    "        if delivered != self.expected:\n            raise ValueError('E0: injection changed before head')\n",
+    "        pass\n",
+    "pre-head hash check removed"
+  ],
+  [
+    "M4",
+    "harness_move1.py",
+    "        if digest_array(array_of(self.u)) != self.expected:\n            raise ValueError('E0: head mutated injection')\n",
+    "        pass\n",
+    "post-head hash check removed"
+  ],
+  [
+    "M7",
+    "harness_move1.py",
+    "keep = np.r_[True, np.diff(lengths) > 0]",
+    "keep = np.r_[True, np.diff(lengths) >= 0]",
+    "zero-length points kept"
+  ],
+  [
+    "H2",
+    "harvest.py",
+    "require(type(steps) is int and 0 < steps <= H, 'invalid observed steps')",
+    "require(type(steps) is int and 0 < steps, 'invalid observed steps')",
+    "steps<=H check removed"
+  ],
+  [
+    "H3",
+    "harvest.py",
+    "            require(len(row['head_u_hashes']) == ceil(steps/row['chunk_steps']), 'missing head chunks')\n",
+    "",
+    "head chunk count check removed"
+  ],
+  [
+    "H6",
+    "harvest.py",
+    "    if calls > ceil(H/chunk)+2:\n        invalid.append('budget-exceeded')",
+    "    if calls > ceil(H/chunk)+3:\n        invalid.append('budget-exceeded')",
+    "harvest budget +3"
+  ],
+  [
+    "H12",
+    "harvest.py",
+    "        require(not any(row['goal_success'][:-1]), 'observations after first success')\n",
+    "",
+    "post-success observation check removed"
+  ],
+  [
+    "H13",
+    "harvest.py",
+    "            reproduced[arm] += bool(n != 'O' and entries[k]['route'] == n and any(by_key[k]['goal_success']))",
+    "            reproduced[arm] += bool(n != 'O' and entries[k]['route'] == n)",
+    "reproduction ignores success"
+  ],
+  [
+    "H15",
+    "harvest.py",
+    "(p['group'] == 'main' and not smoke and len(qualified) < 5)",
+    "(p['group'] == 'main' and not smoke and len(qualified) < 4)",
+    "main skip threshold 4"
+  ],
+  [
+    "H18",
+    "harvest.py",
+    "n_diff=sum(d['different'] for d in details),",
+    "n_diff=0,",
+    "n_diff forced 0"
+  ],
+  [
+    "H19",
+    "harvest.py",
+    "conformance[str(k)] = a.shape == b.shape and a.tobytes() == b.tobytes()",
+    "conformance[str(k)] = True",
+    "conformance always true"
+  ],
+  [
+    "H20",
+    "harvest.py",
+    "require(sources[0] == sources[1], 'historical A/B fingerprints disagree')",
+    "pass",
+    "A/B fingerprint agreement removed"
+  ],
+  [
+    "X1",
+    "runtime.py",
+    "            if reason is not None or state.switch_required:\n                break",
+    "            if reason is not None:\n                break",
+    "no mid-chunk re-plan on reach"
+  ],
+  [
+    "X2",
+    "runtime.py",
+    "cap_steps=min(H, int(np.ceil(geom['w_depth']*step_budget*2))),",
+    "cap_steps=min(H, int(np.ceil(geom['w_depth']*step_budget*1))),",
+    "cap factor 1 not 2"
+  ],
+  [
+    "X3",
+    "runtime.py",
+    "kwargs['u'] = encode(donor['task'], donor['route'])",
+    "kwargs['u'] = encode(task, 'A')",
+    "R injects own route A instead of donor"
+  ],
+  [
+    "X4",
+    "runtime.py",
+    "action = (noisy_action(collector, action) if move == 3 else",
+    "action = (np.clip(action, -1., 1.).astype(np.float32) if move == 3 else",
+    "Move3 without noise"
+  ],
+  [
+    "X5",
+    "runtime.py",
+    "stuck = bool(stuck_check(state.xy + [list(obs[:2])])) if stuck_check else False",
+    "stuck = False",
+    "stuck never fires"
+  ],
+  [
+    "X7",
+    "runtime.py",
+    "    target = waypoint if state.stage == 'w' else goal\n",
+    "    target = goal\n",
+    "conditions always on goal (alt indent)"
+  ],
+  [
+    "X8",
+    "runtime.py",
+    "    reset_policy(module, task, episode, draw)\n",
+    "    pass\n",
+    "policy RNG/caches not reset"
+  ],
+  [
+    "X9",
+    "runtime.py",
+    "        if p['conditional_on_N_success'] and not n_rows[k]['success']:",
+    "        if False:",
+    "N-failed gate rows run anyway"
+  ],
+  [
+    "X10",
+    "runtime.py",
+    "                if p['group'] == 'main' and not smoke and sum(v['success'] for v in n_rows.values()\n                        if v['task'] in (1, 3)) < 5:",
+    "                if False:",
+    "main never gated by >=5"
+  ],
+  [
+    "X11",
+    "runtime.py",
+    "kwargs['u'] = (m1.encode_trajectory(module, m1.gate_p_source(n_rows[k])['xy'])\n                                   if p['group'] == 'gate' else encode(task, 'A' if arm == 'P' else 'B'))",
+    "kwargs['u'] = encode(task, 'A' if arm == 'P' else 'B')",
+    "gate P uses route not self-rollout"
+  ],
+  [
+    "X12",
+    "runtime.py",
+    "        interface = interface_check(module, route(4, 'A'))",
+    "        interface = None",
+    "interface check skipped"
+  ],
+  [
+    "X14",
+    "runtime.py",
+    "            encoded[k] = m1.encode_trajectory(module, route(task, arm))",
+    "            encoded[k] = m1.encode_trajectory(module, route(task, arm)[::-1])",
+    "routes encoded reversed (goal->start)"
+  ]
+]

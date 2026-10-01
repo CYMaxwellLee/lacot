@@ -1,0 +1,38 @@
+{
+  "inputs": [
+    {
+      "path": "/home/cymaxwelllee/Projects/lacot/experiments/scratch_lacot_rollout.py",
+      "sha256": "b7d3a0d98f75fada7e101af73e597af5e08bdc6e1df947852ee764333004a234"
+    },
+    {
+      "path": "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/collector.py",
+      "sha256": "7d8e2bf3b8760388ffa0cdad5460b4ea298c738325d5bf25bc084a0a248c26a5"
+    },
+    {
+      "path": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/PROBE-LAUNCH-CARD.md",
+      "sha256": "d31b406d5d3f68f9d028f5eeb95e390f5cb0a7c3a5184d001abda9d255523957"
+    },
+    {
+      "path": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/gate0b-result.json",
+      "sha256": "b7840f6702c8c97a2943be7d3eac6b3601c1fb45cc0aa843c7ca02f2486134ae"
+    },
+    {
+      "path": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/gate0b.py",
+      "sha256": "8689eb58c391944d9a36f922ed64f4ead72f338b2f77617edd1c28e69f2dd114"
+    },
+    {
+      "path": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/PREFLIGHT-REPORT-v4.md",
+      "sha256": "531c3add8df2dc109eb1f550b49656e3ea22dd1b953a613f5fa654370daf2664"
+    },
+    {
+      "path": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/PREFLIGHT-REPORT-v5.md",
+      "sha256": "fc3ccd766ff6deac09af4bd9fd2ecb1ec19ba1e4982675960d15b31f2c291f70"
+    },
+    {
+      "path": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/PREFLIGHT-REPORT-v6-GO.md",
+      "sha256": "5374c045120d3eb67f59a8b6e4501fe6e74c88ab00520b15a914d878c1ac5ad3"
+    }
+  ],
+  "production_receipt": false,
+  "status": "BLOCKED"
+}
