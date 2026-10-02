@@ -17,3 +17,18 @@ checkpoints/*
 # checkpoint 是 GB 級的中間物，⛔ 不進 repo（要重現用 slurm/ 底下的腳本重跑）
 results/*.pt
 slurm_outputs/
+
+# 2026-10-02 untracked 分流 gitignore 桶（relay-maiden bucket-list G1-G6，主持人裁示「按清單執行」）
+# 可再生的日誌／暫存／smoke 產物／本機參考快照，⛔ 不進 repo（檔案原地不動，只是不再被追蹤）
+# G1 排程器 .out 傾倒區（歷史上從未進庫）
+/slurm/logs/
+# G2 repo 根目錄的排程器 stdout（j_signal_<jobid>_<idx>.out，根目錄 .out 歷史上從未進庫）
+/j_signal_*.out
+# G3 檔名標示暫存的 slurm 腳本
+/slurm/*_tmp.sh
+# G4 smoke 測試產物目錄（含 GB 級 .pt；依名稱視為可重跑再生，未逐一驗證）
+/results/smoke_*/
+# G5 執行期 jsonl 日誌（divlog 家族）
+/results/divlog_*.jsonl
+# G6 本機參考／暫存快照
+/.smokeref/
