@@ -237,8 +237,8 @@ def launch(args):
             or data["ckpt"] != old.CKPTS[seed]
             or list(data)[-3:] != ["n_tasks", "n_draws", "n_success"]):
         raise ValueError("Abnormal result shape/schema")
-    if args.mode == "s35" and (data["arm"] != arm or data["sigma"] != sigma):
-        raise ValueError("s35 result arm/sigma differs from selected plan")
+    if data["arm"] != arm or data["sigma"] != sigma:
+        raise ValueError("Result arm/sigma differs from selected plan")
     pairs = [(t["task"], t["episode"]) for t in data["tasks"]]
     expected = (questions if questions is not None else
                 [(t, e) for t in range(1, 6)
