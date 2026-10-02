@@ -1,0 +1,35 @@
+host: zeldajr
+python: /home/cymaxwelllee/Projects/lacot/.venv/bin/python
+Python 3.11.15
+=== shat_probe  ckpt=/home/cymaxwelllee/Projects/lacot/experiments/bcodec_v0/ckpt/G16K16_lam0p0.pt  tag=bcodec_shat_g16k16 ===
+dict: G=16 K=16 D=8 lam_s=0.0（本工單只用 λ0 顆，字典凍住）  obs_dim=29 act_dim=8 seg_len=4
+segments: n_total=250000  n_train=225000  n_val=25000  split_seed=42  val_frac=0.1
+  step=     0  train_mse=0.998026
+  step=  1000  train_mse=0.215264
+  step=  2000  train_mse=0.182907
+  step=  3000  train_mse=0.168779
+  step=  4000  train_mse=0.154036
+  step=  5000  train_mse=0.151028
+  step=  6000  train_mse=0.143161
+  step=  7000  train_mse=0.145612
+  step=  8000  train_mse=0.134415
+  step=  9000  train_mse=0.130189
+  step= 10000  train_mse=0.134444
+  step= 11000  train_mse=0.128043
+  step= 12000  train_mse=0.122480
+  step= 13000  train_mse=0.124798
+  step= 14000  train_mse=0.125134
+  step= 15000  train_mse=0.122335
+  step= 16000  train_mse=0.123542
+  step= 17000  train_mse=0.118255
+  step= 18000  train_mse=0.116247
+  step= 19000  train_mse=0.118356
+  step= 19999  train_mse=0.122638
+
+=== 結果 ===
+(real) val ŝ MSE (外掛頭，正確配對)     = 0.118181
+(a)    λ1 自帶頭 ŝ MSE（參照上界，讀檔） = 0.051389  (ratio real/lambda1 = 2.300, 越接近1越好)
+(b)    爛錨 control ŝ MSE（碼打亂）       = 0.555638  (ratio bad/real = 4.702, 越大越好，[拍]門檻=2.0)
+判定：假說部分成立或不成立（外掛頭遠優於爛錨，但離λ1自帶頭有距離，見數字，人工判讀）
+saved: /home/cymaxwelllee/Projects/lacot/experiments/bcodec_shat_probe/results/bcodec_shat_g16k16_summary.json
+=== done wall=30.1s ===
