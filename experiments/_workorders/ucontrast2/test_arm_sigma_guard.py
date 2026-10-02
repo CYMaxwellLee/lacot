@@ -32,12 +32,15 @@ class ArmSigmaGuardTests(unittest.TestCase):
     def setUpClass(cls):
         cls.launcher = load_launcher()
 
-    def exercise(self, mode, smoke, index, mismatch=None):
+    def exercise(self, mode, smoke, index, mismatch=None, selected=0.05):
+        # mismatch: None | "arm" (report the other arm) | "sigma" (report another
+        # sigma) | "missing" (result JSON lacks arm/sigma keys).  selected = the
+        # s35 sigma-selection value (n64 B always plans .05).
         module = self.launcher
         # Retain artifacts in /tmp: no files are deleted by this test.
         base = Path(tempfile.mkdtemp(prefix="ucontrast2-arm-sigma-"))
         arm = "A" if index == 0 else "B"
-        planned_sigma = 0.0 if index == 0 else 0.05
+        planned_sigma = 0.0 if index == 0 else (selected if mode == "s35" else 0.05)
         outdir = base / arm
         args = SimpleNamespace(mode=mode, smoke=smoke, index=index,
                                outdir=str(base), calibration_root=str(base / "cal"))
@@ -78,11 +81,15 @@ class ArmSigmaGuardTests(unittest.TestCase):
             quality = [0.0] * draws
             # All later launch gates are satisfied, so an omitted guard writes PASS.
             old.independent_oracle.return_value = (oracle, quality, 0)
-            data = dict(arm="A" if mismatch == "arm" else arm,
-                        sigma=0.10 if mismatch == "sigma" else sigma,
+            # "arm" mismatch reports the OTHER arm with the planned sigma, so an
+            # A plan comes back as B/0.0 (the shape a real env mix-up produces).
+            data = dict(arm=("B" if arm == "A" else "A") if mismatch == "arm" else arm,
+                        sigma=sigma + 0.05 if mismatch == "sigma" else sigma,
                         ckpt=env["LACOT_LOAD_CKPT"], draws_per_task=draws,
                         tasks=tasks, oracle_at_k=oracle, per_draw_quality=quality,
                         pooled_oracle=0.0)
+            if mismatch == "missing":
+                del data["arm"], data["sigma"]
             if is_n64_main:
                 data["sampled_questions"] = json.loads(
                     env["LACOT_UCONTRAST2_QUESTIONS_JSON"])
@@ -105,7 +112,7 @@ class ArmSigmaGuardTests(unittest.TestCase):
             stack.enter_context(patch.object(module, "validate_inputs",
                                            return_value=({}, "fake-provenance", "fake-flagoff")))
             stack.enter_context(patch.object(module, "s35_selection",
-                                           return_value={"sigma": 0.05}))
+                                           return_value={"sigma": selected}))
             stack.enter_context(patch.object(module, "reserve_outdir", side_effect=reserve))
             stack.enter_context(patch.object(module, "registered_questions",
                                            return_value=questions))
@@ -116,7 +123,7 @@ class ArmSigmaGuardTests(unittest.TestCase):
             error = None
             try:
                 module.launch(args)
-            except ValueError as exc:
+            except (ValueError, KeyError) as exc:
                 error = exc
             run.assert_called_once()
             self.assertEqual(len(list(outdir.glob("*.preflight.json"))), 1)
@@ -125,7 +132,8 @@ class ArmSigmaGuardTests(unittest.TestCase):
                 # Check absence even when the baseline fails to raise.
                 self.assertFalse(bool(receipts), "mismatched arm/sigma wrote verified.json")
                 self.assertIsNotNone(error, "mismatched arm/sigma did not raise")
-                self.assertIn(GUARD_ERROR, str(error).lower())
+                if mismatch != "missing":   # a missing key fails closed as KeyError
+                    self.assertIn(GUARD_ERROR, str(error).lower())
                 old.independent_oracle.assert_not_called()
             else:
                 self.assertIsNone(error, f"correct arm/sigma raised: {error}")
@@ -164,6 +172,30 @@ class ArmSigmaGuardTests(unittest.TestCase):
             for index in (0, 1):
                 with self.subTest(smoke=smoke, index=index):
                     self.exercise(mode, smoke, index)
+
+    # Added after S2 review (2026-10-02): the three mutants that survived the
+    # first version — guard only on the B plan, sigma compared to a constant
+    # .05, and .get(key, planned) failing open on a missing key.
+    def test_a_plan_reports_b(self):
+        for mode in ("n64", "s35"):
+            for smoke in (False, True):
+                with self.subTest(mode=mode, smoke=smoke):
+                    self.exercise(mode, smoke, 0, "arm")
+
+    def test_s35_selected_sigma_not_05(self):
+        for selected in (0.10, 0.20):
+            for smoke in (False, True):
+                with self.subTest(selected=selected, smoke=smoke, case="correct"):
+                    self.exercise("s35", smoke, 1, selected=selected)
+                with self.subTest(selected=selected, smoke=smoke, case="wrong sigma"):
+                    self.exercise("s35", smoke, 1, "sigma", selected=selected)
+
+    def test_missing_arm_sigma_keys(self):
+        for mode in ("n64", "s35"):
+            for smoke in (False, True):
+                for index in (0, 1):
+                    with self.subTest(mode=mode, smoke=smoke, index=index):
+                        self.exercise(mode, smoke, index, "missing")
 
 
 class EvidenceResult(unittest.TextTestResult):
