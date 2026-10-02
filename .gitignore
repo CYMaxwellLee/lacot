@@ -16,6 +16,8 @@ checkpoints/*
 # rollout / probe 的產物：JSON 很小又是結論本身，留著進 repo；
 # checkpoint 是 GB 級的中間物，⛔ 不進 repo（要重現用 slurm/ 底下的腳本重跑）
 results/*.pt
+# 2026-10-02 補：上一條只擋頂層，子目錄的 checkpoint 同一個政策（results/day_0904/fsq、night_0903/fsq 的 6 個 .pt 照此不進庫、原地不動）
+results/**/*.pt
 slurm_outputs/
 
 # 2026-10-02 untracked 分流 gitignore 桶（relay-maiden bucket-list G1-G6，主持人裁示「按清單執行」）
