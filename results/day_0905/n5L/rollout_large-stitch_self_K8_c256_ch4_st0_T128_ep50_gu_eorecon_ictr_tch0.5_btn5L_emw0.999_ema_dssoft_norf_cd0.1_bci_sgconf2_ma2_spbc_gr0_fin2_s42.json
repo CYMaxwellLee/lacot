@@ -1,0 +1,82 @@
+{
+ "env": "pointmaze-large-stitch-v0",
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 8,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 0,
+ "tcap": 128,
+ "tcap_requested": 128,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 250,
+ "maxh": 1000,
+ "rates": {
+  "bc": 0.308,
+  "null_u": 0.188,
+  "shuf": 0.0,
+  "R0": 0.576,
+  "subgoal": 0.8
+ },
+ "enc_obj": "recon_ictr",
+ "learned_refine": 0,
+ "cond_drop": 0.1,
+ "bc_indep": 1,
+ "w_var": 0.0,
+ "w_cov": 0.0,
+ "subgoal": "conf2",
+ "grad_refine": 1,
+ "grad_r": 0,
+ "grad_eta": 0.1,
+ "grad_lam": 0.3,
+ "grad_r_warm": 10,
+ "delta_sub": 7.5,
+ "sub_cap_chunks": 10,
+ "sub_stuck_chunks": 3,
+ "dec_anchor": 0,
+ "teacher_mix": 0.5,
+ "intent": "",
+ "intent_ta": 32,
+ "intent_src": "hindsight",
+ "intent_drop": 0.0,
+ "intent_zero": 0,
+ "guid_w": 0.0,
+ "cont_train": 0,
+ "cont_steps": 0,
+ "div_w": 0.0,
+ "div_m": 0.3,
+ "div_log_every": 0,
+ "dev_tiers": "",
+ "load_ckpt": "ckpt_large-stitch_self_K8_c256_ch4_st11429_T128_ep2_gu_eorecon_ictr_tch0.5_btn5L_emw0.999_wu500_s1from_dssoft_norf_cd0.1_bci_s42.pt",
+ "rt_gate": [
+  {
+   "mse": 0.020314909517765045,
+   "wall": 0.020709272474050522,
+   "gdist": 0.3649531304836273
+  },
+  {
+   "mse": 0.04703032225370407,
+   "wall": 0.07341621071100235,
+   "gdist": 0.2520413100719452
+  },
+  {
+   "mse": 0.01686195656657219,
+   "wall": 0.02364230901002884,
+   "gdist": 0.24478045105934143
+  },
+  {
+   "mse": 0.01614212803542614,
+   "wall": 0.05362296104431152,
+   "gdist": 0.27883127331733704
+  },
+  {
+   "mse": 0.019720343872904778,
+   "wall": 0.058360934257507324,
+   "gdist": 0.4122093617916107
+  }
+ ],
+ "flow_probe": null,
+ "n_intent_noroute": 0
+}

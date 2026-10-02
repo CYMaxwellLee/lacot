@@ -1,0 +1,70 @@
+{
+ "env": "pointmaze-large-stitch-v0",
+ "seed": 0,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 8,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 0,
+ "tcap": 128,
+ "tcap_requested": 128,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 250,
+ "maxh": 1000,
+ "rates": {
+  "bc": 0.2,
+  "null_u": 0.0,
+  "shuf": 0.0,
+  "R0": 0.0,
+  "subgoal": 0.18
+ },
+ "enc_obj": "recon_ictr",
+ "learned_refine": 0,
+ "cond_drop": 0.1,
+ "bc_indep": 1,
+ "w_var": 0.0,
+ "w_cov": 0.0,
+ "subgoal": "conf2",
+ "grad_refine": 1,
+ "grad_r": 0,
+ "grad_eta": 0.1,
+ "grad_lam": 0.3,
+ "grad_r_warm": 10,
+ "delta_sub": 7.5,
+ "sub_cap_chunks": 10,
+ "sub_stuck_chunks": 3,
+ "dec_anchor": 0,
+ "teacher_mix": 0.5,
+ "dev_tiers": "",
+ "load_ckpt": "ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_fsqd8x8_dssoft_norf_cd0.1_bci_s44.pt",
+ "rt_gate": [
+  {
+   "mse": 0.12130242586135864,
+   "wall": 0.03126275911927223,
+   "gdist": 0.3832276463508606
+  },
+  {
+   "mse": 0.06943042576313019,
+   "wall": 0.13038703799247742,
+   "gdist": 0.30575820803642273
+  },
+  {
+   "mse": 0.035037025809288025,
+   "wall": 0.01659226231276989,
+   "gdist": 0.4092656373977661
+  },
+  {
+   "mse": 0.03501516580581665,
+   "wall": 0.07441295683383942,
+   "gdist": 0.308342844247818
+  },
+  {
+   "mse": 0.11946137249469757,
+   "wall": 0.1044902503490448,
+   "gdist": 0.9861573576927185
+  }
+ ],
+ "flow_probe": null
+}

@@ -1,0 +1,86 @@
+{
+ "env": "pointmaze-large-stitch-v0",
+ "seed": 33,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 8,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 0,
+ "tcap": 128,
+ "tcap_requested": 128,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 200,
+ "maxh": 1000,
+ "rates": {
+  "bc": 0.2,
+  "null_u": 0.0,
+  "shuf": 0.0,
+  "R1": 0.325
+ },
+ "enc_obj": "recon_ictr",
+ "learned_refine": 0,
+ "cond_drop": 0.1,
+ "bc_indep": 1,
+ "w_var": 0.0,
+ "w_cov": 0.0,
+ "subgoal": "",
+ "grad_refine": 1,
+ "grad_r": 50,
+ "grad_eta": 0.1,
+ "grad_lam": 0.3,
+ "grad_r_warm": 10,
+ "delta_sub": 7.5,
+ "sub_cap_chunks": 10,
+ "sub_stuck_chunks": 3,
+ "dec_anchor": 0,
+ "teacher_mix": 0.5,
+ "intent": "",
+ "intent_ta": 32,
+ "intent_src": "hindsight",
+ "intent_drop": 0.0,
+ "intent_zero": 0,
+ "guid_w": 0.0,
+ "cont_train": 0,
+ "cont_steps": 0,
+ "div_w": 0.0,
+ "div_m": 0.3,
+ "div_log_every": 0,
+ "dev_tiers": "",
+ "load_ckpt": "ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt",
+ "rt_gate": [
+  {
+   "mse": 0.039886996150016785,
+   "wall": 0.0677640289068222,
+   "gdist": 0.19534257054328918
+  },
+  {
+   "mse": 0.09722992032766342,
+   "wall": 0.046164728701114655,
+   "gdist": 0.41467785835266113
+  },
+  {
+   "mse": 0.009665325284004211,
+   "wall": 0.022207843139767647,
+   "gdist": 0.1291782259941101
+  },
+  {
+   "mse": 0.027787113562226295,
+   "wall": 0.05087694898247719,
+   "gdist": 0.11118066310882568
+  },
+  {
+   "mse": 0.0215122252702713,
+   "wall": 0.030374765396118164,
+   "gdist": 0.09537877142429352
+  }
+ ],
+ "flow_probe": null,
+ "x_refine_direction": {
+  "applicable": false,
+  "why": "LEARNED_REFINE=0 \u6216 GRAD_REFINE=1 \u21d2 _RDIR \u6c92\u6709\u4f5c\u7528\u9ede"
+ },
+ "n_intent_noroute": 0,
+ "bon_n": 0
+}

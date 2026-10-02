@@ -1,0 +1,101 @@
+{
+ "env": "antmaze-medium-stitch-v0",
+ "seed": 40,
+ "cons": "self",
+ "ema_m": 0.996,
+ "K": 8,
+ "cond": 256,
+ "chunk": 4,
+ "steps2": 0,
+ "tcap": 128,
+ "tcap_requested": 128,
+ "max_train_T": 201,
+ "goal_sampling": "uniform-official",
+ "episodes": 5,
+ "maxh": 120,
+ "rates": {
+  "bc": 0.0,
+  "null_u": 0.0,
+  "shuf": 0.0,
+  "R0": 0.0,
+  "intent_swap": 0.0,
+  "intent_noise": 0.0,
+  "subgoal": 0.0
+ },
+ "enc_obj": "recon_ictr",
+ "learned_refine": 0,
+ "cond_drop": 0.1,
+ "bc_indep": 1,
+ "w_var": 0.0,
+ "w_cov": 0.0,
+ "subgoal": "conf2",
+ "grad_refine": 1,
+ "grad_r": 0,
+ "grad_eta": 0.1,
+ "grad_lam": 0.3,
+ "grad_r_warm": 10,
+ "delta_sub": 7.5,
+ "sub_cap_chunks": 10,
+ "sub_stuck_chunks": 3,
+ "dec_anchor": 0,
+ "teacher_mix": 0.5,
+ "intent": "embed",
+ "intent_ta": 32,
+ "intent_src": "hindsight",
+ "intent_drop": 0.3,
+ "intent_zero": 0,
+ "guid_w": 0.0,
+ "cont_train": 0,
+ "cont_steps": 0,
+ "div_w": 0.0,
+ "div_m": 0.3,
+ "div_log_every": 0,
+ "obs_dim": 29,
+ "act_dim": 8,
+ "xy_dim": 2,
+ "env_family": "antmaze",
+ "finish_takeover": 0,
+ "dev_tiers": "",
+ "load_ckpt": "ckpt_antmaze-medium-stitch_self_K8_c256_ch4_st100000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_s1from_ite_idp0.3_dssoft_norf_cd0.1_bci_loW1_s40.pt",
+ "rt_gate": [
+  {
+   "mse": 0.01997639611363411,
+   "wall": 0.04306291043758392,
+   "gdist": 0.19209372997283936
+  },
+  {
+   "mse": 0.053303495049476624,
+   "wall": 0.03593016415834427,
+   "gdist": 0.07976090908050537
+  },
+  {
+   "mse": 0.021451063454151154,
+   "wall": 0.07967685163021088,
+   "gdist": 0.3706386983394623
+  },
+  {
+   "mse": 0.07087719440460205,
+   "wall": 0.04756905511021614,
+   "gdist": 0.12958721816539764
+  },
+  {
+   "mse": 0.02854745462536812,
+   "wall": 0.01301493588835001,
+   "gdist": 0.3222323954105377
+  }
+ ],
+ "flow_probe": null,
+ "n_intent_arm_fallback": 0,
+ "n_intent_noroute": 0,
+ "n_intent_src_fallback": 0,
+ "lo": {
+  "w": 1.0,
+  "kmin": 10,
+  "kmax": 60,
+  "adv": 0,
+  "adv_beta": 1.0,
+  "adv_wmax": 5.0,
+  "vbar": null,
+  "sub_policy": ""
+ }
+}
