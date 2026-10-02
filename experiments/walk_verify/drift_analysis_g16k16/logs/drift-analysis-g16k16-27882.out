@@ -1,0 +1,37 @@
+host: zeldajr
+python: /home/cymaxwelllee/Projects/lacot/.venv/bin/python
+Python 3.11.15
+=== drift-analysis-g16k16  ckpt=G16_K16.pt n_traj=200 seed=20260908 garbage_seed=20260911 rho=1.875 DELTA_SUB=7.5 ===
+dict: G=16 K=16 group_dim=8 seg_len=4 hidden=512
+[載入自檢] 整個 val 切分（25000 段）重建 MSE=0.015289 vs /home/cymaxwelllee/Projects/lacot/experiments/gk_scan/results/G16_K16.json 記錄值 0.015289（差=0.00e+00）—— 吻合，載入正確
+tasks: 200 usable (要求 >= 200)  skipped=1
+n_chunks per task = 50
+
+=== 200 題 x 每題全部 chunk（reset 對照，E_indep）===
+done in 25.1s
+
+E_indep（全部 chunk 合併，n=10000）：xy p25/p50/p75/mean = 0.0199/0.0341/0.0543/0.0414
+重建 MSE（decode 前 clip、跟同一批真動作段比，n=10000）：p25/p50/p75/mean = 0.01175/0.01441/0.01781/0.01521
+
+[爛錨對照@k=0] 真字 median=0.0290m (n=200)  vs 隨機字 median=0.1273m (n=200)  比值(隨機/真字)=4.40
+
+   k     n     xy_p25     xy_p50     xy_p75    mse_p50
+   0   200     0.0155     0.0290     0.0441    0.01297
+   1   200     0.0188     0.0349     0.0552    0.01426
+   2   200     0.0215     0.0333     0.0559    0.01379
+   3   200     0.0168     0.0283     0.0467    0.01338
+   4   200     0.0222     0.0349     0.0547    0.01374
+   5   200     0.0200     0.0369     0.0577    0.01396
+   6   200     0.0200     0.0344     0.0514    0.01410
+   8   200     0.0209     0.0356     0.0578    0.01253
+  10   200     0.0219     0.0341     0.0518    0.01368
+  15   200     0.0221     0.0383     0.0603    0.01322
+  20   200     0.0230     0.0372     0.0526    0.01256
+  30   200     0.0190     0.0324     0.0535    0.01501
+  40   200     0.0187     0.0314     0.0518    0.01549
+  49   200     0.0188     0.0328     0.0516    0.01559
+
+G16K16 E_indep p50=0.0341m  vs K32 archived p50=0.0491m  Δ%=-30.5%
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis_g16k16/results/g16k16_20260911_summary.json
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis_g16k16/results/g16k16_20260911_raw.npz
+=== done wall=25.8s ===

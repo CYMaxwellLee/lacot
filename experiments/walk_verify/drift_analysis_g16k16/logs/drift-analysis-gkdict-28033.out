@@ -1,0 +1,22 @@
+host: zeldajr
+python: /home/cymaxwelllee/Projects/lacot/.venv/bin/python
+Python 3.11.15
+=== drift-analysis-gkdict  ckpt=G32_K32.pt n_traj=200 seed=20260908 garbage_seed=20260911 rho=1.875 DELTA_SUB=7.5 ===
+dict: G=32 K=32 group_dim=8 seg_len=4 hidden=512  bits/chunk=160
+[載入自檢] 整個 val 切分（25000 段）重建 MSE=0.000900 vs /home/cymaxwelllee/Projects/lacot/experiments/gk_scan/results/G32_K32.json 記錄值 0.000900（差=1.16e-10）—— 吻合，載入正確
+tasks: 200 usable (要求 >= 200)  skipped=1
+[段集指紋自檢] sha256=450be2402fcc5e8fdc5d99f6c81d453e815e32d4a6ab26c3dbf64318f88f46ff
+[段集指紋自檢] 對照今天 check_task_comparability.py 驗證過的值 450be2402fcc5e8fdc5d99f6c81d453e815e32d4a6ab26c3dbf64318f88f46ff —— 一致
+
+=== 200 題 x 每題全部 chunk（reset 對照，E_indep）===
+done in 29.5s
+
+E_indep（n=10000）：xy p25/p50/p75/mean = 0.0145/0.0268/0.0461/0.0346
+重建 MSE（n=10000）：p25/p50/p75/mean = 0.00064/0.00080/0.00100/0.00088
+
+[爛錨對照@k=0] 真字 median=0.0150m (n=200)  vs 隨機字 median=0.1301m (n=200)  比值(隨機/真字)=8.66
+
+E_indep p50=0.0268m vs K32 archived p50=0.0491m  Δ%=-45.3%
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis_g16k16/results/g32k32_20260911_summary.json
+saved: /home/cymaxwelllee/Projects/lacot/experiments/walk_verify/drift_analysis_g16k16/results/g32k32_20260911_raw.npz
+=== done wall=30.4s ===

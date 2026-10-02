@@ -1,0 +1,29 @@
+{
+  "config": {
+    "k32_ckpt": "/home/cymaxwelllee/Projects/lacot/experiments/walk_verify/results/p0_dict_v1_L4K32_50k.pt",
+    "g16k16_ckpt": "/home/cymaxwelllee/Projects/lacot/experiments/gk_scan/ckpt/G16_K16.pt",
+    "seed": 20260908,
+    "n_traj": 200,
+    "rho": 1.875,
+    "obs_source": "raw['observations'][s]\uff08\u540c gk_common.load_segments_with_obs \u7b2c 97 \u884c obs_start \u53d6\u6cd5\uff0c\u672a\u7d93 MuJoCo \u91cd\u6a21\u64ec\uff09"
+  },
+  "n_tasks_used": 200,
+  "n_segments": 10000,
+  "k32_recon_mse": {
+    "p25": 0.06664440222084522,
+    "p50": 0.09069700539112091,
+    "p75": 0.12634121254086494,
+    "mean": 0.1047681377934292,
+    "n": 10000
+  },
+  "g16k16_recon_mse": {
+    "p25": 0.011749734170734882,
+    "p50": 0.014411837328225374,
+    "p75": 0.01780853746458888,
+    "mean": 0.015214304237859324,
+    "n": 10000
+  },
+  "g16k16_vs_k32_p50_ratio": 0.1589009170267078,
+  "external_ref_g16k16_val_mse": 0.01528940163552761,
+  "external_ref_source": "/home/cymaxwelllee/Projects/lacot/experiments/gk_scan/results/G16_K16.json"
+}
