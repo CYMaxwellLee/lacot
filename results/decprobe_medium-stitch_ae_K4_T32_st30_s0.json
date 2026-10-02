@@ -1,0 +1,61 @@
+{
+ "env": "pointmaze-medium-stitch-v0",
+ "mode": "ae",
+ "desc": "自編碼（encoder 可訓）",
+ "seed": 0,
+ "K": 4,
+ "T_CAP": 32,
+ "steps": 30,
+ "ckpt": null,
+ "holdout_mod": 5,
+ "n_params": 3963138,
+ "secs": 1.6,
+ "val_rmse": 0.8124684393405914,
+ "val_rmse_sd": 0.011653842313762128,
+ "val_inner_rmse": 0.8045700788497925,
+ "val_inner_rmse_sd": 0.011422583183688436,
+ "hist": [
+  {
+   "step": 1,
+   "train_mse": 0.8637550473213196,
+   "val_rmse": 1.84079110622406,
+   "val_inner_rmse": 1.8273698091506958
+  },
+  {
+   "step": 5,
+   "train_mse": 0.7449051141738892,
+   "val_rmse": 0.8012954592704773,
+   "val_inner_rmse": 0.7945979237556458
+  },
+  {
+   "step": 10,
+   "train_mse": 0.4518080949783325,
+   "val_rmse": 0.8549627661705017,
+   "val_inner_rmse": 0.8455634117126465
+  },
+  {
+   "step": 15,
+   "train_mse": 0.314170241355896,
+   "val_rmse": 0.702034592628479,
+   "val_inner_rmse": 0.6914899349212646
+  },
+  {
+   "step": 20,
+   "train_mse": 0.29952272772789,
+   "val_rmse": 0.900095522403717,
+   "val_inner_rmse": 0.8920273184776306
+  },
+  {
+   "step": 25,
+   "train_mse": 0.28946346044540405,
+   "val_rmse": 0.6540358066558838,
+   "val_inner_rmse": 0.6441265940666199
+  },
+  {
+   "step": 30,
+   "train_mse": 0.3044129014015198,
+   "val_rmse": 0.805339515209198,
+   "val_inner_rmse": 0.7954506874084473
+  }
+ ]
+}
