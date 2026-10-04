@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
-FROZEN = Path('/home/cymaxwelllee/Projects/lacot-hsweep-eval-frozen')
+FROZEN = HERE.parents[2]  # wallpen r3: load helpers from this file's own repo tree.
 BACKGROUND = Path('/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u')
 DATASET = Path('/home/cymaxwelllee/data/ogbench')
 DATASET_PIN = '9add335e598e48ebc483447d61415a9755ffb738ddfc406cb9708b2a238992e8'
@@ -184,6 +184,7 @@ def straight_reconstruction(module, geo):
 
 
 def compute(args):
+    import eval_common  # wallpen r3: record the loader actually imported.
     from eval_common import load_ckpt
     module = load_ckpt(str(args.dataset), str(args.ckpt), args.ckpt_sha256)
     if str(module.device) != 'cpu':
@@ -197,6 +198,8 @@ def compute(args):
                    inventory_sha256=sha_file(args.cells), routes_sha256=sha_file(args.routes),
                    positive_control=positive_controls(module, geo, stageo, routes),
                    straight=straight_reconstruction(module, geo))
+        # wallpen r3: expose the actual loader path in output provenance.
+        out['provenance']['eval_common_path'] = eval_common.__file__
         write_json(args.out, out)
         print(json.dumps(dict(out=str(args.out), positive_n=out['positive_control']['n'],
                               positive_p95=out['positive_control']['p95'],
