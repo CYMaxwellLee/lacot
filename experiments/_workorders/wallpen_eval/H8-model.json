@@ -1,0 +1,4099 @@
+{
+  "schema": "wallpen-model-v1",
+  "device": "cpu",
+  "provenance": {
+    "source_path": "/home/cymaxwelllee/Projects/lacot-hsweep-eval-frozen/experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py",
+    "source_sha256": "276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc",
+    "ckpt_path": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/hsweep/ckpt-local/H8.pt",
+    "ckpt_sha256": "2304379c7c1408cdffd73b7f558c1acbd57dda2325d1a0f8ccd7df6d9f67ee15",
+    "dataset_path": "/home/cymaxwelllee/data/ogbench/pointmaze-large-stitch-v0.npz",
+    "dataset_sha256": "9add335e598e48ebc483447d61415a9755ffb738ddfc406cb9708b2a238992e8",
+    "normalization_mu": [
+      18.227279663085938,
+      10.928874969482422
+    ],
+    "normalization_sd": [
+      11.593134880065918,
+      7.238654613494873
+    ],
+    "import_stop_line": 2480,
+    "config": {
+      "ENV": "pointmaze-large-stitch-v0",
+      "CONS": "self",
+      "K": 8,
+      "COND": 256,
+      "CHUNK": 4,
+      "TCAP": 128,
+      "ENC_OBJ": "recon_ictr",
+      "LEARNED_REFINE": 0,
+      "COND_DROP": 0.1,
+      "BC_INDEP": 1,
+      "TEACHER_MIX": 0.5,
+      "WARMUP": 500,
+      "DEC_START": "soft",
+      "LOAD_EMA": 1,
+      "CONT_TRAIN": 0,
+      "STEPS1": 0,
+      "STEPS2": 0,
+      "DEV_EVAL": 0,
+      "PREREQ": 0,
+      "GRAD_REFINE": 0,
+      "SUBGOAL": "",
+      "FINISH_R": 0,
+      "INTENT": "",
+      "U_SOURCE": "flow",
+      "BON_N": 0,
+      "LOAD_CKPT": "/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/hsweep/ckpt-local/H8.pt",
+      "SEED": 33,
+      "BOOT_DATA": "",
+      "S1_FROM": "",
+      "FLOW_PROBE": 0,
+      "DIAG_DUMP": 0
+    },
+    "deterministic_settings": {
+      "torch_version": "2.6.0+cu124",
+      "cuda_version": "12.4",
+      "cudnn_version": 91400,
+      "deterministic": true,
+      "warn_only": false,
+      "cudnn_benchmark": false,
+      "cudnn_deterministic": true,
+      "tf32": false,
+      "sdpa": "math",
+      "dtype": "float32",
+      "batch": 1,
+      "fill_uninitialized_memory": true,
+      "threads": 1,
+      "dataloader_workers": 0,
+      "cublas_workspace_config": ":4096:8"
+    }
+  },
+  "inventory_sha256": "f4d9082bdc83c463f6b35ca2dc34e0a5e74df97d4876b27bad640021598c1f77",
+  "routes_sha256": "cc751919fb7e4a4c79dcdd44d52b3aeca2c60519f33c681be4336503741ef703",
+  "positive_control": {
+    "n": 62,
+    "tau": 0.0664,
+    "clean_count": 58,
+    "clean_rate": 0.9354838709677419,
+    "p50": 0.0,
+    "p95": 0.06869820058345792,
+    "max": 0.15577511489391327,
+    "named": [
+      {
+        "task": "2",
+        "cell": [
+          5,
+          1
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            0.0,
+            16.0
+          ],
+          [
+            4.0,
+            16.0
+          ],
+          [
+            4.0,
+            20.0
+          ],
+          [
+            4.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.15577511489391327,
+        "max_true_wall_depth": 0.75,
+        "clean": false
+      },
+      {
+        "task": "2",
+        "cell": [
+          5,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          3,
+          9
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            32.0,
+            8.0
+          ],
+          [
+            36.0,
+            8.0
+          ],
+          [
+            36.0,
+            12.0
+          ],
+          [
+            36.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      }
+    ],
+    "entries": [
+      {
+        "task": "2",
+        "cell": [
+          3,
+          1
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            0.0,
+            8.0
+          ],
+          [
+            0.0,
+            12.0
+          ],
+          [
+            0.0,
+            16.0
+          ],
+          [
+            4.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          3,
+          2
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            4.0,
+            8.0
+          ],
+          [
+            0.0,
+            8.0
+          ],
+          [
+            0.0,
+            12.0
+          ],
+          [
+            0.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.00023630225041415542,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          3,
+          3
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            8.0,
+            8.0
+          ],
+          [
+            4.0,
+            8.0
+          ],
+          [
+            0.0,
+            8.0
+          ],
+          [
+            0.0,
+            12.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          3,
+          4
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            12.0,
+            8.0
+          ],
+          [
+            8.0,
+            8.0
+          ],
+          [
+            4.0,
+            8.0
+          ],
+          [
+            0.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          3,
+          5
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            16.0,
+            8.0
+          ],
+          [
+            12.0,
+            8.0
+          ],
+          [
+            8.0,
+            8.0
+          ],
+          [
+            4.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          3,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ],
+          [
+            12.0,
+            8.0
+          ],
+          [
+            8.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          4,
+          1
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            0.0,
+            12.0
+          ],
+          [
+            0.0,
+            16.0
+          ],
+          [
+            4.0,
+            16.0
+          ],
+          [
+            4.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.06326740980148315,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          4,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ],
+          [
+            12.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.03847334533929825,
+        "max_true_wall_depth": 0.1,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          5,
+          1
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            0.0,
+            16.0
+          ],
+          [
+            4.0,
+            16.0
+          ],
+          [
+            4.0,
+            20.0
+          ],
+          [
+            4.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.15577511489391327,
+        "max_true_wall_depth": 0.75,
+        "clean": false
+      },
+      {
+        "task": "2",
+        "cell": [
+          5,
+          4
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            12.0,
+            16.0
+          ],
+          [
+            12.0,
+            20.0
+          ],
+          [
+            12.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          5,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          6,
+          4
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            12.0,
+            20.0
+          ],
+          [
+            12.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            20.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          6,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.08929848670959473,
+        "max_true_wall_depth": 0.05,
+        "clean": false
+      },
+      {
+        "task": "2",
+        "cell": [
+          7,
+          4
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            12.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            20.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.00014375885075423867,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          7,
+          5
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            16.0,
+            24.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "2",
+        "cell": [
+          7,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            24.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            12.0
+          ]
+        ],
+        "max_occupancy_depth": 0.00033952202647924423,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          1,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            0.0
+          ],
+          [
+            20.0,
+            4.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ]
+        ],
+        "max_occupancy_depth": 0.024952411651611328,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          1,
+          7
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            24.0,
+            0.0
+          ],
+          [
+            20.0,
+            0.0
+          ],
+          [
+            20.0,
+            4.0
+          ],
+          [
+            20.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.05929088592529297,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          1,
+          8
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            28.0,
+            0.0
+          ],
+          [
+            24.0,
+            0.0
+          ],
+          [
+            20.0,
+            0.0
+          ],
+          [
+            20.0,
+            4.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          2,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            4.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          2,
+          8
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            28.0,
+            4.0
+          ],
+          [
+            28.0,
+            0.0
+          ],
+          [
+            24.0,
+            0.0
+          ],
+          [
+            20.0,
+            0.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          3,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.024063587188720703,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          3,
+          8
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            28.0,
+            8.0
+          ],
+          [
+            28.0,
+            4.0
+          ],
+          [
+            28.0,
+            0.0
+          ],
+          [
+            24.0,
+            0.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          3,
+          8
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            28.0,
+            8.0
+          ],
+          [
+            32.0,
+            8.0
+          ],
+          [
+            36.0,
+            8.0
+          ],
+          [
+            36.0,
+            12.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          3,
+          9
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            32.0,
+            8.0
+          ],
+          [
+            36.0,
+            8.0
+          ],
+          [
+            36.0,
+            12.0
+          ],
+          [
+            36.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          3,
+          10
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            36.0,
+            8.0
+          ],
+          [
+            36.0,
+            12.0
+          ],
+          [
+            36.0,
+            16.0
+          ],
+          [
+            32.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0010299425339326262,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          4,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.03274744004011154,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          4,
+          10
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            36.0,
+            12.0
+          ],
+          [
+            36.0,
+            16.0
+          ],
+          [
+            32.0,
+            16.0
+          ],
+          [
+            28.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          5,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          5,
+          6
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          5,
+          7
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            24.0,
+            16.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          5,
+          8
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            28.0,
+            16.0
+          ],
+          [
+            24.0,
+            16.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 1.0815980203915387e-05,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          5,
+          9
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            32.0,
+            16.0
+          ],
+          [
+            28.0,
+            16.0
+          ],
+          [
+            24.0,
+            16.0
+          ],
+          [
+            20.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          5,
+          10
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            36.0,
+            16.0
+          ],
+          [
+            32.0,
+            16.0
+          ],
+          [
+            28.0,
+            16.0
+          ],
+          [
+            24.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          6,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          6,
+          6
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          7,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ],
+          [
+            12.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "4",
+        "cell": [
+          7,
+          6
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ],
+          [
+            12.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          1,
+          1
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            4.0
+          ],
+          [
+            0.0,
+            8.0
+          ],
+          [
+            4.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.008631885051727295,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          1,
+          1
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            4.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0
+          ],
+          [
+            12.0,
+            0.0
+          ]
+        ],
+        "max_occupancy_depth": 0.03816412016749382,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          1,
+          2
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            4.0,
+            0.0
+          ],
+          [
+            8.0,
+            0.0
+          ],
+          [
+            12.0,
+            0.0
+          ],
+          [
+            12.0,
+            4.0
+          ]
+        ],
+        "max_occupancy_depth": 0.04719850420951843,
+        "max_true_wall_depth": 0.25,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          1,
+          3
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            8.0,
+            0.0
+          ],
+          [
+            12.0,
+            0.0
+          ],
+          [
+            12.0,
+            4.0
+          ],
+          [
+            12.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          1,
+          4
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            12.0,
+            0.0
+          ],
+          [
+            12.0,
+            4.0
+          ],
+          [
+            12.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          2,
+          1
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            0.0,
+            4.0
+          ],
+          [
+            0.0,
+            8.0
+          ],
+          [
+            4.0,
+            8.0
+          ],
+          [
+            8.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          2,
+          4
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            12.0,
+            4.0
+          ],
+          [
+            12.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ],
+          [
+            20.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          1
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            0.0,
+            8.0
+          ],
+          [
+            4.0,
+            8.0
+          ],
+          [
+            8.0,
+            8.0
+          ],
+          [
+            12.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          2
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            4.0,
+            8.0
+          ],
+          [
+            8.0,
+            8.0
+          ],
+          [
+            12.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          3
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            8.0,
+            8.0
+          ],
+          [
+            12.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ],
+          [
+            20.0,
+            8.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          4
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            12.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ]
+        ],
+        "max_occupancy_depth": 0.025736570358276367,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          4
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            12.0,
+            8.0
+          ],
+          [
+            16.0,
+            8.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ]
+        ],
+        "max_occupancy_depth": 0.025736570358276367,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          5
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            16.0,
+            8.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0689840316772461,
+        "max_true_wall_depth": 0.0,
+        "clean": false
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          5
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            16.0,
+            8.0
+          ],
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0689840316772461,
+        "max_true_wall_depth": 0.0,
+        "clean": false
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.024063587188720703,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          3,
+          6
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            8.0
+          ],
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.024063587188720703,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          4,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.03274744004011154,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          4,
+          6
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            12.0
+          ],
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.03274744004011154,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          5,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          5,
+          6
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            16.0
+          ],
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          6,
+          6
+        ],
+        "route_id": 0,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          6,
+          6
+        ],
+        "route_id": 1,
+        "away": true,
+        "points_xy": [
+          [
+            20.0,
+            20.0
+          ],
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          7,
+          6
+        ],
+        "route_id": 0,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ],
+          [
+            12.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      },
+      {
+        "task": "5",
+        "cell": [
+          7,
+          6
+        ],
+        "route_id": 1,
+        "away": false,
+        "points_xy": [
+          [
+            20.0,
+            24.0
+          ],
+          [
+            16.0,
+            24.0
+          ],
+          [
+            12.0,
+            24.0
+          ],
+          [
+            12.0,
+            20.0
+          ]
+        ],
+        "max_occupancy_depth": 0.0,
+        "max_true_wall_depth": 0.0,
+        "clean": true
+      }
+    ]
+  },
+  "straight": {
+    "n": 2048,
+    "mse": 0.009988202150367442,
+    "coordinate_sha256": "9a295f038b84666e1fe9d6ac20e1eb98b506158fa8a42afce212989048635a6f",
+    "coordinate_bytes": "world XY <f8 C order [2048,128,2]",
+    "per_trajectory_mse": [
+      0.008281206712126732,
+      0.019082941114902496,
+      0.0024725734256207943,
+      0.024792548269033432,
+      0.016055939719080925,
+      0.014640443958342075,
+      0.002109128050506115,
+      0.01912429928779602,
+      0.012234246358275414,
+      0.022847836837172508,
+      0.002518459688872099,
+      0.0024107801727950573,
+      0.012030942365527153,
+      0.008093088865280151,
+      0.015192031860351562,
+      0.047382451593875885,
+      0.005769771058112383,
+      0.004864389542490244,
+      0.022785985842347145,
+      0.006737831514328718,
+      0.002213157946243882,
+      0.006107878405600786,
+      0.008697688579559326,
+      0.004763682372868061,
+      0.005868864711374044,
+      0.002055318560451269,
+      0.009499753825366497,
+      0.008595307357609272,
+      0.008054823614656925,
+      0.02576649747788906,
+      0.010137546807527542,
+      0.014545002020895481,
+      0.020187843590974808,
+      0.008430997841060162,
+      0.007690245285630226,
+      0.006711326073855162,
+      0.006348843220621347,
+      0.004580473992973566,
+      0.005746452137827873,
+      0.0019279427360743284,
+      0.003770088776946068,
+      0.00766838900744915,
+      0.011663882993161678,
+      0.014250007458031178,
+      0.004198684357106686,
+      0.016290836036205292,
+      0.018109876662492752,
+      0.010259532369673252,
+      0.002902290550991893,
+      0.013051599264144897,
+      0.04480913653969765,
+      0.020767465233802795,
+      0.004960612393915653,
+      0.002292610937729478,
+      0.01501880120486021,
+      0.025315511971712112,
+      0.0035010380670428276,
+      0.007838561199605465,
+      0.003419948276132345,
+      0.013842184096574783,
+      0.007218012586236,
+      0.006740754470229149,
+      0.016098404303193092,
+      0.0026774911675602198,
+      0.0054540494456887245,
+      0.01973867230117321,
+      0.011140523478388786,
+      0.008716035634279251,
+      0.02426043152809143,
+      0.002878665691241622,
+      0.004613470286130905,
+      0.007565336301922798,
+      0.003186963265761733,
+      0.01729036308825016,
+      0.005831343121826649,
+      0.017568834125995636,
+      0.012065332382917404,
+      0.008331678807735443,
+      0.0035393419675529003,
+      0.012911620549857616,
+      0.014173993840813637,
+      0.006011946126818657,
+      0.005574869457632303,
+      0.008316447958350182,
+      0.0022902204655110836,
+      0.005193639080971479,
+      0.014970937743782997,
+      0.013728795573115349,
+      0.006022092420607805,
+      0.0034758583642542362,
+      0.022798940539360046,
+      0.006461940705776215,
+      0.021339837461709976,
+      0.011896978132426739,
+      0.006981436628848314,
+      0.007914306595921516,
+      0.002354787662625313,
+      0.02469252608716488,
+      0.003286873921751976,
+      0.016763340681791306,
+      0.006702071521431208,
+      0.003476897720247507,
+      0.00662933150306344,
+      0.005524015054106712,
+      0.009037363342940807,
+      0.019962353631854057,
+      0.004855208098888397,
+      0.00778754148632288,
+      0.008196893148124218,
+      0.008106008172035217,
+      0.010459885001182556,
+      0.002485484816133976,
+      0.0027358548250049353,
+      0.004560650791972876,
+      0.003610537387430668,
+      0.011052515357732773,
+      0.00595947727560997,
+      0.006352278869599104,
+      0.008845172822475433,
+      0.004637223668396473,
+      0.008640127256512642,
+      0.005233938805758953,
+      0.004405409097671509,
+      0.011407118290662766,
+      0.005476006306707859,
+      0.024767106398940086,
+      0.009254368022084236,
+      0.005085155833512545,
+      0.01623409241437912,
+      0.005906743463128805,
+      0.00315932952798903,
+      0.01114969328045845,
+      0.0045010922476649284,
+      0.08263140916824341,
+      0.036183036863803864,
+      0.02361469343304634,
+      0.015849249437451363,
+      0.007394152693450451,
+      0.01365099661052227,
+      0.00501056807115674,
+      0.008073179051280022,
+      0.035585954785346985,
+      0.008004087954759598,
+      0.024385374039411545,
+      0.003669204656034708,
+      0.005436765495687723,
+      0.0076682851649820805,
+      0.003338145324960351,
+      0.008157369680702686,
+      0.0042123449966311455,
+      0.006812623701989651,
+      0.017605356872081757,
+      0.015207815915346146,
+      0.008893570862710476,
+      0.005891954991966486,
+      0.018973790109157562,
+      0.004534085281193256,
+      0.003566089551895857,
+      0.0022972601000219584,
+      0.006322707049548626,
+      0.014048061333596706,
+      0.02916143089532852,
+      0.005494637880474329,
+      0.0032047054264694452,
+      0.0035801471676677465,
+      0.007421994581818581,
+      0.018542006611824036,
+      0.02076631970703602,
+      0.0033454596996307373,
+      0.005170764401555061,
+      0.005674400366842747,
+      0.0029054959304630756,
+      0.003253885079175234,
+      0.003913601860404015,
+      0.003170462790876627,
+      0.002069938462227583,
+      0.009871904738247395,
+      0.01666138879954815,
+      0.00322360685095191,
+      0.0026650961954146624,
+      0.00852518156170845,
+      0.004764247220009565,
+      0.01800752803683281,
+      0.023153185844421387,
+      0.010940355248749256,
+      0.024639766663312912,
+      0.02507791481912136,
+      0.019471285864710808,
+      0.007402713876217604,
+      0.009182308800518513,
+      0.012550048530101776,
+      0.0021355836652219296,
+      0.01863042823970318,
+      0.004376071970909834,
+      0.007722474634647369,
+      0.011440624482929707,
+      0.01970788463950157,
+      0.004537035711109638,
+      0.007036524824798107,
+      0.008312990888953209,
+      0.002688125241547823,
+      0.00459976214915514,
+      0.01250192616134882,
+      0.003310057334601879,
+      0.006781884003430605,
+      0.0035844165831804276,
+      0.00451011024415493,
+      0.0069070300087332726,
+      0.008287168107926846,
+      0.0037559091579169035,
+      0.012017311528325081,
+      0.004432851914316416,
+      0.004382256418466568,
+      0.008378122933208942,
+      0.008265769109129906,
+      0.003717346815392375,
+      0.002813818631693721,
+      0.0036539772991091013,
+      0.005001388024538755,
+      0.003594820387661457,
+      0.0015276725171133876,
+      0.006466143764555454,
+      0.0031226235441863537,
+      0.007755315862596035,
+      0.005220963153988123,
+      0.00963385310024023,
+      0.013498537242412567,
+      0.006727925501763821,
+      0.014498995617032051,
+      0.004697071388363838,
+      0.0022266723681241274,
+      0.014318952336907387,
+      0.0029375941958278418,
+      0.01148924883455038,
+      0.0041435835883021355,
+      0.006968442816287279,
+      0.009475333616137505,
+      0.006600081454962492,
+      0.004471414722502232,
+      0.003506158711388707,
+      0.012786506675183773,
+      0.0041589089669287205,
+      0.004429040476679802,
+      0.0036928500048816204,
+      0.002519938163459301,
+      0.003868160769343376,
+      0.0032040472142398357,
+      0.002817054046317935,
+      0.01711449958384037,
+      0.0014813645975664258,
+      0.004632960073649883,
+      0.0020619374699890614,
+      0.0050118835642933846,
+      0.015337529592216015,
+      0.0025138629134744406,
+      0.021136809140443802,
+      0.003643547184765339,
+      0.002273459220305085,
+      0.017253059893846512,
+      0.0177382230758667,
+      0.0017836613114923239,
+      0.012638875283300877,
+      0.010589445009827614,
+      0.01645706407725811,
+      0.002238511573523283,
+      0.002049151575192809,
+      0.005367007572203875,
+      0.01629272662103176,
+      0.013819357380270958,
+      0.010094476863741875,
+      0.0016759595600888133,
+      0.005912915803492069,
+      0.0012401705607771873,
+      0.04954266548156738,
+      0.013703197240829468,
+      0.012761689722537994,
+      0.007687011733651161,
+      0.00986588466912508,
+      0.006935338489711285,
+      0.0009028788190335035,
+      0.01709994673728943,
+      0.010906387120485306,
+      0.014210534282028675,
+      0.003591433633118868,
+      0.0058579035103321075,
+      0.007432192098349333,
+      0.004144096281379461,
+      0.016763564199209213,
+      0.0026398722548037767,
+      0.006558357737958431,
+      0.003566297236829996,
+      0.021281931549310684,
+      0.014934399165213108,
+      0.004723141901195049,
+      0.008469966240227222,
+      0.015133499167859554,
+      0.0020131052006036043,
+      0.013892319984734058,
+      0.004145540297031403,
+      0.0016363648464903235,
+      0.014452467672526836,
+      0.008859913796186447,
+      0.005826744716614485,
+      0.012006659060716629,
+      0.010213424451649189,
+      0.00848331954330206,
+      0.002584094414487481,
+      0.008398828096687794,
+      0.0025571321602910757,
+      0.024435654282569885,
+      0.0013191712787374854,
+      0.02191978693008423,
+      0.011157157830893993,
+      0.0026979073882102966,
+      0.005941559094935656,
+      0.013607571832835674,
+      0.01086791418492794,
+      0.007635325659066439,
+      0.0037813286762684584,
+      0.024482425302267075,
+      0.004745885729789734,
+      0.0058786822482943535,
+      0.008641330525279045,
+      0.00412024836987257,
+      0.006954286713153124,
+      0.011054923757910728,
+      0.016233006492257118,
+      0.009205675683915615,
+      0.01708885282278061,
+      0.026137907058000565,
+      0.008365008980035782,
+      0.006423059850931168,
+      0.0023704010527580976,
+      0.01828591525554657,
+      0.0035535097122192383,
+      0.007540434133261442,
+      0.004536133725196123,
+      0.011092359200119972,
+      0.004033275414258242,
+      0.008964589796960354,
+      0.0039926753379404545,
+      0.013746272772550583,
+      0.002479236340150237,
+      0.015302269719541073,
+      0.00234457035548985,
+      0.0030974873807281256,
+      0.004290016368031502,
+      0.022869819775223732,
+      0.018943704664707184,
+      0.005066089332103729,
+      0.009028065018355846,
+      0.016495047137141228,
+      0.00945440586656332,
+      0.009700416587293148,
+      0.0034029120579361916,
+      0.004514327738434076,
+      0.007120444905012846,
+      0.011918038129806519,
+      0.0020740418694913387,
+      0.016111349686980247,
+      0.014165653847157955,
+      0.003702741814777255,
+      0.007934016175568104,
+      0.010050971992313862,
+      0.01415196992456913,
+      0.0076871635392308235,
+      0.01138247549533844,
+      0.019859133288264275,
+      0.012324310839176178,
+      0.003544022561982274,
+      0.006503415759652853,
+      0.0075365821830928326,
+      0.00590569619089365,
+      0.011435422115027905,
+      0.006306272465735674,
+      0.002787103410810232,
+      0.011959386989474297,
+      0.002469866070896387,
+      0.010263551026582718,
+      0.009984057396650314,
+      0.003486769739538431,
+      0.007747788447886705,
+      0.0064956448040902615,
+      0.011894811876118183,
+      0.003397298278287053,
+      0.009084300138056278,
+      0.0026113896165043116,
+      0.00619783578440547,
+      0.024544725194573402,
+      0.0017321975901722908,
+      0.0066182976588606834,
+      0.013957805931568146,
+      0.0033028717152774334,
+      0.019698645919561386,
+      0.0015906472690403461,
+      0.003913490567356348,
+      0.005230325739830732,
+      0.020310036838054657,
+      0.00925532728433609,
+      0.014657805673778057,
+      0.016731098294258118,
+      0.010098044760525227,
+      0.019252959638834,
+      0.013534399680793285,
+      0.00434641819447279,
+      0.008164530619978905,
+      0.001991888741031289,
+      0.02786923199892044,
+      0.01061057299375534,
+      0.014122609980404377,
+      0.00983416847884655,
+      0.007641197182238102,
+      0.003994496539235115,
+      0.002534307073801756,
+      0.007954309694468975,
+      0.009663736447691917,
+      0.001599162700586021,
+      0.00873260386288166,
+      0.009132696315646172,
+      0.01591210439801216,
+      0.008921048603951931,
+      0.0022706612944602966,
+      0.010914856567978859,
+      0.015225440263748169,
+      0.0021855917293578386,
+      0.005060769617557526,
+      0.002166976686567068,
+      0.011223386973142624,
+      0.015427100472152233,
+      0.010277255438268185,
+      0.004097810015082359,
+      0.0042756907641887665,
+      0.013676432892680168,
+      0.02335132658481598,
+      0.006812683772295713,
+      0.019631028175354004,
+      0.004699902608990669,
+      0.00606705155223608,
+      0.015589948743581772,
+      0.0043670800514519215,
+      0.003906942438334227,
+      0.012161418795585632,
+      0.0025468366220593452,
+      0.006533625535666943,
+      0.0036053932271897793,
+      0.0020187469199299812,
+      0.004471836145967245,
+      0.007581864483654499,
+      0.0168084017932415,
+      0.02841845527291298,
+      0.010540151968598366,
+      0.0037943474017083645,
+      0.004206323064863682,
+      0.009643462486565113,
+      0.002570484299212694,
+      0.003079450223594904,
+      0.002403615741059184,
+      0.0061702909879386425,
+      0.01712041161954403,
+      0.008572712540626526,
+      0.01839456334710121,
+      0.005232975818216801,
+      0.06954942643642426,
+      0.0033682542853057384,
+      0.010764610022306442,
+      0.018309321254491806,
+      0.0055763004347682,
+      0.0038509867154061794,
+      0.003941782284528017,
+      0.005545765161514282,
+      0.003620292292907834,
+      0.01119970716536045,
+      0.006974673829972744,
+      0.02154519036412239,
+      0.014517543837428093,
+      0.017521146684885025,
+      0.00855596549808979,
+      0.005928320344537497,
+      0.007769478019326925,
+      0.006131171248853207,
+      0.00215134653262794,
+      0.010820346884429455,
+      0.004880665335804224,
+      0.0029074554331600666,
+      0.011772265657782555,
+      0.010931269265711308,
+      0.005188114009797573,
+      0.0017198337009176612,
+      0.015744853764772415,
+      0.0035446954425424337,
+      0.012779722921550274,
+      0.008364155888557434,
+      0.003705817274749279,
+      0.011190507560968399,
+      0.0031842170283198357,
+      0.024123962968587875,
+      0.02220064401626587,
+      0.005120224319398403,
+      0.006365485489368439,
+      0.016498716548085213,
+      0.002028023824095726,
+      0.013145027682185173,
+      0.0046807327307760715,
+      0.023612571880221367,
+      0.003685486502945423,
+      0.007517760619521141,
+      0.0014114141231402755,
+      0.005414149723947048,
+      0.009857306256890297,
+      0.0024653952568769455,
+      0.004361436236649752,
+      0.0037561971694231033,
+      0.031667329370975494,
+      0.004184910096228123,
+      0.008368548937141895,
+      0.004297945182770491,
+      0.010075959376990795,
+      0.00630134018138051,
+      0.025123899802565575,
+      0.021336201578378677,
+      0.018009355291724205,
+      0.0020805969834327698,
+      0.006824136711657047,
+      0.01601937599480152,
+      0.012560330331325531,
+      0.01156681403517723,
+      0.00428197905421257,
+      0.008756399154663086,
+      0.006251620128750801,
+      0.01918640360236168,
+      0.02665344439446926,
+      0.013985776342451572,
+      0.010280797258019447,
+      0.002441148506477475,
+      0.002567469608038664,
+      0.011430870741605759,
+      0.005219341721385717,
+      0.014784464612603188,
+      0.008614405058324337,
+      0.006423777434974909,
+      0.013672539964318275,
+      0.0037688473239541054,
+      0.011645671911537647,
+      0.00485222227871418,
+      0.006827544886618853,
+      0.004310603253543377,
+      0.02321675978600979,
+      0.019044185057282448,
+      0.009248041547834873,
+      0.010411934927105904,
+      0.004299290478229523,
+      0.0043561700731515884,
+      0.00265193497762084,
+      0.006491201464086771,
+      0.003459762781858444,
+      0.004254333209246397,
+      0.013603825122117996,
+      0.009942576289176941,
+      0.00906326249241829,
+      0.0077637191861867905,
+      0.007940340787172318,
+      0.025608377531170845,
+      0.007712119724601507,
+      0.020055722445249557,
+      0.005953645799309015,
+      0.0083184614777565,
+      0.010361064225435257,
+      0.0033156713470816612,
+      0.008543716743588448,
+      0.00670373160392046,
+      0.016767576336860657,
+      0.007247408851981163,
+      0.004912410397082567,
+      0.003933495841920376,
+      0.012518194504082203,
+      0.006254169624298811,
+      0.01657256670296192,
+      0.020988475531339645,
+      0.007986138574779034,
+      0.024187305942177773,
+      0.008416472002863884,
+      0.005084245000034571,
+      0.009388763457536697,
+      0.007740308064967394,
+      0.0052996911108493805,
+      0.003913030028343201,
+      0.0044002290815114975,
+      0.012032533995807171,
+      0.016229497268795967,
+      0.003563069738447666,
+      0.008449092507362366,
+      0.017670491710305214,
+      0.004187630955129862,
+      0.004784862976521254,
+      0.009950892999768257,
+      0.01733984239399433,
+      0.0028107138350605965,
+      0.004853385034948587,
+      0.01754436083137989,
+      0.011969824321568012,
+      0.004249481484293938,
+      0.015173370018601418,
+      0.013621827587485313,
+      0.011628624983131886,
+      0.005234966054558754,
+      0.013688079081475735,
+      0.010144569911062717,
+      0.04215497896075249,
+      0.011490563862025738,
+      0.003950407728552818,
+      0.006448622792959213,
+      0.017192445695400238,
+      0.005788437090814114,
+      0.027988934889435768,
+      0.013454291969537735,
+      0.01260433066636324,
+      0.016294188797473907,
+      0.019844137132167816,
+      0.026238588616251945,
+      0.00926859863102436,
+      0.005725285038352013,
+      0.00342062721028924,
+      0.006459058728069067,
+      0.009097987785935402,
+      0.00754949077963829,
+      0.010329918004572392,
+      0.0037257245276123285,
+      0.004619293846189976,
+      0.01158764585852623,
+      0.020432347431778908,
+      0.02411590702831745,
+      0.002055664546787739,
+      0.004133141133934259,
+      0.012383067980408669,
+      0.003609536914154887,
+      0.004346870817244053,
+      0.011025280691683292,
+      0.007746679242700338,
+      0.00430524256080389,
+      0.00921563245356083,
+      0.0054271831177175045,
+      0.02538294345140457,
+      0.0079721100628376,
+      0.009839922189712524,
+      0.005088285077363253,
+      0.019566185772418976,
+      0.0008114792290143669,
+      0.0053811948746442795,
+      0.012661270797252655,
+      0.003389261197298765,
+      0.006243011448532343,
+      0.003998235333710909,
+      0.014513397589325905,
+      0.021089807152748108,
+      0.005663782823830843,
+      0.0038996562361717224,
+      0.004422664642333984,
+      0.005784306209534407,
+      0.006583346053957939,
+      0.01842636428773403,
+      0.003580383025109768,
+      0.017160745337605476,
+      0.020534979179501534,
+      0.007410980295389891,
+      0.002730213338509202,
+      0.004388655070215464,
+      0.003233035560697317,
+      0.005163143388926983,
+      0.00462577398866415,
+      0.005067185033112764,
+      0.011068427935242653,
+      0.025106413289904594,
+      0.004354634787887335,
+      0.006677314639091492,
+      0.006043366622179747,
+      0.027897486463189125,
+      0.011694718152284622,
+      0.005872748792171478,
+      0.008651567623019218,
+      0.014891538769006729,
+      0.008865751326084137,
+      0.011586596257984638,
+      0.013201487250626087,
+      0.02413882687687874,
+      0.011204489506781101,
+      0.03280855715274811,
+      0.014977209270000458,
+      0.00496097095310688,
+      0.008785282261669636,
+      0.009818348102271557,
+      0.006957822944968939,
+      0.007150655146688223,
+      0.014205447398126125,
+      0.013605436310172081,
+      0.001287488266825676,
+      0.0034717675298452377,
+      0.015213198028504848,
+      0.004706069827079773,
+      0.0073804184794425964,
+      0.004700683522969484,
+      0.014593193307518959,
+      0.01570374332368374,
+      0.012055518105626106,
+      0.002472145250067115,
+      0.007086368277668953,
+      0.022420460358262062,
+      0.002447330392897129,
+      0.0039018054958432913,
+      0.0031096108723431826,
+      0.011640538461506367,
+      0.004380771890282631,
+      0.002772783860564232,
+      0.0040213377214968204,
+      0.003107090713456273,
+      0.034096650779247284,
+      0.013445502147078514,
+      0.01050203200429678,
+      0.004279387183487415,
+      0.01045287773013115,
+      0.006379729602485895,
+      0.005690657999366522,
+      0.004428797867149115,
+      0.004366016015410423,
+      0.012374216690659523,
+      0.005814172327518463,
+      0.018468603491783142,
+      0.004202188458293676,
+      0.02841675654053688,
+      0.0036487076431512833,
+      0.006834535859525204,
+      0.025365544483065605,
+      0.002932351315394044,
+      0.011173735372722149,
+      0.019446248188614845,
+      0.005417508073151112,
+      0.011329022236168385,
+      0.0076814088970422745,
+      0.06493185460567474,
+      0.0055677518248558044,
+      0.016466891393065453,
+      0.018994184210896492,
+      0.007597536314278841,
+      0.008697552606463432,
+      0.00985655840486288,
+      0.002188462298363447,
+      0.016800565645098686,
+      0.0015001357533037663,
+      0.00625158566981554,
+      0.003345333971083164,
+      0.019183650612831116,
+      0.00864594615995884,
+      0.0021582799963653088,
+      0.013042104430496693,
+      0.005333487875759602,
+      0.00297332089394331,
+      0.004054367076605558,
+      0.00868426077067852,
+      0.0024261553771793842,
+      0.009593463502824306,
+      0.003182203508913517,
+      0.0034078224562108517,
+      0.01453392580151558,
+      0.00732208089902997,
+      0.011884637176990509,
+      0.006121966987848282,
+      0.00962698645889759,
+      0.01992279291152954,
+      0.0031819476280361414,
+      0.01907930336892605,
+      0.016146374866366386,
+      0.020844874903559685,
+      0.008398042991757393,
+      0.008797532878816128,
+      0.0019569990690797567,
+      0.002288346877321601,
+      0.01031461451202631,
+      0.02042929083108902,
+      0.005531855393201113,
+      0.009588493965566158,
+      0.018661607056856155,
+      0.01610645093023777,
+      0.00964946486055851,
+      0.009882023558020592,
+      0.008177382871508598,
+      0.0014380337670445442,
+      0.005762729328125715,
+      0.0061381203122437,
+      0.002228345023468137,
+      0.05148625746369362,
+      0.01450041588395834,
+      0.003128218464553356,
+      0.0012441312428563833,
+      0.00921348761767149,
+      0.007295344024896622,
+      0.010207165032625198,
+      0.01043818611651659,
+      0.014304691925644875,
+      0.01945805922150612,
+      0.005000105127692223,
+      0.020214155316352844,
+      0.004100026097148657,
+      0.009057263843715191,
+      0.006222340743988752,
+      0.008446716703474522,
+      0.025114702060818672,
+      0.005750363226979971,
+      0.012684402987360954,
+      0.005320585798472166,
+      0.006530532613396645,
+      0.008377240970730782,
+      0.0037689446471631527,
+      0.010491832159459591,
+      0.009776161052286625,
+      0.004454777110368013,
+      0.01577134057879448,
+      0.00545140216127038,
+      0.011020363308489323,
+      0.004712264519184828,
+      0.0031136437319219112,
+      0.003735194681212306,
+      0.001899518771097064,
+      0.0030769333243370056,
+      0.00773124024271965,
+      0.007022589445114136,
+      0.018660711124539375,
+      0.0035648192279040813,
+      0.006492082495242357,
+      0.0046402704901993275,
+      0.00700758770108223,
+      0.005693001672625542,
+      0.003201527986675501,
+      0.006719606928527355,
+      0.003617340000346303,
+      0.029665499925613403,
+      0.0023395437747240067,
+      0.011509808711707592,
+      0.008662711828947067,
+      0.01963638886809349,
+      0.013068982400000095,
+      0.00445504579693079,
+      0.01618819124996662,
+      0.012744627892971039,
+      0.025210823863744736,
+      0.0027256866451352835,
+      0.012440725229680538,
+      0.0073758517391979694,
+      0.004346044268459082,
+      0.012104414403438568,
+      0.0035400022752583027,
+      0.024930153042078018,
+      0.02404547482728958,
+      0.0024705887772142887,
+      0.015741759911179543,
+      0.023670118302106857,
+      0.007019747979938984,
+      0.007282337173819542,
+      0.0029060933738946915,
+      0.021070312708616257,
+      0.008181091398000717,
+      0.015448273159563541,
+      0.025567151606082916,
+      0.0026226628106087446,
+      0.010081788524985313,
+      0.06461288779973984,
+      0.006615045480430126,
+      0.004742588847875595,
+      0.00533947441726923,
+      0.003288955893367529,
+      0.03148085996508598,
+      0.007693834602832794,
+      0.009997567161917686,
+      0.027160370722413063,
+      0.011436233296990395,
+      0.007624659221619368,
+      0.0028645701240748167,
+      0.0012026962358504534,
+      0.01743509992957115,
+      0.007310424465686083,
+      0.002374609699472785,
+      0.004712911322712898,
+      0.012108650989830494,
+      0.007350119296461344,
+      0.019941236823797226,
+      0.003267379244789481,
+      0.0038330205716192722,
+      0.0028271139599382877,
+      0.004356881603598595,
+      0.008611161261796951,
+      0.008415838703513145,
+      0.011087628081440926,
+      0.010254020802676678,
+      0.006681689526885748,
+      0.010566076263785362,
+      0.008685574866831303,
+      0.011878252029418945,
+      0.005916527472436428,
+      0.00587227288633585,
+      0.005430040881037712,
+      0.014670344069600105,
+      0.02623041532933712,
+      0.016077645123004913,
+      0.010082440450787544,
+      0.006782236974686384,
+      0.011410885490477085,
+      0.01982540264725685,
+      0.007191740442067385,
+      0.014582031406462193,
+      0.007141103036701679,
+      0.00862950086593628,
+      0.003990330267697573,
+      0.02630149945616722,
+      0.003765600500628352,
+      0.00545777240768075,
+      0.0307378601282835,
+      0.02524651028215885,
+      0.039095330983400345,
+      0.005091042723506689,
+      0.008383546024560928,
+      0.014157939702272415,
+      0.0147480433806777,
+      0.004276439547538757,
+      0.0020794470328837633,
+      0.009968872182071209,
+      0.014957107603549957,
+      0.018999245017766953,
+      0.008632373064756393,
+      0.010308511555194855,
+      0.009494530037045479,
+      0.005804970394819975,
+      0.026184894144535065,
+      0.011254273355007172,
+      0.006407946813851595,
+      0.0039002508856356144,
+      0.002975327894091606,
+      0.002527131699025631,
+      0.004199471324682236,
+      0.012375732883810997,
+      0.0060702962800860405,
+      0.043714284896850586,
+      0.03471268340945244,
+      0.004224338103085756,
+      0.01043123658746481,
+      0.006555462721735239,
+      0.021649489179253578,
+      0.009900039993226528,
+      0.01712643727660179,
+      0.008523731492459774,
+      0.009295079857110977,
+      0.0290792528539896,
+      0.0036110212095081806,
+      0.017181601375341415,
+      0.005065208300948143,
+      0.007529282011091709,
+      0.006036225240677595,
+      0.004640220198780298,
+      0.011352450586855412,
+      0.009200460277497768,
+      0.004564160015434027,
+      0.0028901416808366776,
+      0.009918340481817722,
+      0.004936941899359226,
+      0.005049264524132013,
+      0.004311242140829563,
+      0.013122618198394775,
+      0.004566453397274017,
+      0.011533912271261215,
+      0.004923697095364332,
+      0.010414140298962593,
+      0.007968420162796974,
+      0.0033202385529875755,
+      0.0022972363512963057,
+      0.006064997520297766,
+      0.01001371257007122,
+      0.0029364759102463722,
+      0.020057354122400284,
+      0.015198446810245514,
+      0.003511598566547036,
+      0.010271667502820492,
+      0.01147001888602972,
+      0.012879162095487118,
+      0.012277624569833279,
+      0.009863967075943947,
+      0.005877604708075523,
+      0.014503310434520245,
+      0.0017715970752760768,
+      0.004898447543382645,
+      0.002835430670529604,
+      0.0038765128701925278,
+      0.021716013550758362,
+      0.0282589141279459,
+      0.004259280860424042,
+      0.011576054617762566,
+      0.004827308468520641,
+      0.011553866788744926,
+      0.020245129242539406,
+      0.002045790432021022,
+      0.007145019248127937,
+      0.010687192901968956,
+      0.004945727530866861,
+      0.017469054087996483,
+      0.006559671834111214,
+      0.007553405128419399,
+      0.002535647712647915,
+      0.01429830864071846,
+      0.009939794428646564,
+      0.013748396188020706,
+      0.015098531730473042,
+      0.005523231346160173,
+      0.0044115097261965275,
+      0.009979813359677792,
+      0.0068485308438539505,
+      0.02736186608672142,
+      0.013662080280482769,
+      0.004388037137687206,
+      0.004010526463389397,
+      0.004098695237189531,
+      0.014114676043391228,
+      0.015452535822987556,
+      0.004272982012480497,
+      0.019050510600209236,
+      0.004155364353209734,
+      0.007834915071725845,
+      0.006347040645778179,
+      0.004781089257448912,
+      0.0050058430060744286,
+      0.003941988106817007,
+      0.005957083310931921,
+      0.00561769213527441,
+      0.007159143686294556,
+      0.02647944539785385,
+      0.01103838812559843,
+      0.0018941082525998354,
+      0.006589918397367001,
+      0.003375621745362878,
+      0.011051791720092297,
+      0.022201862186193466,
+      0.004101094789803028,
+      0.0018827321473509073,
+      0.0014534405199810863,
+      0.01265268586575985,
+      0.0036664949730038643,
+      0.004159043543040752,
+      0.013862421736121178,
+      0.03560810908675194,
+      0.004069851245731115,
+      0.06356539577245712,
+      0.008096235804259777,
+      0.013625942170619965,
+      0.02153727412223816,
+      0.006357735954225063,
+      0.0075873928144574165,
+      0.013130050152540207,
+      0.007796884048730135,
+      0.013399511575698853,
+      0.009930421598255634,
+      0.015635598450899124,
+      0.007648119702935219,
+      0.005410551559180021,
+      0.005364205222576857,
+      0.003978025168180466,
+      0.007440551649779081,
+      0.02138071320950985,
+      0.011052305810153484,
+      0.02689039520919323,
+      0.005066429730504751,
+      0.01005768682807684,
+      0.006702963728457689,
+      0.0055259522050619125,
+      0.006053280550986528,
+      0.008510345593094826,
+      0.003308970248326659,
+      0.0037293387576937675,
+      0.00279233162291348,
+      0.030936550348997116,
+      0.007151116617023945,
+      0.006865797098726034,
+      0.005620451178401709,
+      0.005153825506567955,
+      0.0053896550089120865,
+      0.004056534264236689,
+      0.0035905323456972837,
+      0.0052905273623764515,
+      0.006987979635596275,
+      0.00846806913614273,
+      0.0063471426256000996,
+      0.006254930980503559,
+      0.013204343616962433,
+      0.009411203674972057,
+      0.007878217846155167,
+      0.0034603856038302183,
+      0.014718814752995968,
+      0.0033325417898595333,
+      0.018234461545944214,
+      0.006109265144914389,
+      0.005293447524309158,
+      0.012883939780294895,
+      0.010488749481737614,
+      0.00328372442163527,
+      0.017705991864204407,
+      0.0053181760013103485,
+      0.0023770276457071304,
+      0.007840752601623535,
+      0.03992660343647003,
+      0.006846598349511623,
+      0.02203706093132496,
+      0.019125036895275116,
+      0.006333204917609692,
+      0.02531909942626953,
+      0.0028857290744781494,
+      0.028621090576052666,
+      0.004621854051947594,
+      0.005810025613754988,
+      0.008260585367679596,
+      0.006794659420847893,
+      0.017056629061698914,
+      0.0021441832650452852,
+      0.00696544861420989,
+      0.01019760686904192,
+      0.01181101705878973,
+      0.003255646675825119,
+      0.06426121294498444,
+      0.009132922627031803,
+      0.010768141597509384,
+      0.006071292329579592,
+      0.005791905336081982,
+      0.00583670986816287,
+      0.00624570157378912,
+      0.006735035218298435,
+      0.012929635122418404,
+      0.01044327113777399,
+      0.008157281205058098,
+      0.012590363621711731,
+      0.0017334484728053212,
+      0.0016138951759785414,
+      0.0014582667499780655,
+      0.0039240047335624695,
+      0.0022301613353192806,
+      0.007004676386713982,
+      0.020419714972376823,
+      0.0036341811064630747,
+      0.017665399238467216,
+      0.011392669752240181,
+      0.01225194800645113,
+      0.0293801911175251,
+      0.010881656780838966,
+      0.004311290103942156,
+      0.012147104367613792,
+      0.006136319600045681,
+      0.012684901244938374,
+      0.002486412413418293,
+      0.023369506001472473,
+      0.01440098974853754,
+      0.004463904537260532,
+      0.010175713337957859,
+      0.0027125775814056396,
+      0.002187923528254032,
+      0.020953623577952385,
+      0.024126961827278137,
+      0.003327706828713417,
+      0.015041803941130638,
+      0.0037148860283195972,
+      0.010753911919891834,
+      0.0054666888900101185,
+      0.0051938993856310844,
+      0.005026050843298435,
+      0.006551519967615604,
+      0.016923341900110245,
+      0.005867645610123873,
+      0.004220878705382347,
+      0.003971204161643982,
+      0.0313679501414299,
+      0.021320059895515442,
+      0.0025151295121759176,
+      0.00427200086414814,
+      0.008015792816877365,
+      0.004165785852819681,
+      0.015305327251553535,
+      0.013372049666941166,
+      0.016633089631795883,
+      0.00618385337293148,
+      0.006653798744082451,
+      0.0046057067811489105,
+      0.010792330838739872,
+      0.021437719464302063,
+      0.01727999746799469,
+      0.013369737192988396,
+      0.018106583505868912,
+      0.011501935310661793,
+      0.010235852561891079,
+      0.00801980309188366,
+      0.01169139426201582,
+      0.003932354971766472,
+      0.02882152795791626,
+      0.003832865273579955,
+      0.00602863822132349,
+      0.00587261188775301,
+      0.026258034631609917,
+      0.005840421654284,
+      0.005636352580040693,
+      0.008606898598372936,
+      0.0709075778722763,
+      0.015589838847517967,
+      0.00269965548068285,
+      0.012212838977575302,
+      0.004855391103774309,
+      0.0036482280120253563,
+      0.0030691029969602823,
+      0.006247543264180422,
+      0.0021573600824922323,
+      0.0019575480837374926,
+      0.0024571979884058237,
+      0.012302695773541927,
+      0.0026682380121201277,
+      0.00820282194763422,
+      0.003953852690756321,
+      0.007658001966774464,
+      0.01719549670815468,
+      0.015311244875192642,
+      0.013725333847105503,
+      0.0030789771117269993,
+      0.0018765395507216454,
+      0.004558297339826822,
+      0.0040386333130300045,
+      0.006780567578971386,
+      0.005235089920461178,
+      0.018462825566530228,
+      0.017887452617287636,
+      0.015610679052770138,
+      0.0058084512129426,
+      0.005005114246159792,
+      0.006466735154390335,
+      0.0043380470015108585,
+      0.006551000755280256,
+      0.010322350077331066,
+      0.009039610624313354,
+      0.003906284458935261,
+      0.005159210413694382,
+      0.025249816477298737,
+      0.004902242682874203,
+      0.025856859982013702,
+      0.004177666734904051,
+      0.0017139865085482597,
+      0.02890618145465851,
+      0.008140637539327145,
+      0.001800245139747858,
+      0.006903812754899263,
+      0.003949875943362713,
+      0.010388335213065147,
+      0.006544765084981918,
+      0.005602357909083366,
+      0.0037571510765701532,
+      0.0019720434211194515,
+      0.00895947776734829,
+      0.002575723920017481,
+      0.014750485308468342,
+      0.006977524608373642,
+      0.0052182720974087715,
+      0.0046621025539934635,
+      0.020802777260541916,
+      0.019219927489757538,
+      0.034717876464128494,
+      0.0065356348641216755,
+      0.02035273239016533,
+      0.00673545291647315,
+      0.0040741898119449615,
+      0.018732722848653793,
+      0.02325865440070629,
+      0.005329034756869078,
+      0.007993660867214203,
+      0.0142221599817276,
+      0.00721842423081398,
+      0.0035073382314294577,
+      0.015072154812514782,
+      0.0036377357318997383,
+      0.01640666462481022,
+      0.007568544242531061,
+      0.020739641040563583,
+      0.0061560035683214664,
+      0.005821432452648878,
+      0.00318810879252851,
+      0.008013465441763401,
+      0.004080187529325485,
+      0.006759168580174446,
+      0.006255419459193945,
+      0.005323766265064478,
+      0.01822972297668457,
+      0.006853548809885979,
+      0.011338398791849613,
+      0.007139142602682114,
+      0.008972295559942722,
+      0.003567618317902088,
+      0.003932419698685408,
+      0.010386897251009941,
+      0.007050509564578533,
+      0.0050314320251345634,
+      0.008933022618293762,
+      0.009787374176084995,
+      0.026873014867305756,
+      0.009151851758360863,
+      0.0071607232093811035,
+      0.010008125565946102,
+      0.0071556041948497295,
+      0.003019333817064762,
+      0.00807838886976242,
+      0.004387084860354662,
+      0.005006646737456322,
+      0.006469861138612032,
+      0.002848101546987891,
+      0.011440079659223557,
+      0.0020051575265824795,
+      0.011255353689193726,
+      0.008403276093304157,
+      0.0062956237234175205,
+      0.00869697891175747,
+      0.006132663227617741,
+      0.004000025801360607,
+      0.034226205199956894,
+      0.006485591176897287,
+      0.011162464506924152,
+      0.0015856192912906408,
+      0.0031268461607396603,
+      0.0022664866410195827,
+      0.007143523544073105,
+      0.020008202642202377,
+      0.002504657255485654,
+      0.003954451065510511,
+      0.034956272691488266,
+      0.005136448889970779,
+      0.013067684136331081,
+      0.004826746415346861,
+      0.0030763240065425634,
+      0.0024812764022499323,
+      0.006099771708250046,
+      0.009409616701304913,
+      0.008854590356349945,
+      0.005874961614608765,
+      0.01275408361107111,
+      0.0062143681570887566,
+      0.012142590247094631,
+      0.006119625177234411,
+      0.012561125680804253,
+      0.004744172561913729,
+      0.008634991012513638,
+      0.01622801646590233,
+      0.013080175034701824,
+      0.012983242981135845,
+      0.013809548690915108,
+      0.0013245426816865802,
+      0.00670533487573266,
+      0.01336543820798397,
+      0.0030748688150197268,
+      0.0019966603722423315,
+      0.013487339951097965,
+      0.00660613551735878,
+      0.0024800009559839964,
+      0.00727444514632225,
+      0.004640782251954079,
+      0.038442958146333694,
+      0.005560904275625944,
+      0.005098688416182995,
+      0.009703543037176132,
+      0.01454292330890894,
+      0.004916266072541475,
+      0.014290524646639824,
+      0.0024188014212995768,
+      0.013220740482211113,
+      0.005383904092013836,
+      0.016652751713991165,
+      0.003048521699383855,
+      0.031528737396001816,
+      0.01449646893888712,
+      0.011404006741940975,
+      0.054733820259571075,
+      0.04008807986974716,
+      0.015985459089279175,
+      0.036759816110134125,
+      0.020443622022867203,
+      0.02446053922176361,
+      0.0017731520347297192,
+      0.002622481668367982,
+      0.004894869402050972,
+      0.007826615124940872,
+      0.010601649060845375,
+      0.004040887113660574,
+      0.0016604932025074959,
+      0.019070733338594437,
+      0.003957586828619242,
+      0.011552811600267887,
+      0.021136917173862457,
+      0.007836827076971531,
+      0.0062169586308300495,
+      0.008763735182583332,
+      0.018314432352781296,
+      0.03785988688468933,
+      0.004343385808169842,
+      0.01961570419371128,
+      0.0033701700158417225,
+      0.017873726785182953,
+      0.004187669605016708,
+      0.003932188730686903,
+      0.004224702250212431,
+      0.0063450951129198074,
+      0.010159492492675781,
+      0.012056705541908741,
+      0.015372935682535172,
+      0.004756377078592777,
+      0.006452606525272131,
+      0.003926916513592005,
+      0.004586200695484877,
+      0.012578004971146584,
+      0.01317349448800087,
+      0.007781473454087973,
+      0.007000190671533346,
+      0.014112360775470734,
+      0.009070034138858318,
+      0.0029928770381957293,
+      0.004549446050077677,
+      0.02571716345846653,
+      0.00493305129930377,
+      0.0038933453615754843,
+      0.03615620732307434,
+      0.013538946397602558,
+      0.01851445622742176,
+      0.005991889163851738,
+      0.004093645140528679,
+      0.00160827930085361,
+      0.014545353129506111,
+      0.0025636120699346066,
+      0.0021358542144298553,
+      0.01835760846734047,
+      0.008560927584767342,
+      0.004543845541775227,
+      0.007499135099351406,
+      0.012453218922019005,
+      0.003450114279985428,
+      0.00669228658080101,
+      0.0017660469748079777,
+      0.008456094190478325,
+      0.005966634955257177,
+      0.005331857595592737,
+      0.014225762337446213,
+      0.006659226026386023,
+      0.011543459258973598,
+      0.0017049215966835618,
+      0.0076207928359508514,
+      0.002755219116806984,
+      0.006489627994596958,
+      0.00780550017952919,
+      0.005166598130017519,
+      0.013878093101084232,
+      0.002013969933614135,
+      0.003599712159484625,
+      0.01193530298769474,
+      0.01117001473903656,
+      0.003954384475946426,
+      0.008968577720224857,
+      0.0014577388064935803,
+      0.008216774091124535,
+      0.006503819953650236,
+      0.008152205497026443,
+      0.012847286649048328,
+      0.020014483481645584,
+      0.014158645644783974,
+      0.02114509791135788,
+      0.010142051614820957,
+      0.03302216902375221,
+      0.002944676438346505,
+      0.007246155757457018,
+      0.004038708750158548,
+      0.013066922314465046,
+      0.0057638539001345634,
+      0.008736385963857174,
+      0.006119208410382271,
+      0.002126461360603571,
+      0.005787374451756477,
+      0.0028538822662085295,
+      0.013682357966899872,
+      0.007603723555803299,
+      0.011129292659461498,
+      0.008775667287409306,
+      0.007892198860645294,
+      0.00764915905892849,
+      0.026345176622271538,
+      0.009915618225932121,
+      0.019474150612950325,
+      0.020711392164230347,
+      0.004050559364259243,
+      0.009496241807937622,
+      0.016072116792201996,
+      0.002496148459613323,
+      0.0017521510599181056,
+      0.0031101955100893974,
+      0.010761529207229614,
+      0.013083800673484802,
+      0.01344883069396019,
+      0.0055780052207410336,
+      0.009784754365682602,
+      0.005155663471668959,
+      0.006752661429345608,
+      0.010885816998779774,
+      0.005449644755572081,
+      0.0015665384707972407,
+      0.009692993015050888,
+      0.004602561704814434,
+      0.0033220634795725346,
+      0.02173244208097458,
+      0.0038732916582375765,
+      0.011644819751381874,
+      0.010410009883344173,
+      0.020079251378774643,
+      0.0017536046216264367,
+      0.003456557635217905,
+      0.030846908688545227,
+      0.006393155548721552,
+      0.0062924823723733425,
+      0.002911305520683527,
+      0.007490462623536587,
+      0.0036320146173238754,
+      0.021755222231149673,
+      0.011281928047537804,
+      0.010514715686440468,
+      0.010288538411259651,
+      0.00409475713968277,
+      0.005001132842153311,
+      0.002589026466012001,
+      0.013136321678757668,
+      0.003294542897492647,
+      0.007333381101489067,
+      0.002746653277426958,
+      0.002100599929690361,
+      0.008990517817437649,
+      0.022571444511413574,
+      0.002857333980500698,
+      0.018991338089108467,
+      0.012050796300172806,
+      0.0016355612315237522,
+      0.0028360344003885984,
+      0.014198335818946362,
+      0.004916942212730646,
+      0.007898760959506035,
+      0.0050667221657931805,
+      0.009642441757023335,
+      0.013264555484056473,
+      0.004941621329635382,
+      0.007696069777011871,
+      0.013117463327944279,
+      0.005687642842531204,
+      0.01148588303476572,
+      0.00996796227991581,
+      0.005799578502774239,
+      0.0038493210449814796,
+      0.0038835450541228056,
+      0.00463647348806262,
+      0.07289093732833862,
+      0.007160675246268511,
+      0.003236209275200963,
+      0.008930209092795849,
+      0.005373798776417971,
+      0.01048074197024107,
+      0.013182324357330799,
+      0.010361893102526665,
+      0.001132518402300775,
+      0.005573599133640528,
+      0.010574327781796455,
+      0.021931923925876617,
+      0.002946744440123439,
+      0.0031189306173473597,
+      0.017036454752087593,
+      0.003442305140197277,
+      0.007099593989551067,
+      0.01692386157810688,
+      0.002208283171057701,
+      0.004966055974364281,
+      0.0024480940774083138,
+      0.01020957063883543,
+      0.01037927158176899,
+      0.006622652057558298,
+      0.021431513130664825,
+      0.016691144555807114,
+      0.0027733715251088142,
+      0.007556910626590252,
+      0.0012899234425276518,
+      0.012632557190954685,
+      0.0033256264869123697,
+      0.006849160883575678,
+      0.006698001176118851,
+      0.0034197205677628517,
+      0.010900773108005524,
+      0.020364580675959587,
+      0.005017325282096863,
+      0.009323002770543098,
+      0.011260383762419224,
+      0.0032430116552859545,
+      0.006676553748548031,
+      0.02108975313603878,
+      0.0047799963504076,
+      0.006620691157877445,
+      0.004236200358718634,
+      0.00464242696762085,
+      0.027434710413217545,
+      0.014848602004349232,
+      0.005228074267506599,
+      0.0030947630293667316,
+      0.00567257683724165,
+      0.004150292836129665,
+      0.00504641467705369,
+      0.002376530785113573,
+      0.02660343423485756,
+      0.02346637286245823,
+      0.0036351194139569998,
+      0.01638411357998848,
+      0.003766510868445039,
+      0.013153299689292908,
+      0.004842992871999741,
+      0.002663973718881607,
+      0.015030251815915108,
+      0.006651816423982382,
+      0.0014259160961955786,
+      0.013208653777837753,
+      0.014601555652916431,
+      0.016949210315942764,
+      0.007397253066301346,
+      0.0034445279743522406,
+      0.011529352515935898,
+      0.007159107364714146,
+      0.005658114794641733,
+      0.009965788573026657,
+      0.009585441090166569,
+      0.01341846864670515,
+      0.01331152394413948,
+      0.008018575608730316,
+      0.01839023269712925,
+      0.02668442204594612,
+      0.024017564952373505,
+      0.0024707200936973095,
+      0.01537051610648632,
+      0.017866145819425583,
+      0.006477185525000095,
+      0.055069200694561005,
+      0.0019372651586309075,
+      0.00885697826743126,
+      0.009006350301206112,
+      0.02080562338232994,
+      0.013536137528717518,
+      0.007584366947412491,
+      0.004009973723441362,
+      0.0026043776888400316,
+      0.014158649370074272,
+      0.0018266362603753805,
+      0.014000670053064823,
+      0.002933773910626769,
+      0.006694112438708544,
+      0.02231067605316639,
+      0.019979864358901978,
+      0.022717926651239395,
+      0.0033132629469037056,
+      0.003791217925027013,
+      0.005226051434874535,
+      0.002611533971503377,
+      0.01422595139592886,
+      0.0058585843071341515,
+      0.002233366947621107,
+      0.009196318686008453,
+      0.006774959620088339,
+      0.01093854196369648,
+      0.013662723824381828,
+      0.03158319741487503,
+      0.011354856193065643,
+      0.008499037474393845,
+      0.013029742054641247,
+      0.005299972370266914,
+      0.003218261990696192,
+      0.0031146083492785692,
+      0.006725023500621319,
+      0.018701661378145218,
+      0.0035198424011468887,
+      0.006106209475547075,
+      0.008455860428512096,
+      0.0090860053896904,
+      0.007534570060670376,
+      0.008783652447164059,
+      0.010554496198892593,
+      0.001637981622479856,
+      0.007168727461248636,
+      0.01285247690975666,
+      0.01774969883263111,
+      0.014256996102631092,
+      0.00883486494421959,
+      0.0038255820982158184,
+      0.005250588990747929,
+      0.017284194007515907,
+      0.0025464228820055723,
+      0.005200169514864683,
+      0.0036229812540113926,
+      0.015342417173087597,
+      0.01208195835351944,
+      0.01343977078795433,
+      0.027051644399762154,
+      0.0026734271086752415,
+      0.0029182094149291515,
+      0.005919515620917082,
+      0.010617773979902267,
+      0.0016595034394413233,
+      0.009209034964442253,
+      0.007574302610009909,
+      0.0033094570972025394,
+      0.0075292084366083145,
+      0.007603787817060947,
+      0.00345397787168622,
+      0.011909735389053822,
+      0.008360103704035282,
+      0.024229414761066437,
+      0.003525329986587167,
+      0.012327003292739391,
+      0.00817519798874855,
+      0.016394920647144318,
+      0.006393597926944494,
+      0.002650048118084669,
+      0.01202980987727642,
+      0.0027555683627724648,
+      0.006531035527586937,
+      0.012961144559085369,
+      0.010340439155697823,
+      0.008121362887322903,
+      0.022627873346209526,
+      0.0020747126545757055,
+      0.008360512554645538,
+      0.004014688543975353,
+      0.006682462990283966,
+      0.005474611185491085,
+      0.0016406199429184198,
+      0.0035060993395745754,
+      0.012794053182005882,
+      0.010849127545952797,
+      0.010685812681913376,
+      0.0193826574832201,
+      0.005703550763428211,
+      0.005789717193692923,
+      0.007284425664693117,
+      0.003177239093929529,
+      0.0066359019838273525,
+      0.009573837742209435,
+      0.01152652595192194,
+      0.006651414092630148,
+      0.005994346458464861,
+      0.00946321152150631,
+      0.0026929776649922132,
+      0.003804998006671667,
+      0.002903012093156576,
+      0.004620348569005728,
+      0.005561454687267542,
+      0.008562957867980003,
+      0.005313936620950699,
+      0.007835001684725285,
+      0.022706642746925354,
+      0.011799339205026627,
+      0.004341014660894871,
+      0.011974193155765533,
+      0.005459208972752094,
+      0.007867438718676567,
+      0.01128191128373146,
+      0.006988537963479757,
+      0.01296458300203085,
+      0.003890432184562087,
+      0.0033869489561766386,
+      0.017979882657527924,
+      0.009300895035266876,
+      0.0029308015946298838,
+      0.004937583114951849,
+      0.005086767021566629,
+      0.018497392535209656,
+      0.00232254178263247,
+      0.010777072049677372,
+      0.004608680494129658,
+      0.004280999302864075,
+      0.011586885899305344,
+      0.002742118900641799,
+      0.0047733052633702755,
+      0.0015680246287956834,
+      0.019856184720993042,
+      0.009840883314609528,
+      0.00410985155031085,
+      0.021635450422763824,
+      0.01764599233865738,
+      0.0037922891788184643,
+      0.005949744023382664,
+      0.00593825988471508,
+      0.007174595259130001,
+      0.022329550236463547,
+      0.01492277067154646,
+      0.00453684339299798,
+      0.006930838339030743,
+      0.00235950481146574,
+      0.00823181215673685,
+      0.013405783101916313,
+      0.014865858480334282,
+      0.027787495404481888,
+      0.005930946674197912,
+      0.009016446769237518,
+      0.0038936519995331764,
+      0.003501776373013854,
+      0.00921856239438057,
+      0.005995321087539196,
+      0.0122124794870615,
+      0.011102812364697456,
+      0.005407064687460661,
+      0.0037241855170577765,
+      0.006464263424277306,
+      0.013942057266831398,
+      0.011850038543343544,
+      0.009943289682269096,
+      0.012398283928632736,
+      0.0036619447637349367,
+      0.035238832235336304,
+      0.00332590751349926,
+      0.01086973026394844,
+      0.004808183293789625,
+      0.0032816173043102026,
+      0.002580791711807251,
+      0.035841528326272964,
+      0.03412464261054993,
+      0.017920266836881638,
+      0.01044141873717308,
+      0.0059112487360835075,
+      0.005182350054383278,
+      0.007930533960461617,
+      0.007383447140455246,
+      0.01299296785145998,
+      0.0033178445883095264,
+      0.004437124356627464,
+      0.005661848932504654,
+      0.021392526105046272,
+      0.0031828973442316055,
+      0.03023800253868103,
+      0.0010370605159550905,
+      0.009159166365861893,
+      0.01129323523491621,
+      0.005948815960437059,
+      0.00606706365942955,
+      0.008120493963360786,
+      0.00388258951716125,
+      0.003045089542865753,
+      0.02360111102461815,
+      0.005903384182602167,
+      0.005791305564343929,
+      0.00773198064416647,
+      0.017074760049581528,
+      0.016841929405927658,
+      0.018710704520344734,
+      0.005417902022600174,
+      0.0025458026211708784,
+      0.012343751266598701,
+      0.002534732688218355,
+      0.008249009028077126,
+      0.004006499890238047,
+      0.04229093715548515,
+      0.007008432410657406,
+      0.004383236635476351,
+      0.00776387844234705,
+      0.0015617520548403263,
+      0.004996501374989748,
+      0.003194109769538045,
+      0.005948967300355434,
+      0.01625041663646698,
+      0.0038549257442355156,
+      0.010433612391352654,
+      0.022830815985798836,
+      0.015346390195190907,
+      0.01869927905499935,
+      0.0032420705538243055,
+      0.006276417523622513,
+      0.008024472743272781,
+      0.015952879562973976,
+      0.0028067915700376034,
+      0.011641623452305794,
+      0.0038115810602903366,
+      0.0032239332795143127,
+      0.047594863921403885,
+      0.004512756131589413,
+      0.005484605673700571,
+      0.0020801168866455555,
+      0.023776330053806305,
+      0.014372328296303749,
+      0.0041945395059883595,
+      0.007893985137343407,
+      0.00490671768784523,
+      0.015010781586170197,
+      0.004715222865343094,
+      0.0077108219265937805,
+      0.011317669413983822,
+      0.004709417931735516,
+      0.003101929323747754,
+      0.042162977159023285,
+      0.0028066900558769703,
+      0.016036517918109894,
+      0.005024327896535397,
+      0.0037503032945096493,
+      0.00490305433049798,
+      0.016110830008983612,
+      0.009253173135221004,
+      0.005706797353923321,
+      0.005937134847044945,
+      0.009430316276848316,
+      0.009953086264431477,
+      0.0028435830026865005,
+      0.004010509699583054,
+      0.003532271832227707,
+      0.011803209781646729,
+      0.0052818371914327145,
+      0.006055905949324369,
+      0.00916207954287529,
+      0.016353100538253784,
+      0.005832372233271599,
+      0.010230986401438713,
+      0.018402360379695892,
+      0.003005123697221279,
+      0.022525407373905182,
+      0.007672559469938278,
+      0.0031380127184093,
+      0.007795925717800856,
+      0.01611701212823391,
+      0.015829933807253838,
+      0.006846779957413673,
+      0.00416562519967556,
+      0.0022416673600673676,
+      0.00986744835972786,
+      0.00869486853480339,
+      0.0019939530175179243,
+      0.008873337879776955,
+      0.005909267347306013,
+      0.0036951969377696514,
+      0.024376776069402695,
+      0.00911625660955906,
+      0.01787368208169937,
+      0.006369451992213726,
+      0.011998510919511318,
+      0.0021574737038463354,
+      0.014601835049688816,
+      0.01609145663678646,
+      0.018273992463946342,
+      0.01622907444834709,
+      0.0053780353628098965,
+      0.016493478789925575,
+      0.004524243529886007,
+      0.00438898429274559,
+      0.01023921649903059,
+      0.002305729780346155,
+      0.0035146113950759172,
+      0.0021034488454461098,
+      0.014385003596544266,
+      0.01881973259150982,
+      0.008832830935716629,
+      0.019022447988390923,
+      0.003783048130571842,
+      0.02650177851319313,
+      0.016178686171770096,
+      0.005064371041953564,
+      0.0044837836176157,
+      0.0035826561506837606,
+      0.025590013712644577,
+      0.005782400723546743,
+      0.019318625330924988,
+      0.003923502750694752,
+      0.013239357620477676,
+      0.0061318399384617805,
+      0.008230128325521946,
+      0.0034823196474462748,
+      0.022177714854478836,
+      0.014280298724770546,
+      0.0027428269386291504,
+      0.009897139854729176,
+      0.03695916756987572,
+      0.008333495818078518,
+      0.0015342086553573608,
+      0.003952390514314175,
+      0.0032027731649577618,
+      0.00508271437138319,
+      0.003965816926211119,
+      0.017866555601358414,
+      0.015423646196722984,
+      0.006535434164106846,
+      0.016481060534715652,
+      0.005457649938762188,
+      0.0027462400030344725,
+      0.01821470446884632,
+      0.03920993581414223,
+      0.006333267316222191,
+      0.018404683098196983,
+      0.006146721541881561,
+      0.007819720543920994,
+      0.01668793521821499,
+      0.010006441734731197,
+      0.004271284677088261,
+      0.01239067129790783,
+      0.005897541996091604,
+      0.0025111939758062363,
+      0.04681692644953728,
+      0.003093136241659522,
+      0.0016421000473201275,
+      0.02805311046540737,
+      0.016389155760407448,
+      0.014691678807139397,
+      0.018726177513599396,
+      0.01715712435543537,
+      0.004970156587660313,
+      0.0182805098593235,
+      0.006912849377840757,
+      0.002125134225934744,
+      0.0018899423303082585,
+      0.002675947966054082,
+      0.007537811994552612,
+      0.010462877340614796,
+      0.020639507099986076,
+      0.01402623113244772,
+      0.008631657809019089,
+      0.005388581193983555,
+      0.007252092007547617,
+      0.003274964401498437,
+      0.003325904021039605,
+      0.009897962212562561,
+      0.012246080674231052,
+      0.002129295840859413,
+      0.01800575852394104,
+      0.01646125130355358,
+      0.013024868443608284,
+      0.009927118197083473,
+      0.019473638385534286,
+      0.007912710309028625,
+      0.003646634519100189,
+      0.02185307815670967,
+      0.0046839723363518715,
+      0.005952158011496067,
+      0.015847671777009964,
+      0.003647175384685397,
+      0.004326904658228159,
+      0.010215704329311848,
+      0.01890917494893074,
+      0.00781779084354639,
+      0.0036019114777445793,
+      0.010689042508602142,
+      0.0019189998274669051,
+      0.016976067796349525,
+      0.04411879926919937,
+      0.020636944100260735,
+      0.007021219003945589,
+      0.013240066356956959,
+      0.00348550989292562,
+      0.002120307181030512
+    ],
+    "batches": 470,
+    "batch_size": 64,
+    "seed": 20261004,
+    "turn_n": 4726,
+    "turn_mse": 0.011551930835246693,
+    "turn_definition": "grid sequence changes both row and column; all sampled batches",
+    "definition": "make_batch world XY, consecutive grid duplicates removed; >=3 distinct cells, one row or column"
+  }
+}

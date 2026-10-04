@@ -1,0 +1,62 @@
+wallpen-eval-v1 selftest | CPU | H3/H4/H8/Hinf substitutes only
+COMPUTE H3 repeat (fresh process): /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen_eval/model_metrics.py --ckpt /home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/hsweep/ckpt-local/H3.pt --ckpt-sha256 c42e4389a6f29188a9f8d5f1f3bbad732ccc8597bd26faae00d7fbef9d924d4f --out /home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen_eval/H3-repeat-model.json
+SCHEMA H3: selfsub-v1-r1 cells=50 draws/cell=16
+SCHEMA H4: selfsub-v1-r1 cells=50 draws/cell=16
+SCHEMA H8: selfsub-v1-r1 cells=50 draws/cell=16
+SCHEMA Hinf: selfsub-v1-r1 cells=50 draws/cell=16
+E1 task 4: 19/80=0.2375000000; summary.r=0.2375
+E1 task 5: 29/64=0.4531250000; summary.r=0.453125
+E1 task 2: 78/112=0.6964285714; summary.r=0.6964285714285714
+E1 PASS
+E2 H3 task 4: clean 20/80; valid+clean 4/80
+E2 H3 task 5: clean 35/64; valid+clean 21/64
+E2 H3 task 2: clean 55/112; valid+clean 50/112
+E2 Hinf task 4: clean 0/80; valid+clean 0/80
+E2 Hinf task 5: clean 6/64; valid+clean 6/64
+E2 Hinf task 2: clean 13/112; valid+clean 12/112
+  KILLER 1 mutant FAIL (expected): AssertionError: E2 tau .0572 violates lead clean counts [55, 20, 35] (task order 2,4,5); actual=[52, 19, 29]
+E2 PASS
+E3 H3 positive n=62 p50=0.00728186 p95=0.06638879 max=0.14309558
+E3 named task 2 [5, 6]: [{"task": "2", "cell": [5, 6], "route_id": 0, "away": true, "points_xy": [[20.0, 16.0], [20.0, 12.0], [20.0, 8.0], [16.0, 8.0]], "max_occupancy_depth": 0.08524870872497559, "max_true_wall_depth": 0.0, "clean": false}]
+E3 named task 2 [5, 1]: [{"task": "2", "cell": [5, 1], "route_id": 0, "away": true, "points_xy": [[0.0, 16.0], [4.0, 16.0], [4.0, 20.0], [4.0, 24.0]], "max_occupancy_depth": 0.1275911033153534, "max_true_wall_depth": 0.4, "clean": false}]
+E3 named task 4 [3, 9]: [{"task": "4", "cell": [3, 9], "route_id": 1, "away": true, "points_xy": [[32.0, 8.0], [36.0, 8.0], [36.0, 12.0], [36.0, 16.0]], "max_occupancy_depth": 0.006687970831990242, "max_true_wall_depth": 0.0, "clean": true}]
+E3 PASS
+E4 task 4: failures 61; {'方向對只是不準': 27, '分不清': 11, '太近沒前進': 10, '走錯邊': 13}
+E4 task 5: failures 35; {'方向對只是不準': 14, '分不清': 7, '太近沒前進': 11, '走錯邊': 3}
+E4 PASS
+E5 task 2: identical={'estimate': 0.0, 'ci95': [0.0, 0.0], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; H3-H4={'estimate': 0.1785714285714285, 'ci95': [-0.008928571428571397, 0.37499999999999994], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; H4-H3={'estimate': -0.1785714285714285, 'ci95': [-0.37499999999999994, 0.008928571428571397], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; change k=3, n=112, delta=0.0267857143
+E5 task 4: identical={'estimate': 0.0, 'ci95': [0.0, 0.0], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; H3-H4={'estimate': 0.0625, 'ci95': [-0.2125, 0.425], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; H4-H3={'estimate': -0.0625, 'ci95': [-0.425, 0.2125], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; change k=3, n=80, delta=0.0375000000
+E5 task 5: identical={'estimate': 0.0, 'ci95': [0.0, 0.0], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; H3-H4={'estimate': 0.015625, 'ci95': [-0.078125, 0.109375], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; H4-H3={'estimate': -0.015625, 'ci95': [-0.109375, 0.078125], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}; change k=3, n=64, delta=0.0468750000
+  KILLER 2 mutant FAIL (expected): AssertionError: E5 independent indices break zero-width identical-arm interval; actual={'estimate': 0.0, 'ci95': [-0.4125, 0.4], 'n_boot': 10000, 'seed': 20261004, 'method': 'two-level paired percentile'}
+E5 sparse inner draws: two-level CI=[0.0125, 0.1125]; one-level CI=[0.0625, 0.0625]
+  refusal PASS: E5 pairing cell: Pairing refused: ordered cell lists differ
+  refusal PASS: E5 pairing seed: Pairing refused: seed/draw sequence differs at 2 [3, 1]
+  refusal PASS: E5 pairing draw: Pairing refused: seed/draw sequence differs at 2 [3, 1]
+E5 PASS
+E6 hand: C1 FAIL MSE/task2; hi vs C1 nonaway drops 13/144=.090278, 23/208=.110577 FAIL, -11/192=-.057292; lo drops 12/144=.083333, 9/208=.043269, -14/192=-.072917 all PASS. NEAR <=0. Primary lo; task4/5 penalty not learned, C1 warning; both C2 vs B0 FAIL task2.
+E6 actual: {"primary": "C2-lo", "reason": "主判由 hi 改 lo，因為 hi 的 非陷阱格 VALID 守門 task 4=FAIL（不看主指標）；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題", "by_task": {"2": {"c1": "task 2 只描述", "c2": "task 2 只描述；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題"}, "4": {"c1": "不出結論：B0 Stage O 閘或 C1 Stage O 閘／守門 FAIL", "c2": "懲罰沒教到牆（權重太小或被躲掉）；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題", "failure_branch": null}, "5": {"c1": "不出結論：B0 Stage O 閘或 C1 Stage O 閘／守門 FAIL", "c2": "懲罰沒教到牆（權重太小或被躲掉）；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題", "failure_branch": null}}, "hi_primary_metrics": {"2": {"estimate": 0.5535714285714286, "ci95": [0.30357142857142855, 0.7767857142857143], "n_boot": 10000, "seed": 20261004, "method": "two-level percentile", "count": 62, "n": 112}, "4": {"estimate": 0.0125, "ci95": [0.0, 0.05], "n_boot": 10000, "seed": 20261004, "method": "two-level percentile", "count": 1, "n": 80}, "5": {"estimate": 0.140625, "ci95": [0.0, 0.3125], "n_boot": 10000, "seed": 20261004, "method": "two-level percentile", "count": 9, "n": 64}}, "arm_status": {"B0": "可判讀", "C1": "不出結論", "C2-hi": "不出結論", "C2-lo": "可判讀"}, "rollout": "尚不建議考慮 rollout", "conclusion_blockers": ["C1 對 B0 直路重建 MSE 守門=FAIL", "C1 對 B0 非陷阱格 VALID 守門 task 2=FAIL"], "c2_guard_conclusions": {"C2-hi": {"penalty_side_effects": "FAIL：非陷阱格 VALID 守門 task 4；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題", "overall_degradation": "FAIL：非陷阱格 VALID 守門 task 2；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題"}, "C2-lo": {"penalty_side_effects": "PASS：未見副作用；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題", "overall_degradation": "FAIL：非陷阱格 VALID 守門 task 2；⚠️ C1 對 B0 已有副作用，C2 對 C1 通過不代表整套沒問題"}}, "noise": {"status": "未提供", "by_task": {}, "same_scale": false}}
+E6 synthetic (a): C2-lo; 主判由 hi 改 lo，因為 hi 的 NEAR 守門 task 4=FAIL（不看主指標）; hi r=.9 > lo r=.5
+  KILLER 3 mutant FAIL (expected): AssertionError: E6 primary selection must ignore hi r=.9 > lo r=.5; E6 monkeypatch actual select_primary to look at primary metric
+E6 synthetic (b): (None, '不出結論：hi 的 NEAR 守門 task 4=FAIL；lo 亦不通過：NEAR 守門 task 4=FAIL')
+  KILLER 4 mutant FAIL (expected): AssertionError: E5 inner draw resampling must give nonzero CI for sparse within-cell differences; B1 one-level bootstrap removes draw resampling
+  KILLER 5 mutant FAIL (expected): AssertionError: B1 only G3 FAIL must block all attribution; B1 actual gate_pass omits G3 on Stage O copy
+  KILLER 6 mutant FAIL (expected): AssertionError: B1 fourclass must follow C1 too-close .20 (delta .10), not B0 .05 (delta .25); B1 actual interpretation uses B0 fourclass reference
+  KILLER 7 mutant FAIL (expected): AssertionError: B1 inclusive decision boundary 0.15; B1 >= 0.15 changed to >
+  KILLER 8 mutant FAIL (expected): AssertionError: B1 inclusive decision boundary 0.3; B1 >= 0.3 changed to >
+  KILLER 9 mutant FAIL (expected): AssertionError: B1 B0s exact .10 annotates all conclusions; B1 B0s >= .10 changed to >
+  KILLER 10 mutant FAIL (expected): AssertionError: B1 inclusive guard boundary MSE 1.10x; B1 <= changed to <: MSE 1.10x
+  KILLER 11 mutant FAIL (expected): AssertionError: B1 inclusive guard boundary nonaway .10; B1 <= changed to <: nonaway .10
+  KILLER 12 mutant FAIL (expected): AssertionError: B1 inclusive guard boundary NEAR .15; B1 <= changed to <: NEAR .15
+  refusal PASS: A4 B0s pairing cell: Pairing refused: ordered cell lists differ
+  refusal PASS: A4 B0s pairing seed: Pairing refused: seed/draw sequence differs at 2 [3, 1]
+  refusal PASS: A4 B0s pairing draw: Pairing refused: seed/draw sequence differs at 2 [3, 1]
+E6 v1.3: two guard layers/C1 warning; hi gate fallback; B0s five metrics, pairing/gates/noise annotation; rollout has separate blockers; required --outdir PASS
+E6 PASS
+  refusal PASS: E7 refuse different coordinate set: Straight guard refused: n != 2048 or coordinate sha256 differs
+E7 H3/H3 ratio=1.0; H3/H4/H8 straight_n=2048, sha256=9a295f038b84666e1fe9d6ac20e1eb98b506158fa8a42afce212989048635a6f
+E7 H3: batches=470, straight MSE=0.012006182343, turn_n=4726, turn MSE=0.014397099381
+E7 H4: batches=470, straight MSE=0.014335873203, turn_n=4726, turn MSE=0.017160169411
+E7 H8: batches=470, straight MSE=0.009988202150, turn_n=4726, turn MSE=0.011551930835
+E7 PASS
+n_tests=7 n_killers=12 n_checks=129
+STATUS: DONE
