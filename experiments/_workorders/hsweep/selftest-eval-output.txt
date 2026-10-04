@@ -1,0 +1,726 @@
+CPU selftests 2026-10-04; CUDA_VISIBLE_DEVICES=empty CUBLAS_WORKSPACE_CONFIG=:4096:8 MUJOCO_GL=egl; Python .venv/bin/python -B. All outputs below are verbatim, including first failures.
+
+E1 FIRST ATTEMPT — COMMAND: .venv/bin/python -B /tmp/hsweep-e1.py
+E1 KILLER wrong SHA: FAIL (expected rejection): BLOCKED: s33 checkpoint SHA256 mismatch/unavailable
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  decoder 內部點 RMSE 1.6502   打亂 u 之後 1.6011   用到的 u 值 -0.0492   🚨 幾乎沒在讀 u ⇒ 這一輪的 recon 數字不能拿來談 u
+Traceback (most recent call last):
+  File "/tmp/hsweep-e1.py", line 17, in <module>
+    m=load_ckpt('/home/cymaxwelllee/data/ogbench',CKPT,CKPT_PIN)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/eval_common.py", line 78, in load_ckpt
+    raise Blocked('BLOCKED: s33/EMA/no-training contract mismatch')
+common.Blocked: BLOCKED: s33/EMA/no-training contract mismatch
+
+E2 FIRST ATTEMPT — COMMAND: .venv/bin/python -B /tmp/hsweep-e2.py
+E2 output directory: /tmp/hsweep-e2-_kcvgcq0
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-e2-_kcvgcq0/actual.json
+LOAD frozen M9 checkpoint on CPU via eval_common.load_ckpt
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  decoder 內部點 RMSE 1.6502   打亂 u 之後 1.6011   用到的 u 值 -0.0492   🚨 幾乎沒在讀 u ⇒ 這一輪的 recon 數字不能拿來談 u
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py", line 395, in full
+    module = load_ckpt('/home/cymaxwelllee/data/ogbench', CKPT_PATH, CKPT_SHA256)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/eval_common.py", line 78, in load_ckpt
+    raise Blocked('BLOCKED: s33/EMA/no-training contract mismatch')
+common.Blocked: BLOCKED: s33/EMA/no-training contract mismatch
+
+n_cells=0 n_draws=0
+STATUS: BLOCKED — BLOCKED: s33/EMA/no-training contract mismatch
+Traceback (most recent call last):
+  File "/tmp/hsweep-e2.py", line 16, in <module>
+    assert r.returncode==0, r.returncode
+           ^^^^^^^^^^^^^^^
+AssertionError: 2
+
+ONE FIX: preserve environment config key LOAD_CKPT; no ruler/test/seed changes. E1 RETRY — COMMAND: .venv/bin/python -B /tmp/hsweep-e1.py
+E1 KILLER wrong SHA: FAIL (expected rejection): BLOCKED: s33 checkpoint SHA256 mismatch/unavailable
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E1 PASS provenance: {'source_path': '/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py', 'source_sha256': '276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc', 'ckpt_path': '/home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt', 'ckpt_sha256': '88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787', 'dataset_path': '/home/cymaxwelllee/data/ogbench/pointmaze-large-stitch-v0.npz', 'dataset_sha256': '9add335e598e48ebc483447d61415a9755ffb738ddfc406cb9708b2a238992e8', 'normalization_mu': [18.227279663085938, 10.928874969482422], 'normalization_sd': [11.593134880065918, 7.238654613494873], 'import_stop_line': 2480, 'config': {'ENV': 'pointmaze-large-stitch-v0', 'CONS': 'self', 'K': 8, 'COND': 256, 'CHUNK': 4, 'TCAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1, 'BC_INDEP': 1, 'TEACHER_MIX': 0.5, 'WARMUP': 500, 'DEC_START': 'soft', 'LOAD_EMA': 1, 'CONT_TRAIN': 0, 'STEPS1': 0, 'STEPS2': 0, 'DEV_EVAL': 0, 'PREREQ': 0, 'GRAD_REFINE': 0, 'SUBGOAL': '', 'FINISH_R': 0, 'INTENT': '', 'U_SOURCE': 'flow', 'BON_N': 0, 'LOAD_CKPT': '/home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt', 'SEED': 33, 'BOOT_DATA': '', 'S1_FROM': '', 'FLOW_PROBE': 0, 'DIAG_DUMP': 0}, 'deterministic_settings': {'torch_version': '2.6.0+cu124', 'cuda_version': '12.4', 'cudnn_version': 91400, 'deterministic': True, 'warn_only': False, 'cudnn_benchmark': False, 'cudnn_deterministic': True, 'tf32': False, 'sdpa': 'math', 'dtype': 'float32', 'batch': 1, 'fill_uninitialized_memory': True, 'threads': 1, 'dataloader_workers': 0, 'cublas_workspace_config': ':4096:8'}}
+
+E2 RETRY — COMMAND: .venv/bin/python -B /tmp/hsweep-e2.py
+E2 output directory: /tmp/hsweep-e2-s7_mirpy
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-e2-s7_mirpy/actual.json
+LOAD frozen M9 checkpoint on CPU via eval_common.load_ckpt
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+BFS_CROSSCHECK {"2": {"path_sets_equal": true, "route_count": 1, "distance": 19, "ref_distance": 19}, "4": {"path_sets_equal": true, "route_count": 2, "distance": 14, "ref_distance": 14}, "5": {"path_sets_equal": true, "route_count": 2, "distance": 15, "ref_distance": 15}}
+G1 PASS VALID=62/62 rate=1.000000 (retained v1; not remeasured)
+G2 PASS VALID=62/62 rate=1.000000 (retained v1; not remeasured)
+G3 PASS VALID=0/16 rate=0.000000 (retained v1; not remeasured)
+KILLER G1 single-trapset-route: FAIL VALID=55/62 (retained v1)
+KILLER G2 no-smoothing: FAIL VALID=8/62 (retained v1)
+KILLER G3 no-lower-bound: {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+KILLER G3 STAY example: {"task": 2, "cell": [4, 6], "c_p": [4, 6], "p_xy": [18.070640917146775, 13.157615449711935], "short": true, "cat": "VALID", "prog": 0, "detour": 0, "traveled": 2.25, "stop_wall": true}
+KILLER G3 required at least one task FAIL observed: True
+ALL GATES AND KILLERS VERIFIED; sampling 16 flow plans per cell
+FLOW task=2 cell=(3, 1) seed=20301 VALID=0/16
+FLOW task=2 cell=(3, 2) seed=20302 VALID=6/16
+FLOW task=2 cell=(3, 3) seed=20303 VALID=8/16
+FLOW task=2 cell=(3, 4) seed=20304 VALID=14/16
+FLOW task=2 cell=(3, 5) seed=20305 VALID=14/16
+FLOW task=2 cell=(3, 6) seed=20306 VALID=16/16
+FLOW task=2 cell=(4, 1) seed=20401 VALID=4/16
+FLOW task=2 cell=(4, 6) seed=20406 VALID=8/16
+FLOW task=2 cell=(5, 1) seed=20501 VALID=10/16
+FLOW task=2 cell=(5, 4) seed=20504 VALID=0/16
+FLOW task=2 cell=(5, 6) seed=20506 VALID=15/16
+FLOW task=2 cell=(6, 4) seed=20604 VALID=0/16
+FLOW task=2 cell=(6, 6) seed=20606 VALID=7/16
+FLOW task=2 cell=(7, 4) seed=20704 VALID=1/16
+FLOW task=2 cell=(7, 5) seed=20705 VALID=4/16
+FLOW task=2 cell=(7, 6) seed=20706 VALID=8/16
+FLOW task=4 cell=(1, 6) seed=40106 VALID=16/16
+FLOW task=4 cell=(1, 7) seed=40107 VALID=10/16
+FLOW task=4 cell=(1, 8) seed=40108 VALID=10/16
+FLOW task=4 cell=(2, 6) seed=40206 VALID=16/16
+FLOW task=4 cell=(2, 8) seed=40208 VALID=0/16
+FLOW task=4 cell=(3, 6) seed=40306 VALID=8/16
+FLOW task=4 cell=(3, 8) seed=40308 VALID=0/16
+FLOW task=4 cell=(3, 9) seed=40309 VALID=0/16
+FLOW task=4 cell=(3, 10) seed=40310 VALID=16/16
+FLOW task=4 cell=(4, 6) seed=40406 VALID=0/16
+FLOW task=4 cell=(4, 10) seed=40410 VALID=16/16
+FLOW task=4 cell=(5, 6) seed=40506 VALID=0/16
+FLOW task=4 cell=(5, 7) seed=40507 VALID=0/16
+FLOW task=4 cell=(5, 8) seed=40508 VALID=0/16
+FLOW task=4 cell=(5, 9) seed=40509 VALID=16/16
+FLOW task=4 cell=(5, 10) seed=40510 VALID=13/16
+FLOW task=4 cell=(6, 6) seed=40606 VALID=6/16
+FLOW task=4 cell=(7, 6) seed=40706 VALID=16/16
+FLOW task=5 cell=(1, 1) seed=50101 VALID=15/16
+FLOW task=5 cell=(1, 2) seed=50102 VALID=15/16
+FLOW task=5 cell=(1, 3) seed=50103 VALID=13/16
+FLOW task=5 cell=(1, 4) seed=50104 VALID=9/16
+FLOW task=5 cell=(2, 1) seed=50201 VALID=15/16
+FLOW task=5 cell=(2, 4) seed=50204 VALID=15/16
+FLOW task=5 cell=(3, 1) seed=50301 VALID=14/16
+FLOW task=5 cell=(3, 2) seed=50302 VALID=9/16
+FLOW task=5 cell=(3, 3) seed=50303 VALID=4/16
+FLOW task=5 cell=(3, 4) seed=50304 VALID=7/16
+FLOW task=5 cell=(3, 5) seed=50305 VALID=5/16
+FLOW task=5 cell=(3, 6) seed=50306 VALID=14/16
+FLOW task=5 cell=(4, 6) seed=50406 VALID=1/16
+FLOW task=5 cell=(5, 6) seed=50506 VALID=0/16
+FLOW task=5 cell=(6, 6) seed=50606 VALID=3/16
+FLOW task=5 cell=(7, 6) seed=50706 VALID=16/16
+PRIMARY task=2 VALID=53/112 r=0.473214 部分
+PRIMARY task=4 VALID=6/80 r=0.075000 這層 flow 自產近子目標大多不可用
+PRIMARY task=5 VALID=15/64 r=0.234375 這層 flow 自產近子目標大多不可用
+n_cells=50 n_draws=800
+STATUS: DONE
+E2 PASS recursive field diff: [] (all original fields equal; float64 bits equal; 50 cells x 16 draws)
+GATES: {"G1": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 1.0}, "G2": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}, "G3": {"n": 16, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 13, "OFF": 3}, "valid_rate": 0.0, "threshold": 0.1, "by_task": {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 5, "OFF": 2}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}, "status": "PASS"}}
+SUMMARY: {"2": {"r": 0.4732142857142857, "interpretation": "部分", "away": {"n": 112, "counts": {"VALID": 53, "WALL": 59, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 0.4732142857142857}, "nonaway": {"n": 144, "counts": {"VALID": 62, "WALL": 43, "FAR": 37, "NEAR": 0, "OFF": 2}, "valid_rate": 0.4305555555555556}, "n_cells": 16, "n_away_cells": 7, "arc8": {"n": 256, "counts": {"VALID": 141, "WALL": 102, "FAR": 10, "NEAR": 1, "OFF": 2}, "valid_rate": 0.55078125}, "arc16": {"n": 256, "counts": {"VALID": 35, "WALL": 121, "FAR": 98, "NEAR": 0, "OFF": 2}, "valid_rate": 0.13671875}, "unanchored": {"n": 256, "counts": {"VALID": 125, "WALL": 91, "FAR": 39, "NEAR": 0, "OFF": 1}, "valid_rate": 0.48828125}}, "4": {"r": 0.075, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 80, "counts": {"VALID": 6, "WALL": 10, "FAR": 61, "NEAR": 0, "OFF": 3}, "valid_rate": 0.075}, "nonaway": {"n": 208, "counts": {"VALID": 137, "WALL": 44, "FAR": 27, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6586538461538461}, "n_cells": 18, "n_away_cells": 5, "arc8": {"n": 288, "counts": {"VALID": 173, "WALL": 71, "FAR": 44, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6006944444444444}, "arc16": {"n": 288, "counts": {"VALID": 56, "WALL": 56, "FAR": 170, "NEAR": 0, "OFF": 6}, "valid_rate": 0.19444444444444445}, "unanchored": {"n": 288, "counts": {"VALID": 163, "WALL": 35, "FAR": 89, "NEAR": 0, "OFF": 1}, "valid_rate": 0.5659722222222222}}, "5": {"r": 0.234375, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 64, "counts": {"VALID": 15, "WALL": 21, "FAR": 28, "NEAR": 0, "OFF": 0}, "valid_rate": 0.234375}, "nonaway": {"n": 192, "counts": {"VALID": 140, "WALL": 37, "FAR": 14, "NEAR": 0, "OFF": 1}, "valid_rate": 0.7291666666666666}, "n_cells": 16, "n_away_cells": 4, "arc8": {"n": 256, "counts": {"VALID": 169, "WALL": 73, "FAR": 12, "NEAR": 0, "OFF": 2}, "valid_rate": 0.66015625}, "arc16": {"n": 256, "counts": {"VALID": 23, "WALL": 117, "FAR": 115, "NEAR": 0, "OFF": 1}, "valid_rate": 0.08984375}, "unanchored": {"n": 256, "counts": {"VALID": 129, "WALL": 20, "FAR": 107, "NEAR": 0, "OFF": 0}, "valid_rate": 0.50390625}}}
+
+E3/E4/E5 + actual offline killers + SECOND PASS — COMMAND: .venv/bin/python -B /tmp/hsweep-remaining.py
+CPU task4 question: {'task': 4, 'episode': 4, 'group': 'trap'}
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm SG --out /tmp/hsweep-remaining-wvni8tjb/E3.jsonl
+draw outside 64..79
+E3 exit=2
+E3 BLOCKED: frozen common.seeds refuses mandated draw=80 before any rollout
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm C --out /tmp/hsweep-remaining-wvni8tjb/E4.jsonl
+draw outside 64..79
+E4 exit=2
+E4 BLOCKED: frozen common.seeds refuses mandated draw=80 before any rollout
+E3 KILLER cond_far substitution: NOT EXECUTED; blocked before first chunk (not counted as a killed mutant)
+E4 direct-PB bitwise comparison: NOT EXECUTED; same frozen seed rejection
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-remaining-wvni8tjb/selfsub_probe_ckpt.py.existing
+BLOCKED: --out or artifact directory already exists
+E5 PASS selfsub_probe_ckpt.py exit=2 existing bytes unchanged; nonexistent checkpoint never loaded
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-remaining-wvni8tjb/harness_sg.py.existing --arm SG --questions trap --max-steps 40
+BLOCKED: output already exists: /tmp/hsweep-remaining-wvni8tjb/harness_sg.py.existing
+E5 PASS harness_sg.py exit=2 existing bytes unchanged; nonexistent checkpoint never loaded
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-remaining-wvni8tjb/geometry.json --selftest
+SELFTEST scoring/arc/anchor/short: PASS
+SELFTEST KILLER G1 single-trapset-route: FAIL VALID=55/62
+SELFTEST KILLER G2 no-smoothing: FAIL cat=NEAR (synthetic jitter; proper=VALID)
+SELFTEST KILLER G3 no-lower-bound (0 <= prog <= 4): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+SELFTEST required G3 FAIL observed: True
+SELFTEST DESCRIPTION straight-through-wall: 預期仍 PASS，用來說明穿牆會被判 FAR／WALL；不是殺手。 {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 5, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 3, "FAR": 1, "NEAR": 0, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 2, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}
+SELFTEST upper-bound task=4 c=(3,8) c_p=(5,6) expected=FAR: PASS {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "FAR", "prog": 8, "detour": 0}
+SELFTEST upper-bound MUTANT prog >= 2 expected=FAR: FAIL {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "VALID", "prog": 8, "detour": 0}
+SECOND PASS frozen PB + original offline-source SHA256 diff: []
+SECOND PASS loader line-copy diff (undo ckpt parameters/path normalization): []
+n_tests=5 n_pass=3 n_blocked=2 n_killers=5 (SHA + offline G1/G2/G3/upper; SG killer unexecuted)
+STATUS: BLOCKED — common.seeds draw restriction; cached s33 gate provenance blocks new checkpoints
+hsweep-eval-v1-r1 — CPU E1-E6; previous-pass evidence above retained
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-e1.py
+E1 KILLER wrong SHA: FAIL (expected rejection): BLOCKED: s33 checkpoint SHA256 mismatch/unavailable
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E1 PASS provenance: {'source_path': '/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py', 'source_sha256': '276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc', 'ckpt_path': '/home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt', 'ckpt_sha256': '88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787', 'dataset_path': '/home/cymaxwelllee/data/ogbench/pointmaze-large-stitch-v0.npz', 'dataset_sha256': '9add335e598e48ebc483447d61415a9755ffb738ddfc406cb9708b2a238992e8', 'normalization_mu': [18.227279663085938, 10.928874969482422], 'normalization_sd': [11.593134880065918, 7.238654613494873], 'import_stop_line': 2480, 'config': {'ENV': 'pointmaze-large-stitch-v0', 'CONS': 'self', 'K': 8, 'COND': 256, 'CHUNK': 4, 'TCAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1, 'BC_INDEP': 1, 'TEACHER_MIX': 0.5, 'WARMUP': 500, 'DEC_START': 'soft', 'LOAD_EMA': 1, 'CONT_TRAIN': 0, 'STEPS1': 0, 'STEPS2': 0, 'DEV_EVAL': 0, 'PREREQ': 0, 'GRAD_REFINE': 0, 'SUBGOAL': '', 'FINISH_R': 0, 'INTENT': '', 'U_SOURCE': 'flow', 'BON_N': 0, 'LOAD_CKPT': '/home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt', 'SEED': 33, 'BOOT_DATA': '', 'S1_FROM': '', 'FLOW_PROBE': 0, 'DIAG_DUMP': 0}, 'deterministic_settings': {'torch_version': '2.6.0+cu124', 'cuda_version': '12.4', 'cudnn_version': 91400, 'deterministic': True, 'warn_only': False, 'cudnn_benchmark': False, 'cudnn_deterministic': True, 'tf32': False, 'sdpa': 'math', 'dtype': 'float32', 'batch': 1, 'fill_uninitialized_memory': True, 'threads': 1, 'dataloader_workers': 0, 'cublas_workspace_config': ':4096:8'}}
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r1-e2.py
+E2 output directory: /tmp/hsweep-e2-sa0c6kgg
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-e2-sa0c6kgg/actual.json
+LOAD frozen M9 checkpoint on CPU via eval_common.load_ckpt
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+BFS_CROSSCHECK {"2": {"path_sets_equal": true, "route_count": 1, "distance": 19, "ref_distance": 19}, "4": {"path_sets_equal": true, "route_count": 2, "distance": 14, "ref_distance": 14}, "5": {"path_sets_equal": true, "route_count": 2, "distance": 15, "ref_distance": 15}}
+G1 PASS VALID=62/62 rate=1.000000 (cached)
+G2 PASS VALID=62/62 rate=1.000000 (cached)
+G3 PASS VALID=0/16 rate=0.000000 (cached)
+KILLER G1 single-trapset-route: FAIL VALID=55/62
+KILLER G2 no-smoothing: FAIL VALID=8/62
+KILLER G3 no-lower-bound: {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+KILLER G3 STAY example: {"task": 2, "cell": [4, 6], "c_p": [4, 6], "p_xy": [18.070640917146775, 13.157615449711935], "short": true, "cat": "VALID", "prog": 0, "detour": 0, "traveled": 2.25, "stop_wall": true}
+KILLER G3 required at least one task FAIL observed: True
+ALL GATES AND KILLERS VERIFIED; sampling 16 flow plans per cell
+FLOW task=2 cell=(3, 1) seed=20301 VALID=0/16
+FLOW task=2 cell=(3, 2) seed=20302 VALID=6/16
+FLOW task=2 cell=(3, 3) seed=20303 VALID=8/16
+FLOW task=2 cell=(3, 4) seed=20304 VALID=14/16
+FLOW task=2 cell=(3, 5) seed=20305 VALID=14/16
+FLOW task=2 cell=(3, 6) seed=20306 VALID=16/16
+FLOW task=2 cell=(4, 1) seed=20401 VALID=4/16
+FLOW task=2 cell=(4, 6) seed=20406 VALID=8/16
+FLOW task=2 cell=(5, 1) seed=20501 VALID=10/16
+FLOW task=2 cell=(5, 4) seed=20504 VALID=0/16
+FLOW task=2 cell=(5, 6) seed=20506 VALID=15/16
+FLOW task=2 cell=(6, 4) seed=20604 VALID=0/16
+FLOW task=2 cell=(6, 6) seed=20606 VALID=7/16
+FLOW task=2 cell=(7, 4) seed=20704 VALID=1/16
+FLOW task=2 cell=(7, 5) seed=20705 VALID=4/16
+FLOW task=2 cell=(7, 6) seed=20706 VALID=8/16
+FLOW task=4 cell=(1, 6) seed=40106 VALID=16/16
+FLOW task=4 cell=(1, 7) seed=40107 VALID=10/16
+FLOW task=4 cell=(1, 8) seed=40108 VALID=10/16
+FLOW task=4 cell=(2, 6) seed=40206 VALID=16/16
+FLOW task=4 cell=(2, 8) seed=40208 VALID=0/16
+FLOW task=4 cell=(3, 6) seed=40306 VALID=8/16
+FLOW task=4 cell=(3, 8) seed=40308 VALID=0/16
+FLOW task=4 cell=(3, 9) seed=40309 VALID=0/16
+FLOW task=4 cell=(3, 10) seed=40310 VALID=16/16
+FLOW task=4 cell=(4, 6) seed=40406 VALID=0/16
+FLOW task=4 cell=(4, 10) seed=40410 VALID=16/16
+FLOW task=4 cell=(5, 6) seed=40506 VALID=0/16
+FLOW task=4 cell=(5, 7) seed=40507 VALID=0/16
+FLOW task=4 cell=(5, 8) seed=40508 VALID=0/16
+FLOW task=4 cell=(5, 9) seed=40509 VALID=16/16
+FLOW task=4 cell=(5, 10) seed=40510 VALID=13/16
+FLOW task=4 cell=(6, 6) seed=40606 VALID=6/16
+FLOW task=4 cell=(7, 6) seed=40706 VALID=16/16
+FLOW task=5 cell=(1, 1) seed=50101 VALID=15/16
+FLOW task=5 cell=(1, 2) seed=50102 VALID=15/16
+FLOW task=5 cell=(1, 3) seed=50103 VALID=13/16
+FLOW task=5 cell=(1, 4) seed=50104 VALID=9/16
+FLOW task=5 cell=(2, 1) seed=50201 VALID=15/16
+FLOW task=5 cell=(2, 4) seed=50204 VALID=15/16
+FLOW task=5 cell=(3, 1) seed=50301 VALID=14/16
+FLOW task=5 cell=(3, 2) seed=50302 VALID=9/16
+FLOW task=5 cell=(3, 3) seed=50303 VALID=4/16
+FLOW task=5 cell=(3, 4) seed=50304 VALID=7/16
+FLOW task=5 cell=(3, 5) seed=50305 VALID=5/16
+FLOW task=5 cell=(3, 6) seed=50306 VALID=14/16
+FLOW task=5 cell=(4, 6) seed=50406 VALID=1/16
+FLOW task=5 cell=(5, 6) seed=50506 VALID=0/16
+FLOW task=5 cell=(6, 6) seed=50606 VALID=3/16
+FLOW task=5 cell=(7, 6) seed=50706 VALID=16/16
+PRIMARY task=2 VALID=53/112 r=0.473214 部分
+PRIMARY task=4 VALID=6/80 r=0.075000 這層 flow 自產近子目標大多不可用
+PRIMARY task=5 VALID=15/64 r=0.234375 這層 flow 自產近子目標大多不可用
+n_cells=50 n_draws=800
+STATUS: DONE
+E2 keyed cache: {'key': ['88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787', '20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87'], 'reused': True, 'evidence': 'gates-evidence.json'}
+E2 PASS recursive field diff: [] (all original fields equal; float64 bits equal; 50 cells x 16 draws)
+GATES: {"G1": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 1.0}, "G2": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}, "G3": {"n": 16, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 13, "OFF": 3}, "valid_rate": 0.0, "threshold": 0.1, "by_task": {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 5, "OFF": 2}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}, "status": "PASS"}}
+SUMMARY: {"2": {"r": 0.4732142857142857, "interpretation": "部分", "away": {"n": 112, "counts": {"VALID": 53, "WALL": 59, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 0.4732142857142857}, "nonaway": {"n": 144, "counts": {"VALID": 62, "WALL": 43, "FAR": 37, "NEAR": 0, "OFF": 2}, "valid_rate": 0.4305555555555556}, "n_cells": 16, "n_away_cells": 7, "arc8": {"n": 256, "counts": {"VALID": 141, "WALL": 102, "FAR": 10, "NEAR": 1, "OFF": 2}, "valid_rate": 0.55078125}, "arc16": {"n": 256, "counts": {"VALID": 35, "WALL": 121, "FAR": 98, "NEAR": 0, "OFF": 2}, "valid_rate": 0.13671875}, "unanchored": {"n": 256, "counts": {"VALID": 125, "WALL": 91, "FAR": 39, "NEAR": 0, "OFF": 1}, "valid_rate": 0.48828125}}, "4": {"r": 0.075, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 80, "counts": {"VALID": 6, "WALL": 10, "FAR": 61, "NEAR": 0, "OFF": 3}, "valid_rate": 0.075}, "nonaway": {"n": 208, "counts": {"VALID": 137, "WALL": 44, "FAR": 27, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6586538461538461}, "n_cells": 18, "n_away_cells": 5, "arc8": {"n": 288, "counts": {"VALID": 173, "WALL": 71, "FAR": 44, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6006944444444444}, "arc16": {"n": 288, "counts": {"VALID": 56, "WALL": 56, "FAR": 170, "NEAR": 0, "OFF": 6}, "valid_rate": 0.19444444444444445}, "unanchored": {"n": 288, "counts": {"VALID": 163, "WALL": 35, "FAR": 89, "NEAR": 0, "OFF": 1}, "valid_rate": 0.5659722222222222}}, "5": {"r": 0.234375, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 64, "counts": {"VALID": 15, "WALL": 21, "FAR": 28, "NEAR": 0, "OFF": 0}, "valid_rate": 0.234375}, "nonaway": {"n": 192, "counts": {"VALID": 140, "WALL": 37, "FAR": 14, "NEAR": 0, "OFF": 1}, "valid_rate": 0.7291666666666666}, "n_cells": 16, "n_away_cells": 4, "arc8": {"n": 256, "counts": {"VALID": 169, "WALL": 73, "FAR": 12, "NEAR": 0, "OFF": 2}, "valid_rate": 0.66015625}, "arc16": {"n": 256, "counts": {"VALID": 23, "WALL": 117, "FAR": 115, "NEAR": 0, "OFF": 1}, "valid_rate": 0.08984375}, "unanchored": {"n": 256, "counts": {"VALID": 129, "WALL": 20, "FAR": 107, "NEAR": 0, "OFF": 0}, "valid_rate": 0.50390625}}}
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r1-rollout-test.py
+CPU task4 question: {'task': 4, 'episode': 4, 'group': 'trap'}
+PLAN inventories PASS: trap=30x4, gate=8x2 per arm, PB seeds_detour
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm SG --out /tmp/hsweep-r1-rollout-1o9sb32e/E3.jsonl
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+SG:4 episode=4 draw=80 success=False steps=40
+E3 CLI PASS: steps=40 chunks=10 success=False final_cell=[3, 8]
+E3 observed chunks: [{"step": 0, "current_xy": [27.297232794427476, 7.181995071317001], "current_cell": [3, 8], "w_xy": [5.640556713935673, 20.11123651664645], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "38167b226e384f0d4f136d4f219f2482deb10efded3aaf597cf7ab28c4585e8c", "cond_near_sha256": "d1a97acba9a95861b1a7373611917022d70203af8d7916f4f1c5c1a928441d5b", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "d1a97acba9a95861b1a7373611917022d70203af8d7916f4f1c5c1a928441d5b", "head_consumed_near": true}, {"step": 4, "current_xy": [27.007011744045816, 7.46876842885737], "current_cell": [3, 8], "w_xy": [6.938668687473008, 20.49057027144092], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "7ad55b150f64859a3d63f38a3acd7eb801f46efe61ef3c24f4c9116f0bd43fae", "cond_near_sha256": "6dc5553e050ed5b88b3c554836de98408f0a5264047ad2567c66013aecbb23f8", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "6dc5553e050ed5b88b3c554836de98408f0a5264047ad2567c66013aecbb23f8", "head_consumed_near": true}, {"step": 8, "current_xy": [26.813065924533806, 7.878581035728498], "current_cell": [3, 8], "w_xy": [5.144737321425083, 20.952582506930078], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "be855cf4288ca175d97e6fa65e372f3234dd8836132a0b83a247b75e9152be6c", "cond_near_sha256": "7dd62c105053d8fbae1148441c6a5671ed0de1fd9c36927b29cd2b5588ba0984", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "7dd62c105053d8fbae1148441c6a5671ed0de1fd9c36927b29cd2b5588ba0984", "head_consumed_near": true}, {"step": 12, "current_xy": [26.69165454118218, 8.254934299583478], "current_cell": [3, 8], "w_xy": [6.207501747297906, 19.71690277450142], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "ef4c64af8f9c324062e6e4b50db96af027a4c5fb24142da3db51d9f4a7ede4f1", "cond_near_sha256": "d48f2ebb86ca4ac21d6117835c3ad5b3272620680c02ec476770b1ec2e807c7b", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "d48f2ebb86ca4ac21d6117835c3ad5b3272620680c02ec476770b1ec2e807c7b", "head_consumed_near": true}, {"step": 16, "current_xy": [26.693356832938868, 8.76479205101256], "current_cell": [3, 8], "w_xy": [4.673809794330744, 19.50007547878084], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "2e5744d3764523dbb615c7164798c63730eadbdfd1dd97905eb9b4278f2f68e1", "cond_near_sha256": "ede6534070551d7e4f25d13eacee1c71643d3840defcf87a6a51a5ec5854bc20", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "ede6534070551d7e4f25d13eacee1c71643d3840defcf87a6a51a5ec5854bc20", "head_consumed_near": true}, {"step": 20, "current_xy": [26.69394519661123, 9.2898341206754], "current_cell": [3, 8], "w_xy": [6.51706955235125, 19.528775419266168], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "5dc7983bae2ff4298229a4037ce5aa9e141a9afbaadaa04ab99bdb2aa461c685", "cond_near_sha256": "2cfb757695719f9cd88d95fcd1c894e63c6bc7ae72416d162411ec1c259891c0", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "2cfb757695719f9cd88d95fcd1c894e63c6bc7ae72416d162411ec1c259891c0", "head_consumed_near": true}, {"step": 24, "current_xy": [26.692663818792816, 9.298914828062824], "current_cell": [3, 8], "w_xy": [8.533058050801012, 18.391793805520503], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "25b87cfeb5e48e18e0737f57cf00dc0d584be1f621de4da4a69846663c7003c1", "cond_near_sha256": "93bfa93a7e3033db0ea395eea7fd14b4ee2eea46acb0085a23858c1b175ad617", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "93bfa93a7e3033db0ea395eea7fd14b4ee2eea46acb0085a23858c1b175ad617", "head_consumed_near": true}, {"step": 28, "current_xy": [26.67895208399893, 9.28452111230496], "current_cell": [3, 8], "w_xy": [5.976206222521608, 16.781438942878147], "w_cell": [5, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "2bab3c479d8250d7bc419501e359d5602efb3d232efc92a0c759c049133cb5ed", "cond_near_sha256": "c3653b51b3cc46ceba108a2e741e31195143af8dd6ed66894eeafc9d88252278", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "c3653b51b3cc46ceba108a2e741e31195143af8dd6ed66894eeafc9d88252278", "head_consumed_near": true}, {"step": 32, "current_xy": [26.686601717611158, 9.322297007016687], "current_cell": [3, 8], "w_xy": [8.23697574867805, 18.003065973691495], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "906a7906d6593d79140025d4d760b186df9fd19f41bdca9aefc15e9c20605ada", "cond_near_sha256": "a5cadeb0f9b0630f1b50af453e36fd3da31af4a16f1148ca5110c5a1609e5229", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "a5cadeb0f9b0630f1b50af453e36fd3da31af4a16f1148ca5110c5a1609e5229", "head_consumed_near": true}, {"step": 36, "current_xy": [26.741171098658892, 9.326072665021574], "current_cell": [3, 8], "w_xy": [10.373086403054774, 18.490442036223833], "w_cell": [6, 4], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "0f614f324301f44ab9708ff24883a6e07e19eaf802b638c31ee5c654e9927c4b", "cond_near_sha256": "94b203bf00ba2680a88d18c3137e713beedff22dd20df16c3b5a316dabb0bd3c", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "94b203bf00ba2680a88d18c3137e713beedff22dd20df16c3b5a316dabb0bd3c", "head_consumed_near": true}]
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm C --out /tmp/hsweep-r1-rollout-1o9sb32e/E4.jsonl
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+C:4 episode=4 draw=80 success=False steps=40
+E4 CLI PASS: steps=40 chunks=10 success=False final_cell=[3, 8]
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+Traceback (most recent call last):
+  File "/tmp/hsweep-r1-rollout-test.py", line 66, in <module>
+    bitcompare(direct,actual)
+  File "/tmp/hsweep-r1-rollout-test.py", line 59, in bitcompare
+    for k in a:bitcompare(a[k],b[k],path+'.'+k)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/hsweep-r1-rollout-test.py", line 59, in bitcompare
+    for k in a:bitcompare(a[k],b[k],path+'.'+k)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/hsweep-r1-rollout-test.py", line 56, in bitcompare
+    assert type(a)==type(b),(path,type(a),type(b))
+           ^^^^^^^^^^^^^^^^
+AssertionError: ('$.rng_before.python', <class 'tuple'>, <class 'list'>)
+Traceback (most recent call last):
+  File "/tmp/hsweep-r1-suite.py", line 11, in <module>
+    assert subprocess.run(cmd).returncode==0,script
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: /tmp/hsweep-r1-rollout-test.py
+CONTINUE: E1/E2 passed above; E4 comparator serializes direct-PB tuples to JSON lists before field/float-bit comparison; program/ruler unchanged
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r1-rollout-test.py
+CPU task4 question: {'task': 4, 'episode': 4, 'group': 'trap'}
+PLAN inventories PASS: trap=30x4, gate=8x2 per arm, PB seeds_detour
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm SG --out /tmp/hsweep-r1-rollout-jm0u2_b5/E3.jsonl
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+SG:4 episode=4 draw=80 success=False steps=40
+E3 CLI PASS: steps=40 chunks=10 success=False final_cell=[3, 8]
+E3 observed chunks: [{"step": 0, "current_xy": [27.297232794427476, 7.181995071317001], "current_cell": [3, 8], "w_xy": [5.640556713935673, 20.11123651664645], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "38167b226e384f0d4f136d4f219f2482deb10efded3aaf597cf7ab28c4585e8c", "cond_near_sha256": "d1a97acba9a95861b1a7373611917022d70203af8d7916f4f1c5c1a928441d5b", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "d1a97acba9a95861b1a7373611917022d70203af8d7916f4f1c5c1a928441d5b", "head_consumed_near": true}, {"step": 4, "current_xy": [27.007011744045816, 7.46876842885737], "current_cell": [3, 8], "w_xy": [6.938668687473008, 20.49057027144092], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "7ad55b150f64859a3d63f38a3acd7eb801f46efe61ef3c24f4c9116f0bd43fae", "cond_near_sha256": "6dc5553e050ed5b88b3c554836de98408f0a5264047ad2567c66013aecbb23f8", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "6dc5553e050ed5b88b3c554836de98408f0a5264047ad2567c66013aecbb23f8", "head_consumed_near": true}, {"step": 8, "current_xy": [26.813065924533806, 7.878581035728498], "current_cell": [3, 8], "w_xy": [5.144737321425083, 20.952582506930078], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "be855cf4288ca175d97e6fa65e372f3234dd8836132a0b83a247b75e9152be6c", "cond_near_sha256": "7dd62c105053d8fbae1148441c6a5671ed0de1fd9c36927b29cd2b5588ba0984", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "7dd62c105053d8fbae1148441c6a5671ed0de1fd9c36927b29cd2b5588ba0984", "head_consumed_near": true}, {"step": 12, "current_xy": [26.69165454118218, 8.254934299583478], "current_cell": [3, 8], "w_xy": [6.207501747297906, 19.71690277450142], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "ef4c64af8f9c324062e6e4b50db96af027a4c5fb24142da3db51d9f4a7ede4f1", "cond_near_sha256": "d48f2ebb86ca4ac21d6117835c3ad5b3272620680c02ec476770b1ec2e807c7b", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "d48f2ebb86ca4ac21d6117835c3ad5b3272620680c02ec476770b1ec2e807c7b", "head_consumed_near": true}, {"step": 16, "current_xy": [26.693356832938868, 8.76479205101256], "current_cell": [3, 8], "w_xy": [4.673809794330744, 19.50007547878084], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "2e5744d3764523dbb615c7164798c63730eadbdfd1dd97905eb9b4278f2f68e1", "cond_near_sha256": "ede6534070551d7e4f25d13eacee1c71643d3840defcf87a6a51a5ec5854bc20", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "ede6534070551d7e4f25d13eacee1c71643d3840defcf87a6a51a5ec5854bc20", "head_consumed_near": true}, {"step": 20, "current_xy": [26.69394519661123, 9.2898341206754], "current_cell": [3, 8], "w_xy": [6.51706955235125, 19.528775419266168], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "5dc7983bae2ff4298229a4037ce5aa9e141a9afbaadaa04ab99bdb2aa461c685", "cond_near_sha256": "2cfb757695719f9cd88d95fcd1c894e63c6bc7ae72416d162411ec1c259891c0", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "2cfb757695719f9cd88d95fcd1c894e63c6bc7ae72416d162411ec1c259891c0", "head_consumed_near": true}, {"step": 24, "current_xy": [26.692663818792816, 9.298914828062824], "current_cell": [3, 8], "w_xy": [8.533058050801012, 18.391793805520503], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "25b87cfeb5e48e18e0737f57cf00dc0d584be1f621de4da4a69846663c7003c1", "cond_near_sha256": "93bfa93a7e3033db0ea395eea7fd14b4ee2eea46acb0085a23858c1b175ad617", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "93bfa93a7e3033db0ea395eea7fd14b4ee2eea46acb0085a23858c1b175ad617", "head_consumed_near": true}, {"step": 28, "current_xy": [26.67895208399893, 9.28452111230496], "current_cell": [3, 8], "w_xy": [5.976206222521608, 16.781438942878147], "w_cell": [5, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "2bab3c479d8250d7bc419501e359d5602efb3d232efc92a0c759c049133cb5ed", "cond_near_sha256": "c3653b51b3cc46ceba108a2e741e31195143af8dd6ed66894eeafc9d88252278", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "c3653b51b3cc46ceba108a2e741e31195143af8dd6ed66894eeafc9d88252278", "head_consumed_near": true}, {"step": 32, "current_xy": [26.686601717611158, 9.322297007016687], "current_cell": [3, 8], "w_xy": [8.23697574867805, 18.003065973691495], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "906a7906d6593d79140025d4d760b186df9fd19f41bdca9aefc15e9c20605ada", "cond_near_sha256": "a5cadeb0f9b0630f1b50af453e36fd3da31af4a16f1148ca5110c5a1609e5229", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "a5cadeb0f9b0630f1b50af453e36fd3da31af4a16f1148ca5110c5a1609e5229", "head_consumed_near": true}, {"step": 36, "current_xy": [26.741171098658892, 9.326072665021574], "current_cell": [3, 8], "w_xy": [10.373086403054774, 18.490442036223833], "w_cell": [6, 4], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "0f614f324301f44ab9708ff24883a6e07e19eaf802b638c31ee5c654e9927c4b", "cond_near_sha256": "94b203bf00ba2680a88d18c3137e713beedff22dd20df16c3b5a316dabb0bd3c", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "94b203bf00ba2680a88d18c3137e713beedff22dd20df16c3b5a316dabb0bd3c", "head_consumed_near": true}]
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm C --out /tmp/hsweep-r1-rollout-jm0u2_b5/E4.jsonl
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+C:4 episode=4 draw=80 success=False steps=40
+E4 CLI PASS: steps=40 chunks=10 success=False final_cell=[3, 8]
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E4 PASS direct PB run_draw same seeds_detour plan: recursive original-field/actions bitwise diff=[]; trace_sha256=6cdf96311fa6c143f3a55d37e64d669b0962b7eee687d5cc899960a803d22b00
+E3 KILLER cond_far substitution: FAIL (expected): SG wiring FAIL: action head did not consume cond_near
+E3/E4 SECOND PASS: PB seed bindings/ahead hook/profile restored after success and killer
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r1-e5-0p6fygo6/selfsub_probe_ckpt.py.out
+BLOCKED: --out or artifact directory already exists
+E5 PASS selfsub_probe_ckpt.py out: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r1-e5-0p6fygo6/selfsub_probe_ckpt.py.companion
+BLOCKED: --out or artifact directory already exists
+E5 PASS selfsub_probe_ckpt.py companion: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r1-e5-0p6fygo6/harness_sg.py.out --arm SG --questions trap --max-steps 40
+BLOCKED: output already exists: /tmp/hsweep-r1-e5-0p6fygo6/harness_sg.py.out
+E5 PASS harness_sg.py out: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r1-e5-0p6fygo6/harness_sg.py.companion --arm SG --questions trap --max-steps 40
+BLOCKED: output already exists: /tmp/hsweep-r1-e5-0p6fygo6/harness_sg.py.companion.summary.json
+E5 PASS harness_sg.py companion: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-r1-e5-0p6fygo6/geometry.json --selftest
+SELFTEST scoring/arc/anchor/short: PASS
+SELFTEST KILLER G1 single-trapset-route: FAIL VALID=55/62
+SELFTEST KILLER G2 no-smoothing: FAIL cat=NEAR (synthetic jitter; proper=VALID)
+SELFTEST KILLER G3 no-lower-bound (0 <= prog <= 4): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+SELFTEST required G3 FAIL observed: True
+SELFTEST DESCRIPTION straight-through-wall: 預期仍 PASS，用來說明穿牆會被判 FAR／WALL；不是殺手。 {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 5, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 3, "FAR": 1, "NEAR": 0, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 2, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}
+SELFTEST upper-bound task=4 c=(3,8) c_p=(5,6) expected=FAR: PASS {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "FAR", "prog": 8, "detour": 0}
+SELFTEST upper-bound MUTANT prog >= 2 expected=FAR: FAIL {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "VALID", "prog": 8, "detour": 0}
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r1-e6.py
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E6 same-key positive PASS: reuse=True recompute_calls=0
+GATE CACHE MISS: recomputing G1/G2/G3 and all three killers; key=["08180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787", "20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87"]
+G1 PASS VALID=62/62 rate=1.000000 (remeasured)
+G2 PASS VALID=62/62 rate=1.000000 (remeasured)
+G3 PASS VALID=0/16 rate=0.000000 (remeasured)
+KILLER G1 FAIL VALID=55/62 (remeasured)
+KILLER G2 FAIL VALID=8/62 (remeasured)
+KILLER G3 no-lower-bound (remeasured): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+E6 checkpoint-mismatch PASS: reused=False recompute_calls=1; 50 cells, 62 real encode/decode references; G1/G2/G3 and 3 killers remeasured; no early error
+E6 remeasured gates: {"G1": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 1.0}, "G2": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}, "G3": {"n": 16, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 13, "OFF": 3}, "valid_rate": 0.0, "threshold": 0.1, "by_task": {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 5, "OFF": 2}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}, "status": "PASS"}}
+E6 fixture output: /tmp/hsweep-r1-e6-o1aybbnq/query-fixture-evidence.json
+GATE CACHE MISS: recomputing G1/G2/G3 and all three killers; key=["88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787", "20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87"]
+E6 same-key provenance guard PASS (expected rejection): Cached gate provenance mismatch: normalization_mu
+E6 ruler-mismatch dispatch PASS; original s33 evidence unmodified
+SECOND PASS frozen PB + original e5b8a49b ruler SHA256 diff: []
+SECOND PASS loader authorized parameter normalization line diff: []
+SECOND PASS original scoring AST checked on legacy cache admission; E2 original-field float64 bit diff=[]; E4 PB original-field/actions bit diff=[]; E6 real gates and three killers recomputed
+n_tests=6 n_pass=6 n_blocked=0 n_killers=6 (SHA + SG cond_far + offline G1/G2/G3/upper; cache-miss E6 counted as unit test)
+STATUS: DONE
+
+
+hsweep-eval-v1-r2 — CPU E1-E7; prior-pass output retained above. Pre-edit C baselines saved before any evaluation source edit. E7 sentinel process stops before loader body, no GPU model initialization.
+
+PRE-EDIT C BASELINES
+Frozen hashes and pre-edit sources saved
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+PRE-EDIT C baseline: /tmp/hsweep-r2-C-patch-40.json steps= 40 trace_sha256= 6cdf96311fa6c143f3a55d37e64d669b0962b7eee687d5cc899960a803d22b00
+PRE-EDIT C baseline: /tmp/hsweep-r2-C-patch-1000.json steps= 1000 trace_sha256= f0f17cf416e366c01378011aabef701b5412be7a0f46878809ff35a1ef1cbef0
+
+E1 — COMMAND: .venv/bin/python -B /tmp/hsweep-e1.py
+E1 KILLER wrong SHA: FAIL (expected rejection): BLOCKED: s33 checkpoint SHA256 mismatch/unavailable
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E1 PASS provenance: {'source_path': '/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py', 'source_sha256': '276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc', 'ckpt_path': '/home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt', 'ckpt_sha256': '88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787', 'dataset_path': '/home/cymaxwelllee/data/ogbench/pointmaze-large-stitch-v0.npz', 'dataset_sha256': '9add335e598e48ebc483447d61415a9755ffb738ddfc406cb9708b2a238992e8', 'normalization_mu': [18.227279663085938, 10.928874969482422], 'normalization_sd': [11.593134880065918, 7.238654613494873], 'import_stop_line': 2480, 'config': {'ENV': 'pointmaze-large-stitch-v0', 'CONS': 'self', 'K': 8, 'COND': 256, 'CHUNK': 4, 'TCAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1, 'BC_INDEP': 1, 'TEACHER_MIX': 0.5, 'WARMUP': 500, 'DEC_START': 'soft', 'LOAD_EMA': 1, 'CONT_TRAIN': 0, 'STEPS1': 0, 'STEPS2': 0, 'DEV_EVAL': 0, 'PREREQ': 0, 'GRAD_REFINE': 0, 'SUBGOAL': '', 'FINISH_R': 0, 'INTENT': '', 'U_SOURCE': 'flow', 'BON_N': 0, 'LOAD_CKPT': '/home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt', 'SEED': 33, 'BOOT_DATA': '', 'S1_FROM': '', 'FLOW_PROBE': 0, 'DIAG_DUMP': 0}, 'deterministic_settings': {'torch_version': '2.6.0+cu124', 'cuda_version': '12.4', 'cudnn_version': 91400, 'deterministic': True, 'warn_only': False, 'cudnn_benchmark': False, 'cudnn_deterministic': True, 'tf32': False, 'sdpa': 'math', 'dtype': 'float32', 'batch': 1, 'fill_uninitialized_memory': True, 'threads': 1, 'dataloader_workers': 0, 'cublas_workspace_config': ':4096:8'}}
+
+E2 — COMMAND: .venv/bin/python -B /tmp/hsweep-r1-e2.py
+E2 output directory: /tmp/hsweep-e2-7jgxlspi
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-e2-7jgxlspi/actual.json
+LOAD frozen M9 checkpoint on CPU via eval_common.load_ckpt
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+BFS_CROSSCHECK {"2": {"path_sets_equal": true, "route_count": 1, "distance": 19, "ref_distance": 19}, "4": {"path_sets_equal": true, "route_count": 2, "distance": 14, "ref_distance": 14}, "5": {"path_sets_equal": true, "route_count": 2, "distance": 15, "ref_distance": 15}}
+G1 PASS VALID=62/62 rate=1.000000 (cached)
+G2 PASS VALID=62/62 rate=1.000000 (cached)
+G3 PASS VALID=0/16 rate=0.000000 (cached)
+KILLER G1 single-trapset-route: FAIL VALID=55/62
+KILLER G2 no-smoothing: FAIL VALID=8/62
+KILLER G3 no-lower-bound: {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+KILLER G3 STAY example: {"task": 2, "cell": [4, 6], "c_p": [4, 6], "p_xy": [18.070640917146775, 13.157615449711935], "short": true, "cat": "VALID", "prog": 0, "detour": 0, "traveled": 2.25, "stop_wall": true}
+KILLER G3 required at least one task FAIL observed: True
+ALL GATES AND KILLERS VERIFIED; sampling 16 flow plans per cell
+FLOW task=2 cell=(3, 1) seed=20301 VALID=0/16
+FLOW task=2 cell=(3, 2) seed=20302 VALID=6/16
+FLOW task=2 cell=(3, 3) seed=20303 VALID=8/16
+FLOW task=2 cell=(3, 4) seed=20304 VALID=14/16
+FLOW task=2 cell=(3, 5) seed=20305 VALID=14/16
+FLOW task=2 cell=(3, 6) seed=20306 VALID=16/16
+FLOW task=2 cell=(4, 1) seed=20401 VALID=4/16
+FLOW task=2 cell=(4, 6) seed=20406 VALID=8/16
+FLOW task=2 cell=(5, 1) seed=20501 VALID=10/16
+FLOW task=2 cell=(5, 4) seed=20504 VALID=0/16
+FLOW task=2 cell=(5, 6) seed=20506 VALID=15/16
+FLOW task=2 cell=(6, 4) seed=20604 VALID=0/16
+FLOW task=2 cell=(6, 6) seed=20606 VALID=7/16
+FLOW task=2 cell=(7, 4) seed=20704 VALID=1/16
+FLOW task=2 cell=(7, 5) seed=20705 VALID=4/16
+FLOW task=2 cell=(7, 6) seed=20706 VALID=8/16
+FLOW task=4 cell=(1, 6) seed=40106 VALID=16/16
+FLOW task=4 cell=(1, 7) seed=40107 VALID=10/16
+FLOW task=4 cell=(1, 8) seed=40108 VALID=10/16
+FLOW task=4 cell=(2, 6) seed=40206 VALID=16/16
+FLOW task=4 cell=(2, 8) seed=40208 VALID=0/16
+FLOW task=4 cell=(3, 6) seed=40306 VALID=8/16
+FLOW task=4 cell=(3, 8) seed=40308 VALID=0/16
+FLOW task=4 cell=(3, 9) seed=40309 VALID=0/16
+FLOW task=4 cell=(3, 10) seed=40310 VALID=16/16
+FLOW task=4 cell=(4, 6) seed=40406 VALID=0/16
+FLOW task=4 cell=(4, 10) seed=40410 VALID=16/16
+FLOW task=4 cell=(5, 6) seed=40506 VALID=0/16
+FLOW task=4 cell=(5, 7) seed=40507 VALID=0/16
+FLOW task=4 cell=(5, 8) seed=40508 VALID=0/16
+FLOW task=4 cell=(5, 9) seed=40509 VALID=16/16
+FLOW task=4 cell=(5, 10) seed=40510 VALID=13/16
+FLOW task=4 cell=(6, 6) seed=40606 VALID=6/16
+FLOW task=4 cell=(7, 6) seed=40706 VALID=16/16
+FLOW task=5 cell=(1, 1) seed=50101 VALID=15/16
+FLOW task=5 cell=(1, 2) seed=50102 VALID=15/16
+FLOW task=5 cell=(1, 3) seed=50103 VALID=13/16
+FLOW task=5 cell=(1, 4) seed=50104 VALID=9/16
+FLOW task=5 cell=(2, 1) seed=50201 VALID=15/16
+FLOW task=5 cell=(2, 4) seed=50204 VALID=15/16
+FLOW task=5 cell=(3, 1) seed=50301 VALID=14/16
+FLOW task=5 cell=(3, 2) seed=50302 VALID=9/16
+FLOW task=5 cell=(3, 3) seed=50303 VALID=4/16
+FLOW task=5 cell=(3, 4) seed=50304 VALID=7/16
+FLOW task=5 cell=(3, 5) seed=50305 VALID=5/16
+FLOW task=5 cell=(3, 6) seed=50306 VALID=14/16
+FLOW task=5 cell=(4, 6) seed=50406 VALID=1/16
+FLOW task=5 cell=(5, 6) seed=50506 VALID=0/16
+FLOW task=5 cell=(6, 6) seed=50606 VALID=3/16
+FLOW task=5 cell=(7, 6) seed=50706 VALID=16/16
+PRIMARY task=2 VALID=53/112 r=0.473214 部分
+PRIMARY task=4 VALID=6/80 r=0.075000 這層 flow 自產近子目標大多不可用
+PRIMARY task=5 VALID=15/64 r=0.234375 這層 flow 自產近子目標大多不可用
+n_cells=50 n_draws=800
+STATUS: DONE
+E2 keyed cache: {'key': ['88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787', '20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87'], 'reused': True, 'evidence': 'gates-evidence.json'}
+E2 PASS recursive field diff: [] (all original fields equal; float64 bits equal; 50 cells x 16 draws)
+GATES: {"G1": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 1.0}, "G2": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}, "G3": {"n": 16, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 13, "OFF": 3}, "valid_rate": 0.0, "threshold": 0.1, "by_task": {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 5, "OFF": 2}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}, "status": "PASS"}}
+SUMMARY: {"2": {"r": 0.4732142857142857, "interpretation": "部分", "away": {"n": 112, "counts": {"VALID": 53, "WALL": 59, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 0.4732142857142857}, "nonaway": {"n": 144, "counts": {"VALID": 62, "WALL": 43, "FAR": 37, "NEAR": 0, "OFF": 2}, "valid_rate": 0.4305555555555556}, "n_cells": 16, "n_away_cells": 7, "arc8": {"n": 256, "counts": {"VALID": 141, "WALL": 102, "FAR": 10, "NEAR": 1, "OFF": 2}, "valid_rate": 0.55078125}, "arc16": {"n": 256, "counts": {"VALID": 35, "WALL": 121, "FAR": 98, "NEAR": 0, "OFF": 2}, "valid_rate": 0.13671875}, "unanchored": {"n": 256, "counts": {"VALID": 125, "WALL": 91, "FAR": 39, "NEAR": 0, "OFF": 1}, "valid_rate": 0.48828125}}, "4": {"r": 0.075, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 80, "counts": {"VALID": 6, "WALL": 10, "FAR": 61, "NEAR": 0, "OFF": 3}, "valid_rate": 0.075}, "nonaway": {"n": 208, "counts": {"VALID": 137, "WALL": 44, "FAR": 27, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6586538461538461}, "n_cells": 18, "n_away_cells": 5, "arc8": {"n": 288, "counts": {"VALID": 173, "WALL": 71, "FAR": 44, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6006944444444444}, "arc16": {"n": 288, "counts": {"VALID": 56, "WALL": 56, "FAR": 170, "NEAR": 0, "OFF": 6}, "valid_rate": 0.19444444444444445}, "unanchored": {"n": 288, "counts": {"VALID": 163, "WALL": 35, "FAR": 89, "NEAR": 0, "OFF": 1}, "valid_rate": 0.5659722222222222}}, "5": {"r": 0.234375, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 64, "counts": {"VALID": 15, "WALL": 21, "FAR": 28, "NEAR": 0, "OFF": 0}, "valid_rate": 0.234375}, "nonaway": {"n": 192, "counts": {"VALID": 140, "WALL": 37, "FAR": 14, "NEAR": 0, "OFF": 1}, "valid_rate": 0.7291666666666666}, "n_cells": 16, "n_away_cells": 4, "arc8": {"n": 256, "counts": {"VALID": 169, "WALL": 73, "FAR": 12, "NEAR": 0, "OFF": 2}, "valid_rate": 0.66015625}, "arc16": {"n": 256, "counts": {"VALID": 23, "WALL": 117, "FAR": 115, "NEAR": 0, "OFF": 1}, "valid_rate": 0.08984375}, "unanchored": {"n": 256, "counts": {"VALID": 129, "WALL": 20, "FAR": 107, "NEAR": 0, "OFF": 0}, "valid_rate": 0.50390625}}}
+
+E3/E4 and optional input/error tests — COMMAND: .venv/bin/python -B /tmp/hsweep-r2-rollout-test.py (first driver failure preserved)
+R2 artifact directory: /tmp/hsweep-r2-rollout-goh6c1sm
+PLAN inventories PASS trap=30x4 gate=8x2 per arm; seeds_detour
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm SG --out /tmp/hsweep-r2-rollout-goh6c1sm/SG.jsonl
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+SG:4 episode=4 draw=80 success=False steps=40 error=False
+E3 CLI PASS steps=40 chunks=10 execution={"module_device": "cpu", "torch_cuda_is_available": false, "CUDA_VISIBLE_DEVICES": "", "MUJOCO_GL": "egl"}
+E3 observed chunks: [{"step": 0, "current_xy": [27.297232794427476, 7.181995071317001], "current_cell": [3, 8], "w_xy": [5.640556713935673, 20.11123651664645], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "38167b226e384f0d4f136d4f219f2482deb10efded3aaf597cf7ab28c4585e8c", "cond_near_sha256": "d1a97acba9a95861b1a7373611917022d70203af8d7916f4f1c5c1a928441d5b", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "d1a97acba9a95861b1a7373611917022d70203af8d7916f4f1c5c1a928441d5b", "head_consumed_near": true}, {"step": 4, "current_xy": [27.007011744045816, 7.46876842885737], "current_cell": [3, 8], "w_xy": [6.938668687473008, 20.49057027144092], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "7ad55b150f64859a3d63f38a3acd7eb801f46efe61ef3c24f4c9116f0bd43fae", "cond_near_sha256": "6dc5553e050ed5b88b3c554836de98408f0a5264047ad2567c66013aecbb23f8", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "6dc5553e050ed5b88b3c554836de98408f0a5264047ad2567c66013aecbb23f8", "head_consumed_near": true}, {"step": 8, "current_xy": [26.813065924533806, 7.878581035728498], "current_cell": [3, 8], "w_xy": [5.144737321425083, 20.952582506930078], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "be855cf4288ca175d97e6fa65e372f3234dd8836132a0b83a247b75e9152be6c", "cond_near_sha256": "7dd62c105053d8fbae1148441c6a5671ed0de1fd9c36927b29cd2b5588ba0984", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "7dd62c105053d8fbae1148441c6a5671ed0de1fd9c36927b29cd2b5588ba0984", "head_consumed_near": true}, {"step": 12, "current_xy": [26.69165454118218, 8.254934299583478], "current_cell": [3, 8], "w_xy": [6.207501747297906, 19.71690277450142], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "ef4c64af8f9c324062e6e4b50db96af027a4c5fb24142da3db51d9f4a7ede4f1", "cond_near_sha256": "d48f2ebb86ca4ac21d6117835c3ad5b3272620680c02ec476770b1ec2e807c7b", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "d48f2ebb86ca4ac21d6117835c3ad5b3272620680c02ec476770b1ec2e807c7b", "head_consumed_near": true}, {"step": 16, "current_xy": [26.693356832938868, 8.76479205101256], "current_cell": [3, 8], "w_xy": [4.673809794330744, 19.50007547878084], "w_cell": [6, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "2e5744d3764523dbb615c7164798c63730eadbdfd1dd97905eb9b4278f2f68e1", "cond_near_sha256": "ede6534070551d7e4f25d13eacee1c71643d3840defcf87a6a51a5ec5854bc20", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "ede6534070551d7e4f25d13eacee1c71643d3840defcf87a6a51a5ec5854bc20", "head_consumed_near": true}, {"step": 20, "current_xy": [26.69394519661123, 9.2898341206754], "current_cell": [3, 8], "w_xy": [6.51706955235125, 19.528775419266168], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "5dc7983bae2ff4298229a4037ce5aa9e141a9afbaadaa04ab99bdb2aa461c685", "cond_near_sha256": "2cfb757695719f9cd88d95fcd1c894e63c6bc7ae72416d162411ec1c259891c0", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "2cfb757695719f9cd88d95fcd1c894e63c6bc7ae72416d162411ec1c259891c0", "head_consumed_near": true}, {"step": 24, "current_xy": [26.692663818792816, 9.298914828062824], "current_cell": [3, 8], "w_xy": [8.533058050801012, 18.391793805520503], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "25b87cfeb5e48e18e0737f57cf00dc0d584be1f621de4da4a69846663c7003c1", "cond_near_sha256": "93bfa93a7e3033db0ea395eea7fd14b4ee2eea46acb0085a23858c1b175ad617", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "93bfa93a7e3033db0ea395eea7fd14b4ee2eea46acb0085a23858c1b175ad617", "head_consumed_near": true}, {"step": 28, "current_xy": [26.67895208399893, 9.28452111230496], "current_cell": [3, 8], "w_xy": [5.976206222521608, 16.781438942878147], "w_cell": [5, 2], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "2bab3c479d8250d7bc419501e359d5602efb3d232efc92a0c759c049133cb5ed", "cond_near_sha256": "c3653b51b3cc46ceba108a2e741e31195143af8dd6ed66894eeafc9d88252278", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "c3653b51b3cc46ceba108a2e741e31195143af8dd6ed66894eeafc9d88252278", "head_consumed_near": true}, {"step": 32, "current_xy": [26.686601717611158, 9.322297007016687], "current_cell": [3, 8], "w_xy": [8.23697574867805, 18.003065973691495], "w_cell": [6, 3], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "906a7906d6593d79140025d4d760b186df9fd19f41bdca9aefc15e9c20605ada", "cond_near_sha256": "a5cadeb0f9b0630f1b50af453e36fd3da31af4a16f1148ca5110c5a1609e5229", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "a5cadeb0f9b0630f1b50af453e36fd3da31af4a16f1148ca5110c5a1609e5229", "head_consumed_near": true}, {"step": 36, "current_xy": [26.741171098658892, 9.326072665021574], "current_cell": [3, 8], "w_xy": [10.373086403054774, 18.490442036223833], "w_cell": [6, 4], "sample_plan_calls": 1, "flow_calls": 1, "cond_far_sha256": "0f614f324301f44ab9708ff24883a6e07e19eaf802b638c31ee5c654e9927c4b", "cond_near_sha256": "94b203bf00ba2680a88d18c3137e713beedff22dd20df16c3b5a316dabb0bd3c", "conditions_differ": true, "head_calls": 1, "head_cond_sha256": "94b203bf00ba2680a88d18c3137e713beedff22dd20df16c3b5a316dabb0bd3c", "head_consumed_near": true}]
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --questions trap --task 4 --episode 4 --draw 80 --max-steps 40 --arm C --out /tmp/hsweep-r2-rollout-goh6c1sm/C.jsonl
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+C:4 episode=4 draw=80 success=False steps=40 error=False
+E4 CLI PASS steps=40 chunks=10 execution={"module_device": "cpu", "torch_cuda_is_available": false, "CUDA_VISIBLE_DEVICES": "", "MUJOCO_GL": "egl"}
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E4 PASS saved PRE-EDIT patch C vs PB Q-C: 40 steps ALL original fields incl chunks/actions/rng/provenance float bits diff=[]; trace_sha256=6cdf96311fa6c143f3a55d37e64d669b0962b7eee687d5cc899960a803d22b00
+E4 PASS 1000 steps trace SHA bitwise identical=f0f17cf416e366c01378011aabef701b5412be7a0f46878809ff35a1ef1cbef0; rng_after diff=[]; PB float64 detour_trace_sha256=a29130e8da1ce1c36f118b3e29d30c7dea00025863bfe1d6a661a4ce96147802
+E4 process seed identity assertions PASS Python trace events=23253995
+E3 KILLER head cond_far: FAIL (expected): SG wiring FAIL: action head did not consume cond_near
+E3 KILLER cond_near = cond_far: FAIL (expected): {'step': 0, 'current_xy': [27.297232794427476, 7.181995071317001], 'current_cell': [3, 8], 'w_xy': [5.640556713935673, 20.11123651664645], 'w_cell': [6, 2], 'sample_plan_calls': 1, 'flow_calls': 1, 'cond_far_sha256': '38167b226e384f0d4f136d4f219f2482deb10efded3aaf597cf7ab28c4585e8c', 'cond_near_sha256': '38167b226e384f0d4f136d4f219f2482deb10efded3aaf597cf7ab28c4585e8c', 'conditions_differ': False, 'head_calls': 1, 'head_cond_sha256': '38167b226e384f0d4f136d4f219f2482deb10efded3aaf597cf7ab28c4585e8c', 'head_consumed_near': True}
+E3 smoothing copied source line diff=[]; float64 anchored bytes equal; ruler never imported
+QUESTION KILLER trap SHA: FAIL (expected): BLOCKED: question SHA256 mismatch: /tmp/hsweep-r2-rollout-goh6c1sm/trap-mutant.json
+QUESTION KILLER gate SHA: FAIL (expected): BLOCKED: question SHA256 mismatch: /tmp/hsweep-r2-rollout-goh6c1sm/gate-mutant.json
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r2-rollout-goh6c1sm/error-driver.py
+usage: python [-h] --ckpt CKPT --ckpt-sha256 CKPT_SHA256 --arm {SG,C}
+              --questions {trap,gate} --out OUT [--max-steps MAX_STEPS]
+              [--dataset-dir DATASET_DIR] [--task TASK] [--episode EPISODE]
+              [--draw DRAW]
+python: error: unrecognized arguments: -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py
+Traceback (most recent call last):
+  File "/tmp/hsweep-r2-rollout-test.py", line 114, in <module>
+    assert r.returncode==1
+           ^^^^^^^^^^^^^^^
+AssertionError
+
+ERROR DRIVER RETRY — COMMAND: .venv/bin/python -B /tmp/hsweep-r2-error-retry.py
+ERROR DRIVER FIX ONLY: remove Python executable/-B from sys.argv; implementation and tests unchanged
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r2-rollout-goh6c1sm/error-driver-fixed.py
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+C:4 episode=4 draw=80 success=False steps=None error=True
+C:4 episode=4 draw=81 success=False steps=4 error=False
+C:4 episode=4 draw=82 success=False steps=4 error=False
+C:4 episode=4 draw=83 success=False steps=4 error=False
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+Traceback (most recent call last):
+  File "/tmp/hsweep-r2-error-fixture.py", line 365, in main
+  File "/tmp/hsweep-r2-error-fixture.py", line 271, in evaluate_draw
+RuntimeError: R2 injected rollout error: preserve exact traceback
+ROLLOUT ERROR PASS: 4 rows, exact traceback in failed draw80, remaining 81..83 completed, summary errors=1, process exit=1
+
+E5 FIRST DRIVER ATTEMPT — COMMAND: .venv/bin/python -B /tmp/hsweep-r2-e5.py
+Traceback (most recent call last):
+  File "/tmp/hsweep-r2-e5.py", line 5, in <module>
+    from runtime import CKPT,CKPT_PIN
+ModuleNotFoundError: No module named 'runtime'
+
+E5 RETRY: driver imports eval_common before PB runtime; program/test contract unchanged — COMMAND: .venv/bin/python -B /tmp/hsweep-r2-e5.py
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-2jlj3rkn/selfsub_probe_ckpt.py.out
+BLOCKED: --out or artifact directory already exists
+E5 PASS selfsub_probe_ckpt.py out: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-2jlj3rkn/selfsub_probe_ckpt.py.companion
+BLOCKED: --out or artifact directory already exists
+E5 PASS selfsub_probe_ckpt.py companion: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-2jlj3rkn/harness_sg.py.out --arm SG --questions trap --max-steps 40
+BLOCKED: output already exists: /tmp/hsweep-r2-e5-2jlj3rkn/harness_sg.py.out
+E5 PASS harness_sg.py out: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-2jlj3rkn/harness_sg.py.companion --arm SG --questions trap --max-steps 40
+BLOCKED: output already exists: /tmp/hsweep-r2-e5-2jlj3rkn/harness_sg.py.companion.summary.json
+E5 PASS harness_sg.py companion: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-r2-e5-2jlj3rkn/geometry.json --selftest
+SELFTEST scoring/arc/anchor/short: PASS
+SELFTEST KILLER G1 single-trapset-route: FAIL VALID=55/62
+SELFTEST KILLER G2 no-smoothing: FAIL cat=NEAR (synthetic jitter; proper=VALID)
+SELFTEST KILLER G3 no-lower-bound (0 <= prog <= 4): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+SELFTEST required G3 FAIL observed: True
+SELFTEST DESCRIPTION straight-through-wall: 預期仍 PASS，用來說明穿牆會被判 FAR／WALL；不是殺手。 {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 5, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 3, "FAR": 1, "NEAR": 0, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 2, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}
+SELFTEST upper-bound task=4 c=(3,8) c_p=(5,6) expected=FAR: PASS {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "FAR", "prog": 8, "detour": 0}
+SELFTEST upper-bound MUTANT prog >= 2 expected=FAR: FAIL {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "VALID", "prog": 8, "detour": 0}
+
+E6 — COMMAND: .venv/bin/python -B /tmp/hsweep-r1-e6.py
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E6 same-key positive PASS: reuse=True recompute_calls=0
+GATE CACHE MISS: recomputing G1/G2/G3 and all three killers; key=["08180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787", "20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87"]
+G1 PASS VALID=62/62 rate=1.000000 (remeasured)
+G2 PASS VALID=62/62 rate=1.000000 (remeasured)
+G3 PASS VALID=0/16 rate=0.000000 (remeasured)
+KILLER G1 FAIL VALID=55/62 (remeasured)
+KILLER G2 FAIL VALID=8/62 (remeasured)
+KILLER G3 no-lower-bound (remeasured): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+E6 checkpoint-mismatch PASS: reused=False recompute_calls=1; 50 cells, 62 real encode/decode references; G1/G2/G3 and 3 killers remeasured; no early error
+E6 remeasured gates: {"G1": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 1.0}, "G2": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}, "G3": {"n": 16, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 13, "OFF": 3}, "valid_rate": 0.0, "threshold": 0.1, "by_task": {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 5, "OFF": 2}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}, "status": "PASS"}}
+E6 fixture output: /tmp/hsweep-r1-e6-chjp0gqz/query-fixture-evidence.json
+GATE CACHE MISS: recomputing G1/G2/G3 and all three killers; key=["88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787", "20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87"]
+E6 same-key provenance guard PASS (expected rejection): Cached gate provenance mismatch: normalization_mu
+E6 ruler-mismatch dispatch PASS; original s33 evidence unmodified
+
+E7 — COMMAND: .venv/bin/python -B /tmp/hsweep-r2-e7.py
+COMMAND: CUDA_VISIBLE_DEVICES=0 MUJOCO_GL=osmesa CUBLAS_WORKSPACE_CONFIG=:16:8 /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r2-e7-gaw0nwg1/positive.py
+E7 reached load_ckpt before body: {'CUDA_VISIBLE_DEVICES': '0', 'MUJOCO_GL': 'osmesa', 'CUBLAS_WORKSPACE_CONFIG': ':16:8'}
+E7 PASS: import + CLI validation reached loader; CUDA_VISIBLE_DEVICES=0 MUJOCO_GL=osmesa preserved; no model/GPU initialized
+COMMAND: CUDA_VISIBLE_DEVICES=0 MUJOCO_GL=osmesa CUBLAS_WORKSPACE_CONFIG=:16:8 /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r2-e7-gaw0nwg1/killer.py
+E7 reached load_ckpt before body: {'CUDA_VISIBLE_DEVICES': '', 'MUJOCO_GL': 'egl', 'CUBLAS_WORKSPACE_CONFIG': ':4096:8'}
+E7 FAIL: caller environment overwritten before load_ckpt
+E7 KILLER old import restored: FAIL (expected) exit=2
+
+FINAL AUDIT — COMMAND: .venv/bin/python -B /tmp/hsweep-r2-second-pass.py
+SECOND PASS frozen PB + original e5b8a49b ruler + selfsub_probe_ckpt.py + all 5 trainer files SHA256 diff=[]; n_files=73
+SECOND PASS selfsub_probe_ckpt.py SHA256=20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87; checkpoint/ruler cache key unchanged
+SECOND PASS loader authorized parameter normalization line diff=[]
+SECOND PASS smooth exact source line diff=[]; eval_common has no import-time environment assignments
+SECOND PASS AST: no selfsub import, no PB module attribute assignments; SG runtime distinct=True; Q-C selected directly
+SECOND PASS question pin: /home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/readout-2026-10-02/harvest-m3.json 46de59ed8d46f7990e514c4c7fd9e52a4e1c0ecc50c9c31cf07504678fe421ce
+SECOND PASS question pin: /home/cymaxwelllee/Projects/lacot/experiments/_workorders/breakthrough-probe/builder.json 66a6957d7958729ba2775418cbcf2b86e5cec9571098db550d028d4760799846
+E1-E7 PASS: all required positives and mutation killers observed; rollout error traceback exact, remaining draws completed, nonzero exit
+n_tests=7 n_pass=7 n_blocked=0 n_killers=10 (SHA + SG head-far + SG equal-cond + offline G1/G2/G3/upper + E7 old-import + trap SHA + builder SHA)
+STATUS: DONE
+
+SECOND PASS: E1-E7 all pass; original fields/float bits intact; pre-edit 40-step C full-field/rng diff=[] and 1000-step trace SHA unchanged; E7 positive preserves startup environment, restored old import FAIL; SG equal-cond and head-far FAIL; pinned question mutations FAIL; rollout traceback preserved, subsequent draws complete, errors=1 exit=1; frozen PB/rulers/trainer SHA diff=[].
+n_tests=7 n_pass=7 n_blocked=0 n_killers=10
+STATUS: DONE
