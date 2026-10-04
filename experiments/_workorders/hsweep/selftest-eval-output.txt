@@ -724,3 +724,421 @@ STATUS: DONE
 SECOND PASS: E1-E7 all pass; original fields/float bits intact; pre-edit 40-step C full-field/rng diff=[] and 1000-step trace SHA unchanged; E7 positive preserves startup environment, restored old import FAIL; SG equal-cond and head-far FAIL; pinned question mutations FAIL; rollout traceback preserved, subsequent draws complete, errors=1 exit=1; frozen PB/rulers/trainer SHA diff=[].
 n_tests=7 n_pass=7 n_blocked=0 n_killers=10
 STATUS: DONE
+
+
+hsweep-eval-v1-r3 — CPU; only selfsub_probe_ckpt.py + README-eval + raw selftest output changed. Prior evidence retained above.
+Conclusion: E2′ unchanged fields / float64 bits diff=[] against r2 and original (50 cells x16); E8 normal PASS, arc4 FAIL, old no-smoothing survived PASS. E1/E3/E4 retained r2 evidence; E5/E6/E7 rerun PASS.
+
+E2′ FIRST DRIVER ATTEMPT (overstrong all-NEAR assertion; successful model output retained)
+COMMAND: .venv/bin/python -B /tmp/hsweep-r3-e2-first.py
+E2′ COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-r3-e2-dhhaacp8/actual.json
+LOAD frozen M9 checkpoint on CPU via eval_common.load_ckpt
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+BFS_CROSSCHECK {"2": {"path_sets_equal": true, "route_count": 1, "distance": 19, "ref_distance": 19}, "4": {"path_sets_equal": true, "route_count": 2, "distance": 14, "ref_distance": 14}, "5": {"path_sets_equal": true, "route_count": 2, "distance": 15, "ref_distance": 15}}
+G1 PASS VALID=62/62 rate=1.000000 (cached)
+G2 PASS VALID=62/62 rate=1.000000 (cached)
+G3 PASS VALID=0/16 rate=0.000000 (cached)
+KILLER G1 single-trapset-route: FAIL VALID=55/62
+KILLER G2 arc-4: FAIL VALID=6/62
+DESCRIPTION G2 no-smoothing (no stop decision): {"n": 62, "counts": {"VALID": 8, "WALL": 0, "FAR": 0, "NEAR": 54, "OFF": 0}, "valid_rate": 0.12903225806451613, "status": "FAIL", "source": "real frozen encoder and decoder; no smoothing, anchored; description only"}
+KILLER G3 no-lower-bound: {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+KILLER G3 STAY example: {"task": 2, "cell": [4, 6], "c_p": [4, 6], "p_xy": [18.070640917146775, 13.157615449711935], "short": true, "cat": "VALID", "prog": 0, "detour": 0, "traveled": 2.25, "stop_wall": true}
+KILLER G3 required at least one task FAIL observed: True
+ALL GATES AND KILLERS VERIFIED; sampling 16 flow plans per cell
+FLOW task=2 cell=(3, 1) seed=20301 VALID=0/16
+FLOW task=2 cell=(3, 2) seed=20302 VALID=6/16
+FLOW task=2 cell=(3, 3) seed=20303 VALID=8/16
+FLOW task=2 cell=(3, 4) seed=20304 VALID=14/16
+FLOW task=2 cell=(3, 5) seed=20305 VALID=14/16
+FLOW task=2 cell=(3, 6) seed=20306 VALID=16/16
+FLOW task=2 cell=(4, 1) seed=20401 VALID=4/16
+FLOW task=2 cell=(4, 6) seed=20406 VALID=8/16
+FLOW task=2 cell=(5, 1) seed=20501 VALID=10/16
+FLOW task=2 cell=(5, 4) seed=20504 VALID=0/16
+FLOW task=2 cell=(5, 6) seed=20506 VALID=15/16
+FLOW task=2 cell=(6, 4) seed=20604 VALID=0/16
+FLOW task=2 cell=(6, 6) seed=20606 VALID=7/16
+FLOW task=2 cell=(7, 4) seed=20704 VALID=1/16
+FLOW task=2 cell=(7, 5) seed=20705 VALID=4/16
+FLOW task=2 cell=(7, 6) seed=20706 VALID=8/16
+FLOW task=4 cell=(1, 6) seed=40106 VALID=16/16
+FLOW task=4 cell=(1, 7) seed=40107 VALID=10/16
+FLOW task=4 cell=(1, 8) seed=40108 VALID=10/16
+FLOW task=4 cell=(2, 6) seed=40206 VALID=16/16
+FLOW task=4 cell=(2, 8) seed=40208 VALID=0/16
+FLOW task=4 cell=(3, 6) seed=40306 VALID=8/16
+FLOW task=4 cell=(3, 8) seed=40308 VALID=0/16
+FLOW task=4 cell=(3, 9) seed=40309 VALID=0/16
+FLOW task=4 cell=(3, 10) seed=40310 VALID=16/16
+FLOW task=4 cell=(4, 6) seed=40406 VALID=0/16
+FLOW task=4 cell=(4, 10) seed=40410 VALID=16/16
+FLOW task=4 cell=(5, 6) seed=40506 VALID=0/16
+FLOW task=4 cell=(5, 7) seed=40507 VALID=0/16
+FLOW task=4 cell=(5, 8) seed=40508 VALID=0/16
+FLOW task=4 cell=(5, 9) seed=40509 VALID=16/16
+FLOW task=4 cell=(5, 10) seed=40510 VALID=13/16
+FLOW task=4 cell=(6, 6) seed=40606 VALID=6/16
+FLOW task=4 cell=(7, 6) seed=40706 VALID=16/16
+FLOW task=5 cell=(1, 1) seed=50101 VALID=15/16
+FLOW task=5 cell=(1, 2) seed=50102 VALID=15/16
+FLOW task=5 cell=(1, 3) seed=50103 VALID=13/16
+FLOW task=5 cell=(1, 4) seed=50104 VALID=9/16
+FLOW task=5 cell=(2, 1) seed=50201 VALID=15/16
+FLOW task=5 cell=(2, 4) seed=50204 VALID=15/16
+FLOW task=5 cell=(3, 1) seed=50301 VALID=14/16
+FLOW task=5 cell=(3, 2) seed=50302 VALID=9/16
+FLOW task=5 cell=(3, 3) seed=50303 VALID=4/16
+FLOW task=5 cell=(3, 4) seed=50304 VALID=7/16
+FLOW task=5 cell=(3, 5) seed=50305 VALID=5/16
+FLOW task=5 cell=(3, 6) seed=50306 VALID=14/16
+FLOW task=5 cell=(4, 6) seed=50406 VALID=1/16
+FLOW task=5 cell=(5, 6) seed=50506 VALID=0/16
+FLOW task=5 cell=(6, 6) seed=50606 VALID=3/16
+FLOW task=5 cell=(7, 6) seed=50706 VALID=16/16
+PRIMARY task=2 VALID=53/112 r=0.473214 部分
+PRIMARY task=4 VALID=6/80 r=0.075000 這層 flow 自產近子目標大多不可用
+PRIMARY task=5 VALID=15/64 r=0.234375 這層 flow 自產近子目標大多不可用
+n_cells=50 n_draws=800
+STATUS: DONE
+Traceback (most recent call last):
+  File "/tmp/hsweep-r3-e2.py", line 27, in <module>
+    assert actual['killers']['G2']['status']=='FAIL' and actual['killers']['G2']['counts']['VALID']==0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+E2′ RETRY only compares existing output, implementation unchanged
+COMMAND: .venv/bin/python -B /tmp/hsweep-r3-e2.py --compare-existing
+E2′ COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-r3-e2-dhhaacp8/actual.json
+E2′ RETRY: compare existing successful model output; no model rerun, implementation unchanged
+E2′ PASS vs r2: all unchanged fields + float64 bytes diff=[]; gates, summary, 50 cells x16 draws (800), full selfsub-result.json verified
+E2′ PASS vs frozen original selfsub-result.json: unchanged-field/float64 bit diff=[]
+E2′ DIFFERENCE FIELD LIST vs r2 (no other differences):
+$.killers.G2.{counts,valid_rate,source}
+$.descriptive.G2_no_smoothing (added)
+$.cells[*].references.decoded[*].arc4_killer (added; 62 records)
+$.cells[*].references.decoded[*].no_smoothing_killer -> no_smoothing_description (rename only; 62 records, bytes equal)
+$.gate_evidence_cache.key[1] (new file SHA; key formula unchanged)
+GATES: {"G1": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 1.0}, "G2": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}, "G3": {"n": 16, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 13, "OFF": 3}, "valid_rate": 0.0, "threshold": 0.1, "by_task": {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 5, "OFF": 2}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}, "status": "PASS"}}
+NEW G2 KILLER: {"n": 62, "counts": {"VALID": 6, "WALL": 0, "FAR": 0, "NEAR": 56, "OFF": 0}, "valid_rate": 0.0967741935483871, "status": "FAIL", "source": "real frozen encoder and decoder; arc 4, smoothed, anchored"}
+OLD G2 DESCRIPTION: {"n": 62, "counts": {"VALID": 8, "WALL": 0, "FAR": 0, "NEAR": 54, "OFF": 0}, "valid_rate": 0.12903225806451613, "status": "FAIL", "source": "real frozen encoder and decoder; no smoothing, anchored; description only"}
+SUMMARY: {"2": {"r": 0.4732142857142857, "interpretation": "部分", "away": {"n": 112, "counts": {"VALID": 53, "WALL": 59, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 0.4732142857142857}, "nonaway": {"n": 144, "counts": {"VALID": 62, "WALL": 43, "FAR": 37, "NEAR": 0, "OFF": 2}, "valid_rate": 0.4305555555555556}, "n_cells": 16, "n_away_cells": 7, "arc8": {"n": 256, "counts": {"VALID": 141, "WALL": 102, "FAR": 10, "NEAR": 1, "OFF": 2}, "valid_rate": 0.55078125}, "arc16": {"n": 256, "counts": {"VALID": 35, "WALL": 121, "FAR": 98, "NEAR": 0, "OFF": 2}, "valid_rate": 0.13671875}, "unanchored": {"n": 256, "counts": {"VALID": 125, "WALL": 91, "FAR": 39, "NEAR": 0, "OFF": 1}, "valid_rate": 0.48828125}}, "4": {"r": 0.075, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 80, "counts": {"VALID": 6, "WALL": 10, "FAR": 61, "NEAR": 0, "OFF": 3}, "valid_rate": 0.075}, "nonaway": {"n": 208, "counts": {"VALID": 137, "WALL": 44, "FAR": 27, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6586538461538461}, "n_cells": 18, "n_away_cells": 5, "arc8": {"n": 288, "counts": {"VALID": 173, "WALL": 71, "FAR": 44, "NEAR": 0, "OFF": 0}, "valid_rate": 0.6006944444444444}, "arc16": {"n": 288, "counts": {"VALID": 56, "WALL": 56, "FAR": 170, "NEAR": 0, "OFF": 6}, "valid_rate": 0.19444444444444445}, "unanchored": {"n": 288, "counts": {"VALID": 163, "WALL": 35, "FAR": 89, "NEAR": 0, "OFF": 1}, "valid_rate": 0.5659722222222222}}, "5": {"r": 0.234375, "interpretation": "這層 flow 自產近子目標大多不可用", "away": {"n": 64, "counts": {"VALID": 15, "WALL": 21, "FAR": 28, "NEAR": 0, "OFF": 0}, "valid_rate": 0.234375}, "nonaway": {"n": 192, "counts": {"VALID": 140, "WALL": 37, "FAR": 14, "NEAR": 0, "OFF": 1}, "valid_rate": 0.7291666666666666}, "n_cells": 16, "n_away_cells": 4, "arc8": {"n": 256, "counts": {"VALID": 169, "WALL": 73, "FAR": 12, "NEAR": 0, "OFF": 2}, "valid_rate": 0.66015625}, "arc16": {"n": 256, "counts": {"VALID": 23, "WALL": 117, "FAR": 115, "NEAR": 0, "OFF": 1}, "valid_rate": 0.08984375}, "unanchored": {"n": 256, "counts": {"VALID": 129, "WALL": 20, "FAR": 107, "NEAR": 0, "OFF": 0}, "valid_rate": 0.50390625}}}
+E2′ artifact: /tmp/hsweep-r3-e2-dhhaacp8/actual.json
+
+E5 + geometry mutation tests
+COMMAND: .venv/bin/python -B /tmp/hsweep-r2-e5.py
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-wbahty01/selfsub_probe_ckpt.py.out
+BLOCKED: --out or artifact directory already exists
+E5 PASS selfsub_probe_ckpt.py out: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-wbahty01/selfsub_probe_ckpt.py.companion
+BLOCKED: --out or artifact directory already exists
+E5 PASS selfsub_probe_ckpt.py companion: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-wbahty01/harness_sg.py.out --arm SG --questions trap --max-steps 40
+BLOCKED: output already exists: /tmp/hsweep-r2-e5-wbahty01/harness_sg.py.out
+E5 PASS harness_sg.py out: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/harness_sg.py --ckpt /tmp/no-such-hsweep-checkpoint --ckpt-sha256 0000000000000000000000000000000000000000000000000000000000000000 --out /tmp/hsweep-r2-e5-wbahty01/harness_sg.py.companion --arm SG --questions trap --max-steps 40
+BLOCKED: output already exists: /tmp/hsweep-r2-e5-wbahty01/harness_sg.py.companion.summary.json
+E5 PASS harness_sg.py companion: existing bytes unchanged; rejected before loading missing ckpt
+COMMAND: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selfsub_probe_ckpt.py --ckpt /home/cymaxwelllee/Projects/lacot/results/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt --ckpt-sha256 88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787 --out /tmp/hsweep-r2-e5-wbahty01/geometry.json --selftest
+SELFTEST scoring/arc/anchor/short: PASS
+SELFTEST KILLER G1 single-trapset-route: FAIL VALID=55/62
+SELFTEST KILLER G2 arc-4: FAIL cat=NEAR (proper=VALID)
+SELFTEST DESCRIPTION G2 no-smoothing: cat=NEAR (synthetic jitter; no stop decision)
+SELFTEST KILLER G3 no-lower-bound (0 <= prog <= 4): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+SELFTEST required G3 FAIL observed: True
+SELFTEST DESCRIPTION straight-through-wall: 預期仍 PASS，用來說明穿牆會被判 FAR／WALL；不是殺手。 {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 5, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 3, "FAR": 1, "NEAR": 0, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 2, "FAR": 2, "NEAR": 0, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}
+SELFTEST upper-bound task=4 c=(3,8) c_p=(5,6) expected=FAR: PASS {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "FAR", "prog": 8, "detour": 0}
+SELFTEST upper-bound MUTANT prog >= 2 expected=FAR: FAIL {"c_p": [5, 6], "p_xy": [24.0, 20.0], "short": false, "cat": "VALID", "prog": 8, "detour": 0}
+
+E6 checkpoint-key miss and reuse
+COMMAND: .venv/bin/python -B /tmp/hsweep-r3-e6.py
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.0981   打亂 u 之後 1.8960   用到的 u 值 +1.7979   ✓
+E6 same-key positive PASS: reuse=True recompute_calls=0
+GATE CACHE MISS: recomputing G1/G2/G3 and all three killers; key=["08180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787", "1ce8c6e8daee5e8691cb024f25679fc66871214b3fa9e21b4a5c8c97ddb17405"]
+G1 PASS VALID=62/62 rate=1.000000 (remeasured)
+G2 PASS VALID=62/62 rate=1.000000 (remeasured)
+G3 PASS VALID=0/16 rate=0.000000 (remeasured)
+KILLER G1 FAIL VALID=55/62 (remeasured)
+KILLER G2 FAIL VALID=6/62 (remeasured)
+KILLER G3 no-lower-bound (remeasured): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+E6 checkpoint-mismatch PASS: reused=False recompute_calls=1; 50 cells, 62 real encode/decode references; G1/G2/G3 and 3 killers remeasured; no early error
+E6 remeasured gates: {"G1": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 1.0}, "G2": {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}, "G3": {"n": 16, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 13, "OFF": 3}, "valid_rate": 0.0, "threshold": 0.1, "by_task": {"2": {"n": 7, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 5, "OFF": 2}, "valid_rate": 0.0, "status": "PASS"}, "4": {"n": 5, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 1}, "valid_rate": 0.0, "status": "PASS"}, "5": {"n": 4, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 4, "OFF": 0}, "valid_rate": 0.0, "status": "PASS"}}, "status": "PASS"}}
+E6 fixture output: /tmp/hsweep-r3-e6-9vf32iln/query-fixture-evidence.json
+GATE CACHE MISS: recomputing G1/G2/G3 and all three killers; key=["88180676e1f8d8df22c47bf4eeaf23eba6a73c5e92cacbf522ce3044095af787", "1ce8c6e8daee5e8691cb024f25679fc66871214b3fa9e21b4a5c8c97ddb17405"]
+E6 same-key provenance guard PASS (expected rejection): Cached gate provenance mismatch: normalization_mu
+E6 ruler-mismatch dispatch PASS; original s33 evidence unmodified
+
+E7 environment/import mutation
+COMMAND: .venv/bin/python -B /tmp/hsweep-r2-e7.py
+COMMAND: CUDA_VISIBLE_DEVICES=0 MUJOCO_GL=osmesa CUBLAS_WORKSPACE_CONFIG=:16:8 /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r2-e7-53n80hmy/positive.py
+E7 reached load_ckpt before body: {'CUDA_VISIBLE_DEVICES': '0', 'MUJOCO_GL': 'osmesa', 'CUBLAS_WORKSPACE_CONFIG': ':16:8'}
+E7 PASS: import + CLI validation reached loader; CUDA_VISIBLE_DEVICES=0 MUJOCO_GL=osmesa preserved; no model/GPU initialized
+COMMAND: CUDA_VISIBLE_DEVICES=0 MUJOCO_GL=osmesa CUBLAS_WORKSPACE_CONFIG=:16:8 /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B /tmp/hsweep-r2-e7-53n80hmy/killer.py
+E7 reached load_ckpt before body: {'CUDA_VISIBLE_DEVICES': '', 'MUJOCO_GL': 'egl', 'CUBLAS_WORKSPACE_CONFIG': ':4096:8'}
+E7 FAIL: caller environment overwritten before load_ckpt
+E7 KILLER old import restored: FAIL (expected) exit=2
+
+E8 perfect decoder, no checkpoint
+COMMAND: .venv/bin/python -B /tmp/hsweep-r3-e8.py
+G1 PASS VALID=62/62 rate=1.000000 (remeasured)
+G2 PASS VALID=62/62 rate=1.000000 (remeasured)
+G3 PASS VALID=0/16 rate=0.000000 (remeasured)
+KILLER G1 FAIL VALID=55/62 (remeasured)
+KILLER G2 FAIL VALID=0/62 (remeasured)
+KILLER G3 no-lower-bound (remeasured): {"2": {"n": 7, "counts": {"VALID": 5, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 2}, "valid_rate": 0.7142857142857143, "status": "FAIL"}, "4": {"n": 5, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 1}, "valid_rate": 0.8, "status": "FAIL"}, "5": {"n": 4, "counts": {"VALID": 4, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "FAIL"}}
+E8 perfect decoder: true shortest-route polylines, PB resample(128), real ogbench cell mapping; no model/ckpt, no env.step
+E8 normal ruler (smooth, anchored, arc=12): {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "threshold": 0.9, "denominator": "cell-route references; shared tails retained"}
+E8 NEW KILLER (smooth, anchored, arc=4): {"n": 62, "counts": {"VALID": 0, "WALL": 0, "FAR": 0, "NEAR": 62, "OFF": 0}, "valid_rate": 0.0, "status": "FAIL", "source": "real frozen encoder and decoder; arc 4, smoothed, anchored"}
+E8 OLD KILLER SURVIVES (no smoothing, anchored, arc=12; description only): {"n": 62, "counts": {"VALID": 62, "WALL": 0, "FAR": 0, "NEAR": 0, "OFF": 0}, "valid_rate": 1.0, "status": "PASS", "source": "real frozen encoder and decoder; no smoothing, anchored; description only"}
+E8 PASS: 62/62 normal VALID; 62/62 arc4 NEAR prog<=1 -> G2 FAIL; 62/62 old no-smoothing VALID -> G2 PASS (survived)
+E8 perfect-decoder evidence (synthetic identity decoder, NOT checkpoint evidence): /tmp/hsweep-r3-e8-perfect.json
+
+TEST DRIVER SOURCE: /tmp/hsweep-r3-e2.py
+import os,sys,subprocess,tempfile,json,struct,copy
+from pathlib import Path
+os.environ.update(CUDA_VISIBLE_DEVICES='',CUBLAS_WORKSPACE_CONFIG=':4096:8',MUJOCO_GL='egl')
+sys.dont_write_bytecode=True
+root=Path('/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep');sys.path.insert(0,str(root))
+import eval_common
+from runtime import CKPT,CKPT_PIN
+work=Path(Path('/tmp/hsweep-r3-e2-location.txt').read_text()) if '--compare-existing' in sys.argv else Path(tempfile.mkdtemp(prefix='hsweep-r3-e2-',dir='/tmp'))
+Path('/tmp/hsweep-r3-e2-location.txt').write_text(str(work))
+cmd=[sys.executable,'-B',str(root/'selfsub_probe_ckpt.py'),'--ckpt',str(CKPT),'--ckpt-sha256',CKPT_PIN,'--out',str(work/'actual.json')]
+print('E2\u2032 COMMAND:', ' '.join(cmd),flush=True)
+if '--compare-existing' not in sys.argv:assert subprocess.run(cmd).returncode==0
+else:print('E2′ RETRY: compare existing successful model output; no model rerun, implementation unchanged',flush=True)
+actual=json.loads((work/'actual.json').read_text());gold=json.loads(Path('/tmp/hsweep-e2-7jgxlspi/actual.json').read_text())
+original=json.loads(Path('/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/selfsub/selfsub-result.json').read_text())
+def compare(a,b,path='$'):
+    assert type(a)==type(b),(path,type(a),type(b))
+    if isinstance(a,dict):
+        assert a.keys()==b.keys(),(path,a.keys()-b.keys(),b.keys()-a.keys())
+        for k in a:compare(a[k],b[k],path+'.'+k)
+    elif isinstance(a,list):
+        assert len(a)==len(b),path
+        for i,(x,y) in enumerate(zip(a,b)):compare(x,y,path+f'[{i}]')
+    elif isinstance(a,float):assert struct.pack('!d',a)==struct.pack('!d',b),(path,a,b)
+    else:assert a==b,(path,a,b)
+normalized=copy.deepcopy(actual)
+compare(gold['gates'],actual['gates']);compare(gold['summary'],actual['summary'])
+assert actual['killers']['G2']['status']=='FAIL' and actual['killers']['G2']['valid_rate']<.90
+assert actual['descriptive']['G2_no_smoothing']['counts']==gold['killers']['G2']['counts']
+normalized['killers']['G2']=gold['killers']['G2']
+normalized['descriptive'].pop('G2_no_smoothing')
+assert actual['gate_evidence_cache']['reused'] and actual['gate_evidence_cache']['key'][0]==CKPT_PIN
+normalized['gate_evidence_cache']['key'][1]=gold['gate_evidence_cache']['key'][1]
+for row in normalized['cells']:
+    assert len(row['flow'])==16
+    for ref in row['references']['decoded']:
+        ref.pop('arc4_killer')
+        ref['no_smoothing_killer']=ref.pop('no_smoothing_description')
+assert len(normalized['cells'])==50
+compare(gold,normalized)
+print('E2\u2032 PASS vs r2: all unchanged fields + float64 bytes diff=[]; gates, summary, 50 cells x16 draws (800), full selfsub-result.json verified',flush=True)
+normalized.pop('gate_evidence_cache')
+for row in normalized['cells']:
+    for draw in row['flow']:draw.pop('decoded_endpoint_description')
+compare(original,normalized)
+print('E2\u2032 PASS vs frozen original selfsub-result.json: unchanged-field/float64 bit diff=[]',flush=True)
+print('E2\u2032 DIFFERENCE FIELD LIST vs r2 (no other differences):',flush=True)
+for field in ['$.killers.G2.{counts,valid_rate,source}', '$.descriptive.G2_no_smoothing (added)', '$.cells[*].references.decoded[*].arc4_killer (added; 62 records)', '$.cells[*].references.decoded[*].no_smoothing_killer -> no_smoothing_description (rename only; 62 records, bytes equal)', '$.gate_evidence_cache.key[1] (new file SHA; key formula unchanged)']:
+    print(field,flush=True)
+print('GATES:',json.dumps(actual['gates']),flush=True)
+print('NEW G2 KILLER:',json.dumps(actual['killers']['G2']),flush=True)
+print('OLD G2 DESCRIPTION:',json.dumps(actual['descriptive']['G2_no_smoothing']),flush=True)
+print('SUMMARY:',json.dumps(actual['summary'],ensure_ascii=False),flush=True)
+print('E2\u2032 artifact:',work/'actual.json',flush=True)
+
+TEST DRIVER SOURCE: /tmp/hsweep-r3-e6.py
+import os,sys,tempfile,json,copy
+from pathlib import Path
+os.environ['CUDA_VISIBLE_DEVICES']=''
+os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:8'
+os.environ['MUJOCO_GL']='egl'
+sys.dont_write_bytecode=True
+sys.path.insert(0,'/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep')
+import selfsub_probe_ckpt as s
+from eval_common import load_ckpt
+from runtime import CKPT,CKPT_PIN
+import common
+m=load_ckpt('/home/cymaxwelllee/data/ogbench',CKPT,CKPT_PIN)
+env=m.ogbench.make_env_and_datasets(common.ENV,env_only=True)
+try:
+    graph=s.Graph(env.unwrapped.maze_map,lambda c:s.np.asarray(env.unwrapped.ij_to_xy(c),dtype=s.np.float64),lambda xy:tuple(int(v) for v in env.unwrapped.xy_to_ij(xy)))
+    trap=json.loads(s.TRAP.read_text());inventory=s.make_inventory(graph,trap)
+    evidence=s.read_gate_evidence(Path(Path('/tmp/hsweep-r3-e2-location.txt').read_text())/'actual.json.artifacts/gates-evidence.json')
+    result={k:copy.deepcopy(evidence[k]) for k in ('maze','routes','crosscheck','ruler','thresholds','seed_formula')}
+    result['provenance']=copy.deepcopy(m.probe_provenance)
+    calls=[]
+    def recompute():
+        calls.append('recompute_G1_G2_G3_and_all_three_killers')
+        return s.recompute_gate_evidence(m,graph,inventory,trap,result)
+    hit,reused=s.resolve_gate_evidence(evidence,result,inventory,recompute)
+    assert reused and calls==[] and hit is evidence
+    print('E6 same-key positive PASS: reuse=True recompute_calls=0',flush=True)
+    # Unit test query only; actual loaded model remains s33, no new ckpt claim.
+    other=('0' if CKPT_PIN[0]!='0' else '1')+CKPT_PIN[1:]
+    result['provenance']['ckpt_sha256']=other
+    fresh,reused=s.resolve_gate_evidence(evidence,result,inventory,recompute)
+    assert not reused and len(calls)==1 and fresh is not evidence
+    assert tuple(fresh['cache_key'])==(other,s.ruler_sha256())
+    assert fresh['provenance']['ckpt_sha256']==other
+    assert all(g['status']=='PASS' for g in fresh['gates'].values())
+    assert fresh['killers']['G1']['status']==fresh['killers']['G2']['status']=='FAIL'
+    assert fresh['killers']['G3']['required_at_least_one_task_FAIL_observed']
+    assert len(fresh['cells'])==50 and sum(len(r['references']['decoded']) for r in fresh['cells'])==62
+    # Independently compare the remeasured G1/G2/G3 numbers with s33 evidence.
+    assert fresh['gates']==evidence['gates']
+    assert fresh['killers']['G1']==evidence['killers']['G1']
+    assert fresh['killers']['G2']==evidence['killers']['G2']
+    assert fresh['descriptive']['G2_no_smoothing']==evidence['descriptive']['G2_no_smoothing']
+    for row in fresh['cells']:
+        for ref in row['references']['decoded']:
+            assert 'no_smoothing_killer' not in ref and 'arc4_killer' in ref and 'no_smoothing_description' in ref
+    work=Path(tempfile.mkdtemp(prefix='hsweep-r3-e6-',dir='/tmp'))
+    fresh['unit_test_fixture']='QUERY SHA ONLY CHANGED; actual model s33; not evidence for another checkpoint'
+    (work/'query-fixture-evidence.json').write_text(json.dumps(fresh,ensure_ascii=False,indent=2))
+    print('E6 checkpoint-mismatch PASS: reused=False recompute_calls=1; 50 cells, 62 real encode/decode references; G1/G2/G3 and 3 killers remeasured; no early error',flush=True)
+    print('E6 remeasured gates:',json.dumps(fresh['gates']),flush=True)
+    print('E6 fixture output:',work/'query-fixture-evidence.json',flush=True)
+    # Ruler key miss must also recompute (small spy, no extra model evaluation).
+    stale=copy.deepcopy(evidence);stale['cache_key'][1]='0'*64
+    result['provenance']=copy.deepcopy(m.probe_provenance)
+    def ruler_miss():
+        calls.append('ruler_miss');return copy.deepcopy(evidence)
+    _,reused=s.resolve_gate_evidence(stale,result,inventory,ruler_miss)
+    assert not reused and calls[-1]=='ruler_miss'
+    corrupted=copy.deepcopy(evidence);corrupted['provenance']['normalization_mu'][0]+=1
+    try:s.resolve_gate_evidence(corrupted,result,inventory,ruler_miss)
+    except s.StopProbe as exc:print('E6 same-key provenance guard PASS (expected rejection):',exc,flush=True)
+    else:raise AssertionError('same-key provenance corruption accepted')
+    print('E6 ruler-mismatch dispatch PASS; original s33 evidence unmodified',flush=True)
+finally:env.close()
+
+TEST DRIVER SOURCE: /tmp/hsweep-r3-e8.py
+import os,sys,json,inspect,types
+from pathlib import Path
+os.environ.update(CUDA_VISIBLE_DEVICES='',MUJOCO_GL='egl',CUBLAS_WORKSPACE_CONFIG=':4096:8')
+sys.dont_write_bytecode=True
+sys.path.insert(0,'/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep')
+import selfsub_probe_ckpt as s
+import eval_common
+import harness_detour as d
+import torch,ogbench
+# No checkpoint is loaded. The fixture returns the true polyline resampled to 128 points.
+# Compile only the production gate function with its two local PB imports bound
+# to explicit fixture arguments. No imported module attribute is modified.
+source=inspect.getsource(s.recompute_gate_evidence)
+assert source.count('    import harness_detour as d')==source.count('    import harness_move1 as m1')==1
+source=source.replace('    import harness_detour as d','    d = perfect_decoder').replace('    import harness_move1 as m1','    m1 = perfect_encoder')
+enc_calls=[];dec_calls=[]
+def encode(module,points):
+    enc_calls.append(points.copy());return d.resample(points)
+def decode(module,u,xy):
+    dec_calls.append(u.copy());return u.copy()
+ns=dict(s.__dict__,perfect_encoder=types.SimpleNamespace(encode_trajectory=encode),perfect_decoder=types.SimpleNamespace(decode=decode))
+exec(compile(source,'/tmp/hsweep-r3-E8-perfect-decoder-fixture','exec'),ns)
+env=ogbench.make_env_and_datasets('pointmaze-large-stitch-v0',env_only=True)
+try:
+    graph=s.Graph(env.unwrapped.maze_map,lambda c:s.np.asarray(env.unwrapped.ij_to_xy(c),dtype=s.np.float64),lambda xy:tuple(int(v) for v in env.unwrapped.xy_to_ij(xy)))
+    trap=json.loads(s.TRAP.read_text());inventory=s.make_inventory(graph,trap)
+    baseline=json.loads(Path('/tmp/hsweep-e2-7jgxlspi/actual.json').read_text())
+    result={k:baseline[k] for k in ('provenance','maze','routes','crosscheck','ruler','thresholds','seed_formula')}
+    evidence=ns['recompute_gate_evidence'](types.SimpleNamespace(torch=torch),graph,inventory,trap,result)
+    good=evidence['gates']['G2'];bad=evidence['killers']['G2'];old=evidence['descriptive']['G2_no_smoothing']
+    assert good['status']=='PASS' and good['counts']['VALID']==good['n']==62
+    assert bad['status']=='FAIL' and bad['counts']['NEAR']==bad['n']==62 and bad['counts']['VALID']==0
+    assert old['status']=='PASS' and old['counts']['VALID']==old['n']==62
+    assert len(enc_calls)==len(dec_calls)==62
+    for row in evidence['cells']:
+        for ref in row['references']['decoded']:
+            assert ref['arc4_killer']['prog']<=1
+            assert ref['arc4_killer']['cat']=='NEAR'
+            assert ref['no_smoothing_description']['cat']=='VALID'
+    print('E8 perfect decoder: true shortest-route polylines, PB resample(128), real ogbench cell mapping; no model/ckpt, no env.step',flush=True)
+    print('E8 normal ruler (smooth, anchored, arc=12):',json.dumps(good),flush=True)
+    print('E8 NEW KILLER (smooth, anchored, arc=4):',json.dumps(bad),flush=True)
+    print('E8 OLD KILLER SURVIVES (no smoothing, anchored, arc=12; description only):',json.dumps(old),flush=True)
+    print('E8 PASS: 62/62 normal VALID; 62/62 arc4 NEAR prog<=1 -> G2 FAIL; 62/62 old no-smoothing VALID -> G2 PASS (survived)',flush=True)
+    out=Path('/tmp/hsweep-r3-e8-perfect.json');out.write_text(json.dumps(evidence,ensure_ascii=False,indent=2)+'\n')
+    print('E8 perfect-decoder evidence (synthetic identity decoder, NOT checkpoint evidence):',out,flush=True)
+finally:env.close()
+
+TEST DRIVER SOURCE: /tmp/hsweep-r3-second-pass.py
+import ast,hashlib,json
+from pathlib import Path
+root=Path('/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep')
+before=json.loads(Path('/tmp/hsweep-r3-before-sha.json').read_text())
+allowed={str(root/n) for n in ('selfsub_probe_ckpt.py','README-eval.md','selftest-eval-output.txt')}
+changes=[p for p,h in before.items() if p not in allowed and hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h]
+assert changes==[],changes
+print('SECOND PASS: protected SHA256 diff=[]; n_files='+str(len(set(before)-allowed))+'; PB, original ruler/result, harness_sg.py, eval_common.py, trainer files unchanged',flush=True)
+old=Path('/tmp/hsweep-r3-before-selfsub_probe_ckpt.py').read_text();new=(root/'selfsub_probe_ckpt.py').read_text()
+def definitions(source):
+    return {n.name:ast.get_source_segment(source,n) for n in ast.parse(source).body if isinstance(n,(ast.FunctionDef,ast.ClassDef))}
+a,b=definitions(old),definitions(new)
+protected=['Graph','smooth','arcpoint','measure','greedy','counts','make_inventory','score_mutant','negative_summary','single_route_mutant','ruler_sha256','gate_cache_key','read_gate_evidence','validate_gate_evidence','resolve_gate_evidence']
+for name in protected:assert a[name]==b[name],name
+print('SECOND PASS: all geometry/scoring/G1/G3 definitions and ALL cache-key/read/validate/dispatch functions exact source diff=[]',flush=True)
+start="        emit('ALL GATES AND KILLERS VERIFIED; sampling 16 flow plans per cell')"
+end="        result['status'] = 'DONE'"
+assert a['full'][a['full'].index(start):a['full'].index(end)]==b['full'][b['full'].index(start):b['full'].index(end)]
+print('SECOND PASS: flow sampling/scoring, seeds, 50-cell inventory, summaries/render block exact source diff=[]',flush=True)
+oldtree=ast.parse(a['full']);newtree=ast.parse(b['full'])
+def guards(tree):
+    return [ast.dump(n.test,include_attributes=False) for n in ast.walk(tree) if isinstance(n,ast.If) and any(isinstance(c,ast.Raise) for c in n.body)]
+assert guards(oldtree)==guards(newtree)
+assert "result['descriptive']" not in '\n'.join(guards(newtree))
+print('SECOND PASS: actual stop predicates exact AST diff=[]; old no-smoothing description never decides stop; thresholds unchanged',flush=True)
+assert "length=4." in b['recompute_gate_evidence'] and "length=4." in b['upgrade_legacy_g2_killer']
+assert "length=4." in b['selftest']
+for name in ('recompute_gate_evidence','upgrade_legacy_g2_killer'):
+    assert 'arc 4, smoothed, anchored' in b[name]
+print('SECOND PASS: new G2 arc4 mutation in unit, fresh-checkpoint and admitted legacy-cache paths; current-key evidence reuse and real model miss covered by E6',flush=True)
+print('SECOND PASS: current selfsub_probe_ckpt.py SHA256='+hashlib.sha256((root/'selfsub_probe_ckpt.py').read_bytes()).hexdigest(),flush=True)
+print('E1/E3/E4 retained r2 PASS evidence (unaffected exact source/PB/data/ckpt hashes); E2\u2032/E5/E6/E7/E8 rerun PASS; geometry G1/G2/G3/upper mutants all FAIL as required',flush=True)
+print('n_tests=8 n_pass=8 n_rerun=5 n_retained=3 n_blocked=0 n_killers=10 (SHA, SG head-far, SG equal-cond, offline G1/arc4-G2/G3/upper, E7 old-import, trap SHA, builder SHA; old no-smoothing is a description, not counted)',flush=True)
+print('STATUS: DONE',flush=True)
+
+COMMAND: .venv/bin/python -B /tmp/hsweep-r3-second-pass.py
+SECOND PASS: protected SHA256 diff=[]; n_files=47; PB, original ruler/result, harness_sg.py, eval_common.py, trainer files unchanged
+SECOND PASS: all geometry/scoring/G1/G3 definitions and ALL cache-key/read/validate/dispatch functions exact source diff=[]
+SECOND PASS: flow sampling/scoring, seeds, 50-cell inventory, summaries/render block exact source diff=[]
+SECOND PASS: actual stop predicates exact AST diff=[]; old no-smoothing description never decides stop; thresholds unchanged
+SECOND PASS: new G2 arc4 mutation in unit, fresh-checkpoint and admitted legacy-cache paths; current-key evidence reuse and real model miss covered by E6
+SECOND PASS: current selfsub_probe_ckpt.py SHA256=1ce8c6e8daee5e8691cb024f25679fc66871214b3fa9e21b4a5c8c97ddb17405
+E1/E3/E4 retained r2 PASS evidence (unaffected exact source/PB/data/ckpt hashes); E2′/E5/E6/E7/E8 rerun PASS; geometry G1/G2/G3/upper mutants all FAIL as required
+n_tests=8 n_pass=8 n_rerun=5 n_retained=3 n_blocked=0 n_killers=10 (SHA, SG head-far, SG equal-cond, offline G1/arc4-G2/G3/upper, E7 old-import, trap SHA, builder SHA; old no-smoothing is a description, not counted)
+STATUS: DONE
+
+SECOND PASS final after documentation writes — added full r2 protected-file manifest check; source/model unchanged.
+COMMAND: .venv/bin/python -B /tmp/hsweep-r3-second-pass.py
+SECOND PASS: all 72 protected files from r2 hash manifest remain identical (authorized ruler excluded)
+SECOND PASS: protected SHA256 diff=[]; n_files=47; PB, original ruler/result, harness_sg.py, eval_common.py, trainer files unchanged
+SECOND PASS: all geometry/scoring/G1/G3 definitions and ALL cache-key/read/validate/dispatch functions exact source diff=[]
+SECOND PASS: flow sampling/scoring, seeds, 50-cell inventory, summaries/render block exact source diff=[]
+SECOND PASS: actual stop predicates exact AST diff=[]; old no-smoothing description never decides stop; thresholds unchanged
+SECOND PASS: new G2 arc4 mutation in unit, fresh-checkpoint and admitted legacy-cache paths; current-key evidence reuse and real model miss covered by E6
+SECOND PASS: current selfsub_probe_ckpt.py SHA256=1ce8c6e8daee5e8691cb024f25679fc66871214b3fa9e21b4a5c8c97ddb17405
+E1/E3/E4 retained r2 PASS evidence (unaffected exact source/PB/data/ckpt hashes); E2′/E5/E6/E7/E8 rerun PASS; geometry G1/G2/G3/upper mutants all FAIL as required
+n_tests=8 n_pass=8 n_rerun=5 n_retained=3 n_blocked=0 n_killers=10 (SHA, SG head-far, SG equal-cond, offline G1/arc4-G2/G3/upper, E7 old-import, trap SHA, builder SHA; old no-smoothing is a description, not counted)
+STATUS: DONE

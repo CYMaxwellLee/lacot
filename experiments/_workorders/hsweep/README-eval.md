@@ -1,5 +1,46 @@
 這張單只交「能對任何一顆新 checkpoint 做同樣評估的程式」。證明：(a) 用新載入器載 s33，離線尺的三道閘與摘要數字跟既有那支（sha e5b8a49b…）**逐位元一樣**；(b) 新的 SG 臂每個 chunk 都是「flow 看最終終點抽 u → 解碼取終點當近子目標 → 動作頭的條件換成近子目標」，留痕查得到。判準＝§6 的自測全過（含殺手輸入真的 FAIL 過）。
 
+hsweep-eval-v1-r3 已完成。G2 殺手僅將取點弧長改為 4，保留 9 點平滑與錨定；正常尺仍取弧長 12，三道閘與門檻、格集合、BFS 打分、G1/G3 殺手、快取鍵規則及摘要均不變。拿掉平滑改成 `descriptive.G2_no_smoothing` 與各 decoded 參照的 `no_smoothing_description`；描述欄的 PASS/FAIL 不決定停止。
+
+本輪僅修改 `selfsub_probe_ckpt.py`、本 README 與 `selftest-eval-output.txt`。尺 SHA256=`1ce8c6e8daee5e8691cb024f25679fc66871214b3fa9e21b4a5c8c97ddb17405`。`gate_cache_key`、`read_gate_evidence`、`validate_gate_evidence`、`resolve_gate_evidence` 原始碼逐字相同。舊 s33 證據依原規則核對並重用三閘；只現場重算 62 份 G2 弧長 4 殺手，舊 no-smoothing 分類原值移到描述欄。新 checkpoint 快取未命中仍當場重算三閘、三殺手；新證據保存 G2 新殺手及描述，同鍵證據可直接重用。
+
+E2′ 通過：s33 的三閘、50 格 × 16 份分類、摘要及完整 `selfsub-result.json` 所有不變欄位，對 r2 與原凍結結果的遞迴欄位／float64 位元 diff=[]。三閘為 G1=62/62、G2=62/62、G3=0/16，r 仍為 task2=0.4732142857142857、task4=0.075、task5=0.234375。新 G2 殺手 VALID=6/62、NEAR=56/62，G2 FAIL；舊 no-smoothing 描述 VALID=8/62，原分類位元不變。
+
+E2′ 差異欄位完整清單（相對 r2，無其他差異）：
+
+- `killers.G2.counts`、`killers.G2.valid_rate`、`killers.G2.source`；status 仍 FAIL。
+- 新增 `descriptive.G2_no_smoothing`。
+- 62 份 `cells[*].references.decoded[*].arc4_killer` 新殺手紀錄。
+- 62 份 `cells[*].references.decoded[*].no_smoothing_killer` 改名為 `no_smoothing_description`，原值及浮點位元全部相同。
+- `gate_evidence_cache.key[1]` 隨尺檔 SHA 更新為上列 SHA；鍵公式、命中／未命中與逐欄 provenance 驗證規則完全不改。
+
+E8 通過：不用模型或 checkpoint，解碼器直接回傳真最短路折線（PB 原 `resample` 採 128 點），用真 ogbench 格映射及正式 `recompute_gate_evidence` 其餘原碼測 62 份參照。只在測試函式的區域 import 接上明示 fixture，未改任何 PB 模組屬性。
+
+```text
+E8 normal ruler (smooth, anchored, arc=12): PASS VALID=62/62
+E8 NEW KILLER (smooth, anchored, arc=4): FAIL VALID=0/62 NEAR=62/62 prog<=1
+E8 OLD KILLER SURVIVES (no smoothing, anchored, arc=12; description only): PASS VALID=62/62
+```
+
+E1–E7 全部仍過。本輪重跑 E2′、E5（含幾何自測）、E6、E7，加新 E8；E1、E3、E4 保留 r2 已通過原文，因 loader、rollout、PB、trainer 及既有輸入皆未變。E6 同鍵重用 0 次重算、換查詢 ckpt SHA 實際重算 50 格／62 參照／三閘與三殺手；真模型仍 s33，此 query fixture 不當另一顆 checkpoint 證據。E7 正常 import 保留 CUDA_VISIBLE_DEVICES=0/MUJOCO_GL=osmesa，舊 import 殺手仍 FAIL；測試在 loader 前停止。
+
+E2′ driver 首次多加了「s33 弧長 4 必須 62 份全 NEAR」的斷言，超出工單（忠實完美解碼才全 NEAR；s33 是 56 NEAR、6 VALID，但 G2 明確 FAIL）。首次失敗原文保留；只修 driver，對同一次已成功的模型輸出比對，實作／門檻／工單判準未變。E8 的完美解碼 62 份全 NEAR 斷言照原樣通過。
+
+原文與完整 E8 輸出：`selftest-eval-output.txt` 的 `hsweep-eval-v1-r3` 段。E2′ 實際結果 `/tmp/hsweep-r3-e2-dhhaacp8/actual.json`，新閘證據 `/tmp/hsweep-r3-e2-dhhaacp8/actual.json.artifacts/gates-evidence.json`；E8 明示 identity-decoder fixture `/tmp/hsweep-r3-e8-perfect.json`。driver 命令／來源及逐欄位元比較都附於原文，正式 CLI 參數沿用下方 r2 指令。
+
+測試環境差異聲明：本輪全部 CPU，離線尺不呼叫 env.step，未上 GPU、未送 Slurm、未跑正式 rollout；E8 是理想解碼參照，不驗模型品質或 GPU 浮點。E1/E3/E4 的 CPU 接線與 C 位元證據沿用 r2，原有限制不變。未碰凍結樹、results 或 trainer，未 commit、未裝套件、未刪檔。
+
+| 成功路徑必須保留的輸出 | 允許變更的行為 |
+| --- | --- |
+| 三閘及門檻、50 格 × 16 份原分類／浮點、完整摘要與 r、正常弧長 12、G1/G3 殺手、provenance、原快取規則、全部 rollout 契約 | G2 殺手改弧長 4，新增逐參照及聚合殺手證據；舊 no-smoothing 改成描述欄；尺檔 SHA 導致鍵值自然更新 |
+
+SECOND PASS: 保護檔 SHA diff=[]；幾何／打分／G1／G3／全部快取函式、正式抽樣／摘要／繪圖區塊逐字 diff=[]；停止條件 AST diff=[]，描述欄不進停止判斷；E2′ 原欄位位元 diff=[]，E8 三種尺按要求 PASS/FAIL/PASS。
+
+n_tests=8 n_pass=8 n_rerun=5 n_retained=3 n_blocked=0 n_killers=10（G2 已替換；舊 no-smoothing 不算殺手）
+STATUS: DONE
+
+以下保留 r2 的指令、輸出契約與歷史驗證；涉及 G2 殺手與本輪修改範圍時以上述 r3 為準。
+
 hsweep-eval-v1-r2 已完成，E1–E7 全過。C 臂相對修改前已存檔的 patch 版，40 步全部既有欄位（含 RNG、chunks、actions、provenance 及浮點位元）diff=[]，1000 步 trace SHA 相同。SG 的動作頭吃遠條件與近遠條件相同兩個殺手均 FAIL；E7 舊 import 殺手也 FAIL。歷輪及本輪輸出原文都保留在 `selftest-eval-output.txt`。
 
 本輪修改 `eval_common.py`、`harness_sg.py` 與本文件／測試原文。`selfsub_probe_ckpt.py` 完全不動，SHA256=`20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87`，快取鍵仍為（checkpoint SHA256, 本離線尺檔 SHA256）。PB、原 e5b8a49b 尺及五個 trainer 工單檔案前後 SHA256 diff=[]。

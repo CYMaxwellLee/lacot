@@ -229,9 +229,10 @@ def selftest():
     raw = np.column_stack([np.linspace(4., 16., 128), np.full(128, 12.)])
     raw[:, 1] += .14 * (-1.)**np.arange(128)
     positive, _ = measure(graph, c, g, raw)
-    mutant, _ = measure(graph, c, g, raw, smoothing=False)
+    mutant, _ = measure(graph, c, g, raw, length=4.)
+    no_smoothing, _ = measure(graph, c, g, raw, smoothing=False)
     assert positive['cat'] == 'VALID'
-    assert mutant['cat'] != 'VALID'
+    assert mutant['cat'] == 'NEAR' and mutant['prog'] <= 1
     short, _ = measure(graph, c, g, np.repeat(xy(c)[None], 128, axis=0))
     assert short['short'] and short['cat'] == 'NEAR'
     p, shortflag, total = arcpoint([[0., 0.], [0., 0.], [8., 0.], [8., 8.]], 12.)
@@ -257,7 +258,8 @@ def selftest():
     assert upper_mutant['cat'] == 'VALID', 'Upper-bound mutant must fail FAR expectation'
     lines = [f"SELFTEST scoring/arc/anchor/short: PASS",
              f"SELFTEST KILLER G1 single-trapset-route: {g1['status']} VALID={g1['counts']['VALID']}/{g1['n']}",
-             f"SELFTEST KILLER G2 no-smoothing: FAIL cat={mutant['cat']} (synthetic jitter; proper={positive['cat']})",
+             f"SELFTEST KILLER G2 arc-4: FAIL cat={mutant['cat']} (proper={positive['cat']})",
+             f"SELFTEST DESCRIPTION G2 no-smoothing: cat={no_smoothing['cat']} (synthetic jitter; no stop decision)",
              f"SELFTEST KILLER G3 no-lower-bound (0 <= prog <= 4): {json.dumps(g3, ensure_ascii=False)}",
              f"SELFTEST required G3 FAIL observed: {g3_killed}",
              'SELFTEST DESCRIPTION straight-through-wall: 預期仍 PASS，用來說明穿牆會被判 FAR／WALL；不是殺手。 ' + json.dumps(through_wall, ensure_ascii=False),
@@ -265,6 +267,7 @@ def selftest():
              'SELFTEST upper-bound MUTANT prog >= 2 expected=FAR: FAIL ' + json.dumps(upper_mutant)]
     result = dict(unit_tests='PASS', requested_killers_all_observed=g3_killed,
                   G1=g1, G2=dict(synthetic=True, proper=positive, mutant=mutant, status='FAIL'),
+                  no_smoothing_description=dict(synthetic=True, record=no_smoothing),
                   G3=dict(synthetic_coordinates=True, by_task=g3, away_records=g3rows,
                           variant='no_lower_bound', requested_FAIL_observed=g3_killed),
                   through_wall_description=dict(expected='PASS', by_task=through_wall,
@@ -340,6 +343,8 @@ def finish_report(result):
                     for name, killer in result['killers'].items()]
     missing = result.get('not_produced', [])
     text = INTRO + '\n\n' + '''本探針只使用 CPU、環境幾何與凍結模型的 encode/sample/decode；不 reset、不 step、不跑 rollout。BFS 全部路線獨立重算；ref-routes-density.json 僅用於核對，不作打分答案。所有門檻及尺固定為工單原值。
+
+依 hsweep-eval-v1-r3，G2 殺手只將取點弧長改為 4；正常尺仍為弧長 12。拿掉平滑的結果記於 descriptive.G2_no_smoothing 及各 decoded 參照的 no_smoothing_description，不參與停止判斷。舊 s33 證據照原規則驗證／重用三閘，只重新量測替換的 G2 殺手；新 checkpoint 照原快取未命中流程重算。
 
 執行指令（工作目錄為本目錄）：
 
@@ -440,11 +445,38 @@ def resolve_gate_evidence(evidence, result, inventory, recompute):
     return fresh, False
 
 
+def g2_mutation_summary(records, source):
+    tally = counts(records)
+    return dict(tally, status='PASS' if tally['valid_rate'] >= .90 else 'FAIL', source=source)
+
+
+def upgrade_legacy_g2_killer(module, graph, inventory, evidence):
+    """Keep admitted legacy gates; remeasure only the replacement G2 mutation."""
+    import harness_detour as d
+    import harness_move1 as m1
+    arc4, no_smoothing = [], []
+    with module.torch.no_grad():
+        for row in evidence['cells']:
+            c, g = tuple(row['cell']), inventory[row['task']]['g']
+            for decoded in row['references']['decoded']:
+                u = m1.encode_trajectory(module, np.asarray(decoded['points_xy']))
+                raw = d.decode(module, u, graph.cell_to_xy(c))
+                mutant, _ = measure(graph, c, g, raw, length=4.)
+                decoded['arc4_killer'] = mutant
+                decoded['no_smoothing_description'] = decoded.pop('no_smoothing_killer')
+                arc4.append(mutant)
+                no_smoothing.append(decoded['no_smoothing_description'])
+    evidence['killers']['G2'] = g2_mutation_summary(arc4,
+        'real frozen encoder and decoder; arc 4, smoothed, anchored')
+    evidence['descriptive'] = dict(G2_no_smoothing=g2_mutation_summary(no_smoothing,
+        'real frozen encoder and decoder; no smoothing, anchored; description only'))
+
+
 def recompute_gate_evidence(module, graph, inventory, trap, result):
     """Use the original reference definitions, ruler, thresholds and PB APIs."""
     import harness_detour as d
     import harness_move1 as m1
-    cells, positives, decoded_records, no_smoothing = [], [], [], []
+    cells, positives, decoded_records, arc4, no_smoothing = [], [], [], [], []
     with module.torch.no_grad():
         for task, spec in inventory.items():
             for c in spec['cells']:
@@ -459,16 +491,18 @@ def recompute_gate_evidence(module, graph, inventory, trap, result):
                     u = m1.encode_trajectory(module, points)
                     raw = d.decode(module, u, graph.cell_to_xy(c))
                     scored, _ = measure(graph, c, spec['g'], raw)
-                    mutant, _ = measure(graph, c, spec['g'], raw, smoothing=False)
+                    mutant, _ = measure(graph, c, spec['g'], raw, length=4.)
+                    unsmoothed, _ = measure(graph, c, spec['g'], raw, smoothing=False)
                     decoded = dict(scored, route_id=route_id, points_xy=points.tolist(),
                         raw_arc=float(np.linalg.norm(np.diff(raw, axis=0), axis=1).sum()),
                         raw_start_distance=float(np.linalg.norm(raw[0]-graph.cell_to_xy(c))),
-                        no_smoothing_killer=mutant)
+                        arc4_killer=mutant, no_smoothing_description=unsmoothed)
                     refs['positive'].append(positive)
                     refs['decoded'].append(decoded)
                     positives.append(positive)
                     decoded_records.append(decoded)
-                    no_smoothing.append(mutant)
+                    arc4.append(mutant)
+                    no_smoothing.append(unsmoothed)
                 refs['greedy_no_lower_bound_killer'] = score_mutant(refs['greedy'], 'no_lower_bound')
                 cells.append(dict(task=task, cell=list(c), away=graph.away(c, spec['g']),
                     d_to_g=graph.dist[spec['g']][c], seed=task*10000+c[0]*100+c[1],
@@ -483,8 +517,7 @@ def recompute_gate_evidence(module, graph, inventory, trap, result):
     killer3_by_task, killer3_rows = negative_summary(graph, inventory, True, 'no_lower_bound')
     killed3 = any(v['status'] == 'FAIL' for v in killer3_by_task.values())
     killers = dict(G1=single_route_mutant(graph, inventory, trap),
-        G2=dict(counts(no_smoothing), status='PASS' if counts(no_smoothing)['valid_rate'] >= .90 else 'FAIL',
-                source='real frozen encoder and decoder; no smoothing, anchored'),
+        G2=g2_mutation_summary(arc4, 'real frozen encoder and decoder; arc 4, smoothed, anchored'),
         G3=dict(variant='no_lower_bound: 0 <= prog <= 4', by_task=killer3_by_task,
                 away_records=killer3_rows, required_at_least_one_task_FAIL_observed=killed3,
                 requirement_status='PASS' if killed3 else 'FAIL'))
@@ -497,7 +530,9 @@ def recompute_gate_evidence(module, graph, inventory, trap, result):
     return dict(schema='hsweep-gate-evidence-v1', cache_key=list(gate_cache_key(result['provenance'])),
         provenance=result['provenance'], maze=result['maze'], routes=result['routes'],
         crosscheck=result['crosscheck'], ruler=result['ruler'], thresholds=result['thresholds'],
-        seed_formula=result['seed_formula'], cells=cells, gates=gates, killers=killers, n_cells=len(cells))
+        seed_formula=result['seed_formula'], cells=cells, gates=gates, killers=killers, n_cells=len(cells),
+        descriptive=dict(G2_no_smoothing=g2_mutation_summary(no_smoothing,
+            'real frozen encoder and decoder; no smoothing, anchored; description only')))
 
 
 def full():
@@ -555,9 +590,12 @@ def full():
         candidate = read_gate_evidence(evidence_path) if evidence_path.is_file() else None
         evidence, reused = resolve_gate_evidence(candidate, result, inventory,
             lambda: recompute_gate_evidence(module, graph, inventory, trap, result))
+        if 'G2_no_smoothing' not in evidence.get('descriptive', {}):
+            upgrade_legacy_g2_killer(module, graph, inventory, evidence)
         result['gates'] = evidence['gates']
         result['killers'] = evidence['killers']
         result['cells'] = evidence['cells']
+        result['descriptive']['G2_no_smoothing'] = evidence['descriptive']['G2_no_smoothing']
         result['gate_evidence_cache'] = dict(key=evidence['cache_key'], reused=reused,
                                             evidence='gates-evidence.json')
         save('gates-evidence.json', evidence)
@@ -575,9 +613,11 @@ def full():
         for name in ('G1', 'G2', 'G3'):
             gate = result['gates'][name]
             emit(f"{name} {gate['status']} VALID={gate['counts']['VALID']}/{gate['n']} rate={gate['valid_rate']:.6f} ({'cached' if reused else 'remeasured'})")
-        for name, label in (('G1', 'single-trapset-route'), ('G2', 'no-smoothing')):
+        for name, label in (('G1', 'single-trapset-route'), ('G2', 'arc-4')):
             killer = result['killers'][name]
             emit(f"KILLER {name} {label}: {killer['status']} VALID={killer['counts']['VALID']}/{killer['n']}")
+        emit('DESCRIPTION G2 no-smoothing (no stop decision): ' +
+             json.dumps(result['descriptive']['G2_no_smoothing']))
         killer3_by_task, killer3_rows = {}, []
         for row in result['cells']:
             row['flow'] = []
