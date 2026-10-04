@@ -1,3 +1,81 @@
+## wallpen2 r1 重啟交付
+
+證明：下限只加在「teacher 列，而且該列自己的目標位移 ≥ F」的樣本上；其他行為逐位元不變。判準＝X1–X4、原 W1–W7／T1–T8／T6d 全過，移除目標門檻的新殺手實際 FAIL。
+
+RESTART: from 5d640811
+
+- 起點 trainer SHA256 `5d640811913b0e349f71489f82c325d4ccf8733fbcbe7a64c0759d03472c28a6`；六個還原檔與 lead 指定的 v2 基準逐位元相同。本次開工另存基準於 `/tmp/wallpen2-r1-restart-baseline-74rzforw/`。原工單已讀；PREREG-wallpen-v2.md §七 v2.1 SHA256 `e8cef8e86ed1447021bcb491be5aea662b6bc502507e192c90ea569ebb34ecd3`。
+- `dT_i = ‖traj[i,-1] × SD + MU − (to_xy(s_i) × SD + MU)‖`，與 decoded `d_i` 共用條件起點；目標／起點均 detach。作用列為 `_REAL_W[0]==0` 且 `dT_i≥F`，只對這些列平均 `relu(F-d_i)²`。全真資料或 teacher 目標全短時，回傳可微零。目標首點與 goal g 均不用來判斷。
+- trainer 只改下限函式、呼叫接點與活動記錄，新增處標 `wallpen2 r1:`。定標、退路、λ、抽樣與 checkpoint payload 保持既有實作。既有 teacher 描述量保留原子集；每個 floor log 點另記 `active_count`、`active_fraction`（分母＝整個 batch）。sidecar 新增 `floor_active_logs`，含 step 與上述兩欄。
+- 前次失敗原文為 `AssertionError: X3 unrelated stream changed: excluded_short_count`。這是測試錯誤：`excluded_short_count` 含當步 decoded `d<F`，允許的參數分岔後不應要求相同。本次只在暖身／只量的前 70 步嚴格比對它；100 步的 batch、teacher eligibility、全域 torch／penalty torch／主 NumPy／teacher NumPy RNG 仍全部嚴格比對。前次結果沒有沿用。
+- X2 使用真 CLI subprocess，構造短／長／恰等於 F 的 teacher 目標與真資料列；核對作用列平均、解析梯度、其他列與 prefix 梯度恰零、空集合可微零、起點／目標無梯度、RNG 無消耗。殺手只移除 `dT≥F` 條件，要求同一判準 FAIL。
+- X3 讀取並驗 SHA 固定的 v2 基準，以真 C1、S1_FROM、STAGES=2、100 步 stage 2 比較。兩份暫存觀測副本在每次更新後加相同的唯讀 hash 呼叫，再用兩邊未插入觀測的 checkpoint bytes 證明觀測無副作用；不預載、追蹤或猴補 trainer。原 T 測試的既有 harness 照舊。
+- W2 的原解析公式／teacher reduction／全真資料測試改提供符合新規則的目標；W3 正常定標與只量測試改用 F=5.65。舊 F=100 在 v2.1 會排除所有目標，不能再用來代表正常定標；小 F 的退路與其殺手照舊。
+
+完整命令（單次原文輸出，沒有串接前次結果）：
+
+```bash
+OGBENCH_DATA_DIR=/home/cymaxwelllee/data/ogbench PYTHONDONTWRITEBYTECODE=1 \
+/home/cymaxwelllee/Projects/lacot/.venv/bin/python -u \
+  experiments/_workorders/wallpen/selftest_wallpen.py \
+  > experiments/_workorders/wallpen/selftest-output.txt 2>&1
+```
+
+本次固定版本的單次完整自測 **PASS**：`n_tests=21 n_killers=14`，14 個殺手全部實際 FAIL；輸出只有一次開工標頭與一次最終 DONE，沒有拼接先前結果。全部 artifacts 保留於 `/tmp/wallpen-selftest-lzx7dmpl/`。trainer SHA256 `b0b7d80ecbec30f4690f1e9ecd67b5ae9954f454a086a44386f1981f3ac50919` 與執行輸出一致。
+
+- X1／W1／T1：預設 checkpoint SHA 仍為 `637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8`；floor 關閉的舊新版 C2 SHA 都為 `3ae14b6f8c810e85e6d7db70ec7b396f82c631fe642823128b0e0af456c548f6`，以上都在這次重新跑出。
+- X2：作用列 `[true,true,false,false,true,false,false]`，目標位移 `[9,8,7,6,10,9,7]`，F=8，floor=2；恰等於 F 的列納入，inactive／real／prefix 梯度恰為零，解析梯度、空集合可微零、起點／目標無梯度與 RNG 不變全部 PASS。移除目標門檻的殺手實際 FAIL。
+- X3：前 70 步暖身／只量的所有觀測參數 hash 相同；100 步 batch、作用列、全域 torch／penalty torch／主 NumPy／teacher NumPy RNG 全部相同。舊版共記到 57 列 `teacher 且 dT<F 且 d<F`；首次分岔為 zero-based step=70（第 71 次更新），當步有 3 個衝突短目標列。作用列平均與其定標 λ 改變，從這個首次加罰步改變 flow 更新，符合這次唯一的訓練規則變更。
+- X3 checkpoint：舊 `9d0505ddfca982199400cdbb65f0f3d49c69bc04a66288c70af53eb6a5d09bb0`；新 `45a43e2610267c38208eba70ff8eaf7a09c82b99342833e0da5b2368099f757e`。兩份觀測副本各自與未插入觀測的版本 bytes 相同；sidecar／log 的 10 個活動記錄逐點核對 PASS。
+- W3：小 F 0/50 有效步，λ_floor=λ_flow=`0.1755717484278825`，fallback=true；F=5.65 正常 50/50 有效步，λ_floor=`0.0016192804968316534`，精確等於 κ×meanρ_floor；刪掉退路的殺手得到 λ=0 並實際退出。62 步暖身＋只量的完整 checkpoint tensors／cfg 相同。
+- W4–W7／X4：真 C1 的 encoder／decoder 逐位元凍結，兩罰項對 flow 有有限非零梯度、condition 無梯度；C1′ 決定性、H3 schema、fresh loader、旗標拒絕、全部原 T1–T8／T6d 重跑 PASS。
+
+SECOND PASS: 逐項重查目標與 decoded 路徑共用條件起點、≥ 邊界、作用列平均與空集合可微零；其餘 trainer 函式 AST 及 checkpoint 儲存原文與 5d640811 一致。完整 CPU 自測與 14 個殺手全部通過。只改本目錄與保留 /tmp 測試 artifacts，沒有 commit、刪檔、安裝套件、GPU 或 Slurm。
+
+STATUS: DONE
+
+本次完整執行結果見 [selftest-output.txt](selftest-output.txt)，對 v2 基準的變更見 [DIFF-wallpen2-r1.txt](DIFF-wallpen2-r1.txt)。以下為歷史交付，r1 的下限作用列規則以本節為準。
+
+## wallpen2 變更
+
+<!-- wallpen2: 本節是 v2 的現行契約；以下 r1/v1 段落保留為歷史紀錄。 -->
+
+本輪證明 teacher-only 步長下限只對 flow 有梯度、定標不足會退回 λ_flow；S1_FROM 只可與 STAGES=2 的懲罰並用；預設訓練保持 d6d869ff 的 checkpoint bytes。以下 r1/v1 段落是原交付紀錄，本節優先。
+
+- `LACOT_WALLPEN_FLOOR=F`：預設未設或 0 關閉，必須有限且非負。開啟要求 κ>0、STAGES 包含 2、TEACHER_CLEAN=1。S1_FROM 與 κ>0 並用另要求 STAGES **恰為 `2`**；其餘 r1 互斥 assert 保留。
+- stage 2 復用牆罰的一次可微 flow 抽樣、同一份 detach condition 及凍住的 decoder 輸出。d 是解碼末點到 condition 起點的原始座標距離；`relu(F-d)^2` 只平均 `_REAL_W[0]==0` 的 teacher 列。全真資料 batch 為可微零，不讓真資料列稀釋平均。
+- floor 與 wall 共用前 20% 暖身、50 步只量窗、θ=flow。‖∇floor‖>1e-12 才記 ρ_floor；有效步數≥10 時 λ_floor=κ×meanρ_floor，否則 λ_floor=λ_flow 並印 `wallpen2: floor 定標退路`。完成定標後 λ_floor≤0 或非有限即退出，避免默默停用。窗口之後才加入兩個加權罰項；量測中不加入任何 penalty loss。
+- sidecar 新增 `F`、`λ_floor`、`ρ_floor`（全部測量值，跳過為 null）、`floor_valid_steps`、`floor_fallback`。未完成窗口時 λ_floor=null；有效步數仍記實際已測量數。checkpoint 的原始 payload、cfg、state_dict key/shape 不加欄位。
+- 每個 stage 2 log 點增加 `floor_pen`、teacher d 的中位數（偶數取中間兩點平均）、teacher d<F 的比例；沒有 teacher 時兩個描述量印 None。開啟 floor 檔名加 `_fl{F:g}`，沿用既有 `_s1from`。
+
+起始 HEAD `ca1a528589e2b7f34eb1b96cc5df3071fcdc4e0a`；原 trainer SHA256 `d6d869ff5e997f319905908d3e220980748c762a9dc8738a3b38c2cee5567247`。實際讀到 PREREG-wallpen-v2.md 的 SHA256 為 `2131461b93bd339d79eec94ec043687a757dc31e86c88f4c08795e0b10309563`，與工單引述的 `43b1cf32…` 不同；§一、§二與工單明列規則一致，本輪遵守工單明列要求。
+
+W1–W6 在 [selftest_wallpen2.py](selftest_wallpen2.py) 中以 subprocess 直接跑 `train_wallpen.py --wallpen-cpu-test=train|floor`；不預載 trainer、不追蹤或猴補其模組。測試 CLI 強制隱藏 CUDA、CPU、單執行緒，跑完整原訓練迴圈；訓練後用 [cpu_probe_wallpen2.py](cpu_probe_wallpen2.py) 執行原始檔內確切的命名、拒絕覆蓋及存檔片段，跳過 rollout，不捏造 rollout 結果。CPU-only 梯度 probe 在真定標步以 autograd.grad 記兩個罰項的 flow norm，驗 decoder frozen、condition 梯度皆 None；不寫進 checkpoint。W7 保留原 T1–T8/T6d 測法與殺手，僅把原 r1 比較基底改為從 HEAD 讀取並驗 d6d869ff，避免從 v2 原文猜測重建。
+
+完整測試命令與原交付相同：
+
+```bash
+OGBENCH_DATA_DIR=/home/cymaxwelllee/data/ogbench PYTHONDONTWRITEBYTECODE=1 \
+/home/cymaxwelllee/Projects/lacot/.venv/bin/python -u \
+  experiments/_workorders/wallpen/selftest_wallpen.py \
+  > experiments/_workorders/wallpen/selftest-output.txt 2>&1
+```
+
+W1 與 T1 固定預設 SHA `637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8`；W2 構造原始座標路徑並檢查 teacher-only mean、短/長公式、全真資料零與真資料梯度零；W3 實際 S1_FROM 微訓練跑小 F／大 F、核對退路／正常定標，另在 62 步（12 暖身+50 只量）核對完整 checkpoint tensor/cfg 不變；W4 真 C1 載入、100 步 stage 2、stage 1 略過且三個 encoder/decoder state_dict 逐位元凍住，兩罰項 flow 梯度有限非零；W5 同 seed 兩次 SHA 相同，換 seed SHA 不同；W6 與實際 H3/G 比對 schema，fresh process 用本 repo 指定 `hsweep/eval_common.py`、seed 33 且不設 WALLPEN_EXPECTED_SEED 載入。三個新增殺手是所有列平均、刪除 floor 退路、STAGES=12+S1_FROM 拒絕；另測六種 floor 無效旗標組合。
+
+交付 [selftest-output.txt](selftest-output.txt) 是一次完整執行的 stdout/stderr（含殺手 FAIL 原文），[DIFF-wallpen2.txt](DIFF-wallpen2.txt) 是對原 d6d869ff trainer／同 HEAD 測試與 README 的完整變更，包含新增測試檔。所有微訓練與失敗副本保留在 /tmp。只執行 CPU，沒有 GPU、Slurm、commit、刪檔或安裝套件。
+
+
+本輪固定版本的單次完整自測 **PASS**：`n_tests=17 n_killers=13`（原十組檢查＋W1–W7；原十個殺手＋W2/W3/W4 三個殺手）。trainer SHA256 `5d640811913b0e349f71489f82c325d4ccf8733fbcbe7a64c0759d03472c28a6`；原始輸出與交付程式 SHA 一致。最終完整執行的 artifacts 保留於 `/tmp/wallpen-selftest-0psgh1_j/`；較早完整執行另保留於 `/tmp/wallpen-selftest-ajrws3pk/`，未串接進交付輸出。
+
+- W1/T1：預設 SHA 仍為 `637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8`；floor 關閉的 C2 舊新版 SHA 都是 `3ae14b6f8c810e85e6d7db70ec7b396f82c631fe642823128b0e0af456c548f6`。
+- W3：小 F=1e-6、0/50 有效步，λ_floor=λ_flow=`0.1755717484278825` 且 fallback=true；大 F=100、50/50 有效步，λ_floor=`7.432017578978955e-06` 且精確等於 κ×meanρ_floor。62 步完整 checkpoint tensor/cfg 比對相同。刪掉退路得到 λ_floor=0，實際 RuntimeError FAIL。
+- W4：stage 1 跳過，traj_enc/e_pooler/u_dec state_dict 與真 C1 相同；floor 的 flow 梯度 norm 範圍 `2.076258420944214–133.03269958496094`，wall 為 `0.14846475422382355–0.5591681003570557`；decoder frozen、penalty 對 condition 參數的梯度為 None。檔名同時含 `_s1from`、`_fl5.65`；STAGES=12+S1_FROM 的殺手實際 assert FAIL。
+- W5：s33 兩次 SHA 都是 `688ecf780f13be91749032e743587f445914990960d063c4d7f1037cdbf0835a`；s34 是 `8e53d06bc59899a741176b1138c009b3811c4049e3da963eff94410ff2fb6b03`。W6 schema 與 H3/G 一致，指定 eval_common fresh loader 成功。W7 原 T1–T8/T6d 與新增旗標拒絕全部 PASS。
+
+SECOND PASS: 重查 teacher-only reduction、50 步只量邊界、正有限 λ_floor 與 S1_FROM 限制；固定版本完整 CPU 自測通過，十三個殺手全部實際 FAIL。未執行 GPU。
+
+
 這輪只修 T8 測試 harness、補常駐 T6d gradcheck、加 sidecar UTF-8 與旗標安全 assert。證明：旗標開著時訓練行為逐位元不變，全部自測從頭乾淨通過。判準：`selftest-output.txt` 為單次完整執行且以 `STATUS: DONE` 結尾；新 detach 殺手實測 FAIL；預設與上一輪 SHA 相同，CPU C2 舊新版 SHA 相同。
 
 ## r1 變更

@@ -33,7 +33,16 @@ if ORACLE_ARM:
 # 資料位置：預設走官方 OGBENCH_DATA_DIR，沒設才用本機 archive
 OGB_DATA = os.environ.get("OGBENCH_DATA_DIR", "/archive/cymaxwelllee/data/ogbench")
 
+# wallpen2: explicit CPU test CLI, before device selection; ordinary runs are untouched.
+_WP_CPU_TEST = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--wallpen-cpu-test=")), "")
+if _WP_CPU_TEST:
+    assert _WP_CPU_TEST in ("floor", "train"), "wallpen2: unknown CPU test mode"
+    assert os.environ.get("CUDA_VISIBLE_DEVICES") == "", "wallpen2: CPU tests require hidden CUDA"
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
 device = "cuda" if torch.cuda.is_available() else "cpu"
+if _WP_CPU_TEST:
+    assert device == "cpu", "wallpen2: CPU tests forbid CUDA"
 print("device:", device, flush=True)
 # ⚠️ 環境改成變數（主人 2026-08-23：「跑個 large，跑個 stitch」）。
 # ★ 為什麼要換環境：medium-navigate 上誠實 BC 地板已經 0.900、天花板 1.000
@@ -482,6 +491,13 @@ if TEACHER_H is not None and TEACHER_H <= 0:
 TEACHER_CLEAN = int(os.environ.get("LACOT_TEACHER_CLEAN", "0"))
 WALLPEN_KAPPA = float(os.environ.get("LACOT_WALLPEN_KAPPA", "0"))
 WALLPEN_STAGES = os.environ.get("LACOT_WALLPEN_STAGES", "12")
+# wallpen2: physical displacement floor, opt-in and teacher-only.
+WALLPEN_FLOOR = float(os.environ.get("LACOT_WALLPEN_FLOOR", "0"))
+assert np.isfinite(WALLPEN_FLOOR) and WALLPEN_FLOOR >= 0, "wallpen2: FLOOR must be finite and nonnegative"
+if WALLPEN_FLOOR:
+    assert WALLPEN_KAPPA > 0, "wallpen2: FLOOR requires KAPPA>0"
+    assert "2" in WALLPEN_STAGES, "wallpen2: FLOOR requires stage 2"
+    assert TEACHER_CLEAN == 1, "wallpen2: FLOOR requires TEACHER_CLEAN=1"
 assert TEACHER_CLEAN in (0, 1), "wallpen: TEACHER_CLEAN must be 0 or 1"
 assert np.isfinite(WALLPEN_KAPPA) and WALLPEN_KAPPA >= 0, "wallpen: kappa must be finite and nonnegative"
 assert WALLPEN_STAGES in ("12", "1", "2"), "wallpen: STAGES must be 12, 1 or 2"
@@ -498,7 +514,8 @@ if WALLPEN_KAPPA:
     assert LO_W <= 0, "wallpen: LO_W must not be positive"
     assert CONT_TRAIN == 0, "wallpen: CONT_TRAIN must be 0"
     assert not LOAD_CKPT, "wallpen: LOAD_CKPT must be empty"
-    assert not S1_FROM, "wallpen: S1_FROM must be empty"
+    # wallpen2: shared/frozen stage 1 is compatible only with flow-only penalties.
+    assert not S1_FROM or WALLPEN_STAGES == "2", "wallpen: S1_FROM must be empty unless STAGES=2"
     # wallpen: BOOT_DATA is parsed later; reject the same env value before setup.
     assert not os.environ.get("LACOT_BOOT_DATA", ""), "wallpen: BOOT_DATA must be empty"
 WARM_FRAC, CAL_STEPS, RETRY = 0.2, 50, 16
@@ -545,6 +562,72 @@ def pen(pts_n):
     # wallpen: violating-point mean per sample, then batch mean (no dilution).
     ex = F.relu(_WP_GEO.wall_depth(pts_n) - TAU_DATA)
     return (ex.square().sum(1) / (ex > 0).sum(1).clamp_min(1)).mean()
+
+
+# wallpen2: independent calibration state, never enters the checkpoint payload.
+_WP_FLOOR_STATE = dict(rho=[], lam=None, n_valid=0, fallback=False,
+                       floor_grad_norms=[], wall_grad_norms=[], active_logs=[])  # wallpen2 r1: log-point activity
+
+
+def _wallpen_floor(pts_n, s_n, real_w, traj_n):
+    # wallpen2: use condition start (not decoded start/goal), in original units.
+    end = pts_n[:, -1] * SD_XY_T + MU_XY_T
+    start = to_xy(s_n).detach() * SD_XY_T + MU_XY_T
+    distance = torch.linalg.vector_norm(end - start, dim=-1)
+    teacher = real_w == 0
+    # wallpen2 r1: target displacement uses this row's condition start, never goal g.
+    target_end = traj_n[:, -1].detach() * SD_XY_T + MU_XY_T
+    target_distance = torch.linalg.vector_norm(target_end - start, dim=-1)
+    active = teacher & (target_distance >= WALLPEN_FLOOR)
+    selected = distance[active]
+    # wallpen2 r1: mean over eligible teachers; an empty active set gives differentiable zero.
+    penalty = F.relu(WALLPEN_FLOOR - selected).square().mean() if selected.numel() else distance.sum() * 0.0
+    return penalty, distance[teacher], active
+
+
+def _wallpen_floor_calibrate(stp, n_steps, main, penalty, wall_penalty, params):
+    # wallpen2: same 50 measurement-only steps and theta=flow as wall calibration.
+    state = _WP_FLOOR_STATE
+    warm = int(WARM_FRAC * n_steps)
+    if warm <= stp < warm + CAL_STEPS:
+        params = [p for p in params if p.requires_grad]
+        def norm(loss):
+            grads = torch.autograd.grad(loss, params, retain_graph=True, allow_unused=True)
+            return torch.sqrt(sum((g.square().sum() for g in grads if g is not None), loss.new_zeros(()))).item()
+        nm, nf = norm(main), norm(penalty)
+        if not np.isfinite(nm) or not np.isfinite(nf):
+            raise RuntimeError("wallpen2: nonfinite floor calibration gradient")
+        rho = nm / nf if nf > 1e-12 else None
+        if rho is not None and not np.isfinite(rho):
+            raise RuntimeError("wallpen2: nonfinite floor calibration ratio")
+        state["rho"].append(rho)
+        state["n_valid"] += int(rho is not None)  # wallpen2: count partial windows too.
+        # wallpen2: CPU probe records actual loss gradients without accumulating .grad.
+        if _WP_CPU_TEST:
+            state["floor_grad_norms"].append(nf)
+            state["wall_grad_norms"].append(norm(wall_penalty))
+            assert all(not p.requires_grad for p in u_dec.parameters()), "wallpen2: decoder is not frozen"
+            condition_grads = torch.autograd.grad(penalty + wall_penalty,
+                list(cond_enc.parameters()) + list(cond_head.parameters()), retain_graph=True, allow_unused=True)
+            assert all(g is None for g in condition_grads), "wallpen2: condition gradient leaked"
+        if stp == warm + CAL_STEPS - 1:
+            used = [r for r in state["rho"] if r is not None]
+            state["n_valid"] = len(used)
+            state["fallback"] = len(used) < 10
+            state["lam"] = _WP_STATE["2"]["lam"] if state["fallback"] else WALLPEN_KAPPA * float(np.mean(used))
+            if state["lam"] is None or not np.isfinite(state["lam"]) or state["lam"] <= 0:
+                raise RuntimeError("wallpen2: floor lambda must be positive and finite")
+            if state["fallback"]:
+                print("wallpen2: floor 定標退路 λ_floor=λ_flow", flush=True)
+            print(f"wallpen2: λ_floor={state['lam']:.10g} n_valid={len(used)}/{CAL_STEPS} floor_fallback={state['fallback']}", flush=True)
+    return state["lam"] if stp >= warm + CAL_STEPS and state["lam"] is not None else None
+
+
+# wallpen2: direct CLI fixture probe; no import/trace/patch of the tested trainer.
+if _WP_CPU_TEST == "floor":
+    from cpu_probe_wallpen2 import floor_probe
+    floor_probe(globals())
+    raise SystemExit(0)
 
 
 def _wallpen_sample(flow, n, cond, generator):
@@ -2127,13 +2210,33 @@ def _stage2_loop(n_steps, step_off=0):
         if WALLPEN_KAPPA and "2" in WALLPEN_STAGES:
             _wpc = flow_cond(cond, anc).detach()
             _wpu = _wallpen_sample(flow, len(cond), _wpc, _WP_TGEN)
-            _wp2 = pen(_intent_inv(_dec(_q(_wpu), s), anc))
+            # wallpen2: both penalties share this differentiable sample and decoder output.
+            _wp_pts = _intent_inv(_dec(_q(_wpu), s), anc)
+            _wp2 = pen(_wp_pts)
             _wl2 = _wallpen_calibrate("2", stp, n_steps, l_nf, _wp2,
                                      [p for p in flow.parameters() if p.requires_grad])
+            # wallpen2: measure floor independently; neither penalty changes measurement updates.
+            if WALLPEN_FLOOR:
+                # wallpen2 r1: the existing batch target supplies eligibility without RNG.
+                _wpf2, _wp_d, _wp_active = _wallpen_floor(_wp_pts, s, _REAL_W[0], traj)
+                _wlf2 = _wallpen_floor_calibrate(stp, n_steps, l_nf, _wpf2, _wp2,
+                                               list(flow.parameters()))
             if _wl2 is not None and _wl2 > 0:
                 total = total + _wl2 * _wp2
+            if WALLPEN_FLOOR and _wlf2 is not None:
+                total = total + _wlf2 * _wpf2
             if (_gstp + 1) % LOG_EVERY == 0:
                 _wallpen_log("2", _gstp, _wp2, l_nf)
+                if WALLPEN_FLOOR:
+                    # wallpen2: current teacher displacement only; an empty teacher set is explicit.
+                    _dmed = _wp_d.quantile(0.5).item() if _wp_d.numel() else None
+                    _dfrac = (_wp_d < WALLPEN_FLOOR).float().mean().item() if _wp_d.numel() else None
+                    # wallpen2 r1: activity fraction uses the full batch as denominator.
+                    _active_count = int(_wp_active.sum().item())
+                    _active_fraction = _active_count / len(_wp_active)
+                    _WP_FLOOR_STATE["active_logs"].append(dict(step=_gstp,
+                        active_count=_active_count, active_fraction=_active_fraction))
+                    print(f"wallpen2: stp {_gstp} floor_pen={_wpf2.item():.10g} teacher_d_median={_dmed} teacher_d_lt_F={_dfrac} active_count={_active_count} active_fraction={_active_fraction}", flush=True)
         _wallpen_teacher_log("2", _gstp)  # wallpen: cumulative clean-teacher counters.
         # ⭐ AMP：backward／clip／step 一律走 helper —— AMP=0 時逐字等於原本那三行
         #    （scaler is None ⇒ loss.backward()、no-op、opt.step()）。
@@ -2197,6 +2300,11 @@ if INTENT and _N_SRC_FB[1] > 0:
     print(f"  ⭐ intent 錨源 src={INTENT_SRC}：處理 {_N_SRC_FB[1]} 個樣本，"
           f"fallback 回 hindsight {_N_SRC_FB[0]} 次（{_N_SRC_FB[0] / _N_SRC_FB[1]:.4f}）", flush=True)
 TAG_SEED = SEED          # 檔名用的 seed；載入模式下改跟 ckpt 的 seed 走（2026-08-31 修互蓋病）
+# wallpen2: native CLI skips rollout and reuses the exact original naming/save statements.
+if _WP_CPU_TEST == "train":
+    from cpu_probe_wallpen2 import save_only
+    save_only(globals())
+    raise SystemExit(0)
 LOAD_EMA = 0             # 載入模式下由 LACOT_LOAD_EMA 蓋掉；訓練模式恆 0
 if LOAD_CKPT:
     _lp = LOAD_CKPT if os.path.isabs(LOAD_CKPT) else os.path.join(
@@ -3922,6 +4030,9 @@ if TEACHER_CLEAN:
     _extra += "_tc1"
 if WALLPEN_KAPPA:
     _extra += f"_wp{WALLPEN_KAPPA:g}"
+# wallpen2: floor has its own filename identity; no default-name change.
+if WALLPEN_FLOOR:
+    _extra += f"_fl{WALLPEN_FLOOR:g}"
 if (TEACHER_CLEAN or WALLPEN_KAPPA) and WALLPEN_STAGES != "12":
     _extra += f"_wps{WALLPEN_STAGES}"
 tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
@@ -4116,6 +4227,15 @@ if TEACHER_CLEAN or WALLPEN_KAPPA:
                       ρ={stage: state["rho"] for stage, state in _WP_STATE.items()},
                       clean_teacher=_CLEAN_COUNTS,
                       no_calibration={stage: state["no_calibration"] for stage, state in _WP_STATE.items()})
+    # wallpen2: sidecar records all ratios, including null skipped measurements.
+    _wp_sidecar.update(F=WALLPEN_FLOOR, λ_floor=_WP_FLOOR_STATE["lam"],
+                       ρ_floor=_WP_FLOOR_STATE["rho"], floor_valid_steps=_WP_FLOOR_STATE["n_valid"],
+                       floor_fallback=_WP_FLOOR_STATE["fallback"])
+    # wallpen2 r1: record each floor log point's activity; checkpoint payload is unchanged.
+    if WALLPEN_FLOOR:
+        _wp_sidecar["floor_active_logs"] = _WP_FLOOR_STATE["active_logs"]
+    if _WP_CPU_TEST:
+        _wp_sidecar["cpu_gradient_probe"] = {k: _WP_FLOOR_STATE[k] for k in ("floor_grad_norms", "wall_grad_norms")}
     with open(ck + ".wallpen.json", "x", encoding="utf-8") as _wpf:
         json.dump(_wp_sidecar, _wpf, ensure_ascii=False, indent=2, allow_nan=False)
     print(f"wallpen: teacher final {_CLEAN_COUNTS}", flush=True)

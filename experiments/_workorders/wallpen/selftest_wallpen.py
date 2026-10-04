@@ -323,7 +323,9 @@ def main():
     count = dict(tests=0, killers=0)
     # Recover the pre-r1 source by reverting ONLY the two allowed trainer edits;
     # the pin proves this is the original delivery, not an approximate baseline.
-    current = TRAIN.read_text()
+    # wallpen2: pin the exact d6d869ff delivery before reconstructing pre-r1.
+    current = subprocess.check_output(['git', 'show', 'HEAD:experiments/_workorders/wallpen/train_wallpen.py'], cwd=REPO, text=True)
+    assert hashlib.sha256(current.encode()).hexdigest() == 'd6d869ff5e997f319905908d3e220980748c762a9dc8738a3b38c2cee5567247'
     start = current.index('    # wallpen: r1 forbid overlapping experiments')
     end = current.index('WARM_FRAC, CAL_STEPS, RETRY', start)
     old_source = (current[:start] + current[end:]).replace(
@@ -513,9 +515,20 @@ def main():
         print(f'R4 forbidden {key}: refusal PASS (exit {rejected.returncode})', flush=True)
     count['tests'] += 1
     print('T1–T8 (including T6d), r1 behavior equality and R4 asserts: PASS', flush=True)
-    print('SECOND PASS: T6d tests the exact sampler AST with explicit z and ALL functional parameters; '
+    # wallpen2: W tests use direct trainer CLI subprocesses, never load()/trace/patch.
+    from selftest_wallpen2 import run_suite
+    new_count = run_suite(run_dir)
+    count['tests'] += new_count['tests']
+    count['killers'] += new_count['killers']
+    # wallpen2 r1: X1-X4 run in this same complete execution.
+    from selftest_wallpen2_r1 import run_suite as run_r1_suite
+    r1_count = run_r1_suite(run_dir)
+    count['tests'] += r1_count['tests']
+    count['killers'] += r1_count['killers']
+    print('RESTART: from 5d640811', flush=True)
+    print('SECOND PASS: X2 eligibility/gradient killer and X3 warmup, calibration, batch/RNG hashes passed; T6d tests the exact sampler AST with explicit z and ALL functional parameters; '
           'T8 loader ran once in a fresh worker without pre-load torch setup. '
-          'CUDA inverse/grid_sample behavior remains outside this CPU test.', flush=True)
+          'W1–W6 direct CLI subprocess tests and their killers passed; W7 preserved T1–T8/T6d. CPU only.', flush=True)
     print(f'n_tests={count["tests"]} n_killers={count["killers"]}', flush=True)
     print('STATUS: DONE', flush=True)
 

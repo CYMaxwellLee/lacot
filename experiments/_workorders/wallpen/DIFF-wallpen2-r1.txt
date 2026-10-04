@@ -1,0 +1,409 @@
+--- a/experiments/_workorders/wallpen/train_wallpen.py
++++ b/experiments/_workorders/wallpen/train_wallpen.py
+@@ -566,19 +566,23 @@
+ 
+ # wallpen2: independent calibration state, never enters the checkpoint payload.
+ _WP_FLOOR_STATE = dict(rho=[], lam=None, n_valid=0, fallback=False,
+-                       floor_grad_norms=[], wall_grad_norms=[])
+-
+-
+-def _wallpen_floor(pts_n, s_n, real_w):
++                       floor_grad_norms=[], wall_grad_norms=[], active_logs=[])  # wallpen2 r1: log-point activity
++
++
++def _wallpen_floor(pts_n, s_n, real_w, traj_n):
+     # wallpen2: use condition start (not decoded start/goal), in original units.
+     end = pts_n[:, -1] * SD_XY_T + MU_XY_T
+     start = to_xy(s_n).detach() * SD_XY_T + MU_XY_T
+     distance = torch.linalg.vector_norm(end - start, dim=-1)
+     teacher = real_w == 0
+-    selected = distance[teacher]
+-    # wallpen2: differentiable zero for an all-real batch; real rows never dilute the mean.
++    # wallpen2 r1: target displacement uses this row's condition start, never goal g.
++    target_end = traj_n[:, -1].detach() * SD_XY_T + MU_XY_T
++    target_distance = torch.linalg.vector_norm(target_end - start, dim=-1)
++    active = teacher & (target_distance >= WALLPEN_FLOOR)
++    selected = distance[active]
++    # wallpen2 r1: mean over eligible teachers; an empty active set gives differentiable zero.
+     penalty = F.relu(WALLPEN_FLOOR - selected).square().mean() if selected.numel() else distance.sum() * 0.0
+-    return penalty, selected
++    return penalty, distance[teacher], active
+ 
+ 
+ def _wallpen_floor_calibrate(stp, n_steps, main, penalty, wall_penalty, params):
+@@ -2213,7 +2217,8 @@
+                                      [p for p in flow.parameters() if p.requires_grad])
+             # wallpen2: measure floor independently; neither penalty changes measurement updates.
+             if WALLPEN_FLOOR:
+-                _wpf2, _wp_d = _wallpen_floor(_wp_pts, s, _REAL_W[0])
++                # wallpen2 r1: the existing batch target supplies eligibility without RNG.
++                _wpf2, _wp_d, _wp_active = _wallpen_floor(_wp_pts, s, _REAL_W[0], traj)
+                 _wlf2 = _wallpen_floor_calibrate(stp, n_steps, l_nf, _wpf2, _wp2,
+                                                list(flow.parameters()))
+             if _wl2 is not None and _wl2 > 0:
+@@ -2226,7 +2231,12 @@
+                     # wallpen2: current teacher displacement only; an empty teacher set is explicit.
+                     _dmed = _wp_d.quantile(0.5).item() if _wp_d.numel() else None
+                     _dfrac = (_wp_d < WALLPEN_FLOOR).float().mean().item() if _wp_d.numel() else None
+-                    print(f"wallpen2: stp {_gstp} floor_pen={_wpf2.item():.10g} teacher_d_median={_dmed} teacher_d_lt_F={_dfrac}", flush=True)
++                    # wallpen2 r1: activity fraction uses the full batch as denominator.
++                    _active_count = int(_wp_active.sum().item())
++                    _active_fraction = _active_count / len(_wp_active)
++                    _WP_FLOOR_STATE["active_logs"].append(dict(step=_gstp,
++                        active_count=_active_count, active_fraction=_active_fraction))
++                    print(f"wallpen2: stp {_gstp} floor_pen={_wpf2.item():.10g} teacher_d_median={_dmed} teacher_d_lt_F={_dfrac} active_count={_active_count} active_fraction={_active_fraction}", flush=True)
+         _wallpen_teacher_log("2", _gstp)  # wallpen: cumulative clean-teacher counters.
+         # ⭐ AMP：backward／clip／step 一律走 helper —— AMP=0 時逐字等於原本那三行
+         #    （scaler is None ⇒ loss.backward()、no-op、opt.step()）。
+@@ -4221,6 +4231,9 @@
+     _wp_sidecar.update(F=WALLPEN_FLOOR, λ_floor=_WP_FLOOR_STATE["lam"],
+                        ρ_floor=_WP_FLOOR_STATE["rho"], floor_valid_steps=_WP_FLOOR_STATE["n_valid"],
+                        floor_fallback=_WP_FLOOR_STATE["fallback"])
++    # wallpen2 r1: record each floor log point's activity; checkpoint payload is unchanged.
++    if WALLPEN_FLOOR:
++        _wp_sidecar["floor_active_logs"] = _WP_FLOOR_STATE["active_logs"]
+     if _WP_CPU_TEST:
+         _wp_sidecar["cpu_gradient_probe"] = {k: _WP_FLOOR_STATE[k] for k in ("floor_grad_norms", "wall_grad_norms")}
+     with open(ck + ".wallpen.json", "x", encoding="utf-8") as _wpf:
+--- a/experiments/_workorders/wallpen/selftest_wallpen.py
++++ b/experiments/_workorders/wallpen/selftest_wallpen.py
+@@ -520,7 +520,13 @@
+     new_count = run_suite(run_dir)
+     count['tests'] += new_count['tests']
+     count['killers'] += new_count['killers']
+-    print('SECOND PASS: T6d tests the exact sampler AST with explicit z and ALL functional parameters; '
++    # wallpen2 r1: X1-X4 run in this same complete execution.
++    from selftest_wallpen2_r1 import run_suite as run_r1_suite
++    r1_count = run_r1_suite(run_dir)
++    count['tests'] += r1_count['tests']
++    count['killers'] += r1_count['killers']
++    print('RESTART: from 5d640811', flush=True)
++    print('SECOND PASS: X2 eligibility/gradient killer and X3 warmup, calibration, batch/RNG hashes passed; T6d tests the exact sampler AST with explicit z and ALL functional parameters; '
+           'T8 loader ran once in a fresh worker without pre-load torch setup. '
+           'W1–W6 direct CLI subprocess tests and their killers passed; W7 preserved T1–T8/T6d. CPU only.', flush=True)
+     print(f'n_tests={count["tests"]} n_killers={count["killers"]}', flush=True)
+--- a/experiments/_workorders/wallpen/selftest_wallpen2.py
++++ b/experiments/_workorders/wallpen/selftest_wallpen2.py
+@@ -98,7 +98,7 @@
+         assert result['all_real'] == 0. and result['empty'] == 0, 'W2 all-real failed'
+         assert result['real_grad_zero'] and result['finite'], 'W2 real-row gradient leaked'
+     floor_check()
+-    mutant = mutate('killer-W2', 'selected = distance[teacher]', 'selected = distance  # wallpen2: killer includes real rows')
++    mutant = mutate('killer-W2', 'selected = distance[active]', 'selected = distance  # wallpen2: killer includes real rows')
+     try:
+         floor_check(mutant)
+     except AssertionError as exc:
+@@ -117,7 +117,8 @@
+     assert ss['floor_valid_steps'] == 0 and all(x is None for x in ss['ρ_floor']), 'W3 floor unexpectedly active'
+     assert ss['floor_fallback'] and ss['λ_floor'] == ss['λ_flow'] > 0, 'W3 fallback equality failed'
+     assert 'wallpen2: floor 定標退路' in log_small
+-    large, log_large = train('W3-large', shared | {'WALLPEN_FLOOR': 100})
++    # wallpen2 r1: F=100 excludes all targets; use eligible F=5.65 for normal calibration.
++    large, log_large = train('W3-large', shared | {'WALLPEN_FLOOR': 5.65})
+     sl = side(large)
+     ratios = [x for x in sl['ρ_floor'] if x is not None]
+     assert len(sl['ρ_floor']) == 50 and sl['floor_valid_steps'] == len(ratios) >= 10
+@@ -131,7 +132,7 @@
+     print('KILLER W3: observed FAIL: removed fallback produces λ_floor=0, positivity guard rejected it', flush=True)
+     count['killers'] += 1
+     # Prove the floor's additional measurements do not affect either update stream.
+-    measured_floor, _ = train('W3-measure-floor', shared | {'STEPS2': 62, 'WALLPEN_FLOOR': 100})
++    measured_floor, _ = train('W3-measure-floor', shared | {'STEPS2': 62, 'WALLPEN_FLOOR': 5.65})
+     measured_wall, _ = train('W3-measure-wall', shared | {'STEPS2': 62})
+     assert equal(states(measured_floor), states(measured_wall)), 'W3 measurement window changed updates'
+     print('W3 PASS complete checkpoint tensors/cfg equal through warmup+50 measurement steps', flush=True)
+--- a/experiments/_workorders/wallpen/cpu_probe_wallpen2.py
++++ b/experiments/_workorders/wallpen/cpu_probe_wallpen2.py
+@@ -13,14 +13,18 @@
+     normalize = lambda x: (x - ns['MU_XY_T']) / ns['SD_XY_T']
+     points = torch.stack((normalize(start_raw + 4.), normalize(end_raw)), 1).requires_grad_()
+     starts = normalize(start_raw)
+-    mixed, ds = ns['_wallpen_floor'](points, starts, torch.tensor([0., 0., 1., 1.]))
+-    all_real, empty = ns['_wallpen_floor'](points, starts, torch.ones(4))
+-    long, _ = ns['_wallpen_floor'](points[:1], starts[:1], torch.zeros(1))
+-    short, _ = ns['_wallpen_floor'](points[1:2], starts[1:2], torch.zeros(1))
++    # wallpen2 r1: W2 retains its formula/reduction checks with eligible targets.
++    target_end = start_raw + torch.tensor([floor + 1., 0.])
++    targets = torch.stack((normalize(start_raw + 9.), normalize(target_end)), 1)
++    mixed, ds, _ = ns['_wallpen_floor'](points, starts, torch.tensor([0., 0., 1., 1.]), targets)
++    all_real, empty, _ = ns['_wallpen_floor'](points, starts, torch.ones(4), targets)
++    long, _, _ = ns['_wallpen_floor'](points[:1], starts[:1], torch.zeros(1), targets[:1])
++    short, _, _ = ns['_wallpen_floor'](points[1:2], starts[1:2], torch.zeros(1), targets[1:2])
+     grads = torch.autograd.grad(mixed, points, retain_graph=True)[0]
+     print('FLOOR_RESULT ' + json.dumps(dict(mixed=mixed.item(), all_real=all_real.item(),
+         long=long.item(), short=short.item(), distances=ds.tolist(), empty=empty.numel(),
+         real_grad_zero=bool((grads[2:] == 0).all()), finite=bool(torch.isfinite(grads).all()))), flush=True)
++    active_probe(ns)
+ 
+ 
+ def save_only(ns):
+@@ -38,4 +42,83 @@
+                         (line('ck = os.path.join(os.path.dirname(dst)'), len(lines))):
+         statements = '\n' * first + '\n'.join(lines[first:last]) + '\n'
+         exec(compile(statements, str(path), 'exec'), ns)
++    # wallpen2 r1: only temporary X3 observation copies populate this list.
++    if _STEP_OBSERVATIONS:
++        Path(ns['ck'] + '.r1-observations.json').write_text(json.dumps(_STEP_OBSERVATIONS, indent=2))
+     print('ARTIFACT ' + ns['ck'], flush=True)
++
++
++def active_probe(ns):
++    """wallpen2 r1: mixed targets, exact >= boundary and all inactive gradients."""
++    torch, np = ns['torch'], ns['np']
++    floor = ns['WALLPEN_FLOOR']
++    mu, sd = ns['MU_XY_T'], ns['SD_XY_T']
++    normalize = lambda x: (x - mu) / sd
++    # At F=8 these offsets round-trip exactly even with the real nonunit scales.
++    raw_start = mu.expand(7, -1)
++    decoded_d = torch.tensor([floor-1, floor-2, floor-3, floor-4, floor-1, floor-2, floor-3])
++    target_d = torch.tensor([floor+1, floor, floor-1, floor-2, floor+2, floor+1, floor-1])
++    endpoint = lambda d: raw_start + torch.stack((d, torch.zeros_like(d)), -1)
++    starts = normalize(raw_start).clone().requires_grad_()
++    points = torch.stack((normalize(raw_start + 17), normalize(endpoint(decoded_d))), 1).requires_grad_()
++    targets = torch.stack((normalize(raw_start - 13), normalize(endpoint(target_d))), 1).requires_grad_()
++    real_w = torch.tensor([0., 0., 0., 0., 0., 1., 1.])
++    torch_rng, numpy_rng = torch.get_rng_state().clone(), np.random.get_state()
++    penalty, teacher_d, active = ns['_wallpen_floor'](points, starts, real_w, targets)
++    grad, start_grad, target_grad = torch.autograd.grad(penalty, (points, starts, targets), allow_unused=True)
++    empty, _, empty_active = ns['_wallpen_floor'](points[2:4], starts[2:4], real_w[2:4], targets[2:4])
++    empty_grad = torch.autograd.grad(empty, points)[0]
++    real_zero, _, _ = ns['_wallpen_floor'](points, starts, torch.ones(7), targets)
++    real_grad = torch.autograd.grad(real_zero, points)[0]
++    actual_target_d = torch.linalg.vector_norm(targets[:, -1].detach()*sd + mu - raw_start, dim=-1)
++    expected = torch.zeros_like(points)
++    expected[[0, 1, 4], -1, 0] = -2 * (floor-decoded_d[[0, 1, 4]]) * sd[0] / 3
++    numpy_now = np.random.get_state()
++    rng_equal = (torch.equal(torch_rng, torch.get_rng_state()) and numpy_rng[0] == numpy_now[0]
++                 and np.array_equal(numpy_rng[1], numpy_now[1]) and numpy_rng[2:] == numpy_now[2:])
++    print('ACTIVE_RESULT ' + json.dumps(dict(
++        penalty=penalty.item(), active=active.tolist(), target_distances=actual_target_d.tolist(),
++        boundary_equal=bool(actual_target_d[1] == floor),
++        inactive_grad_zero=bool((grad[[2, 3, 5, 6]] == 0).all()),
++        prefix_grad_zero=bool((grad[:, 0] == 0).all()),
++        gradient_formula=bool(torch.allclose(grad, expected, atol=2e-5, rtol=1e-5)),
++        start_target_detached=start_grad is None and target_grad is None,
++        empty_zero=empty.item() == 0 and not bool(empty_active.any()) and bool((empty_grad == 0).all()),
++        all_real_zero=real_zero.item() == 0 and bool((real_grad == 0).all()),
++        teacher_count=teacher_d.numel(), rng_equal=bool(rng_equal))), flush=True)
++
++
++_STEP_OBSERVATIONS = []
++
++
++def observe_step(ns, local):
++    """wallpen2 r1: read-only hashes after updates in temporary direct CLI copies."""
++    import hashlib
++    torch = ns['torch']
++    def digest(tensors):
++        result = hashlib.sha256()
++        for tensor in tensors:
++            result.update(tensor.detach().cpu().contiguous().numpy().tobytes())
++        return result.hexdigest()
++    modules = ns['f_mods'] + [ns['bc_head'], ns['traj_enc'], ns['e_pooler'], ns['u_dec']]
++    parameters = [p for module in modules if module is not None for p in module.parameters()]
++    parameters += [p for ema, _ in ns['_EMA_PAIRS'] for p in ema.parameters()]
++    mu, sd = ns['MU_XY_T'], ns['SD_XY_T']
++    start = ns['to_xy'](local['s']).detach()*sd + mu
++    target_d = torch.linalg.vector_norm(local['traj'][:, -1].detach()*sd + mu - start, dim=-1)
++    sampled_d = torch.linalg.vector_norm(local['_wp_pts'][:, -1].detach()*sd + mu - start, dim=-1)
++    teacher = ns['_REAL_W'][0] == 0
++    active = teacher & (target_d >= ns['WALLPEN_FLOOR'])
++    conflicting = teacher & ~active & (sampled_d < ns['WALLPEN_FLOOR'])
++    state_sha = lambda rng: hashlib.sha256(json.dumps(rng.bit_generator.state, sort_keys=True).encode()).hexdigest()
++    row = dict(step=local['stp'], parameter_sha=digest(parameters),
++        batch_sha=digest([local['traj'], local['s'], local['g'], ns['_REAL_W'][0]]),
++        global_torch_sha=digest([torch.get_rng_state()]),
++        penalty_torch_sha=digest([ns['_WP_TGEN'].get_state()]),
++        main_numpy_sha=state_sha(ns['rng']), teacher_numpy_sha=state_sha(ns['_CLEAN_RNG']),
++        active_count=int(active.sum()), excluded_short_count=int(conflicting.sum()),
++        excluded_teacher_count=int((teacher & ~active).sum()),
++        floor_pen=float(local['_wpf2'].detach()), floor_lambda=ns['_WP_FLOOR_STATE']['lam'],
++        wall_lambda=ns['_WP_STATE']['2']['lam'])
++    _STEP_OBSERVATIONS.append(row)
++    print('STEP_OBSERVATION ' + json.dumps(row, sort_keys=True), flush=True)
+--- /dev/null
++++ b/experiments/_workorders/wallpen/selftest_wallpen2_r1.py
+@@ -0,0 +1,139 @@
++"""wallpen2 r1: X1-X4 direct CLI checks and the target-mask mutation killer."""
++from pathlib import Path
++import ast
++import hashlib
++import json
++import sys
++
++from selftest_wallpen2 import TRAIN, C1, DEFAULT_SHA, command, environment, sha
++
++PREVIOUS_SHA = '5d640811913b0e349f71489f82c325d4ccf8733fbcbe7a64c0759d03472c28a6'
++
++
++def previous_source():
++    """Read the verified v2 baseline; never reconstruct it from r1 implementation."""
++    baseline = Path(json.loads((TRAIN.parent / 'r1-baseline-location.json').read_text())['path'])
++    source = (baseline / 'train_wallpen.py').read_text()
++    assert hashlib.sha256(source.encode()).hexdigest() == PREVIOUS_SHA, 'X3 previous source pin mismatch'
++    return source
++
++
++def run_suite(run_dir):
++    count = dict(tests=0, killers=0)
++    default = next((run_dir / 'W1-default').glob('*.pt'))
++    assert sha(default) == DEFAULT_SHA
++    print(f'X1 PASS W1/T1 unchanged default sha={sha(default)}', flush=True)
++    count['tests'] += 1
++
++    config = dict(TEACHER_CLEAN=1, WALLPEN_KAPPA=0.1, WALLPEN_STAGES='2', WALLPEN_FLOOR=8)
++    def active_check(source):
++        status, log = command([sys.executable, '-u', str(source), '--wallpen-cpu-test=floor'], environment(config))
++        assert status == 0, 'X2 fixture CLI failed'
++        row = json.loads(next(x[len('ACTIVE_RESULT '):] for x in log.splitlines() if x.startswith('ACTIVE_RESULT ')))
++        assert row['active'] == [True, True, False, False, True, False, False], 'X2 target eligibility mask failed'
++        assert abs(row['penalty'] - 2.) < 1e-5, 'X2 active-row mean failed'
++        for key in ('boundary_equal', 'inactive_grad_zero', 'prefix_grad_zero', 'gradient_formula',
++                    'start_target_detached', 'empty_zero', 'all_real_zero', 'rng_equal'):
++            assert row[key], 'X2 ' + key + ' failed'
++        assert row['teacher_count'] == 5, 'X2 teacher descriptive subset changed'
++        return row
++    fixture = active_check(TRAIN)
++    mutant = run_dir / 'killer-X2-remove-target-mask.py'
++    source = TRAIN.read_text()
++    old = 'active = teacher & (target_distance >= WALLPEN_FLOOR)'
++    assert source.count(old) == 1
++    mutant.write_text(source.replace(old, 'active = teacher  # wallpen2 r1: killer restores v2.0', 1))
++    try:
++        active_check(mutant)
++    except AssertionError as exc:
++        assert str(exc) == 'X2 target eligibility mask failed', str(exc)
++        print(f'KILLER X2: observed FAIL: {exc}', flush=True)
++        count['killers'] += 1
++    else:
++        raise AssertionError('X2 killer undetected')
++    print('X2 PASS active teacher-only mean, exact >= boundary, inactive/real zero gradients, '
++          'differentiable empty zero, detached target/start, no RNG; fixture=' + json.dumps(fixture), flush=True)
++    count['tests'] += 1
++
++    previous = previous_source()
++    old_path = run_dir / 'train_wallpen-5d640811.py'
++    old_path.write_text(previous)
++    print(f'X3 previous trainer sha={sha(old_path)} current trainer sha={sha(TRAIN)}', flush=True)
++
++    # Observation copies add exactly one read-only call after the EMA update, before logging.
++    # No preload, trace, hook, or monkey patch. Removing the insertion restores pinned source.
++    anchor = '        # ⭐ 散度時間序列（LACOT_DIV_LOG_EVERY>0）：'
++    insertion = ('        # wallpen2 r1: temporary CLI parameter/RNG observation only.\n'
++                 '        from cpu_probe_wallpen2 import observe_step\n'
++                 '        observe_step(globals(), locals())\n')
++    copies = []
++    for name, text in (('old', previous), ('new', source)):
++        assert text.count(anchor) == 1
++        first = text.index(anchor)
++        measured = text[:first] + insertion + text[first:]
++        assert measured.replace(insertion, '', 1) == text
++        ast.parse(measured)
++        path = run_dir / ('X3-observe-' + name + '.py')
++        path.write_text(measured)
++        copies.append(path)
++    shared = dict(S1_FROM=str(C1), STEPS1=3, STEPS2=100, TEACHER_CLEAN=1,
++                  WALLPEN_STAGES='2', WALLPEN_KAPPA=0.1, WALLPEN_FLOOR=5.65)
++    def train(name, path):
++        out = run_dir / name
++        out.mkdir()
++        status, log = command([sys.executable, '-u', str(path), '--wallpen-cpu-test=train'],
++                              environment(shared | {'OUT_DIR': str(out)}))
++        (run_dir / (name + '.log')).write_text(log)
++        assert status == 0, 'X3 ' + name + ' CLI failed'
++        assert 'stage 1 載入並跳過訓練' in log and '  DIAG stp ' not in log
++        return Path(next(x[9:] for x in log.splitlines() if x.startswith('ARTIFACT ')))
++    exact_old = train('X3-exact-old', old_path)
++    observed_old = train('X3-observed-old', copies[0])
++    observed_new = train('X3-observed-new', copies[1])
++    exact_new = next((run_dir / 'W4-S1-from').glob('*.pt'))
++    assert sha(exact_old) == sha(observed_old), 'X3 old observer changed checkpoint bytes'
++    assert sha(exact_new) == sha(observed_new), 'X3 new observer changed checkpoint bytes'
++    before = json.loads(Path(str(observed_old) + '.r1-observations.json').read_text())
++    after = json.loads(Path(str(observed_new) + '.r1-observations.json').read_text())
++    assert len(before) == len(after) == 100
++    warm_cal = 20 + 50
++    assert all(a['parameter_sha'] == b['parameter_sha'] for a,b in zip(before[:warm_cal], after[:warm_cal])), 'X3 warm/cal parameter hash differs'
++    # wallpen2 r1: previous failure was a test error: sampled d can change after
++    # parameter divergence, so excluded_short_count is comparable only before then.
++    assert all(a['excluded_short_count'] == b['excluded_short_count']
++               for a,b in zip(before[:warm_cal], after[:warm_cal])), 'X3 warm/cal floor predicate differs'
++    for a,b in zip(before,after):
++        for key in ('step', 'batch_sha', 'global_torch_sha', 'penalty_torch_sha', 'active_count',
++                    'main_numpy_sha', 'teacher_numpy_sha', 'excluded_teacher_count'):
++            assert a[key] == b[key], 'X3 unrelated stream changed: ' + key
++    excluded = sum(a['excluded_short_count'] for a in before)
++    first = next((a['step'] for a,b in zip(before,after) if a['parameter_sha'] != b['parameter_sha']), None)
++    if not excluded:
++        assert sha(exact_old) == sha(exact_new), 'X3 no conflicting rows but final checkpoint differs'
++    else:
++        assert first is not None and first >= warm_cal, 'X3 missing/early first divergence'
++        a, b = before[first], after[first]
++        print('X3 first divergence zero-based step=' + str(first) + ' (update=' + str(first+1) + '): '
++              'teacher dT<F and sampled d<F excluded from floor; active-only denominator and floor rho/lambda reflect this rule. '
++              'old=' + json.dumps(a, sort_keys=True) + ' new=' + json.dumps(b, sort_keys=True), flush=True)
++        assert any(a['floor_pen'] != b['floor_pen'] for a,b in zip(before[:warm_cal],after[:warm_cal])), 'X3 eligibility never changed measured floor'
++    side = json.loads(Path(str(exact_new) + '.wallpen.json').read_text())
++    activity = side['floor_active_logs']
++    assert len(activity) == 10
++    for row in activity:
++        expected = after[row['step']]['active_count']
++        assert row['active_count'] == expected and row['active_fraction'] == expected / 64
++    log_new = (run_dir / 'W4-S1-from.log').read_text()
++    log_rows = [line for line in log_new.splitlines() if line.startswith('wallpen2: stp ')]
++    assert len(log_rows) == len(activity)
++    for line, row in zip(log_rows, activity):
++        assert 'active_count=' + str(row['active_count']) in line
++        assert 'active_fraction=' + str(row['active_fraction']) in line
++    print(f'X3 PASS 70 warmup/measurement parameter hashes identical; all 100 batch/global/penalty RNG hashes identical; '
++          f'excluded_short_rows={excluded} first_divergence={first}; observer CKPT byte identity old/new PASS; '
++          f'old_ckpt={sha(exact_old)} new_ckpt={sha(exact_new)}; sidecar/log activity 10 points PASS', flush=True)
++    count['tests'] += 1
++    print('X4 PASS original W1-W7, T1-T8 and T6d completed in this same execution; '
++          'W3 normal-calibration F=5.65 has eligible targets (F=100 would exclude every target under v2.1).', flush=True)
++    count['tests'] += 1
++    return count
+--- a/experiments/_workorders/wallpen/README.md
++++ b/experiments/_workorders/wallpen/README.md
+@@ -1,3 +1,41 @@
++## wallpen2 r1 重啟交付
++
++證明：下限只加在「teacher 列，而且該列自己的目標位移 ≥ F」的樣本上；其他行為逐位元不變。判準＝X1–X4、原 W1–W7／T1–T8／T6d 全過，移除目標門檻的新殺手實際 FAIL。
++
++RESTART: from 5d640811
++
++- 起點 trainer SHA256 `5d640811913b0e349f71489f82c325d4ccf8733fbcbe7a64c0759d03472c28a6`；六個還原檔與 lead 指定的 v2 基準逐位元相同。本次開工另存基準於 `/tmp/wallpen2-r1-restart-baseline-74rzforw/`。原工單已讀；PREREG-wallpen-v2.md §七 v2.1 SHA256 `e8cef8e86ed1447021bcb491be5aea662b6bc502507e192c90ea569ebb34ecd3`。
++- `dT_i = ‖traj[i,-1] × SD + MU − (to_xy(s_i) × SD + MU)‖`，與 decoded `d_i` 共用條件起點；目標／起點均 detach。作用列為 `_REAL_W[0]==0` 且 `dT_i≥F`，只對這些列平均 `relu(F-d_i)²`。全真資料或 teacher 目標全短時，回傳可微零。目標首點與 goal g 均不用來判斷。
++- trainer 只改下限函式、呼叫接點與活動記錄，新增處標 `wallpen2 r1:`。定標、退路、λ、抽樣與 checkpoint payload 保持既有實作。既有 teacher 描述量保留原子集；每個 floor log 點另記 `active_count`、`active_fraction`（分母＝整個 batch）。sidecar 新增 `floor_active_logs`，含 step 與上述兩欄。
++- 前次失敗原文為 `AssertionError: X3 unrelated stream changed: excluded_short_count`。這是測試錯誤：`excluded_short_count` 含當步 decoded `d<F`，允許的參數分岔後不應要求相同。本次只在暖身／只量的前 70 步嚴格比對它；100 步的 batch、teacher eligibility、全域 torch／penalty torch／主 NumPy／teacher NumPy RNG 仍全部嚴格比對。前次結果沒有沿用。
++- X2 使用真 CLI subprocess，構造短／長／恰等於 F 的 teacher 目標與真資料列；核對作用列平均、解析梯度、其他列與 prefix 梯度恰零、空集合可微零、起點／目標無梯度、RNG 無消耗。殺手只移除 `dT≥F` 條件，要求同一判準 FAIL。
++- X3 讀取並驗 SHA 固定的 v2 基準，以真 C1、S1_FROM、STAGES=2、100 步 stage 2 比較。兩份暫存觀測副本在每次更新後加相同的唯讀 hash 呼叫，再用兩邊未插入觀測的 checkpoint bytes 證明觀測無副作用；不預載、追蹤或猴補 trainer。原 T 測試的既有 harness 照舊。
++- W2 的原解析公式／teacher reduction／全真資料測試改提供符合新規則的目標；W3 正常定標與只量測試改用 F=5.65。舊 F=100 在 v2.1 會排除所有目標，不能再用來代表正常定標；小 F 的退路與其殺手照舊。
++
++完整命令（單次原文輸出，沒有串接前次結果）：
++
++```bash
++OGBENCH_DATA_DIR=/home/cymaxwelllee/data/ogbench PYTHONDONTWRITEBYTECODE=1 \
++/home/cymaxwelllee/Projects/lacot/.venv/bin/python -u \
++  experiments/_workorders/wallpen/selftest_wallpen.py \
++  > experiments/_workorders/wallpen/selftest-output.txt 2>&1
++```
++
++本次固定版本的單次完整自測 **PASS**：`n_tests=21 n_killers=14`，14 個殺手全部實際 FAIL；輸出只有一次開工標頭與一次最終 DONE，沒有拼接先前結果。全部 artifacts 保留於 `/tmp/wallpen-selftest-lzx7dmpl/`。trainer SHA256 `b0b7d80ecbec30f4690f1e9ecd67b5ae9954f454a086a44386f1981f3ac50919` 與執行輸出一致。
++
++- X1／W1／T1：預設 checkpoint SHA 仍為 `637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8`；floor 關閉的舊新版 C2 SHA 都為 `3ae14b6f8c810e85e6d7db70ec7b396f82c631fe642823128b0e0af456c548f6`，以上都在這次重新跑出。
++- X2：作用列 `[true,true,false,false,true,false,false]`，目標位移 `[9,8,7,6,10,9,7]`，F=8，floor=2；恰等於 F 的列納入，inactive／real／prefix 梯度恰為零，解析梯度、空集合可微零、起點／目標無梯度與 RNG 不變全部 PASS。移除目標門檻的殺手實際 FAIL。
++- X3：前 70 步暖身／只量的所有觀測參數 hash 相同；100 步 batch、作用列、全域 torch／penalty torch／主 NumPy／teacher NumPy RNG 全部相同。舊版共記到 57 列 `teacher 且 dT<F 且 d<F`；首次分岔為 zero-based step=70（第 71 次更新），當步有 3 個衝突短目標列。作用列平均與其定標 λ 改變，從這個首次加罰步改變 flow 更新，符合這次唯一的訓練規則變更。
++- X3 checkpoint：舊 `9d0505ddfca982199400cdbb65f0f3d49c69bc04a66288c70af53eb6a5d09bb0`；新 `45a43e2610267c38208eba70ff8eaf7a09c82b99342833e0da5b2368099f757e`。兩份觀測副本各自與未插入觀測的版本 bytes 相同；sidecar／log 的 10 個活動記錄逐點核對 PASS。
++- W3：小 F 0/50 有效步，λ_floor=λ_flow=`0.1755717484278825`，fallback=true；F=5.65 正常 50/50 有效步，λ_floor=`0.0016192804968316534`，精確等於 κ×meanρ_floor；刪掉退路的殺手得到 λ=0 並實際退出。62 步暖身＋只量的完整 checkpoint tensors／cfg 相同。
++- W4–W7／X4：真 C1 的 encoder／decoder 逐位元凍結，兩罰項對 flow 有有限非零梯度、condition 無梯度；C1′ 決定性、H3 schema、fresh loader、旗標拒絕、全部原 T1–T8／T6d 重跑 PASS。
++
++SECOND PASS: 逐項重查目標與 decoded 路徑共用條件起點、≥ 邊界、作用列平均與空集合可微零；其餘 trainer 函式 AST 及 checkpoint 儲存原文與 5d640811 一致。完整 CPU 自測與 14 個殺手全部通過。只改本目錄與保留 /tmp 測試 artifacts，沒有 commit、刪檔、安裝套件、GPU 或 Slurm。
++
++STATUS: DONE
++
++本次完整執行結果見 [selftest-output.txt](selftest-output.txt)，對 v2 基準的變更見 [DIFF-wallpen2-r1.txt](DIFF-wallpen2-r1.txt)。以下為歷史交付，r1 的下限作用列規則以本節為準。
++
+ ## wallpen2 變更
+ 
+ <!-- wallpen2: 本節是 v2 的現行契約；以下 r1/v1 段落保留為歷史紀錄。 -->

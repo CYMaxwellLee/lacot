@@ -1,0 +1,498 @@
+diff --git a/experiments/_workorders/wallpen/README.md b/experiments/_workorders/wallpen/README.md
+index db7767c..4e73174 100644
+--- a/experiments/_workorders/wallpen/README.md
++++ b/experiments/_workorders/wallpen/README.md
+@@ -1,3 +1,43 @@
++## wallpen2 變更
++
++<!-- wallpen2: 本節是 v2 的現行契約；以下 r1/v1 段落保留為歷史紀錄。 -->
++
++本輪證明 teacher-only 步長下限只對 flow 有梯度、定標不足會退回 λ_flow；S1_FROM 只可與 STAGES=2 的懲罰並用；預設訓練保持 d6d869ff 的 checkpoint bytes。以下 r1/v1 段落是原交付紀錄，本節優先。
++
++- `LACOT_WALLPEN_FLOOR=F`：預設未設或 0 關閉，必須有限且非負。開啟要求 κ>0、STAGES 包含 2、TEACHER_CLEAN=1。S1_FROM 與 κ>0 並用另要求 STAGES **恰為 `2`**；其餘 r1 互斥 assert 保留。
++- stage 2 復用牆罰的一次可微 flow 抽樣、同一份 detach condition 及凍住的 decoder 輸出。d 是解碼末點到 condition 起點的原始座標距離；`relu(F-d)^2` 只平均 `_REAL_W[0]==0` 的 teacher 列。全真資料 batch 為可微零，不讓真資料列稀釋平均。
++- floor 與 wall 共用前 20% 暖身、50 步只量窗、θ=flow。‖∇floor‖>1e-12 才記 ρ_floor；有效步數≥10 時 λ_floor=κ×meanρ_floor，否則 λ_floor=λ_flow 並印 `wallpen2: floor 定標退路`。完成定標後 λ_floor≤0 或非有限即退出，避免默默停用。窗口之後才加入兩個加權罰項；量測中不加入任何 penalty loss。
++- sidecar 新增 `F`、`λ_floor`、`ρ_floor`（全部測量值，跳過為 null）、`floor_valid_steps`、`floor_fallback`。未完成窗口時 λ_floor=null；有效步數仍記實際已測量數。checkpoint 的原始 payload、cfg、state_dict key/shape 不加欄位。
++- 每個 stage 2 log 點增加 `floor_pen`、teacher d 的中位數（偶數取中間兩點平均）、teacher d<F 的比例；沒有 teacher 時兩個描述量印 None。開啟 floor 檔名加 `_fl{F:g}`，沿用既有 `_s1from`。
++
++起始 HEAD `ca1a528589e2b7f34eb1b96cc5df3071fcdc4e0a`；原 trainer SHA256 `d6d869ff5e997f319905908d3e220980748c762a9dc8738a3b38c2cee5567247`。實際讀到 PREREG-wallpen-v2.md 的 SHA256 為 `2131461b93bd339d79eec94ec043687a757dc31e86c88f4c08795e0b10309563`，與工單引述的 `43b1cf32…` 不同；§一、§二與工單明列規則一致，本輪遵守工單明列要求。
++
++W1–W6 在 [selftest_wallpen2.py](selftest_wallpen2.py) 中以 subprocess 直接跑 `train_wallpen.py --wallpen-cpu-test=train|floor`；不預載 trainer、不追蹤或猴補其模組。測試 CLI 強制隱藏 CUDA、CPU、單執行緒，跑完整原訓練迴圈；訓練後用 [cpu_probe_wallpen2.py](cpu_probe_wallpen2.py) 執行原始檔內確切的命名、拒絕覆蓋及存檔片段，跳過 rollout，不捏造 rollout 結果。CPU-only 梯度 probe 在真定標步以 autograd.grad 記兩個罰項的 flow norm，驗 decoder frozen、condition 梯度皆 None；不寫進 checkpoint。W7 保留原 T1–T8/T6d 測法與殺手，僅把原 r1 比較基底改為從 HEAD 讀取並驗 d6d869ff，避免從 v2 原文猜測重建。
++
++完整測試命令與原交付相同：
++
++```bash
++OGBENCH_DATA_DIR=/home/cymaxwelllee/data/ogbench PYTHONDONTWRITEBYTECODE=1 \
++/home/cymaxwelllee/Projects/lacot/.venv/bin/python -u \
++  experiments/_workorders/wallpen/selftest_wallpen.py \
++  > experiments/_workorders/wallpen/selftest-output.txt 2>&1
++```
++
++W1 與 T1 固定預設 SHA `637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8`；W2 構造原始座標路徑並檢查 teacher-only mean、短/長公式、全真資料零與真資料梯度零；W3 實際 S1_FROM 微訓練跑小 F／大 F、核對退路／正常定標，另在 62 步（12 暖身+50 只量）核對完整 checkpoint tensor/cfg 不變；W4 真 C1 載入、100 步 stage 2、stage 1 略過且三個 encoder/decoder state_dict 逐位元凍住，兩罰項 flow 梯度有限非零；W5 同 seed 兩次 SHA 相同，換 seed SHA 不同；W6 與實際 H3/G 比對 schema，fresh process 用本 repo 指定 `hsweep/eval_common.py`、seed 33 且不設 WALLPEN_EXPECTED_SEED 載入。三個新增殺手是所有列平均、刪除 floor 退路、STAGES=12+S1_FROM 拒絕；另測六種 floor 無效旗標組合。
++
++交付 [selftest-output.txt](selftest-output.txt) 是一次完整執行的 stdout/stderr（含殺手 FAIL 原文），[DIFF-wallpen2.txt](DIFF-wallpen2.txt) 是對原 d6d869ff trainer／同 HEAD 測試與 README 的完整變更，包含新增測試檔。所有微訓練與失敗副本保留在 /tmp。只執行 CPU，沒有 GPU、Slurm、commit、刪檔或安裝套件。
++
++
++本輪固定版本的單次完整自測 **PASS**：`n_tests=17 n_killers=13`（原十組檢查＋W1–W7；原十個殺手＋W2/W3/W4 三個殺手）。trainer SHA256 `5d640811913b0e349f71489f82c325d4ccf8733fbcbe7a64c0759d03472c28a6`；原始輸出與交付程式 SHA 一致。最終完整執行的 artifacts 保留於 `/tmp/wallpen-selftest-0psgh1_j/`；較早完整執行另保留於 `/tmp/wallpen-selftest-ajrws3pk/`，未串接進交付輸出。
++
++- W1/T1：預設 SHA 仍為 `637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8`；floor 關閉的 C2 舊新版 SHA 都是 `3ae14b6f8c810e85e6d7db70ec7b396f82c631fe642823128b0e0af456c548f6`。
++- W3：小 F=1e-6、0/50 有效步，λ_floor=λ_flow=`0.1755717484278825` 且 fallback=true；大 F=100、50/50 有效步，λ_floor=`7.432017578978955e-06` 且精確等於 κ×meanρ_floor。62 步完整 checkpoint tensor/cfg 比對相同。刪掉退路得到 λ_floor=0，實際 RuntimeError FAIL。
++- W4：stage 1 跳過，traj_enc/e_pooler/u_dec state_dict 與真 C1 相同；floor 的 flow 梯度 norm 範圍 `2.076258420944214–133.03269958496094`，wall 為 `0.14846475422382355–0.5591681003570557`；decoder frozen、penalty 對 condition 參數的梯度為 None。檔名同時含 `_s1from`、`_fl5.65`；STAGES=12+S1_FROM 的殺手實際 assert FAIL。
++- W5：s33 兩次 SHA 都是 `688ecf780f13be91749032e743587f445914990960d063c4d7f1037cdbf0835a`；s34 是 `8e53d06bc59899a741176b1138c009b3811c4049e3da963eff94410ff2fb6b03`。W6 schema 與 H3/G 一致，指定 eval_common fresh loader 成功。W7 原 T1–T8/T6d 與新增旗標拒絕全部 PASS。
++
++SECOND PASS: 重查 teacher-only reduction、50 步只量邊界、正有限 λ_floor 與 S1_FROM 限制；固定版本完整 CPU 自測通過，十三個殺手全部實際 FAIL。未執行 GPU。
++
++
+ 這輪只修 T8 測試 harness、補常駐 T6d gradcheck、加 sidecar UTF-8 與旗標安全 assert。證明：旗標開著時訓練行為逐位元不變，全部自測從頭乾淨通過。判準：`selftest-output.txt` 為單次完整執行且以 `STATUS: DONE` 結尾；新 detach 殺手實測 FAIL；預設與上一輪 SHA 相同，CPU C2 舊新版 SHA 相同。
+ 
+ ## r1 變更
+diff --git a/experiments/_workorders/wallpen/selftest_wallpen.py b/experiments/_workorders/wallpen/selftest_wallpen.py
+index 0f083a0..b8a7540 100644
+--- a/experiments/_workorders/wallpen/selftest_wallpen.py
++++ b/experiments/_workorders/wallpen/selftest_wallpen.py
+@@ -323,7 +323,9 @@ def main():
+     count = dict(tests=0, killers=0)
+     # Recover the pre-r1 source by reverting ONLY the two allowed trainer edits;
+     # the pin proves this is the original delivery, not an approximate baseline.
+-    current = TRAIN.read_text()
++    # wallpen2: pin the exact d6d869ff delivery before reconstructing pre-r1.
++    current = subprocess.check_output(['git', 'show', 'HEAD:experiments/_workorders/wallpen/train_wallpen.py'], cwd=REPO, text=True)
++    assert hashlib.sha256(current.encode()).hexdigest() == 'd6d869ff5e997f319905908d3e220980748c762a9dc8738a3b38c2cee5567247'
+     start = current.index('    # wallpen: r1 forbid overlapping experiments')
+     end = current.index('WARM_FRAC, CAL_STEPS, RETRY', start)
+     old_source = (current[:start] + current[end:]).replace(
+@@ -513,9 +515,14 @@ def main():
+         print(f'R4 forbidden {key}: refusal PASS (exit {rejected.returncode})', flush=True)
+     count['tests'] += 1
+     print('T1–T8 (including T6d), r1 behavior equality and R4 asserts: PASS', flush=True)
++    # wallpen2: W tests use direct trainer CLI subprocesses, never load()/trace/patch.
++    from selftest_wallpen2 import run_suite
++    new_count = run_suite(run_dir)
++    count['tests'] += new_count['tests']
++    count['killers'] += new_count['killers']
+     print('SECOND PASS: T6d tests the exact sampler AST with explicit z and ALL functional parameters; '
+           'T8 loader ran once in a fresh worker without pre-load torch setup. '
+-          'CUDA inverse/grid_sample behavior remains outside this CPU test.', flush=True)
++          'W1–W6 direct CLI subprocess tests and their killers passed; W7 preserved T1–T8/T6d. CPU only.', flush=True)
+     print(f'n_tests={count["tests"]} n_killers={count["killers"]}', flush=True)
+     print('STATUS: DONE', flush=True)
+ 
+diff --git a/experiments/_workorders/wallpen/train_wallpen.py b/experiments/_workorders/wallpen/train_wallpen.py
+index bb43bc4..21df511 100644
+--- a/experiments/_workorders/wallpen/train_wallpen.py
++++ b/experiments/_workorders/wallpen/train_wallpen.py
+@@ -33,7 +33,16 @@ if ORACLE_ARM:
+ # 資料位置：預設走官方 OGBENCH_DATA_DIR，沒設才用本機 archive
+ OGB_DATA = os.environ.get("OGBENCH_DATA_DIR", "/archive/cymaxwelllee/data/ogbench")
+ 
++# wallpen2: explicit CPU test CLI, before device selection; ordinary runs are untouched.
++_WP_CPU_TEST = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--wallpen-cpu-test=")), "")
++if _WP_CPU_TEST:
++    assert _WP_CPU_TEST in ("floor", "train"), "wallpen2: unknown CPU test mode"
++    assert os.environ.get("CUDA_VISIBLE_DEVICES") == "", "wallpen2: CPU tests require hidden CUDA"
++    torch.set_num_threads(1)
++    torch.set_num_interop_threads(1)
+ device = "cuda" if torch.cuda.is_available() else "cpu"
++if _WP_CPU_TEST:
++    assert device == "cpu", "wallpen2: CPU tests forbid CUDA"
+ print("device:", device, flush=True)
+ # ⚠️ 環境改成變數（主人 2026-08-23：「跑個 large，跑個 stitch」）。
+ # ★ 為什麼要換環境：medium-navigate 上誠實 BC 地板已經 0.900、天花板 1.000
+@@ -482,6 +491,13 @@ if TEACHER_H is not None and TEACHER_H <= 0:
+ TEACHER_CLEAN = int(os.environ.get("LACOT_TEACHER_CLEAN", "0"))
+ WALLPEN_KAPPA = float(os.environ.get("LACOT_WALLPEN_KAPPA", "0"))
+ WALLPEN_STAGES = os.environ.get("LACOT_WALLPEN_STAGES", "12")
++# wallpen2: physical displacement floor, opt-in and teacher-only.
++WALLPEN_FLOOR = float(os.environ.get("LACOT_WALLPEN_FLOOR", "0"))
++assert np.isfinite(WALLPEN_FLOOR) and WALLPEN_FLOOR >= 0, "wallpen2: FLOOR must be finite and nonnegative"
++if WALLPEN_FLOOR:
++    assert WALLPEN_KAPPA > 0, "wallpen2: FLOOR requires KAPPA>0"
++    assert "2" in WALLPEN_STAGES, "wallpen2: FLOOR requires stage 2"
++    assert TEACHER_CLEAN == 1, "wallpen2: FLOOR requires TEACHER_CLEAN=1"
+ assert TEACHER_CLEAN in (0, 1), "wallpen: TEACHER_CLEAN must be 0 or 1"
+ assert np.isfinite(WALLPEN_KAPPA) and WALLPEN_KAPPA >= 0, "wallpen: kappa must be finite and nonnegative"
+ assert WALLPEN_STAGES in ("12", "1", "2"), "wallpen: STAGES must be 12, 1 or 2"
+@@ -498,7 +514,8 @@ if WALLPEN_KAPPA:
+     assert LO_W <= 0, "wallpen: LO_W must not be positive"
+     assert CONT_TRAIN == 0, "wallpen: CONT_TRAIN must be 0"
+     assert not LOAD_CKPT, "wallpen: LOAD_CKPT must be empty"
+-    assert not S1_FROM, "wallpen: S1_FROM must be empty"
++    # wallpen2: shared/frozen stage 1 is compatible only with flow-only penalties.
++    assert not S1_FROM or WALLPEN_STAGES == "2", "wallpen: S1_FROM must be empty unless STAGES=2"
+     # wallpen: BOOT_DATA is parsed later; reject the same env value before setup.
+     assert not os.environ.get("LACOT_BOOT_DATA", ""), "wallpen: BOOT_DATA must be empty"
+ WARM_FRAC, CAL_STEPS, RETRY = 0.2, 50, 16
+@@ -547,6 +564,68 @@ def pen(pts_n):
+     return (ex.square().sum(1) / (ex > 0).sum(1).clamp_min(1)).mean()
+ 
+ 
++# wallpen2: independent calibration state, never enters the checkpoint payload.
++_WP_FLOOR_STATE = dict(rho=[], lam=None, n_valid=0, fallback=False,
++                       floor_grad_norms=[], wall_grad_norms=[])
++
++
++def _wallpen_floor(pts_n, s_n, real_w):
++    # wallpen2: use condition start (not decoded start/goal), in original units.
++    end = pts_n[:, -1] * SD_XY_T + MU_XY_T
++    start = to_xy(s_n).detach() * SD_XY_T + MU_XY_T
++    distance = torch.linalg.vector_norm(end - start, dim=-1)
++    teacher = real_w == 0
++    selected = distance[teacher]
++    # wallpen2: differentiable zero for an all-real batch; real rows never dilute the mean.
++    penalty = F.relu(WALLPEN_FLOOR - selected).square().mean() if selected.numel() else distance.sum() * 0.0
++    return penalty, selected
++
++
++def _wallpen_floor_calibrate(stp, n_steps, main, penalty, wall_penalty, params):
++    # wallpen2: same 50 measurement-only steps and theta=flow as wall calibration.
++    state = _WP_FLOOR_STATE
++    warm = int(WARM_FRAC * n_steps)
++    if warm <= stp < warm + CAL_STEPS:
++        params = [p for p in params if p.requires_grad]
++        def norm(loss):
++            grads = torch.autograd.grad(loss, params, retain_graph=True, allow_unused=True)
++            return torch.sqrt(sum((g.square().sum() for g in grads if g is not None), loss.new_zeros(()))).item()
++        nm, nf = norm(main), norm(penalty)
++        if not np.isfinite(nm) or not np.isfinite(nf):
++            raise RuntimeError("wallpen2: nonfinite floor calibration gradient")
++        rho = nm / nf if nf > 1e-12 else None
++        if rho is not None and not np.isfinite(rho):
++            raise RuntimeError("wallpen2: nonfinite floor calibration ratio")
++        state["rho"].append(rho)
++        state["n_valid"] += int(rho is not None)  # wallpen2: count partial windows too.
++        # wallpen2: CPU probe records actual loss gradients without accumulating .grad.
++        if _WP_CPU_TEST:
++            state["floor_grad_norms"].append(nf)
++            state["wall_grad_norms"].append(norm(wall_penalty))
++            assert all(not p.requires_grad for p in u_dec.parameters()), "wallpen2: decoder is not frozen"
++            condition_grads = torch.autograd.grad(penalty + wall_penalty,
++                list(cond_enc.parameters()) + list(cond_head.parameters()), retain_graph=True, allow_unused=True)
++            assert all(g is None for g in condition_grads), "wallpen2: condition gradient leaked"
++        if stp == warm + CAL_STEPS - 1:
++            used = [r for r in state["rho"] if r is not None]
++            state["n_valid"] = len(used)
++            state["fallback"] = len(used) < 10
++            state["lam"] = _WP_STATE["2"]["lam"] if state["fallback"] else WALLPEN_KAPPA * float(np.mean(used))
++            if state["lam"] is None or not np.isfinite(state["lam"]) or state["lam"] <= 0:
++                raise RuntimeError("wallpen2: floor lambda must be positive and finite")
++            if state["fallback"]:
++                print("wallpen2: floor 定標退路 λ_floor=λ_flow", flush=True)
++            print(f"wallpen2: λ_floor={state['lam']:.10g} n_valid={len(used)}/{CAL_STEPS} floor_fallback={state['fallback']}", flush=True)
++    return state["lam"] if stp >= warm + CAL_STEPS and state["lam"] is not None else None
++
++
++# wallpen2: direct CLI fixture probe; no import/trace/patch of the tested trainer.
++if _WP_CPU_TEST == "floor":
++    from cpu_probe_wallpen2 import floor_probe
++    floor_probe(globals())
++    raise SystemExit(0)
++
++
+ def _wallpen_sample(flow, n, cond, generator):
+     # wallpen: exact reverse order and prefix semantics of Flow.sample; no in-place tokens.
+     z = torch.randn(n, flow.seq_len, flow.token_dim, device=next(flow.parameters()).device,
+@@ -2127,13 +2206,27 @@ def _stage2_loop(n_steps, step_off=0):
+         if WALLPEN_KAPPA and "2" in WALLPEN_STAGES:
+             _wpc = flow_cond(cond, anc).detach()
+             _wpu = _wallpen_sample(flow, len(cond), _wpc, _WP_TGEN)
+-            _wp2 = pen(_intent_inv(_dec(_q(_wpu), s), anc))
++            # wallpen2: both penalties share this differentiable sample and decoder output.
++            _wp_pts = _intent_inv(_dec(_q(_wpu), s), anc)
++            _wp2 = pen(_wp_pts)
+             _wl2 = _wallpen_calibrate("2", stp, n_steps, l_nf, _wp2,
+                                      [p for p in flow.parameters() if p.requires_grad])
++            # wallpen2: measure floor independently; neither penalty changes measurement updates.
++            if WALLPEN_FLOOR:
++                _wpf2, _wp_d = _wallpen_floor(_wp_pts, s, _REAL_W[0])
++                _wlf2 = _wallpen_floor_calibrate(stp, n_steps, l_nf, _wpf2, _wp2,
++                                               list(flow.parameters()))
+             if _wl2 is not None and _wl2 > 0:
+                 total = total + _wl2 * _wp2
++            if WALLPEN_FLOOR and _wlf2 is not None:
++                total = total + _wlf2 * _wpf2
+             if (_gstp + 1) % LOG_EVERY == 0:
+                 _wallpen_log("2", _gstp, _wp2, l_nf)
++                if WALLPEN_FLOOR:
++                    # wallpen2: current teacher displacement only; an empty teacher set is explicit.
++                    _dmed = _wp_d.quantile(0.5).item() if _wp_d.numel() else None
++                    _dfrac = (_wp_d < WALLPEN_FLOOR).float().mean().item() if _wp_d.numel() else None
++                    print(f"wallpen2: stp {_gstp} floor_pen={_wpf2.item():.10g} teacher_d_median={_dmed} teacher_d_lt_F={_dfrac}", flush=True)
+         _wallpen_teacher_log("2", _gstp)  # wallpen: cumulative clean-teacher counters.
+         # ⭐ AMP：backward／clip／step 一律走 helper —— AMP=0 時逐字等於原本那三行
+         #    （scaler is None ⇒ loss.backward()、no-op、opt.step()）。
+@@ -2197,6 +2290,11 @@ if INTENT and _N_SRC_FB[1] > 0:
+     print(f"  ⭐ intent 錨源 src={INTENT_SRC}：處理 {_N_SRC_FB[1]} 個樣本，"
+           f"fallback 回 hindsight {_N_SRC_FB[0]} 次（{_N_SRC_FB[0] / _N_SRC_FB[1]:.4f}）", flush=True)
+ TAG_SEED = SEED          # 檔名用的 seed；載入模式下改跟 ckpt 的 seed 走（2026-08-31 修互蓋病）
++# wallpen2: native CLI skips rollout and reuses the exact original naming/save statements.
++if _WP_CPU_TEST == "train":
++    from cpu_probe_wallpen2 import save_only
++    save_only(globals())
++    raise SystemExit(0)
+ LOAD_EMA = 0             # 載入模式下由 LACOT_LOAD_EMA 蓋掉；訓練模式恆 0
+ if LOAD_CKPT:
+     _lp = LOAD_CKPT if os.path.isabs(LOAD_CKPT) else os.path.join(
+@@ -3922,6 +4020,9 @@ if TEACHER_CLEAN:
+     _extra += "_tc1"
+ if WALLPEN_KAPPA:
+     _extra += f"_wp{WALLPEN_KAPPA:g}"
++# wallpen2: floor has its own filename identity; no default-name change.
++if WALLPEN_FLOOR:
++    _extra += f"_fl{WALLPEN_FLOOR:g}"
+ if (TEACHER_CLEAN or WALLPEN_KAPPA) and WALLPEN_STAGES != "12":
+     _extra += f"_wps{WALLPEN_STAGES}"
+ tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
+@@ -4116,6 +4217,12 @@ if TEACHER_CLEAN or WALLPEN_KAPPA:
+                       ρ={stage: state["rho"] for stage, state in _WP_STATE.items()},
+                       clean_teacher=_CLEAN_COUNTS,
+                       no_calibration={stage: state["no_calibration"] for stage, state in _WP_STATE.items()})
++    # wallpen2: sidecar records all ratios, including null skipped measurements.
++    _wp_sidecar.update(F=WALLPEN_FLOOR, λ_floor=_WP_FLOOR_STATE["lam"],
++                       ρ_floor=_WP_FLOOR_STATE["rho"], floor_valid_steps=_WP_FLOOR_STATE["n_valid"],
++                       floor_fallback=_WP_FLOOR_STATE["fallback"])
++    if _WP_CPU_TEST:
++        _wp_sidecar["cpu_gradient_probe"] = {k: _WP_FLOOR_STATE[k] for k in ("floor_grad_norms", "wall_grad_norms")}
+     with open(ck + ".wallpen.json", "x", encoding="utf-8") as _wpf:
+         json.dump(_wp_sidecar, _wpf, ensure_ascii=False, indent=2, allow_nan=False)
+     print(f"wallpen: teacher final {_CLEAN_COUNTS}", flush=True)
+--- /dev/null
++++ b/experiments/_workorders/wallpen/cpu_probe_wallpen2.py
+@@ -0,0 +1,41 @@
++"""wallpen2: native CPU CLI probes, no preload, tracing, or model monkey-patching."""
++from pathlib import Path
++import json
++
++
++def floor_probe(ns):
++    # wallpen2: nontrivial raw origin/scales; first decoded point differs from condition start.
++    torch = ns['torch']
++    floor = ns['WALLPEN_FLOOR']
++    start_raw = torch.tensor([[3., 7.]]).expand(4, -1)
++    distance = torch.tensor([floor + 1., floor - 2., 0., floor - 1.])
++    end_raw = start_raw + torch.stack((distance, distance * 0), -1)
++    normalize = lambda x: (x - ns['MU_XY_T']) / ns['SD_XY_T']
++    points = torch.stack((normalize(start_raw + 4.), normalize(end_raw)), 1).requires_grad_()
++    starts = normalize(start_raw)
++    mixed, ds = ns['_wallpen_floor'](points, starts, torch.tensor([0., 0., 1., 1.]))
++    all_real, empty = ns['_wallpen_floor'](points, starts, torch.ones(4))
++    long, _ = ns['_wallpen_floor'](points[:1], starts[:1], torch.zeros(1))
++    short, _ = ns['_wallpen_floor'](points[1:2], starts[1:2], torch.zeros(1))
++    grads = torch.autograd.grad(mixed, points, retain_graph=True)[0]
++    print('FLOOR_RESULT ' + json.dumps(dict(mixed=mixed.item(), all_real=all_real.item(),
++        long=long.item(), short=short.item(), distances=ds.tolist(), empty=empty.numel(),
++        real_grad_zero=bool((grads[2:] == 0).all()), finite=bool(torch.isfinite(grads).all()))), flush=True)
++
++
++def save_only(ns):
++    # wallpen2: run the trainer's unmodified naming/guard/save statements after real loops.
++    # No rollout result is fabricated; this CLI emits a checkpoint and sidecar only.
++    path = Path(ns['__file__'])
++    lines = path.read_text().splitlines()
++    def line(prefix):
++        hits = [i for i, value in enumerate(lines) if value.startswith(prefix)]
++        assert len(hits) == 1, (prefix, hits)
++        return hits[0]
++    ns['LOAD_EMA'] = 0
++    ns['SEEDS'] = int(ns['os'].environ.get('LACOT_EVAL_EPISODES', '2'))
++    for first, last in ((line('def _tag_extra('), line('out["n_intent_noroute"]')),
++                        (line('ck = os.path.join(os.path.dirname(dst)'), len(lines))):
++        statements = '\n' * first + '\n'.join(lines[first:last]) + '\n'
++        exec(compile(statements, str(path), 'exec'), ns)
++    print('ARTIFACT ' + ns['ck'], flush=True)
+--- /dev/null
++++ b/experiments/_workorders/wallpen/selftest_wallpen2.py
+@@ -0,0 +1,194 @@
++"""wallpen2: W1–W7 direct-command CPU tests; retain every subprocess's raw output."""
++from pathlib import Path
++import hashlib
++import json
++import os
++import subprocess
++import sys
++
++HERE = Path(__file__).resolve().parent
++REPO = HERE.parents[2]
++TRAIN = HERE / 'train_wallpen.py'
++C1 = Path('/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u/wallpen/ckpt-local/C1.pt')
++H3 = C1.parent / 'G.pt'
++DEFAULT_SHA = '637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8'
++CONFIG = dict(ENV='pointmaze-large-stitch-v0', ENC_OBJ='recon_ictr', LEARNED_REFINE=0,
++              COND_DROP=0.1, BC_INDEP=1, TEACHER_MIX=0.5, EVAL_RS=0, DIAG_TRAIN=1,
++              EMA_W=0.999, WARMUP=500, K=8, SEED=33, DEC_START='soft', TEACHER_H=3,
++              STEPS1=3, STEPS2=3, EVAL_EPISODES=2, LOG_EVERY=10)
++
++
++def sha(path):
++    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
++
++
++def environment(extra):
++    env = {k: v for k, v in os.environ.items() if not k.startswith('LACOT_') and k != 'WALLPEN_EXPECTED_SEED'}
++    env.update(CUDA_VISIBLE_DEVICES='', PYTHONDONTWRITEBYTECODE='1', CUBLAS_WORKSPACE_CONFIG=':4096:8',
++               OGBENCH_DATA_DIR='/home/cymaxwelllee/data/ogbench',
++               PYTHONPATH=os.pathsep.join((str(HERE), str(REPO))), MUJOCO_GL='egl')
++    env.update({'LACOT_' + k: str(v) for k, v in (CONFIG | extra).items()})
++    return env
++
++
++def command(argv, env):
++    print('COMMAND ' + json.dumps(argv, ensure_ascii=False), flush=True)
++    process = subprocess.Popen(argv, env=env, cwd=REPO, text=True,
++                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
++    chunks = []
++    for chunk in process.stdout:
++        print(chunk, end='', flush=True)
++        chunks.append(chunk)
++    return process.wait(), ''.join(chunks)
++
++
++def run_suite(run_dir):
++    import numpy as np
++    import torch
++    count = dict(tests=0, killers=0)
++    print(f'wallpen2: W suite C1 sha={sha(C1)} H3/G sha={sha(H3)}', flush=True)
++    def train(name, extra=None, source=TRAIN, reject=None):
++        out = run_dir / name
++        out.mkdir()
++        config = {'OUT_DIR': str(out)} | (extra or {})
++        print('CONFIG ' + json.dumps(CONFIG | config, sort_keys=True), flush=True)
++        status, log = command([sys.executable, '-u', str(source), '--wallpen-cpu-test=train'], environment(config))
++        (run_dir / (name + '.log')).write_text(log)
++        if reject:
++            assert status != 0 and reject in log, f'{name}: missing intended refusal: {status}'
++            return None, log
++        assert status == 0, f'{name}: exit {status}'
++        ckpt = Path(next(line[9:] for line in log.splitlines() if line.startswith('ARTIFACT ')))
++        return ckpt, log
++    def side(ckpt):
++        return json.loads(Path(str(ckpt) + '.wallpen.json').read_text())
++    def mutate(name, old, new):
++        text = TRAIN.read_text()
++        assert text.count(old) == 1, (name, text.count(old))
++        path = run_dir / (name + '.py')
++        path.write_text(text.replace(old, new, 1))
++        return path
++    def states(path):
++        return torch.load(path, map_location='cpu', weights_only=False)
++    def equal(a, b):
++        if isinstance(a, torch.Tensor):
++            return torch.equal(a, b)
++        if isinstance(a, dict):
++            return a.keys() == b.keys() and all(equal(v, b[k]) for k, v in a.items())
++        return a == b
++    def shapes(v):
++        if isinstance(v, torch.Tensor):
++            return ('tensor', tuple(v.shape))
++        if isinstance(v, dict):
++            return {k: shapes(x) for k, x in v.items()}
++        return type(v).__name__
++
++    ck, log = train('W1-default')
++    assert sha(ck) == DEFAULT_SHA, 'W1 default checkpoint SHA changed'
++    print(f'W1 PASS default SHA={sha(ck)}; original T1 also passed', flush=True)
++    count['tests'] += 1
++
++    floor_config = dict(TEACHER_CLEAN=1, WALLPEN_KAPPA=0.1, WALLPEN_STAGES='2', WALLPEN_FLOOR=5.65)
++    def floor_check(source=TRAIN):
++        status, log = command([sys.executable, '-u', str(source), '--wallpen-cpu-test=floor'], environment(floor_config))
++        assert status == 0, 'W2 fixture process failed'
++        result = json.loads(next(x[13:] for x in log.splitlines() if x.startswith('FLOOR_RESULT ')))
++        assert np.isclose(result['mixed'], 2., atol=1e-5), 'W2 teacher-only mean failed'
++        assert np.isclose(result['short'], 4., atol=1e-5) and result['long'] == 0., 'W2 floor formula failed'
++        assert result['all_real'] == 0. and result['empty'] == 0, 'W2 all-real failed'
++        assert result['real_grad_zero'] and result['finite'], 'W2 real-row gradient leaked'
++    floor_check()
++    mutant = mutate('killer-W2', 'selected = distance[teacher]', 'selected = distance  # wallpen2: killer includes real rows')
++    try:
++        floor_check(mutant)
++    except AssertionError as exc:
++        assert 'W2 teacher-only mean failed' in str(exc), str(exc)
++        print(f'KILLER W2: observed FAIL: {exc}', flush=True)
++        count['killers'] += 1
++    else:
++        raise AssertionError('W2 killer undetected')
++    print('W2 PASS formula, teacher-only reduction, all-real zero and real-row zero gradient', flush=True)
++    count['tests'] += 1
++
++    shared = dict(S1_FROM=str(C1), STEPS1=3, STEPS2=100, TEACHER_CLEAN=1,
++                  WALLPEN_STAGES='2', WALLPEN_KAPPA=0.1)
++    small, log_small = train('W3-small', shared | {'WALLPEN_FLOOR': 1e-6})
++    ss = side(small)
++    assert ss['floor_valid_steps'] == 0 and all(x is None for x in ss['ρ_floor']), 'W3 floor unexpectedly active'
++    assert ss['floor_fallback'] and ss['λ_floor'] == ss['λ_flow'] > 0, 'W3 fallback equality failed'
++    assert 'wallpen2: floor 定標退路' in log_small
++    large, log_large = train('W3-large', shared | {'WALLPEN_FLOOR': 100})
++    sl = side(large)
++    ratios = [x for x in sl['ρ_floor'] if x is not None]
++    assert len(sl['ρ_floor']) == 50 and sl['floor_valid_steps'] == len(ratios) >= 10
++    assert not sl['floor_fallback'] and sl['λ_floor'] == sl['κ'] * float(np.mean(ratios)) > 0
++    assert np.isfinite(sl['λ_floor'])
++    print(f"W3 PASS fallback λ_floor=λ_flow={ss['λ_floor']}; normal λ_floor={sl['λ_floor']} n_valid={len(ratios)}", flush=True)
++    mutant = mutate('killer-W3', '_WP_STATE["2"]["lam"] if state["fallback"] else WALLPEN_KAPPA * float(np.mean(used))',
++                    '0.0 if state["fallback"] else WALLPEN_KAPPA * float(np.mean(used))')
++    train('W3-no-fallback', shared | {'WALLPEN_FLOOR': 1e-6}, mutant,
++          reject='wallpen2: floor lambda must be positive and finite')
++    print('KILLER W3: observed FAIL: removed fallback produces λ_floor=0, positivity guard rejected it', flush=True)
++    count['killers'] += 1
++    # Prove the floor's additional measurements do not affect either update stream.
++    measured_floor, _ = train('W3-measure-floor', shared | {'STEPS2': 62, 'WALLPEN_FLOOR': 100})
++    measured_wall, _ = train('W3-measure-wall', shared | {'STEPS2': 62})
++    assert equal(states(measured_floor), states(measured_wall)), 'W3 measurement window changed updates'
++    print('W3 PASS complete checkpoint tensors/cfg equal through warmup+50 measurement steps', flush=True)
++    count['tests'] += 1
++
++    w4, log4 = train('W4-S1-from', shared | {'WALLPEN_FLOOR': 5.65})
++    current, origin = states(w4), states(C1)
++    assert 'stage 1 載入並跳過訓練' in log4 and '  DIAG stp ' not in log4, 'W4 stage 1 ran'
++    for name in ('traj_enc', 'e_pooler', 'u_dec'):
++        assert equal(current[name], origin[name]), f'W4 frozen {name} changed'
++    assert not equal(current['flow'], origin['flow']), 'W4 flow did not change'
++    assert '_s1from' in w4.name and '_fl5.65' in w4.name
++    probe = side(w4)['cpu_gradient_probe']
++    for name in ('floor_grad_norms', 'wall_grad_norms'):
++        assert len(probe[name]) == 50 and np.isfinite(probe[name]).all() and max(probe[name]) > 1e-12, f'W4 {name} no nonzero finite gradient'
++        print(f'W4 {name} min={min(probe[name])} max={max(probe[name])}', flush=True)
++    assert log4.count('floor_pen=') == 10 and log4.count('teacher_d_median=') == 10 and log4.count('teacher_d_lt_F=') == 10
++    train('W4-reject-stages12', shared | {'WALLPEN_STAGES': '12', 'WALLPEN_FLOOR': 5.65},
++          reject='wallpen: S1_FROM must be empty unless STAGES=2')
++    print('KILLER W4: observed FAIL: STAGES=12 with S1_FROM rejected by assert', flush=True)
++    count['killers'] += 1
++    print(f'W4 PASS stage 1 skipped, encoder/decoder bitwise frozen, both penalties reach only flow; {w4.name}', flush=True)
++    count['tests'] += 1
++
++    control = dict(S1_FROM=str(C1), TEACHER_CLEAN=1)
++    a, _ = train('W5-s33-a', control)
++    b, _ = train('W5-s33-b', control)
++    c, _ = train('W5-s34', control | {'SEED': 34})
++    assert sha(a) == sha(b) and sha(c) != sha(a), 'W5 seed reproducibility failed'
++    print(f'W5 PASS s33={sha(a)} repeat={sha(b)} s34={sha(c)}', flush=True)
++    count['tests'] += 1
++
++    assert shapes(current) == shapes(states(H3)), 'W6 H3 key/shape mismatch'
++    status, _ = command([sys.executable, '-u', str(__file__), '--load', str(w4)], environment({}))
++    assert status == 0, 'W6 fresh eval_common loader failed'
++    print('W6 PASS recursive H3 key/shape identity; requested eval_common.load_ckpt fresh-process load, seed 33', flush=True)
++    count['tests'] += 1
++
++    for name, extra, reason in (
++        ('kappa', {'WALLPEN_KAPPA': 0}, 'FLOOR requires KAPPA>0'),
++        ('stage', {'WALLPEN_STAGES': '1'}, 'FLOOR requires stage 2'),
++        ('clean', {'TEACHER_CLEAN': 0}, 'FLOOR requires TEACHER_CLEAN=1'),
++        ('nan', {'WALLPEN_FLOOR': 'nan'}, 'FLOOR must be finite and nonnegative'),
++        ('inf', {'WALLPEN_FLOOR': 'inf'}, 'FLOOR must be finite and nonnegative'),
++        ('negative', {'WALLPEN_FLOOR': -1}, 'FLOOR must be finite and nonnegative'),
++    ):
++        train('W-flags-' + name, floor_config | extra, reject='wallpen2: ' + reason)
++    print('W7 PASS original T1–T8 and T6d completed unchanged; additional floor flag refusals PASS', flush=True)
++    count['tests'] += 1
++    return count
++
++
++if __name__ == '__main__':
++    assert len(sys.argv) == 3 and sys.argv[1] == '--load'
++    assert 'WALLPEN_EXPECTED_SEED' not in os.environ
++    sys.path.insert(0, str(REPO / 'experiments/_workorders/hsweep'))
++    import eval_common
++    model = eval_common.load_ckpt(os.environ['OGBENCH_DATA_DIR'], sys.argv[2], sha(sys.argv[2]))
++    assert model.device == 'cpu' and model.TAG_SEED == 33
++    print('W6 fresh eval_common.load_ckpt: PASS seed=33 WALLPEN_EXPECTED_SEED unset', flush=True)
