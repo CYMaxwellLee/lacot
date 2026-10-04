@@ -1,79 +1,30 @@
-# wallpen2-eval-v1-r2（CPU）
+# wallpen2-eval-v1-r3（CPU）
 
-結論：下限比例與雜訊帶邊界補上 `1e-12` 浮點容差；V8 用整數計數與獨立有理數預期，驗證 n=80、n=112 的等號不擠、下一個計數會擠及 `1/N` 退回。V1–V8 單次完整執行全部 PASS，六個 subprocess 突變殺手都確實 FAIL，包含移除下限比例容差。這是替身資料的程式驗收，不能當成 v2 實驗結果。
+結論：擠下限比例改用「所有最短路前 3 步格心位移皆 ≥ 5.65」的陷阱格子集；臂與 C1p 三個 seed 共用子集，比例的 R、零極差 1/N 與 max+2R 隨之使用子集樣本。落點中位距離、雜訊帶與其他計算維持原樣。V1–V10 首次單次完整執行全部 PASS，7 個 subprocess 殺手都實際 FAIL。
 
-SECOND PASS: PASS；`descriptor_checks` 以外判讀程式 AST 一致，V1–V7 斷言與預期值一致（V4 僅更新突變來源比對字串）；25 個保護檔 SHA256 diff=[]。六個同斷言 subprocess 殺手全部 FAIL。
+SECOND PASS: PASS；V10 用 SHA256 為 `68038b85…` 的原始程式執行真 CLI，在原替身組與 U 回折組逐值比較所有非擠下限 JSON 欄位。原替身組除新增子集清單外，TXT 全文相同，PNG 位元相同。V1–V8 自測語句與預期值 AST 全同；v1 評估目錄 20 個保護檔 SHA256 diff=[]。
 
-`n_tests=8 n_killers=6 n_checks=387`
+`n_tests=10 n_killers=7 n_checks=506`
 
-## 檔案與依據
+## 依據與變更
 
-- `wallpen2_analyze.py`：CLI、v2 描述量、seed R、守門、hi→lo 選擇、判定、JSON／等寬表／四面板圖。
-- `wallpen2_selftest.py`：V1–V8；被測程式只在新 subprocess 執行，突變為獨立來源副本；沒有 preload 或猴補。
-- `wallpen2-selftest-output.txt`：回鍋單單次完整執行 V1–V8 的 stdout＋stderr 原文（覆寫）。
-- `wallpen2_selftest_first_failure.txt`：第一輪失敗原文。
-- `wallpen2_example/`：正常有 draw 的替身組，含 JSON、文字、PNG。
-- `wallpen2_example_nodraw/`：真實 C2hi G2 FAIL／無 draw 的替身組，含 JSON、文字、PNG。
+開工前已讀原工單 `WORKORDER-wallpen2-eval-v1.md`、預註冊 §七 v2.1、r2 交付與自測原文；上一版 commit 為 `eccece8`。
 
-預註冊完整 SHA256：`2131461b93bd339d79eec94ec043687a757dc31e86c88f4c08795e0b10309563`。
+- §七 v2.1 完整 SHA256：`e8cef8e86ed1447021bcb491be5aea662b6bc502507e192c90ea569ebb34ecd3`。
+- 上一版 analyzer SHA256：`68038b856fc6a08dad16506f6444799d93dd7df110df56823876cea359aff8da`。
+- 本版 analyzer SHA256：`0ca418f614fc34a63ba05001c0e49e553c079849e529fca8424181c04f9c18d8`。
 
-本次 `wallpen2_analyze.py` SHA256：`68038b856fc6a08dad16506f6444799d93dd7df110df56823876cea359aff8da`。
+程式新增部分標記 `wallpen2 r3:`。從 C1p Stage O 的 `cells` 取陷阱格；在 `routes[task]['paths']` 中找所有包含該格的路，取該格索引 +3（超出路長取最後一格）。格心位移使用格索引差乘原始格距 `ruler.cell_size=4`，共同座標原點抵消；每條路皆 ≥ 5.65 才納入。子集依原 cells 次序保留。
 
-沿用而未修改：
+子集只計算一次；既有配對／routes 一致性驗證確保五臂共用。JSON 新增 `floor_subset_cells`，TXT 每 task 印同名清單，包含無 draw 情境。`descriptors.away.floor_fraction` 使用子集的 16 draws／格；非陷阱比例不變。`noise_report` 與 `descriptor_checks` 原碼不變，直接接收新的比例與 N。中位距離仍用所有陷阱格。
 
-- `analyze_wallpen.py` SHA256 `536e6a9eb907a521fbd6a6aa05fa3c21da2e38cff9938639f6636972dc146c00`。
-- `model_metrics.py` SHA256 `291ead053320d669a814157f2dbe125b50d549c5251ced4473b704b99f2f929c`。
+原 JSON 的 `prereg_sha256` 欄位依「其他欄位逐值不變」保留 v2.0 基線值；本次 v2.1 規則依據的 SHA 記於上方。
 
-只使用 CPU；未訓練、未載 checkpoint、未 commit、未刪檔、未裝套件。訓練工單檔案未碰。
+原替身組子集未排除任何陷阱格：task 2＝7 格／112 draws，task 4＝5 格／80 draws，task 5＝4 格／64 draws。此為程式驗收，不能當成 v2 訓練臂的實驗結果。
 
-## CLI
+## 自測與殺手
 
-臂名稱固定，`--outdir` 必填。以下為替身例，不能當成 v2 實驗結果：
-
-```bash
-BG=/home/cymaxwelllee/Projects/elsa-agent-workspaces/luna/data/fleet-runs/breakthrough-u
-EV=/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen_eval
-/home/cymaxwelllee/Projects/lacot/.venv/bin/python -B "$EV/wallpen2_analyze.py" \
-  --base "C1p=$BG/wallpen/stageO/C1.json,$BG/wallpen/model/C1-model.json" \
-  --seed "C1p-s34=$BG/hsweep/stageO/H3.json,$EV/H3-model.json" \
-  --seed "C1p-s35=$BG/wallpen/stageO/B0s.json,$BG/wallpen/model/B0s-model.json" \
-  --arm "C3-b=$BG/hsweep/stageO/H3.json,$EV/H3-model.json" \
-  --arm "C3-a=$BG/wallpen/stageO/C2lo.json,$BG/wallpen/model/C2lo-model.json" \
-  --outdir "$EV/wallpen2_example"
-```
-
-輸出固定名稱 `wallpen2-analysis.json`、`wallpen2-analysis.txt`、`wallpen2-analysis.png`。JSON 記錄每份輸入的路徑與 SHA256。
-
-無 draw 例的三個 seed 與 C3-a 都用 C1；C3-b 用真實 C2hi Stage O／model。該例沒有補造 draw，保留 G2 FAIL；`interpretation.primary` 為 `C3-a`，原因列出 G2 與無 draw，C3-b 主指標為 null。
-
-## 實作口徑
-
-有 draw 的 Stage O 直接呼叫 v1 `validate_stage`、`assert_paired`、`arm_metrics`；主指標、區間、路乾淨尺與四分類沿用 v1。空 flow 專用驗證只檢查 envelope／尺／evidence key／inventory／seed／閘／provenance，不補造樣本。對照及兩個 seed 都必須有 draw 且閘全 PASS；候選臂閘失敗仍保留已量到的指標。
-
-落點距離為 `sqrt((p_x-start_x)^2+(p_y-start_y)^2)`，start 是 `smooth_anchored_xy[0]`。陷阱與非陷阱分報中位數及閉區間 `[5.65,6.5]` 比例。中位數的圖上區間採兩層 percentile bootstrap；比例直接沿用 v1 bootstrap。皆 10,000 次，seed 20261004。
-
-R 按 task／量取三 seed 極差；零極差用相同樣本數的 `1/N`，每個 R 在文字與 JSON 列出。非陷阱 VALID 與陷阱 NEAR 用往壞方向 `>2R` 守門。直路 MSE 相等檢查僅警告，不進守門。四分類使用 v1.2 函數，基準 C1p。主判只看閘與守門；task 4／5 分判，task 2 描述。
-
-本輪逐條比較自查（所有容差皆為 `1e-12`；報出的門檻值維持原數值）：
-
-| 比較 | 自查與處理 |
-| --- | --- |
-| 下限比例嚴格 `> max+2R` | 補為 `floor > limit + 1e-12`，等號不擠。 |
-| 雜訊帶下緣（含等號） | 補為 `band[0]-1e-12 <= med`。 |
-| 雜訊帶上緣（含等號） | 補為 `med <= band[1]+1e-12`。 |
-| 「仍在縮」嚴格小於下緣 | 補為 `med < band[0]-1e-12`，與含等號的帶內比較一致。 |
-| VALID Δ ≥ .15 | 原 `V1.reaches(dv, .15)` 已有容差，維持。 |
-| 路乾淨 Δ ≥ .30 | 原 `V1.reaches(dc, .30)` 已有容差，維持。 |
-| VALID R ≥ .10 | 原 `V1.reaches(R, .10)` 已有容差，維持。 |
-| 非陷阱 VALID／陷阱 NEAR 守門嚴格 > 2R | 原 `value > limit+1e-12` 已有容差，維持。 |
-
-落點距離 `[5.65,6.5]` 是原始描述量定義，維持；零極差退回判斷與直路 MSE 相等警告也維持。
-
-替身組的三個「seed」其實是 C1、H3、B0s，不能代表 v2 共享 stage 1 的訓練雜訊。輸出中的 `synthetic` 反映 model JSON 原有標記；這兩組交付例的臂別都是替身名稱，並非真的 v2 訓練臂。
-
-## 自測狀態
-
-執行命令：
+`wallpen2-selftest-output.txt` 是以下單次完整執行的 stdout＋stderr 原文，exit 0；本輪沒有失敗後重跑。
 
 ```bash
 /home/cymaxwelllee/Projects/lacot/.venv/bin/python -B \
@@ -81,22 +32,32 @@ R 按 task／量取三 seed 極差；零極差用相同樣本數的 `1/N`，每�
   > experiments/_workorders/wallpen_eval/wallpen2-selftest-output.txt 2>&1
 ```
 
-V1：逐值核對 v1 指標、paired 區間、四分類。V2：獨立重算 H3／C2lo 距離與比例。V3：C1／H3／B0s 手算 R 與三份相同 JSON 的 `1/N`。V4：原始 JSON 落點全改成 5.8；邊界殺手被殺。V5：VALID 大增仍需兩個描述量；所有判定分支、四分類、縮短及雜訊註記測試通過，成功條件殺手被殺。
+被測 analyzer 只在新 subprocess 執行，殺手為來源副本；沒有 preload、猴補或載入 checkpoint。既有 V4–V8 的判讀分支 fixture 仍為明示 synthetic aggregates；新增 V9、V10 執行真正 analyzer CLI。
 
-V6：真實無 draw CLI、G1／G2／G3、task 2／4／5 兩種守門、等於 2R、兩臂都 FAIL 的檢查全部通過；exit-on-no-draw 殺手確實 exit 2。原 :329 的過度寬泛斷言改成兩條：有直路 MSE 不等的警告；每臂的守門失敗清單只含 VALID／NEAR 守門，且直路 MSE 不進守門 checks 或 pass_all。保留替身組原有的 VALID／NEAR FAIL。新增殺手把直路 MSE 相等納入守門 checks，這條斷言確實 FAIL。
+- V1–V8：全部 PASS，沿用上一版所有斷言與預期值。V4 的全 5.8 落點仍判擠；V8 的 n=80／112 計數邊界與 1/N 退回均不變，無任何預期值修訂。
+- V9：不呼叫被測函數，以 `math.hypot` 獨立逐格重算 H3 前 3 步位移，核對 JSON／TXT 清單，原文列出每格位移。
+- V9 U 回折：明示合成 routes fixture；task 4 的 `[3,8]` 一條路位移 √80，另一條路三步 U 回折位移 4，必須排除。此為 JSON 路徑條件 fixture，不是實測 maze 最短路。
+- V9 子集比例：五臂 task 4 都只用 4 格／64 draws；被排除格的 16 個 5.8 落點不計入。三 seed 都 0，R＝1/64；候選臂 2/64 等於 max+2R 不擠，3/64 必須擠。
+- V9 短路徑：一步位移 4／終止格位移 0 排除，兩步直角位移 √32 納入，確認不足三步取最後格。
+- V9 新殺手：把子集条件改成 `if True`（全部陷阱格），同一套 CLI 斷言實際 FAIL：`V9 exact independent subset list`。
+- V10：從 `git show eccece8:…/wallpen2_analyze.py` 取原始來源並核對完整 SHA，再對完全相同輸入路徑執行 CLI。僅剔除新增子集、陷阱 floor_fraction、其 seed noise 與三個判讀欄位 `floor_fraction/floor_limit/squeezed`，其餘 JSON 全結構逐值相等，包含結論、守門、來源與所有中位距離。一般替身組的原 TXT 與 PNG 亦相同。
 
-V7：固定同一組閘／守門狀態，把 C3-b VALID 分別設為 .9、.01（C3-a 為 .5），兩次主判都選 C3-b，並保留 C3-b 主指標。改成比較 VALID 的殺手選出 C3-b、C3-a，確實 FAIL。
+七個實際被殺的突變：V4 基準改 C1p；V5 拿掉成功的描述量条件；V6 無 draw exit；V6 直路 MSE 納入守門；V7 按 VALID 選主判；V8 移除下限容差；V9 子集改全部陷阱格。
 
-V8：下限比例計數組 `(0,0,3)/80`、`(7,7,7)/80`、`(0,0,3)/112`，候選臂各測 8/N、9/N、10/N。以 `Fraction` 獨立手算門檻；R=0 時為 `7/80 + 2*(1/80) = 9/80`，等號不擠。兩臂、task 4／5 的擠判定與結論全部核對。另驗距離雜訊帶 `[639/80,642/80]` 的上下緣及外側；等號留在帶內且不標「仍在縮」。拿掉下限比例容差的突變在 `(0,0,3)/80`、臂 9/80 的 V8 斷言 FAIL。
-
-本次判讀程式只補上述容差；未改 V1–V7 預期值。殺手總數由五調為六，計入新增的容差殺手。最終原文：
+最終原文：
 
 ```text
-SECOND PASS: source review and all same-invariant subprocess killers passed
-n_tests=8 n_killers=6 n_checks=387
+SECOND PASS: independent subsets, pinned r2 non-floor equality and all same-invariant subprocess killers passed
+n_tests=10 n_killers=7 n_checks=506
 STATUS: DONE
 ```
 
-完整 stdout／stderr 見 `wallpen2-selftest-output.txt`。subprocess fixture、突變副本與各 CLI 原文保留於 `/tmp/wallpen2_selftest_7vejpmcg`。本輪修改前來源、輸出與 SHA256 清單保留於 `/tmp/wallpen2_r2_before/`。
+完整 fixture、突變來源與每次 CLI 原文保留於 `/tmp/wallpen2_selftest_sdv15916/`；修改前檔案及保護檔 SHA 清單保留於 `/tmp/wallpen2_r3_before/`。只寫入 `wallpen2_*` 交付檔與其輸出；未 commit、刪檔、裝套件、訓練或使用 GPU。訓練目錄同時有外部變更，本次未寫入其中任何檔案。
+
+## CLI 與輸出
+
+CLI 不變：`--base C1p=STAGEO,MODEL`，兩個 `--seed C1p-s34=…`／`C1p-s35=…`，兩個 `--arm C3-b=…`／`C3-a=…`，`--outdir DIR` 必填。
+
+輸出固定為 `wallpen2-analysis.json`、`wallpen2-analysis.txt`、`wallpen2-analysis.png`。原替身例在 `wallpen2_example/`；真實 C2hi G2 FAIL／無 draw 的替身例在 `wallpen2_example_nodraw/`，保留退回 C3-a 的判定與原因。
 
 STATUS: DONE

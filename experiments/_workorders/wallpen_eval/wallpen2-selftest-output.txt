@@ -1,5 +1,5 @@
 wallpen2-eval-v1 | CPU | substitute data + explicitly synthetic branch fixtures
-Artifacts retained (no deletion): /tmp/wallpen2_selftest_7vejpmcg
+Artifacts retained (no deletion): /tmp/wallpen2_selftest_sdv15916
 V1 v1 exact metrics / paired intervals / four classes PASS
 V2 independent H3/C2lo distances and inclusive floor fraction PASS
 V3 hand seed ranges and three identical JSON 1/N fallback PASS
@@ -30,6 +30,10 @@ V8 distance 643/80: in_band=False shrinking=False PASS
 V8 counts n=80 seeds=(0, 0, 3) arm=8: squeezed=False PASS
 KILLER V8_floor_tolerance: mutant FAIL (expected): V8 exact strict floor boundary n=80 seeds=(0, 0, 3) arm=9 C3-b task 4
 V8 count-derived n=80/n=112 equality / 1/N fallback / next count / tolerance killer PASS
-SECOND PASS: source review and all same-invariant subprocess killers passed
-n_tests=8 n_killers=6 n_checks=387
+V9 H3 independent per-trap 3-step displacements: {('2', (4, 6)): [8.94427190999916], ('2', (5, 1)): [8.94427190999916], ('2', (5, 6)): [8.94427190999916], ('2', (6, 6)): [12.0], ('2', (7, 4)): [8.94427190999916], ('2', (7, 5)): [8.94427190999916], ('2', (7, 6)): [12.0], ('4', (2, 8)): [8.94427190999916], ('4', (3, 8)): [8.94427190999916, 8.94427190999916], ('4', (3, 9)): [8.94427190999916], ('4', (5, 6)): [8.94427190999916, 8.94427190999916], ('4', (6, 6)): [8.94427190999916, 8.94427190999916], ('5', (3, 4)): [8.94427190999916, 8.94427190999916], ('5', (3, 5)): [8.94427190999916, 8.94427190999916], ('5', (5, 6)): [8.94427190999916, 8.94427190999916], ('5', (6, 6)): [8.94427190999916, 8.94427190999916]}
+KILLER V9_all_traps: mutant FAIL (expected): V9 exact independent subset list
+V9 H3 independent subset / U all-routes exclusion / short routes / shared N,R,max+2R / killer PASS
+V10 pinned r2 CLI / all non-floor JSON values equal (real and U fixtures) / original TXT+PNG equal PASS
+SECOND PASS: independent subsets, pinned r2 non-floor equality and all same-invariant subprocess killers passed
+n_tests=10 n_killers=7 n_checks=506
 STATUS: DONE

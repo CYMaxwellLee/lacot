@@ -1,4 +1,4 @@
-"""Eight v2 tests. Tested code is executed only in fresh subprocesses.
+"""Ten v2 tests. Tested code is executed only in fresh subprocesses.
 
 Mutants are source copies executed in subprocesses; no preload or monkeypatch.
 Synthetic decision aggregates are marked separately from measured JSON fixtures.
@@ -10,6 +10,8 @@ import sys
 sys.dont_write_bytecode = True
 import argparse
 import copy
+import hashlib
+import math
 from fractions import Fraction
 import json
 from pathlib import Path
@@ -424,8 +426,148 @@ def main():
         mut = s.mutant('V8_floor_tolerance', 'squeezed = floor > limit + 1e-12', 'squeezed = floor > limit')
         s.kill('V8_floor_tolerance', count_boundaries, lambda: count_boundaries(mut))
         s.passed('V8 count-derived n=80/n=112 equality / 1/N fallback / next count / tolerance killer')
-        s.check(s.tests == 8 and s.killers == 6, 'exactly eight tests and six killed subprocess mutants')
-        print('SECOND PASS: source review and all same-invariant subprocess killers passed', flush=True)
+        # V9: independent route arithmetic on H3, plus explicit route fixtures.
+        # Never import or call the candidate's subset/descriptors in this process.
+        def independent_subset(stage):
+            selected, displacements = {t: [] for t in TASKS}, {}
+            for c in stage['cells']:
+                if not c['away']:
+                    continue
+                t, start = str(c['task']), c['cell']
+                ds = []
+                for path in stage['routes'][t]['paths']:
+                    if start in path:
+                        end = path[min(path.index(start)+3, len(path)-1)]
+                        ds.append(math.hypot(end[0]-start[0], end[1]-start[1])*4.0)
+                s.check(bool(ds), 'V9 independent route coverage')
+                displacements[t, tuple(start)] = ds
+                if min(ds) >= 5.65:
+                    selected[t].append(start)
+            return selected, displacements
+
+        def subset_matches(stage, result, txt):
+            expected, ds = independent_subset(stage)
+            s.check(result['floor_subset_cells'] == expected, 'V9 exact independent subset list')
+            for t in TASKS:
+                s.check(f'task {t} floor_subset_cells: '+json.dumps(expected[t]) in txt,
+                        'V9 TXT subset list '+t)
+            return ds
+
+        h3_only = dict.fromkeys(SEEDS+('C3-b', 'C3-a'), (stages['H3'], models['H3']))
+        h3_out = s.tmp/'wallpen2_v9_h3'
+        h3_result = s.cli(h3_only, outdir=h3_out)
+        ds = subset_matches(raw['H3'], h3_result, (h3_out/'wallpen2-analysis.txt').read_text())
+        print('V9 H3 independent per-trap 3-step displacements: '+str(ds), flush=True)
+
+        # Explicit synthetic routes: the first route for [3,8] qualifies, but
+        # the second has a three-step U prefix ending at [3,9], displacement 4.
+        # These route fixtures test the JSON contract, not measured maze routes.
+        u_raw = copy.deepcopy(raw['C1'])
+        p2 = u_raw['routes']['4']['paths'][1]
+        u_raw['routes']['4']['paths'][1] = [[3,8], [4,8], [4,9], [3,9]]+p2[2:]
+        for c in u_raw['cells']:
+            if c['away']:
+                for d in c['flow']:
+                    start = d['smooth_anchored_xy'][0]
+                    d['p_xy'] = [start[0]+8., start[1]]
+        u_path = s.tmp/'wallpen2_v9_u.json'
+        u_path.write_text(json.dumps(u_raw))
+        u_bindings = dict.fromkeys(SEEDS+('C3-b', 'C3-a'), (u_path, models['C1']))
+        u_arm = copy.deepcopy(u_raw)
+        # Excluded cell: all sixteen endpoints at 5.8. Included cells: exactly
+        # two endpoints at 5.8. Thus the subset cutoff is exactly 2/64.
+        for c in u_arm['cells']:
+            if str(c['task']) == '4' and c['away']:
+                for d in (c['flow'] if c['cell'] == [3,8] else c['flow'][:2] if c['cell'] == [2,8] else []):
+                    start = d['smooth_anchored_xy'][0]
+                    d['p_xy'] = [start[0]+5.8, start[1]]
+        u_arm_path = s.tmp/'wallpen2_v9_u_arm.json'
+        u_arm_path.write_text(json.dumps(u_arm))
+        u_bindings['C3-b'] = (u_arm_path, models['C1'])
+
+        def u_invariant(candidate=TARGET):
+            out = s.tmp/('wallpen2_v9_u_'+candidate.stem)
+            result = s.cli(u_bindings, candidate, out)
+            ds = subset_matches(u_raw, result, (out/'wallpen2-analysis.txt').read_text())
+            s.check(ds['4', (3,8)] == [math.sqrt(80), 4.0] and
+                    [3,8] not in result['floor_subset_cells']['4'], 'V9 one U route excludes cell despite qualifying other route')
+            for name in SEEDS+('C3-b', 'C3-a'):
+                floor = result['arms'][name]['tasks']['4']['descriptors']['away']['floor_fraction']
+                s.check(floor['n'] == 64 and floor['count'] == (2 if name == 'C3-b' else 0),
+                        'V9 all arms/seeds share subset denominator/count '+name)
+            ns = result['noise']['by_task']['4']['away_floor_fraction']
+            checks = result['interpretation']['by_arm']['C3-b']['4']['descriptor_checks']
+            s.check(ns['n'] == 64 and ns['R'] == 1/64 and ns['fallback'] and
+                    checks['floor_fraction'] == 2/64 and checks['floor_limit'] == 2/64 and not checks['squeezed'],
+                    'V9 subset R=1/64 and max+2R equality')
+            return result
+
+        u_result = u_invariant()
+        mut = s.mutant('V9_all_traps',
+                       "if all(o['ruler']['cell_size'] * np.linalg.norm(np.asarray(end)-start) >= 5.65 for end in targets):",
+                       'if True:')
+        s.kill('V9_all_traps', u_invariant, lambda: u_invariant(mut))
+        next_raw = copy.deepcopy(u_arm)
+        cell = next(c for c in next_raw['cells'] if str(c['task']) == '4' and c['cell'] == [2,8])
+        d = cell['flow'][2]
+        d['p_xy'] = [d['smooth_anchored_xy'][0][0]+5.8, d['smooth_anchored_xy'][0][1]]
+        next_path = s.tmp/'wallpen2_v9_next.json'
+        next_path.write_text(json.dumps(next_raw))
+        next_result = s.cli(dict(u_bindings, **{'C3-b': (next_path, models['C1'])}))
+        checks = next_result['interpretation']['by_arm']['C3-b']['4']['descriptor_checks']
+        s.check(checks['floor_fraction'] == 3/64 and checks['squeezed'], 'V9 subset next count squeezed')
+        # Routes shorter than three steps use their last cell: one step is 4,
+        # two perpendicular steps are sqrt(32), on the >=5.65 side.
+        short_raw = copy.deepcopy(u_raw)
+        short_raw['routes']['4']['paths'] += [[[3,8], [3,9]], [[3,9], [3,10], [4,10]],
+                                             [[2,8], [3,8], [3,9]]]
+        short_path = s.tmp/'wallpen2_v9_short.json'
+        short_path.write_text(json.dumps(short_raw))
+        short_out = s.tmp/'wallpen2_v9_short'
+        short_result = s.cli(dict.fromkeys(SEEDS+('C3-b', 'C3-a'), (short_path, models['C1'])), outdir=short_out)
+        ds = subset_matches(short_raw, short_result, (short_out/'wallpen2-analysis.txt').read_text())
+        s.check(ds['4', (3,8)][-1] == 4 and ds['4', (3,9)][-1] == 0 and
+                math.sqrt(32) in ds['4', (3,9)] and [3,9] not in short_result['floor_subset_cells']['4'] and
+                ds['4', (2,8)][-1] == math.sqrt(32) and [2,8] in short_result['floor_subset_cells']['4'],
+                'V9 short/terminal routes use last cell')
+        s.passed('V9 H3 independent subset / U all-routes exclusion / short routes / shared N,R,max+2R / killer')
+
+        # V10: pinned original source, executed by the real CLI on identical
+        # paths. Remove only floor-related fields; compare all remaining values.
+        cp = subprocess.run(['git', 'show', 'eccece8:experiments/_workorders/wallpen_eval/wallpen2_analyze.py'],
+                            cwd=HERE, capture_output=True, check=True)
+        s.check(hashlib.sha256(cp.stdout).hexdigest() == '68038b856fc6a08dad16506f6444799d93dd7df110df56823876cea359aff8da',
+                'V10 pinned 68038b85 original source')
+        old_target = s.tmp/'wallpen2_analyze_r2_reference.py'
+        old_target.write_bytes(cp.stdout)
+        def without_floor(result):
+            result = copy.deepcopy(result)
+            result.pop('floor_subset_cells', None)
+            for arm in result['arms'].values():
+                for task in arm['tasks'].values():
+                    task['descriptors']['away'].pop('floor_fraction')
+            for task in result['noise']['by_task'].values():
+                task.pop('away_floor_fraction')
+            for tasks in (list(result['interpretation']['by_arm'].values())+[result['interpretation']['by_task']]):
+                for row in tasks.values():
+                    for k in ('floor_fraction', 'floor_limit', 'squeezed'):
+                        row.get('descriptor_checks', {}).pop(k, None)
+            return result
+        for label, inputs, current, current_out in (
+                ('measured', bindings, measured, HERE/'wallpen2_example'),
+                ('U subset', u_bindings, u_result, s.tmp/'wallpen2_v9_u_wallpen2_analyze')):
+            old_out = s.tmp/('wallpen2_v10_'+label.replace(' ', '_'))
+            original = s.cli(inputs, old_target, old_out)
+            s.check(without_floor(current) == without_floor(original), 'V10 every non-floor JSON value equal '+label)
+            if label == 'measured':
+                txt = (current_out/'wallpen2-analysis.txt').read_text()
+                txt = '\n'.join(line for line in txt.split('\n') if ' floor_subset_cells: ' not in line)
+                s.check(txt == (old_out/'wallpen2-analysis.txt').read_text(), 'V10 all original TXT values/lines unchanged on H3 subset')
+                s.check((current_out/'wallpen2-analysis.png').read_bytes() == (old_out/'wallpen2-analysis.png').read_bytes(),
+                        'V10 original PNG unchanged on H3 subset')
+        s.passed('V10 pinned r2 CLI / all non-floor JSON values equal (real and U fixtures) / original TXT+PNG equal')
+        s.check(s.tests == 10 and s.killers == 7, 'exactly ten tests and seven killed subprocess mutants')
+        print('SECOND PASS: independent subsets, pinned r2 non-floor equality and all same-invariant subprocess killers passed', flush=True)
         status = 'DONE'
     except Exception:
         print(traceback.format_exc(), flush=True)

@@ -35,12 +35,38 @@ def distance_metrics(rows):
     return dict(median_distance=median, floor_fraction=dict(V1.bootstrap(floor), count=int(floor.sum()), n=int(a.size)))
 
 
-def descriptors(o):
-    return {t: {label: distance_metrics([
+def floor_subset_cells(o):
+    # wallpen2 r3: every shortest-route suffix must have a far-enough target.
+    # Raw cell centers differ by cell_size per grid coordinate (origin cancels).
+    subset = {t: [] for t in TASKS}
+    for c in o['cells']:
+        if not c['away']:
+            continue
+        t, start = str(c['task']), c['cell']
+        paths = [p for p in o['routes'][t]['paths'] if start in p]
+        if not paths:
+            raise ValueError('Floor subset cell missing from routes: '+str((t, start)))
+        targets = [p[min(p.index(start)+3, len(p)-1)] for p in paths]
+        if all(o['ruler']['cell_size'] * np.linalg.norm(np.asarray(end)-start) >= 5.65 for end in targets):
+            subset[t].append(start)
+    return subset
+
+
+def descriptors(o, subset):
+    result = {t: {label: distance_metrics([
         [float(np.sqrt(sum((float(d['p_xy'][j])-float(d['smooth_anchored_xy'][0][j]))**2
                            for j in (0, 1)))) for d in c['flow']]
         for c in o['cells'] if str(c['task']) == t and c['away'] == away])
         for away, label in ((True, 'away'), (False, 'nonaway'))} for t in TASKS}
+    # wallpen2 r3: only the trap floor fraction changes; medians keep all cells.
+    for t in TASKS:
+        distances = np.asarray([
+            [float(np.sqrt(sum((float(d['p_xy'][j])-float(d['smooth_anchored_xy'][0][j]))**2
+                               for j in (0, 1)))) for d in c['flow']]
+            for c in o['cells'] if str(c['task']) == t and c['away'] and c['cell'] in subset[t]])
+        floor = (distances >= 5.65) & (distances <= 6.5)
+        result[t]['away']['floor_fraction'] = dict(V1.bootstrap(floor), count=int(floor.sum()), n=int(floor.size))
+    return result
 
 
 def has_draws(o):
@@ -202,6 +228,8 @@ def analyze(inputs, geo):
         raise ValueError('Exactly C1p, C1p-s34, C1p-s35, C3-b, C3-a required')
     base_o = inputs['C1p'][0]
     V1.validate_stage(base_o)
+    # wallpen2 r3: one route-defined subset shared by both arms and all seeds.
+    subset = floor_subset_cells(base_o)
     arms, arrays = {}, {}
     for name, (o, model) in inputs.items():
         draw = has_draws(o)
@@ -219,7 +247,7 @@ def analyze(inputs, geo):
             raise ValueError(name+': seed reference requires PASS gates and measured draws')
         if draw:
             arms[name], arrays[name] = V1.arm_metrics(o, model, geo)
-            desc = descriptors(o)
+            desc = descriptors(o, subset)
             for t in TASKS:
                 arms[name]['tasks'][t]['descriptors'] = desc[t]
         else:
@@ -239,6 +267,7 @@ def analyze(inputs, geo):
     differences = {name+'-C1p': {t: {metric: V1.bootstrap(arrays[name][t][:, :, k], arrays['C1p'][t][:, :, k])
                     for k, metric in enumerate(METRICS)} for t in TASKS} for name in arrays if name != 'C1p'}
     return dict(schema='wallpen2-analysis-v2', prereg_sha256=PREREG_SHA, tau=M.TAU, arms=arms,
+                floor_subset_cells=subset,  # wallpen2 r3: audit the selected cells.
                 noise=noise, differences=differences, interpretation=interpret(arms, differences, noise), warnings=warnings,
                 synthetic=any(a['synthetic'] for a in arms.values()),
                 notes=['task 4、5 各自判；task 2 只描述。非陷阱描述量不參與判定。',
@@ -250,6 +279,9 @@ def analyze(inputs, geo):
 def render(result):
     lines = ['wallpen v2 | CPU | '+('SUBSTITUTE / SYNTHETIC' if result['synthetic'] else 'measured JSON'),
              'arm       task VALID [95% CI]          clean [95% CI]          joint    med-trap [95% CI]       floor-trap [95% CI]', '-'*135]
+    # wallpen2 r3: include the common floor subset even for arms without draws.
+    for t, cells in result['floor_subset_cells'].items():
+        lines.append(f'task {t} floor_subset_cells: '+json.dumps(cells))
     for name, arm in result['arms'].items():
         if not arm['has_draws']:
             lines.append(f'{name:<10} 未量（沒有 draw）')
