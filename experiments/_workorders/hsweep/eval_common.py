@@ -21,6 +21,14 @@ def load_ckpt(dataset_dir, ckpt_path, ckpt_sha256):
     loaded weights intact. No sed, AST transformation, source-copy or flat-guard
     modification is used. Call once in a fresh process (determinism setup).
     """
+    # wallpen r2b: read the caller's seed override; retain s33 by default.
+    seed_value = os.environ.get('WALLPEN_EXPECTED_SEED', '33')
+    try:
+        expected_seed = int(seed_value)
+    except ValueError:
+        raise Blocked(f'BLOCKED: WALLPEN_EXPECTED_SEED must be an integer: {seed_value!r}') from None
+    if expected_seed != 33:
+        print(f'⚠️ eval_common: WALLPEN_EXPECTED_SEED={seed_value}（非 s33 契約）', file=sys.stderr)
     ckpt_path = Path(ckpt_path).resolve()
     boundary = import_boundary()  # before torch, dataset, checkpoint, imports
     if not ckpt_path.is_file() or file_sha(ckpt_path) != ckpt_sha256:
@@ -73,7 +81,8 @@ def load_ckpt(dataset_dir, ckpt_path, ckpt_sha256):
         sys.dont_write_bytecode = saved_bytecode
         os.environ.clear()
         os.environ.update(saved_env)
-    if not (module.LOAD_EMA == 1 and module.TAG_SEED == 33 and module.T_CAP == 128
+    # wallpen r2b: only the expected checkpoint seed changes in this contract.
+    if not (module.LOAD_EMA == 1 and module.TAG_SEED == expected_seed and module.T_CAP == 128
             and module.STEPS2 == module._S1 == 0 and module.CONT_TRAIN == 0):
         raise Blocked('BLOCKED: s33/EMA/no-training contract mismatch')
     # Source loads EMA for the consumer chain, raw checkpoint encoder/decoder.
