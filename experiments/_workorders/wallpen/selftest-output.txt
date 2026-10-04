@@ -1,0 +1,850 @@
+CPU SELFTEST artifacts retained: /tmp/wallpen-selftest-5o49w89y
+Python=3.11.15 torch=2.6.0+cu124 threads=1 CUDA_VISIBLE_DEVICES=empty
+baseline sha256=f748e2cb844dd9af2d3d93a624ca2545635953c4ffdbd684cf69fe8b2ceb377e prereg=d2238aef400f6fb981026640e5c915fc702c55b7d4c9c6e03952cc071d03ca92
+dataset sha256=9add335e598e48ebc483447d61415a9755ffb738ddfc406cb9708b2a238992e8 reference ckpt sha256=c42e4389a6f29188a9f8d5f1f3bbad732ccc8597bd26faae00d7fbef9d924d4f
+r1 original trainer sha256=418670fd14d1851e35a9cd77461b7bf156550aaa93cec58c8af2ce1660b0ff91 current=d6d869ff5e997f319905908d3e220980748c762a9dc8738a3b38c2cee5567247
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+T1 6 batches: main rng, real data, 192 route choices PASS
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+  DIAG stp 0  recon 1.3955  總 3.0258  grad 31.943  effdim 0.041
+  step 1  recon-mse 1.3955  總 3.0258  u 有效維度 0.041
+  step 2  recon-mse 1.3652  總 3.1520  u 有效維度 0.040
+  step 3  recon-mse 1.3477  總 3.0112  u 有效維度 0.037
+  e_target match-acc(train batch) 0.938
+  ⇒ u 有效維度 起 0.041 → 末 0.037
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+存 checkpoint /tmp/wallpen-selftest-5o49w89y/T1-base/ckpt_large-stitch_self_K8_c256_ch4_st3_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s13_dssoft_norf_cd0.1_bci_s33.pt
+ARTIFACT /tmp/wallpen-selftest-5o49w89y/T1-base/ckpt_large-stitch_self_K8_c256_ch4_st3_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s13_dssoft_norf_cd0.1_bci_s33.pt
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+  DIAG stp 0  recon 1.3955  總 3.0258  grad 31.943  effdim 0.041
+  step 1  recon-mse 1.3955  總 3.0258  u 有效維度 0.041
+  step 2  recon-mse 1.3652  總 3.1520  u 有效維度 0.040
+  step 3  recon-mse 1.3477  總 3.0112  u 有效維度 0.037
+  e_target match-acc(train batch) 0.938
+  ⇒ u 有效維度 起 0.041 → 末 0.037
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+存 checkpoint /tmp/wallpen-selftest-5o49w89y/T1-default/ckpt_large-stitch_self_K8_c256_ch4_st3_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s13_dssoft_norf_cd0.1_bci_s33.pt
+ARTIFACT /tmp/wallpen-selftest-5o49w89y/T1-default/ckpt_large-stitch_self_K8_c256_ch4_st3_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s13_dssoft_norf_cd0.1_bci_s33.pt
+T1 baseline/default ckpt sha256=637dbddf84afbf744bee2c2814fed4df07d70a917390dad36ee1ced3ca6032e8: PASS
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+  DIAG stp 0  recon 1.3955  總 3.0258  grad 31.943  effdim 0.041
+  step 1  recon-mse 1.3955  總 3.0258  u 有效維度 0.041
+  step 2  recon-mse 1.3652  總 3.1527  u 有效維度 0.040
+  step 3  recon-mse 1.3477  總 3.0111  u 有效維度 0.037
+  e_target match-acc(train batch) 0.969
+  ⇒ u 有效維度 起 0.041 → 末 0.037
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+存 checkpoint /tmp/wallpen-selftest-5o49w89y/T1-mutant/ckpt_large-stitch_self_K8_c256_ch4_st3_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s13_dssoft_norf_cd0.1_bci_s33.pt
+ARTIFACT /tmp/wallpen-selftest-5o49w89y/T1-mutant/ckpt_large-stitch_self_K8_c256_ch4_st3_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s13_dssoft_norf_cd0.1_bci_s33.pt
+KILLER T1: observed FAIL: T1 checkpoint sha mismatch; mutant sha256=5ced654b048a40253d85a0432904cd5f17c18b6670ecb14941c5b210d5a8fa96
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+T2 full-route/actual-target/g max_depth=0.0571901798 counts={'first': 1727, 'retry': 321, 'fallback': 0}
+T2 fallback exercised: PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+T2 full-route/actual-target/g max_depth=0.0996175185 counts={'first': 2048, 'retry': 0, 'fallback': 0}
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 528, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 295, in worker
+    check_teacher(m)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 141, in check_teacher
+    assert depth <= m.TAU_DATA, 'T2 dirty teacher accepted'
+           ^^^^^^^^^^^^^^^^^^^
+AssertionError: T2 dirty teacher accepted
+KILLER T2 dirty teacher accepted: observed FAIL (exit 1), expected PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+T3 70 batches: main rng, real data, 2240 route choices PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 528, in <module>
+    args = parser.parse_args()
+        ^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 298, in worker
+    pair_batches(baseline, m, clean=True)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 168, in pair_batches
+    assert torch.equal(x[:32] if clean else x, y[:32] if clean else y), 'paired real data/batch differs'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: paired real data/batch differs
+KILLER paired real data/batch differs: observed FAIL (exit 1), expected PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+T4 τ_data=0.0572285652: PASS
+device: cpu
+wallpen: τ_data=0.1349922717 reference=0.05722857
+wallpen: τ_data mismatch (0.1349922717)
+KILLER τ_data mismatch: observed FAIL (exit 1), expected PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+T5 task4 negative control ij_to_xy: (20.0, 16.0) -> (12.0, 16.0)
+T5 real=0 negative=0.0108401309699 appended-free=0.0108401309699 delta=0
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+T5 task4 negative control ij_to_xy: (20.0, 16.0) -> (12.0, 16.0)
+T5 real=0 negative=0.00609757378697 appended-free=0.00342319929041 delta=0.00267437449656
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 307, in worker
+    check_pen(m)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 187, in check_pen
+    assert abs(p - diluted) < 1e-9, 'T5c dilution detected'
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: T5c dilution detected
+KILLER T5c dilution detected: observed FAIL (exit 1), expected PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+T6a cond_dim=2 max_delta=0
+T6a cond_dim=3 max_delta=0
+T6b decoded penalty=0.0255253594369 requires_grad=True
+T6b/c flow finite nonzero; decoder/cond grads None; global RNG unchanged: PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+T6a cond_dim=2 max_delta=0
+T6a cond_dim=3 max_delta=0
+T6b decoded penalty=0.0255253594369 requires_grad=False
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 309, in worker
+    check_sample(m)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 218, in check_sample
+    assert penalty.requires_grad, 'T6b sample has no gradients'
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError: T6b sample has no gradients
+KILLER T6b sample has no gradients: observed FAIL (exit 1), expected PASS
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+T6d cond_dim=2 float64 randomized ALL weights; forward bitwise equal; n_params=42 n_scalars=572
+T6d cond_dim=2 gradcheck(z): PASS
+T6d cond_dim=2 gradcheck(z, cond, ALL flow parameters): PASS
+T6d cond_dim=3 float64 randomized ALL weights; forward bitwise equal; n_params=42 n_scalars=572
+T6d cond_dim=3 gradcheck(z): PASS
+T6d cond_dim=3 gradcheck(z, cond, ALL flow parameters): PASS
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+T6d cond_dim=2 float64 randomized ALL weights; forward bitwise equal; n_params=42 n_scalars=572
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 281, in worker
+    check_gradcheck(Path(args.source))
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 270, in check_gradcheck
+    assert torch.autograd.gradcheck(lambda base: wrapped(base, cond), (z,), fast_mode=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 2055, in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 2084, in _gradcheck_helper
+    _gradcheck_real_imag(
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 1494, in _gradcheck_real_imag
+    gradcheck_fn(
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 1635, in _slow_gradcheck
+    raise GradcheckError(
+torch.autograd.gradcheck.GradcheckError: Jacobian mismatch for output 0 with respect to input 0,
+numerical:tensor([[-8.2469e-05,  3.9786e-03,  8.3544e-01],
+        [ 1.4873e-02,  7.6920e-01,  7.3131e-04],
+        [ 7.9205e-01, -8.4182e-05,  4.0046e-05]], dtype=torch.float64)
+analytical:tensor([[0.0000, 0.0000, 0.8354],
+        [0.0000, 0.7692, 0.0000],
+        [0.7921, 0.0000, 0.0000]], dtype=torch.float64)
+
+KILLER Jacobian mismatch: observed FAIL (exit 1), expected PASS
+T6d history.detach(): forward bitwise equal, gradcheck FAIL observed
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+T6d cond_dim=2 float64 randomized ALL weights; forward bitwise equal; n_params=42 n_scalars=572
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 281, in worker
+    check_gradcheck(Path(args.source))
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 270, in check_gradcheck
+    assert torch.autograd.gradcheck(lambda base: wrapped(base, cond), (z,), fast_mode=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 2055, in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 2084, in _gradcheck_helper
+    _gradcheck_real_imag(
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 1494, in _gradcheck_real_imag
+    gradcheck_fn(
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 1635, in _slow_gradcheck
+    raise GradcheckError(
+torch.autograd.gradcheck.GradcheckError: Jacobian mismatch for output 0 with respect to input 0,
+numerical:tensor([[-8.2469e-05,  3.9786e-03,  8.3544e-01],
+        [ 1.4873e-02,  7.6920e-01,  7.3131e-04],
+        [ 7.9205e-01, -8.4182e-05,  4.0046e-05]], dtype=torch.float64)
+analytical:tensor([[0., 0., 0.],
+        [0., 0., 0.],
+        [0., 0., 0.]], dtype=torch.float64)
+
+KILLER Jacobian mismatch: observed FAIL (exit 1), expected PASS
+T6d z.detach(): forward bitwise equal, gradcheck FAIL observed
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+T6d cond_dim=2 float64 randomized ALL weights; forward bitwise equal; n_params=42 n_scalars=572
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 281, in worker
+    check_gradcheck(Path(args.source))
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 270, in check_gradcheck
+    assert torch.autograd.gradcheck(lambda base: wrapped(base, cond), (z,), fast_mode=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 2055, in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 2084, in _gradcheck_helper
+    _gradcheck_real_imag(
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 1494, in _gradcheck_real_imag
+    gradcheck_fn(
+  File "/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/autograd/gradcheck.py", line 1635, in _slow_gradcheck
+    raise GradcheckError(
+torch.autograd.gradcheck.GradcheckError: Jacobian mismatch for output 0 with respect to input 0,
+numerical:tensor([[-8.2469e-05,  3.9786e-03,  8.3544e-01],
+        [ 1.4873e-02,  7.6920e-01,  7.3131e-04],
+        [ 7.9205e-01, -8.4182e-05,  4.0046e-05]], dtype=torch.float64)
+analytical:tensor([[ 2.6913e-04,  4.1804e-04,  8.3544e-01],
+        [ 3.6471e-03,  7.6920e-01,  1.0232e-03],
+        [ 7.9205e-01,  2.1055e-04, -7.9291e-05]], dtype=torch.float64)
+
+KILLER Jacobian mismatch: observed FAIL (exit 1), expected PASS
+T6d mu.detach(): forward bitwise equal, gradcheck FAIL observed
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+  DIAG stp 0  recon 1.3894  總 3.0125  grad 31.839  effdim 0.041
+  step 1  recon-mse 1.3894  總 3.0125  u 有效維度 0.041
+  DIAG stp 10  recon 0.4674  總 1.2226  grad 8.452  effdim 0.035
+  DIAG stp 20  recon 0.5495  總 1.2359  grad 10.680  effdim 0.036
+  step 25  recon-mse 0.3654  總 0.9650  u 有效維度 0.037
+  DIAG stp 30  recon 0.3197  總 0.9977  grad 6.076  effdim 0.037
+  DIAG stp 40  recon 0.2275  總 0.8045  grad 3.316  effdim 0.039
+  step 50  recon-mse 0.1747  總 0.7416  u 有效維度 0.040
+  DIAG stp 50  recon 0.1555  總 0.6945  grad 2.117  effdim 0.047
+  DIAG stp 60  recon 0.1245  總 0.6833  grad 3.027  effdim 0.050
+  DIAG stp 70  recon 0.1287  總 0.6260  grad 4.151  effdim 0.062
+  step 75  recon-mse 0.1294  總 0.6374  u 有效維度 0.064
+  DIAG stp 80  recon 0.1127  總 0.6437  grad 3.920  effdim 0.059
+  DIAG stp 90  recon 0.1012  總 0.5249  grad 4.434  effdim 0.065
+  step 100  recon-mse 0.0932  總 0.5254  u 有效維度 0.063
+  e_target match-acc(train batch) 0.969
+  ⇒ u 有效維度 起 0.041 → 末 0.063
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+  step 10  l_nf/dim 1.397 l_anchor 1.2774 l_refine 0.0000
+  step 20  l_nf/dim 1.323 l_anchor 0.7166 l_refine 0.0000
+  step 30  l_nf/dim 1.204 l_anchor 0.6325 l_refine 0.0000
+  step 40  l_nf/dim 1.036 l_anchor 0.5856 l_refine 0.0000
+  step 50  l_nf/dim 0.800 l_anchor 0.6190 l_refine 0.0000
+  step 60  l_nf/dim 0.504 l_anchor 0.6247 l_refine 0.0000
+  step 70  l_nf/dim 0.186 l_anchor 0.6161 l_refine 0.0000
+  step 80  l_nf/dim -0.142 l_anchor 0.6788 l_refine 0.0000
+  step 90  l_nf/dim -0.444 l_anchor 0.5981 l_refine 0.0000
+  step 100  l_nf/dim -0.710 l_anchor 0.5586 l_refine 0.0000
+存 checkpoint /tmp/wallpen-selftest-5o49w89y/T7-C1/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_s33.pt
+wallpen: teacher final {'first': 5391, 'retry': 1009, 'fallback': 0}
+wallpen: sidecar /tmp/wallpen-selftest-5o49w89y/T7-C1/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_s33.pt.wallpen.json
+ARTIFACT /tmp/wallpen-selftest-5o49w89y/T7-C1/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_s33.pt
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+wallpen: stage 1 stp 0 pen=0.01933924481 pen/recon_mse=0.013919488671439793 λ=None
+  DIAG stp 0  recon 1.3894  總 3.0125  grad 31.839  effdim 0.041
+  step 1  recon-mse 1.3894  總 3.0125  u 有效維度 0.041
+wallpen: stage 1 stp 10 pen=0.02463684231 pen/recon_mse=0.05271055250691229 λ=None
+  DIAG stp 10  recon 0.4674  總 1.2226  grad 8.452  effdim 0.035
+wallpen: stage 1 stp 20 pen=0.07191833854 pen/recon_mse=0.1308734102744656 λ=None
+  DIAG stp 20  recon 0.5495  總 1.2359  grad 10.680  effdim 0.036
+wallpen: stage 1 stp 24 pen=0.03809978068 pen/recon_mse=0.1042596923400127 λ=None
+  step 25  recon-mse 0.3654  總 0.9650  u 有效維度 0.037
+wallpen: stage 1 stp 30 pen=0.01617945172 pen/recon_mse=0.05061399708002793 λ=None
+  DIAG stp 30  recon 0.3197  總 0.9977  grad 6.076  effdim 0.037
+wallpen: stage 1 stp 40 pen=0.01836694032 pen/recon_mse=0.08074124751184981 λ=None
+  DIAG stp 40  recon 0.2275  總 0.8045  grad 3.316  effdim 0.039
+wallpen: stage 1 stp 49 pen=0.01136557944 pen/recon_mse=0.06505910822759847 λ=None
+  step 50  recon-mse 0.1747  總 0.7416  u 有效維度 0.040
+wallpen: stage 1 stp 50 pen=0.01125139184 pen/recon_mse=0.07233895233331472 λ=None
+  DIAG stp 50  recon 0.1555  總 0.6945  grad 2.117  effdim 0.047
+wallpen: stage 1 stp 60 pen=0.008396850899 pen/recon_mse=0.06742445167981975 λ=None
+  DIAG stp 60  recon 0.1245  總 0.6833  grad 3.027  effdim 0.050
+wallpen: stage 1 λ=14.23293738 ρ_mean=14.23293738 n_used=50/50
+wallpen: stage 1 stp 70 pen=0.007335300092 pen/recon_mse=0.05698784843817688 λ=14.232937380682165
+  DIAG stp 70  recon 0.1287  總 0.7304  grad 6.053  effdim 0.062
+wallpen: stage 1 stp 74 pen=0.004193149507 pen/recon_mse=0.03260885561947468 λ=14.232937380682165
+  step 75  recon-mse 0.1286  總 0.6908  u 有效維度 0.064
+wallpen: stage 1 stp 80 pen=0.002468238818 pen/recon_mse=0.018740667678708207 λ=14.232937380682165
+  DIAG stp 80  recon 0.1317  總 0.7126  grad 3.690  effdim 0.063
+wallpen: stage 1 stp 90 pen=0.002588190138 pen/recon_mse=0.023619751516686528 λ=14.232937380682165
+  DIAG stp 90  recon 0.1096  總 0.5928  grad 5.759  effdim 0.066
+wallpen: stage 1 stp 99 pen=0.002514100401 pen/recon_mse=0.029223012865901628 λ=14.232937380682165
+  step 100  recon-mse 0.0860  總 0.5314  u 有效維度 0.064
+  e_target match-acc(train batch) 0.969
+  ⇒ u 有效維度 起 0.041 → 末 0.064
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+wallpen: stage 2 stp 9 pen=0.0009508364601 pen/l_nf=0.0006810229282040789 λ=None
+  step 10  l_nf/dim 1.396 l_anchor 1.1914 l_refine 0.0000
+wallpen: stage 2 stp 19 pen=0.00110075844 pen/l_nf=0.0008347024024201118 λ=None
+  step 20  l_nf/dim 1.319 l_anchor 0.6551 l_refine 0.0000
+wallpen: stage 2 stp 29 pen=0.001674588886 pen/l_nf=0.0014004462023687755 λ=None
+  step 30  l_nf/dim 1.196 l_anchor 0.6379 l_refine 0.0000
+wallpen: stage 2 stp 39 pen=0.003531795694 pen/l_nf=0.003461145256146727 λ=None
+  step 40  l_nf/dim 1.020 l_anchor 0.5980 l_refine 0.0000
+wallpen: stage 2 stp 49 pen=0.0109767234 pen/l_nf=0.013749684412699453 λ=None
+  step 50  l_nf/dim 0.798 l_anchor 0.5980 l_refine 0.0000
+wallpen: stage 2 stp 59 pen=0.009775979444 pen/l_nf=0.02037461418025342 λ=None
+  step 60  l_nf/dim 0.480 l_anchor 0.6048 l_refine 0.0000
+wallpen: stage 2 λ=5.559852292 ρ_mean=5.559852292 n_used=50/50
+wallpen: stage 2 stp 69 pen=0.006352705415 pen/l_nf=0.04541649732714319 λ=5.55985229245679
+  step 70  l_nf/dim 0.140 l_anchor 0.6268 l_refine 0.0000
+wallpen: stage 2 stp 79 pen=0.001711909194 pen/l_nf=-0.010482849276972234 λ=5.55985229245679
+  step 80  l_nf/dim -0.163 l_anchor 0.6551 l_refine 0.0000
+wallpen: stage 2 stp 89 pen=0.001649189391 pen/l_nf=-0.0039097887401600175 λ=5.55985229245679
+  step 90  l_nf/dim -0.422 l_anchor 0.5749 l_refine 0.0000
+wallpen: stage 2 stp 99 pen=0.0009412246291 pen/l_nf=-0.001382642925747839 λ=5.55985229245679
+  step 100  l_nf/dim -0.681 l_anchor 0.5745 l_refine 0.0000
+存 checkpoint /tmp/wallpen-selftest-5o49w89y/T7-C2/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt
+wallpen: teacher final {'first': 5391, 'retry': 1009, 'fallback': 0}
+wallpen: sidecar /tmp/wallpen-selftest-5o49w89y/T7-C2/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt.wallpen.json
+ARTIFACT /tmp/wallpen-selftest-5o49w89y/T7-C2/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+wallpen: stage 1 stp 0 pen=0.01933924481 pen/recon_mse=0.013919488671439793 λ=None
+  DIAG stp 0  recon 1.3894  總 3.0125  grad 31.839  effdim 0.041
+  step 1  recon-mse 1.3894  總 3.0125  u 有效維度 0.041
+wallpen: stage 1 stp 10 pen=0.02463684231 pen/recon_mse=0.05271055250691229 λ=None
+  DIAG stp 10  recon 0.4674  總 1.2226  grad 8.452  effdim 0.035
+wallpen: stage 1 stp 20 pen=0.07191833854 pen/recon_mse=0.1308734102744656 λ=None
+  DIAG stp 20  recon 0.5495  總 1.2359  grad 10.680  effdim 0.036
+wallpen: stage 1 stp 24 pen=0.03809978068 pen/recon_mse=0.1042596923400127 λ=None
+  step 25  recon-mse 0.3654  總 0.9650  u 有效維度 0.037
+wallpen: stage 1 stp 30 pen=0.01617945172 pen/recon_mse=0.05061399708002793 λ=None
+  DIAG stp 30  recon 0.3197  總 0.9977  grad 6.076  effdim 0.037
+wallpen: stage 1 stp 40 pen=0.01836694032 pen/recon_mse=0.08074124751184981 λ=None
+  DIAG stp 40  recon 0.2275  總 0.8045  grad 3.316  effdim 0.039
+wallpen: stage 1 stp 49 pen=0.01136557944 pen/recon_mse=0.06505910822759847 λ=None
+  step 50  recon-mse 0.1747  總 0.7416  u 有效維度 0.040
+wallpen: stage 1 stp 50 pen=0.01125139184 pen/recon_mse=0.07233895233331472 λ=None
+  DIAG stp 50  recon 0.1555  總 0.6945  grad 2.117  effdim 0.047
+wallpen: stage 1 stp 60 pen=0.008396850899 pen/recon_mse=0.06742445167981975 λ=None
+  DIAG stp 60  recon 0.1245  總 0.6833  grad 3.027  effdim 0.050
+wallpen: stage 1 λ=14.23293738 ρ_mean=14.23293738 n_used=50/50
+wallpen: stage 1 stp 70 pen=0.007335300092 pen/recon_mse=0.05698784843817688 λ=14.232937380682165
+  DIAG stp 70  recon 0.1287  總 0.7304  grad 6.053  effdim 0.062
+wallpen: stage 1 stp 74 pen=0.004193149507 pen/recon_mse=0.03260885561947468 λ=14.232937380682165
+  step 75  recon-mse 0.1286  總 0.6908  u 有效維度 0.064
+wallpen: stage 1 stp 80 pen=0.002468238818 pen/recon_mse=0.018740667678708207 λ=14.232937380682165
+  DIAG stp 80  recon 0.1317  總 0.7126  grad 3.690  effdim 0.063
+wallpen: stage 1 stp 90 pen=0.002588190138 pen/recon_mse=0.023619751516686528 λ=14.232937380682165
+  DIAG stp 90  recon 0.1096  總 0.5928  grad 5.759  effdim 0.066
+wallpen: stage 1 stp 99 pen=0.002514100401 pen/recon_mse=0.029223012865901628 λ=14.232937380682165
+  step 100  recon-mse 0.0860  總 0.5314  u 有效維度 0.064
+  e_target match-acc(train batch) 0.969
+  ⇒ u 有效維度 起 0.041 → 末 0.064
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+wallpen: stage 2 stp 9 pen=0.0009508364601 pen/l_nf=0.0006810229282040789 λ=None
+  step 10  l_nf/dim 1.396 l_anchor 1.1914 l_refine 0.0000
+wallpen: stage 2 stp 19 pen=0.00110075844 pen/l_nf=0.0008347024024201118 λ=None
+  step 20  l_nf/dim 1.319 l_anchor 0.6551 l_refine 0.0000
+wallpen: stage 2 stp 29 pen=0.001674588886 pen/l_nf=0.0014004462023687755 λ=None
+  step 30  l_nf/dim 1.196 l_anchor 0.6379 l_refine 0.0000
+wallpen: stage 2 stp 39 pen=0.003531795694 pen/l_nf=0.003461145256146727 λ=None
+  step 40  l_nf/dim 1.020 l_anchor 0.5980 l_refine 0.0000
+wallpen: stage 2 stp 49 pen=0.0109767234 pen/l_nf=0.013749684412699453 λ=None
+  step 50  l_nf/dim 0.798 l_anchor 0.5980 l_refine 0.0000
+wallpen: stage 2 stp 59 pen=0.009775979444 pen/l_nf=0.02037461418025342 λ=None
+  step 60  l_nf/dim 0.480 l_anchor 0.6048 l_refine 0.0000
+wallpen: stage 2 λ=5.559852292 ρ_mean=5.559852292 n_used=50/50
+wallpen: stage 2 stp 69 pen=0.006352705415 pen/l_nf=0.04541649732714319 λ=5.55985229245679
+  step 70  l_nf/dim 0.140 l_anchor 0.6268 l_refine 0.0000
+wallpen: stage 2 stp 79 pen=0.001711909194 pen/l_nf=-0.010482849276972234 λ=5.55985229245679
+  step 80  l_nf/dim -0.163 l_anchor 0.6551 l_refine 0.0000
+wallpen: stage 2 stp 89 pen=0.001649189391 pen/l_nf=-0.0039097887401600175 λ=5.55985229245679
+  step 90  l_nf/dim -0.422 l_anchor 0.5749 l_refine 0.0000
+wallpen: stage 2 stp 99 pen=0.0009412246291 pen/l_nf=-0.001382642925747839 λ=5.55985229245679
+  step 100  l_nf/dim -0.681 l_anchor 0.5745 l_refine 0.0000
+存 checkpoint /tmp/wallpen-selftest-5o49w89y/r1-C2-old/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt
+wallpen: teacher final {'first': 5391, 'retry': 1009, 'fallback': 0}
+wallpen: sidecar /tmp/wallpen-selftest-5o49w89y/r1-C2-old/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt.wallpen.json
+ARTIFACT /tmp/wallpen-selftest-5o49w89y/r1-C2-old/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt
+r1 behavior unchanged C2 CPU 100+100 old/new ckpt sha256=3ae14b6f8c810e85e6d7db70ec7b396f82c631fe642823128b0e0af456c548f6: PASS
+T7 λ_dec=14.2329373807 κ*meanρ=14.2329373807 n_used=50 PASS
+T7 λ_flow=5.55985229246 κ*meanρ=5.55985229246 n_used=50 PASS
+T7 C1/C2 stage1 DIAG 0–60 identical; >=70 diverges: PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+wallpen: stage 1 stp 0 pen=0 pen/recon_mse=0.0 λ=None
+  DIAG stp 0  recon 1.3955  總 3.0258  grad 31.943  effdim 0.041
+  step 1  recon-mse 1.3955  總 3.0258  u 有效維度 0.041
+wallpen: stage 1 stp 10 pen=0 pen/recon_mse=0.0 λ=None
+  DIAG stp 10  recon 0.4683  總 1.2257  grad 8.485  effdim 0.035
+wallpen: stage 1 stp 20 pen=0 pen/recon_mse=0.0 λ=None
+  DIAG stp 20  recon 0.5550  總 1.2505  grad 10.680  effdim 0.036
+wallpen: stage 1 stp 24 pen=0 pen/recon_mse=0.0 λ=None
+  step 25  recon-mse 0.3654  總 0.9650  u 有效維度 0.037
+wallpen: stage 1 stp 30 pen=0 pen/recon_mse=0.0 λ=None
+  DIAG stp 30  recon 0.3178  總 1.0013  grad 6.106  effdim 0.037
+wallpen: stage 1 stp 40 pen=0 pen/recon_mse=0.0 λ=None
+  DIAG stp 40  recon 0.2271  總 0.8035  grad 3.206  effdim 0.039
+wallpen: stage 1 stp 49 pen=0 pen/recon_mse=0.0 λ=None
+  step 50  recon-mse 0.1752  總 0.7464  u 有效維度 0.040
+wallpen: stage 1 stp 50 pen=0 pen/recon_mse=0.0 λ=None
+  DIAG stp 50  recon 0.1572  總 0.7022  grad 2.166  effdim 0.046
+wallpen: stage 1 stp 60 pen=0 pen/recon_mse=0.0 λ=None
+  DIAG stp 60  recon 0.1242  總 0.6821  grad 2.999  effdim 0.050
+wallpen: stage 1 λ=0 ρ_mean=0 n_used=0/50 無可定標
+wallpen: stage 1 stp 70 pen=0 pen/recon_mse=0.0 λ=0.0
+  DIAG stp 70  recon 0.1303  總 0.6306  grad 4.198  effdim 0.062
+wallpen: stage 1 stp 74 pen=0 pen/recon_mse=0.0 λ=0.0
+  step 75  recon-mse 0.1298  總 0.6375  u 有效維度 0.064
+wallpen: stage 1 stp 80 pen=0 pen/recon_mse=0.0 λ=0.0
+  DIAG stp 80  recon 0.1134  總 0.6450  grad 3.933  effdim 0.059
+wallpen: stage 1 stp 90 pen=0 pen/recon_mse=0.0 λ=0.0
+  DIAG stp 90  recon 0.0997  總 0.5195  grad 4.210  effdim 0.066
+wallpen: stage 1 stp 99 pen=0 pen/recon_mse=0.0 λ=0.0
+  step 100  recon-mse 0.0925  總 0.5245  u 有效維度 0.063
+  e_target match-acc(train batch) 0.969
+  ⇒ u 有效維度 起 0.041 → 末 0.063
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+wallpen: stage 2 stp 9 pen=0 pen/l_nf=0.0 λ=None
+  step 10  l_nf/dim 1.397 l_anchor 1.2786 l_refine 0.0000
+wallpen: stage 2 stp 19 pen=0 pen/l_nf=0.0 λ=None
+  step 20  l_nf/dim 1.322 l_anchor 0.7165 l_refine 0.0000
+wallpen: stage 2 stp 29 pen=0 pen/l_nf=0.0 λ=None
+  step 30  l_nf/dim 1.205 l_anchor 0.6322 l_refine 0.0000
+wallpen: stage 2 stp 39 pen=0 pen/l_nf=0.0 λ=None
+  step 40  l_nf/dim 1.037 l_anchor 0.5828 l_refine 0.0000
+wallpen: stage 2 stp 49 pen=0 pen/l_nf=0.0 λ=None
+  step 50  l_nf/dim 0.802 l_anchor 0.6195 l_refine 0.0000
+wallpen: stage 2 stp 59 pen=0 pen/l_nf=0.0 λ=None
+  step 60  l_nf/dim 0.503 l_anchor 0.6273 l_refine 0.0000
+wallpen: stage 2 λ=0 ρ_mean=0 n_used=0/50 無可定標
+wallpen: stage 2 stp 69 pen=0 pen/l_nf=0.0 λ=0.0
+  step 70  l_nf/dim 0.191 l_anchor 0.6201 l_refine 0.0000
+wallpen: stage 2 stp 79 pen=0 pen/l_nf=-0.0 λ=0.0
+  step 80  l_nf/dim -0.139 l_anchor 0.6808 l_refine 0.0000
+wallpen: stage 2 stp 89 pen=0 pen/l_nf=-0.0 λ=0.0
+  step 90  l_nf/dim -0.443 l_anchor 0.5964 l_refine 0.0000
+wallpen: stage 2 stp 99 pen=0 pen/l_nf=-0.0 λ=0.0
+  step 100  l_nf/dim -0.726 l_anchor 0.5614 l_refine 0.0000
+存 checkpoint /tmp/wallpen-selftest-5o49w89y/T7-zero-signal/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt
+wallpen: teacher final {'first': 6400, 'retry': 0, 'fallback': 0}
+wallpen: sidecar /tmp/wallpen-selftest-5o49w89y/T7-zero-signal/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt.wallpen.json
+ARTIFACT /tmp/wallpen-selftest-5o49w89y/T7-zero-signal/ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt
+KILLER T7: observed FAIL: T7 positive-calibration gate FAIL (zero signal); both λ=0, 無可定標, JSON finite PASS
+T8 recursive key/shape schema matches H3; sidecar fields=['STAGES', 'clean_teacher', 'no_calibration', 'κ', 'λ_dec', 'λ_flow', 'ρ', 'τ_data'] filename=ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt: PASS
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+⛔ /tmp/wallpen-selftest-5o49w89y/T8-existing-ckpt/ckpt_large-stitch_self_K8_c256_ch4_st0_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s10_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt already exists — refusing checkpoint overwrite
+T8 existing ckpt: refusal PASS (exit 1)
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+wallpen: /tmp/wallpen-selftest-5o49w89y/T8-existing-sidecar/ckpt_large-stitch_self_K8_c256_ch4_st0_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s10_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt.wallpen.json already exists — refusing overwrite
+T8 existing sidecar: refusal PASS (exit 1)
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  e_target match-acc(train batch) nan
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  ⭐ 已切到 EMA 影子權重（m=0.999，五模組）
+✅ 載入 ckpt_large-stitch_self_K8_c256_ch4_st100_T128_ep2_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s1100_dssoft_norf_cd0.1_bci_tc1_wp1_s33.pt（跳過訓練，只跑評估）  cfg={'K': 8, 'T_CAP': 128, 'ENC_OBJ': 'recon_ictr', 'LEARNED_REFINE': 0, 'COND_DROP': 0.1}
+  decoder 內部點 RMSE 0.4363   打亂 u 之後 1.9627   用到的 u 值 +1.5264   ✓
+T8 frozen eval load_ckpt: PASS (no evaluation)
+=== wallpen effective env: ARM=G MODE=dryrun host=zeldajr ===
+CUDA_VISIBLE_DEVICES=
+LACOT_BC_INDEP=1
+LACOT_COND_DROP=0.1
+LACOT_DEC_START=soft
+LACOT_DIAG_TRAIN=1
+LACOT_EMA_W=0.999
+LACOT_ENC_OBJ=recon_ictr
+LACOT_ENV=pointmaze-large-stitch-v0
+LACOT_EVAL_EPISODES=2
+LACOT_EVAL_RS=0
+LACOT_K=8
+LACOT_LEARNED_REFINE=0
+LACOT_OUT_DIR=/tmp/wallpen-selftest-5o49w89y/formal-G
+LACOT_SEED=33
+LACOT_STEPS1=1500
+LACOT_STEPS2=8000
+LACOT_TEACHER_H=3
+LACOT_TEACHER_MIX=0.5
+LACOT_WARMUP=500
+MUJOCO_GL=osmesa
+OGBENCH_DATA_DIR=/archive/cymaxwelllee/data/ogbench
+PYTHONDONTWRITEBYTECODE=1
+PYTHONPATH=/home/cymaxwelllee/Projects/lacot-wallpen-frozen
+=== end env ===
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+R4 formal arm=G STEPS1=1500 STEPS2=8000 CLEAN=0 KAPPA=0.0: asserts PASS (no training)
+=== wallpen effective env: ARM=C1 MODE=dryrun host=zeldajr ===
+CUDA_VISIBLE_DEVICES=
+LACOT_BC_INDEP=1
+LACOT_COND_DROP=0.1
+LACOT_DEC_START=soft
+LACOT_DIAG_TRAIN=1
+LACOT_EMA_W=0.999
+LACOT_ENC_OBJ=recon_ictr
+LACOT_ENV=pointmaze-large-stitch-v0
+LACOT_EVAL_EPISODES=2
+LACOT_EVAL_RS=0
+LACOT_K=8
+LACOT_LEARNED_REFINE=0
+LACOT_OUT_DIR=/tmp/wallpen-selftest-5o49w89y/formal-C1
+LACOT_SEED=33
+LACOT_STEPS1=1500
+LACOT_STEPS2=8000
+LACOT_TEACHER_CLEAN=1
+LACOT_TEACHER_H=3
+LACOT_TEACHER_MIX=0.5
+LACOT_WARMUP=500
+MUJOCO_GL=osmesa
+OGBENCH_DATA_DIR=/archive/cymaxwelllee/data/ogbench
+PYTHONDONTWRITEBYTECODE=1
+PYTHONPATH=/home/cymaxwelllee/Projects/lacot-wallpen-frozen
+=== end env ===
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+R4 formal arm=C1 STEPS1=1500 STEPS2=8000 CLEAN=1 KAPPA=0.0: asserts PASS (no training)
+=== wallpen effective env: ARM=C2lo MODE=dryrun host=zeldajr ===
+CUDA_VISIBLE_DEVICES=
+LACOT_BC_INDEP=1
+LACOT_COND_DROP=0.1
+LACOT_DEC_START=soft
+LACOT_DIAG_TRAIN=1
+LACOT_EMA_W=0.999
+LACOT_ENC_OBJ=recon_ictr
+LACOT_ENV=pointmaze-large-stitch-v0
+LACOT_EVAL_EPISODES=2
+LACOT_EVAL_RS=0
+LACOT_K=8
+LACOT_LEARNED_REFINE=0
+LACOT_OUT_DIR=/tmp/wallpen-selftest-5o49w89y/formal-C2lo
+LACOT_SEED=33
+LACOT_STEPS1=1500
+LACOT_STEPS2=8000
+LACOT_TEACHER_CLEAN=1
+LACOT_TEACHER_H=3
+LACOT_TEACHER_MIX=0.5
+LACOT_WALLPEN_KAPPA=0.1
+LACOT_WARMUP=500
+MUJOCO_GL=osmesa
+OGBENCH_DATA_DIR=/archive/cymaxwelllee/data/ogbench
+PYTHONDONTWRITEBYTECODE=1
+PYTHONPATH=/home/cymaxwelllee/Projects/lacot-wallpen-frozen
+=== end env ===
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+R4 formal arm=C2lo STEPS1=1500 STEPS2=8000 CLEAN=1 KAPPA=0.1: asserts PASS (no training)
+=== wallpen effective env: ARM=C2hi MODE=dryrun host=zeldajr ===
+CUDA_VISIBLE_DEVICES=
+LACOT_BC_INDEP=1
+LACOT_COND_DROP=0.1
+LACOT_DEC_START=soft
+LACOT_DIAG_TRAIN=1
+LACOT_EMA_W=0.999
+LACOT_ENC_OBJ=recon_ictr
+LACOT_ENV=pointmaze-large-stitch-v0
+LACOT_EVAL_EPISODES=2
+LACOT_EVAL_RS=0
+LACOT_K=8
+LACOT_LEARNED_REFINE=0
+LACOT_OUT_DIR=/tmp/wallpen-selftest-5o49w89y/formal-C2hi
+LACOT_SEED=33
+LACOT_STEPS1=1500
+LACOT_STEPS2=8000
+LACOT_TEACHER_CLEAN=1
+LACOT_TEACHER_H=3
+LACOT_TEACHER_MIX=0.5
+LACOT_WALLPEN_KAPPA=1
+LACOT_WARMUP=500
+MUJOCO_GL=osmesa
+OGBENCH_DATA_DIR=/archive/cymaxwelllee/data/ogbench
+PYTHONDONTWRITEBYTECODE=1
+PYTHONPATH=/home/cymaxwelllee/Projects/lacot-wallpen-frozen
+=== end env ===
+device: cpu
+wallpen: τ_data=0.0572285652 reference=0.05722857
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+R4 formal arm=C2hi STEPS1=1500 STEPS2=8000 CLEAN=1 KAPPA=1.0: asserts PASS (no training)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 495, in <module>
+    assert not INTENT, "wallpen: INTENT must be empty"
+           ^^^^^^^^^^
+AssertionError: wallpen: INTENT must be empty
+R4 forbidden INTENT: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 496, in <module>
+    assert not (FSQ_SPEC or FSQ_FIT or FSQ_LOAD), "wallpen: FSQ must be off"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: wallpen: FSQ must be off
+R4 forbidden FSQ: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 496, in <module>
+    assert not (FSQ_SPEC or FSQ_FIT or FSQ_LOAD), "wallpen: FSQ must be off"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: wallpen: FSQ must be off
+R4 forbidden FSQ_FIT: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 496, in <module>
+    assert not (FSQ_SPEC or FSQ_FIT or FSQ_LOAD), "wallpen: FSQ must be off"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: wallpen: FSQ must be off
+R4 forbidden FSQ_LOAD: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 497, in <module>
+    assert VQ_V == 0, "wallpen: VQ must be off"
+           ^^^^^^^^^
+AssertionError: wallpen: VQ must be off
+R4 forbidden VQ: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 498, in <module>
+    assert LO_W <= 0, "wallpen: LO_W must not be positive"
+           ^^^^^^^^^
+AssertionError: wallpen: LO_W must not be positive
+R4 forbidden LO_W: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 499, in <module>
+    assert CONT_TRAIN == 0, "wallpen: CONT_TRAIN must be 0"
+           ^^^^^^^^^^^^^^^
+AssertionError: wallpen: CONT_TRAIN must be 0
+R4 forbidden CONT_TRAIN: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 500, in <module>
+    assert not LOAD_CKPT, "wallpen: LOAD_CKPT must be empty"
+           ^^^^^^^^^^^^^
+AssertionError: wallpen: LOAD_CKPT must be empty
+R4 forbidden LOAD_CKPT: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 501, in <module>
+    assert not S1_FROM, "wallpen: S1_FROM must be empty"
+           ^^^^^^^^^^^
+AssertionError: wallpen: S1_FROM must be empty
+R4 forbidden S1_FROM: refusal PASS (exit 1)
+device: cpu
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 530, in <module>
+    worker(args)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 293, in worker
+    m = load(Path(args.source), 'flow' if args.case == 'sample' else 'batch', extra)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/selftest_wallpen.py", line 106, in load
+    module.__spec__.loader.exec_module(module)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/wallpen/train_wallpen.py", line 503, in <module>
+    assert not os.environ.get("LACOT_BOOT_DATA", ""), "wallpen: BOOT_DATA must be empty"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: wallpen: BOOT_DATA must be empty
+R4 forbidden BOOT_DATA: refusal PASS (exit 1)
+T1–T8 (including T6d), r1 behavior equality and R4 asserts: PASS
+SECOND PASS: T6d tests the exact sampler AST with explicit z and ALL functional parameters; T8 loader ran once in a fresh worker without pre-load torch setup. CUDA inverse/grid_sample behavior remains outside this CPU test.
+n_tests=10 n_killers=10
+STATUS: DONE

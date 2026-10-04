@@ -1,0 +1,283 @@
+--- experiments/_workorders/hsweep/train_hsweep.py
++++ experiments/_workorders/wallpen/train_wallpen.py
+@@ -478,6 +478,139 @@
+ TEACHER_H = int(os.environ["LACOT_TEACHER_H"]) if "LACOT_TEACHER_H" in os.environ else None
+ if TEACHER_H is not None and TEACHER_H <= 0:
+     raise SystemExit("⛔ LACOT_TEACHER_H must be a positive integer")
++# wallpen: opt-in switches and preregistered constants; disabled creates no geometry/RNG.
++TEACHER_CLEAN = int(os.environ.get("LACOT_TEACHER_CLEAN", "0"))
++WALLPEN_KAPPA = float(os.environ.get("LACOT_WALLPEN_KAPPA", "0"))
++WALLPEN_STAGES = os.environ.get("LACOT_WALLPEN_STAGES", "12")
++assert TEACHER_CLEAN in (0, 1), "wallpen: TEACHER_CLEAN must be 0 or 1"
++assert np.isfinite(WALLPEN_KAPPA) and WALLPEN_KAPPA >= 0, "wallpen: kappa must be finite and nonnegative"
++assert WALLPEN_STAGES in ("12", "1", "2"), "wallpen: STAGES must be 12, 1 or 2"
++if WALLPEN_KAPPA:
++    assert TEACHER_CLEAN == 1, "wallpen: kappa requires TEACHER_CLEAN=1"
++    assert AMP == 0, "wallpen: AMP must be off"
++    assert LEARNED_REFINE == 0, "wallpen: LEARNED_REFINE must be 0"
++    assert GRPO_W == DIV_W == 0, "wallpen: GRPO_W and DIV_W must be 0"
++    assert ENC_OBJ.startswith("recon"), "wallpen: penalty requires decoder"
++    # wallpen: r1 forbid overlapping experiments before their setup/load paths.
++    assert not INTENT, "wallpen: INTENT must be empty"
++    assert not (FSQ_SPEC or FSQ_FIT or FSQ_LOAD), "wallpen: FSQ must be off"
++    assert VQ_V == 0, "wallpen: VQ must be off"
++    assert LO_W <= 0, "wallpen: LO_W must not be positive"
++    assert CONT_TRAIN == 0, "wallpen: CONT_TRAIN must be 0"
++    assert not LOAD_CKPT, "wallpen: LOAD_CKPT must be empty"
++    assert not S1_FROM, "wallpen: S1_FROM must be empty"
++    # wallpen: BOOT_DATA is parsed later; reject the same env value before setup.
++    assert not os.environ.get("LACOT_BOOT_DATA", ""), "wallpen: BOOT_DATA must be empty"
++WARM_FRAC, CAL_STEPS, RETRY = 0.2, 50, 16
++TAU_DATA_REFERENCE = 0.05722857
++TAU_DATA = None
++_WP_GEO_CPU = _WP_GEO = None
++_CLEAN_RNG = _WP_TGEN = None
++_CLEAN_COUNTS = dict(first=0, retry=0, fallback=0)
++_WP_STATE = {stage: dict(rho=[], lam=None, no_calibration=False) for stage in ("1", "2")}
++
++
++def _wallpen_geo(device, res=8):
++    # wallpen: construction must preserve main/global random streams, even if GeoEnergy changes.
++    from lacot.refine_grad import GeoEnergy
++    _np_state = np.random.get_state()
++    try:
++        with torch.random.fork_rng(devices=([torch.cuda.current_device()] if device == "cuda" else [])):
++            return GeoEnergy(OBS_XY, MU_XY, SD_XY, res=res, device=device)
++    finally:
++        np.random.set_state(_np_state)
++
++
++def _wallpen_tau(geo):
++    # wallpen: CPU float32, all OBS points, bounded chunks; reject geometry/data drift.
++    maximum = 0.0
++    with torch.no_grad():
++        for start in range(0, N, 65536):
++            pts = torch.from_numpy(((OBS_XY[start:start + 65536] - MU_XY) / SD_XY).astype(np.float32))[None]
++            maximum = max(maximum, geo.wall_depth(pts).max().item())
++    print(f"wallpen: τ_data={maximum:.10f} reference={TAU_DATA_REFERENCE:.8f}", flush=True)
++    if abs(maximum - TAU_DATA_REFERENCE) > 1e-5:
++        raise SystemExit(f"wallpen: τ_data mismatch ({maximum:.10f})")
++    return maximum
++
++
++if TEACHER_CLEAN or WALLPEN_KAPPA:
++    _WP_GEO_CPU = _wallpen_geo("cpu")
++    TAU_DATA = _wallpen_tau(_WP_GEO_CPU)
++if WALLPEN_KAPPA:
++    _WP_GEO = _wallpen_geo(device)  # wallpen: separate training-device instance.
++
++
++def pen(pts_n):
++    # wallpen: violating-point mean per sample, then batch mean (no dilution).
++    ex = F.relu(_WP_GEO.wall_depth(pts_n) - TAU_DATA)
++    return (ex.square().sum(1) / (ex > 0).sum(1).clamp_min(1)).mean()
++
++
++def _wallpen_sample(flow, n, cond, generator):
++    # wallpen: exact reverse order and prefix semantics of Flow.sample; no in-place tokens.
++    z = torch.randn(n, flow.seq_len, flow.token_dim, device=next(flow.parameters()).device,
++                    generator=generator)
++    u = z
++    for i in reversed(range(len(flow.blocks))):
++        if i < len(flow.blocks) - 1:
++            u = flow.perm.inverse(u)
++        block = flow.blocks[i]
++        prefix = block._prefix(n, flow._cond_for_block(cond, i), u.device)
++        tokens = []
++        for t in range(flow.seq_len):
++            if t == 0:
++                seq = prefix
++            else:
++                # wallpen: preserve inverse's full-K buffer slice strides. Contiguous short
++                # stacks make Linear choose a different CPU GEMM and exceed the 1e-6 gate.
++                history = torch.cat([torch.stack(tokens, 1),
++                                     u.new_zeros(n, flow.seq_len - t, flow.token_dim)], dim=1)[:, :t]
++                seq = torch.cat([prefix, block.embed(history)], dim=1)
++            mu, alpha = block._params(seq)
++            tokens.append(u[:, t] * torch.exp(alpha[:, -1]) + mu[:, -1])
++        u = torch.stack(tokens, 1)
++    return u
++
++
++def _wallpen_calibrate(stage, stp, n_steps, main, penalty, params):
++    # wallpen: GRPO norm-ratio recipe; measurement never adds even zero*pen to loss.
++    state = _WP_STATE[stage]
++    warm = int(WARM_FRAC * n_steps)
++    if warm <= stp < warm + CAL_STEPS:
++        params = [p for p in params if p.requires_grad]
++        gm = torch.autograd.grad(main, params, retain_graph=True, allow_unused=True)
++        gp = torch.autograd.grad(penalty, params, retain_graph=True, allow_unused=True)
++        nm = torch.sqrt(sum((g.pow(2).sum() for g in gm if g is not None), main.new_zeros(()))).item()
++        np_ = torch.sqrt(sum((g.pow(2).sum() for g in gp if g is not None), main.new_zeros(()))).item()
++        rho = nm / np_ if np_ > 1e-12 else None
++        if rho is not None and not np.isfinite(rho):
++            raise RuntimeError("wallpen: nonfinite calibration ratio")
++        state["rho"].append(rho)
++        if stp == warm + CAL_STEPS - 1:
++            used = [r for r in state["rho"] if r is not None]
++            state["lam"] = WALLPEN_KAPPA * float(np.mean(used)) if used else 0.0
++            state["no_calibration"] = not used
++            print(f"wallpen: stage {stage} λ={state['lam']:.10g} "
++                  f"ρ_mean={float(np.mean(used)) if used else 0.0:.10g} n_used={len(used)}/{CAL_STEPS}"
++                  + (" 無可定標" if not used else ""), flush=True)
++    return state["lam"] if stp >= warm + CAL_STEPS and state["lam"] is not None else None
++
++
++def _wallpen_log(stage, stp, penalty, main):
++    # wallpen: descriptive ratios only; keep original DIAG lines untouched.
++    print(f"wallpen: stage {stage} stp {stp} pen={penalty.item():.10g} "
++          f"pen/{'recon_mse' if stage == '1' else 'l_nf'}="
++          f"{penalty.item() / main.item() if main.item() != 0 else 'undefined'} "
++          f"λ={_WP_STATE[stage]['lam']}", flush=True)
++
++
++def _wallpen_teacher_log(stage, stp):
++    # wallpen: teacher counts are cumulative across both stages.
++    if TEACHER_CLEAN and (stp + 1) % 1000 == 0:
++        print(f"wallpen: teacher stage {stage} step {stp+1} {_CLEAN_COUNTS}", flush=True)
++
++
+ _TCH = None
+ if TEACHER_MIX > 0:
+     assert not LEARNED_REFINE, "⛔ TEACHER_MIX 的 real-mask 尚未接進 l_refine 分支 —— 要開先接"
+@@ -603,6 +736,41 @@
+     return np.concatenate([p[:j], cut[None]], axis=0)
+ 
+ 
++def _wallpen_interp(p, n, raw_arclength=False):
++    # wallpen: full-route check uses physical arclength; actual target keeps hsweep interpolation.
++    seg = np.linalg.norm(np.diff(p, axis=0) * (SD_XY if raw_arclength else 1.0), axis=1)
++    cum = np.concatenate([[0.0], np.cumsum(seg)])
++    tt = np.linspace(0.0, cum[-1], n)
++    return np.stack([np.interp(tt, cum, p[:, k]) for k in (0, 1)], 1)
++
++
++def _wallpen_teacher_points(p):
++    # wallpen: check exactly the float32 points delivered to encoder/flow, plus full route and g.
++    return np.concatenate([_wallpen_interp(p, 128, raw_arclength=True),
++                           _wallpen_interp(_teacher_prefix(p), T_CAP), p[-1:]], 0).astype(np.float32)
++
++
++def _wallpen_teacher_ok(p):
++    with torch.no_grad():
++        return _WP_GEO_CPU.wall_depth(torch.from_numpy(_wallpen_teacher_points(p))[None]).max().item() <= TAU_DATA
++
++
++def _wallpen_clean_teacher(p, shifted):
++    # wallpen: first jitter already consumed the original main-rng draw; retries never use it.
++    if _wallpen_teacher_ok(shifted):
++        _CLEAN_COUNTS["first"] += 1
++        return shifted
++    for _ in range(RETRY):
++        candidate = p + _CLEAN_RNG.uniform(-0.5, 0.5, size=(1, 2)) * _tcell_norm
++        if _wallpen_teacher_ok(candidate):
++            _CLEAN_COUNTS["retry"] += 1
++            return candidate
++    if not _wallpen_teacher_ok(p):
++        raise RuntimeError("wallpen: unshifted fallback violates τ_data")
++    _CLEAN_COUNTS["fallback"] += 1
++    return p
++
++
+ def _teacher_traj(rng, n):
+     """從題庫抽 n 條 teacher 軌跡 → traj[n,T,2] 正規化。cell 內 jitter。
+     ⭐ P2：_BOOT 有東西時，n 條裡 BOOT_FRAC 比例改抽自舉樣本（按 exp(−βE) 權重）。
+@@ -612,7 +780,10 @@
+     goals = np.empty((n, 2), np.float64)  # hsweep: full translated endpoint, before truncation.
+     for i in range(n - n_b):
+         p = _TCH[int(rng.integers(len(_TCH)))]
++        _wp_route = p if TEACHER_CLEAN else None  # wallpen: retain unshifted route.
+         p = p + rng.uniform(-0.5, 0.5, size=(1, 2)) * _tcell_norm   # 整條小平移（cell 內）
++        if TEACHER_CLEAN:  # wallpen: opt-in clean acceptance/retry/fallback.
++            p = _wallpen_clean_teacher(_wp_route, p)
+         goals[i] = p[-1]  # hsweep: preserve distant g without consuming RNG.
+         p = _teacher_prefix(p)  # hsweep: after the original route choice and jitter.
+         seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
+@@ -770,6 +941,11 @@
+ 
+ 
+ torch.manual_seed(SEED); rng = np.random.default_rng(SEED if DATA_SEED < 0 else DATA_SEED)
++# wallpen: one dedicated generator per process; construction consumes no global randomness.
++if TEACHER_CLEAN:
++    _CLEAN_RNG = np.random.default_rng(SEED + 1_000_003)
++if WALLPEN_KAPPA:
++    _WP_TGEN = torch.Generator(device=device).manual_seed(SEED + 2_000_003)
+ _BOOT_RNG = np.random.default_rng(BOOT_SEED) if BOOT_SEED >= 0 else None   # ⭐ 9/2 boot 抽樣獨立流
+ print(f"設定：seed={SEED} cons={CONS} ema_m={EMA_M} K={K} COND={COND}"
+       + (f" data_seed={DATA_SEED}" if DATA_SEED >= 0 else "")
+@@ -1150,6 +1326,16 @@
+     if W_VAR > 0 or W_COV > 0:                      # ⭐ A1：防塌正則
+         _v, _c = vicreg_terms(et)
+         loss = loss + W_VAR * _v + W_COV * _c
++    # wallpen: raw decoder output, all batch samples; warm/calibration have no loss addition.
++    if WALLPEN_KAPPA and "1" in WALLPEN_STAGES:
++        _wp1 = pen(_pts1)
++        _wl1 = _wallpen_calibrate("1", stp, _S1, loss, _wp1,
++                                 [p for group in opt1.param_groups for p in group["params"]])
++        if _wl1 is not None and _wl1 > 0:
++            loss = loss + _wl1 * _wp1
++        if (DIAG_TRAIN and stp < 300 and stp % 10 == 0) or stp == 0 or (stp + 1) % max(_S1 // 4, 1) == 0:
++            _wallpen_log("1", stp, _wp1, _main)
++    _wallpen_teacher_log("1", stp)  # wallpen: every 1000 steps when teacher clean is enabled.
+     _warm_lr(opt1, stp)
+     opt1.zero_grad(set_to_none=True); loss.backward()
+     if DIAG_TRAIN and stp < 300 and stp % 10 == 0:
+@@ -1937,6 +2123,18 @@
+                     print(f"  grpo step {_gstp + 1}  r {_grw.mean():.3f}±{_grw.std():.3f} gate {_ggate.mean():.2f}"
+                           f" degen {_gdg}/{GRPO_BQ} β {_gbeta:.3e} l_grpo {l_grpo.item():+.4f}", flush=True)
+         _warm_lr(opt2, _gstp)
++        # wallpen: use NLL cond before action COND_DROP; detach blocks the shared cond chain.
++        if WALLPEN_KAPPA and "2" in WALLPEN_STAGES:
++            _wpc = flow_cond(cond, anc).detach()
++            _wpu = _wallpen_sample(flow, len(cond), _wpc, _WP_TGEN)
++            _wp2 = pen(_intent_inv(_dec(_q(_wpu), s), anc))
++            _wl2 = _wallpen_calibrate("2", stp, n_steps, l_nf, _wp2,
++                                     [p for p in flow.parameters() if p.requires_grad])
++            if _wl2 is not None and _wl2 > 0:
++                total = total + _wl2 * _wp2
++            if (_gstp + 1) % LOG_EVERY == 0:
++                _wallpen_log("2", _gstp, _wp2, l_nf)
++        _wallpen_teacher_log("2", _gstp)  # wallpen: cumulative clean-teacher counters.
+         # ⭐ AMP：backward／clip／step 一律走 helper —— AMP=0 時逐字等於原本那三行
+         #    （scaler is None ⇒ loss.backward()、no-op、opt.step()）。
+         #    ⚠️ 兩個 optimizer 的參數集合互斥（BC_INDEP：bc_head vs f_mods）⇒ 各自 unscale_ 安全。
+@@ -3719,6 +3917,13 @@
+                     INTENT_ZERO=INTENT_ZERO, INTENT_GUID_W=INTENT_GUID_W,
+                     LO_W=LO_W, LO_ADV=LO_ADV, LO_ADV_BETA=LO_ADV_BETA,
+                     LO_KMIN=LO_KMIN, LO_KMAX=LO_KMAX, TEACHER_H=TEACHER_H)  # hsweep: tag H.
++# wallpen: keep hsweep filename unchanged when off; flags stay outside ckpt contents.
++if TEACHER_CLEAN:
++    _extra += "_tc1"
++if WALLPEN_KAPPA:
++    _extra += f"_wp{WALLPEN_KAPPA:g}"
++if (TEACHER_CLEAN or WALLPEN_KAPPA) and WALLPEN_STAGES != "12":
++    _extra += f"_wps{WALLPEN_STAGES}"
+ tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
+        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
+ # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
+@@ -3730,6 +3935,9 @@
+     f"rollout_{tag}.json")
+ # hsweep: refuse an existing target before writing rollout output, including fresh training.
+ _hsweep_ck = os.path.join(os.path.dirname(dst), f"ckpt_{tag}.pt")
++# wallpen: orphaned sidecars also reserve the target; no overwrite before rollout output.
++if (not LOAD_CKPT or CONT_TRAIN) and os.path.exists(_hsweep_ck + ".wallpen.json"):
++    raise SystemExit(f"wallpen: {_hsweep_ck}.wallpen.json already exists — refusing overwrite")
+ if (not LOAD_CKPT or CONT_TRAIN) and os.path.exists(_hsweep_ck):
+     raise SystemExit(f"⛔ {_hsweep_ck} already exists — refusing checkpoint overwrite")
+ os.makedirs(os.path.dirname(dst), exist_ok=True)
+@@ -3900,3 +4108,15 @@
+                             "LO_ADV": LO_ADV, "LO_ADV_BETA": LO_ADV_BETA,
+                             "LO_VBAR": _LO_ST["vbar"]} if LO_ON else {}))}, ck)
+ print(f"存 checkpoint {ck}", flush=True)
++
++# wallpen: sidecar only; original torch.save payload above is byte-for-byte unchanged.
++if TEACHER_CLEAN or WALLPEN_KAPPA:
++    _wp_sidecar = dict(τ_data=TAU_DATA, κ=WALLPEN_KAPPA, STAGES=WALLPEN_STAGES,
++                      λ_dec=_WP_STATE["1"]["lam"], λ_flow=_WP_STATE["2"]["lam"],
++                      ρ={stage: state["rho"] for stage, state in _WP_STATE.items()},
++                      clean_teacher=_CLEAN_COUNTS,
++                      no_calibration={stage: state["no_calibration"] for stage, state in _WP_STATE.items()})
++    with open(ck + ".wallpen.json", "x", encoding="utf-8") as _wpf:
++        json.dump(_wp_sidecar, _wpf, ensure_ascii=False, indent=2, allow_nan=False)
++    print(f"wallpen: teacher final {_CLEAN_COUNTS}", flush=True)
++    print(f"wallpen: sidecar {ck}.wallpen.json", flush=True)
