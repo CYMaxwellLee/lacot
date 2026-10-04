@@ -1,0 +1,120 @@
+--- experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py	2026-09-28 12:03:25.818866263 +0800
++++ experiments/_workorders/hsweep/train_hsweep.py	2026-10-04 11:12:28.420958681 +0800
+@@ -474,6 +474,10 @@
+ # ⚠️ (s,g) 抽法＝全域均勻可達對：原資料（hindsight、全短）供「短」的密度，teacher 專供
+ #    遠距 ⇒ 混合本身就是重尾（調研配方）。mix 比例是超參（ablation #13）。
+ TEACHER_MIX = float(os.environ.get("LACOT_TEACHER_MIX", 0.0))
++# hsweep: unset keeps M9; H is a positive integer in maze cells (4 raw units).
++TEACHER_H = int(os.environ["LACOT_TEACHER_H"]) if "LACOT_TEACHER_H" in os.environ else None
++if TEACHER_H is not None and TEACHER_H <= 0:
++    raise SystemExit("⛔ LACOT_TEACHER_H must be a positive integer")
+ _TCH = None
+ if TEACHER_MIX > 0:
+     assert not LEARNED_REFINE, "⛔ TEACHER_MIX 的 real-mask 尚未接進 l_refine 分支 —— 要開先接"
+@@ -585,15 +589,32 @@
+ _REAL_W = [None]
+ 
+ 
++# hsweep: deterministic raw-arclength prefix; p stays in normalized coordinates.
++def _teacher_prefix(p):
++    if TEACHER_H is None:
++        return p
++    seg = np.linalg.norm(np.diff(p, axis=0) * SD_XY, axis=1)
++    cum = np.concatenate([[0.0], np.cumsum(seg)])
++    limit = 4.0 * TEACHER_H
++    if cum[-1] <= limit:
++        return p
++    j = int(np.searchsorted(cum, limit, side="right"))
++    cut = p[j - 1] + (p[j] - p[j - 1]) * ((limit - cum[j - 1]) / seg[j - 1])
++    return np.concatenate([p[:j], cut[None]], axis=0)
++
++
+ def _teacher_traj(rng, n):
+     """從題庫抽 n 條 teacher 軌跡 → traj[n,T,2] 正規化。cell 內 jitter。
+     ⭐ P2：_BOOT 有東西時，n 條裡 BOOT_FRAC 比例改抽自舉樣本（按 exp(−βE) 權重）。
+     自舉樣本已是 T_CAP 點 ⇒ 不再內插、不 jitter（flow 生成自帶連續多樣性）。"""
+     n_b = int(round(n * BOOT_FRAC)) if _BOOT is not None else 0
+     trajs = np.empty((n, T_CAP, 2), np.float64)
++    goals = np.empty((n, 2), np.float64)  # hsweep: full translated endpoint, before truncation.
+     for i in range(n - n_b):
+         p = _TCH[int(rng.integers(len(_TCH)))]
+         p = p + rng.uniform(-0.5, 0.5, size=(1, 2)) * _tcell_norm   # 整條小平移（cell 內）
++        goals[i] = p[-1]  # hsweep: preserve distant g without consuming RNG.
++        p = _teacher_prefix(p)  # hsweep: after the original route choice and jitter.
+         seg = np.linalg.norm(np.diff(p, axis=0), axis=1)
+         cum = np.concatenate([[0.0], np.cumsum(seg)])
+         tt = np.linspace(0.0, cum[-1], T_CAP)
+@@ -603,7 +624,10 @@
+         _r = _BOOT_RNG if _BOOT_RNG is not None else rng      # ⭐ 9/2：BOOT_SEED 設了就走獨立流
+         idx = _r.choice(len(_BOOT[0]), size=n_b, p=_BOOT[1])
+         trajs[n - n_b:] = _BOOT[0][idx]
+-    return trajs.astype(np.float32)
++    # hsweep: BOOT samples keep their M9 endpoint (no shortest-route source).
++    if n_b > 0:
++        goals[n - n_b:] = trajs[n - n_b:, -1]
++    return trajs.astype(np.float32), goals.astype(np.float32)  # hsweep: paired outputs.
+ 
+ 
+ # ⭐ 荒漠重採樣（LACOT_DATA_RESAMPLE=1）：訓練 batch 的起點 transition 從「均勻」改成
+@@ -687,10 +711,10 @@
+         # real-mask 擋掉 —— head/bc 不吃合成動作）。
+         # ⭐ ant v1：teacher 只有位置、沒有關節姿態 ⇒ s/g 的非 xy 維補 0（＝資料平均）。
+         #    合法：這些樣本的 action loss 本來就被 real-mask 擋掉，只餵幾何側。
+-        tt = _teacher_traj(rng, n_t)                 # [n_t, T_CAP, 2] 已正規化
++        tt, tg = _teacher_traj(rng, n_t)              # hsweep: trajectory plus full-route goal.
+         traj = np.concatenate([traj, tt], 0)
+         s = np.concatenate([s, xy_to_obs_slot(tt[:, 0].astype(np.float64))], 0)
+-        g = np.concatenate([g, xy_to_obs_slot(tt[:, -1].astype(np.float64))], 0)
++        g = np.concatenate([g, xy_to_obs_slot(tg.astype(np.float64))], 0)  # hsweep: distant g.
+         act = np.concatenate([act, np.zeros((n_t, CHUNK, ADIM), np.float32)], 0)
+     mask = np.zeros((B, T_CAP), bool)                # 全 False ＝ 全部都是真點
+     # ⚠️ 自檢：一響就代表洩漏又回來了（⛔ 別把它拿掉）
+@@ -3521,7 +3545,8 @@
+                GRPO_W=0.0, GRPO_G=8, GRPO_EVERY=1, GRPO_BQ=4, GRPO_WARM=500, GRPO_STDNORM=1,
+                AMP=0, COMPILE=0, BON_N=0,
+                INTENT_ZERO=0, INTENT_GUID_W=0.0,
+-               LO_W=0.0, LO_ADV=0, LO_ADV_BETA=1.0, LO_KMIN=10, LO_KMAX=60):
++               LO_W=0.0, LO_ADV=0, LO_ADV_BETA=1.0, LO_KMIN=10, LO_KMAX=60,
++               TEACHER_H=None):  # hsweep: optional filename segment.
+     """檔名後綴。⭐ 只有【非預設值】才進去 ⇒ 預設跑出來的檔名跟歷史一致（⛔ 不破壞舊索引）。
+ 
+     ⚠️ 預設值必須跟上面那些 os.environ.get 的第二個參數逐一對齊 ——
+@@ -3532,6 +3557,8 @@
+         x += f"_eo{ENC_OBJ}"
+     if TEACHER_MIX > 0:                              # ⭐ P1b teacher 資料引擎
+         x += f"_tch{repr(TEACHER_MIX)}"
++    if TEACHER_H is not None:  # hsweep: unset leaves the original filename unchanged.
++        x += f"_th{TEACHER_H}"
+     if BOOT_TAG:                                     # ⭐ P2 自舉輪次（⛔ 沒有它自舉 ckpt 會蓋非自舉）
+         x += f"_bt{BOOT_TAG}"
+     if EMA_W > 0:                                    # ⭐ 權重 EMA 訓練檔（ckpt 內容多 ema 段）
+@@ -3691,7 +3718,7 @@
+                     AMP=AMP, COMPILE=COMPILE, BON_N=BON_N,
+                     INTENT_ZERO=INTENT_ZERO, INTENT_GUID_W=INTENT_GUID_W,
+                     LO_W=LO_W, LO_ADV=LO_ADV, LO_ADV_BETA=LO_ADV_BETA,
+-                    LO_KMIN=LO_KMIN, LO_KMAX=LO_KMAX)
++                    LO_KMIN=LO_KMIN, LO_KMAX=LO_KMAX, TEACHER_H=TEACHER_H)  # hsweep: tag H.
+ tag = (f"{ENV_NAME.replace('pointmaze-', '').replace('-v0', '')}_{CONS}_K{K}_c{COND}"
+        f"_ch{CHUNK}_st{STEPS2}_T{T_CAP}_ep{SEEDS}_gu{_extra}_s{TAG_SEED}")   # gu = goal uniform(official)
+ # 🚨 smoke／假資料跑出來的檔【不准】落進 results/ —— 同族檔案混版本正是這個 repo 咬過
+@@ -3701,6 +3728,10 @@
+ dst = os.path.join(_OUT_DIR or os.path.join(
+     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results"),
+     f"rollout_{tag}.json")
++# hsweep: refuse an existing target before writing rollout output, including fresh training.
++_hsweep_ck = os.path.join(os.path.dirname(dst), f"ckpt_{tag}.pt")
++if (not LOAD_CKPT or CONT_TRAIN) and os.path.exists(_hsweep_ck):
++    raise SystemExit(f"⛔ {_hsweep_ck} already exists — refusing checkpoint overwrite")
+ os.makedirs(os.path.dirname(dst), exist_ok=True)
+ # ⭐ 9/3：守門開火數寫進頂層（9/2 夜那批有計數沒出口 —— subgoal_diag 掛在 dsub/d0 的
+ #    gate 裡，該 gate 在 conf2 沒收樣本時整段跳過 ⇒ n_headguard 白計。⛔ 不掛 gate。）
+@@ -3815,6 +3846,9 @@
+     assert not os.path.exists(ck), \
+         (f"⛔ {ck} 已存在 —— 續訓拒絕覆蓋既有 ckpt（換 LACOT_OUT_DIR／LACOT_BOOT_TAG）。"
+          " ⚠️ rollout json 已經寫好了，⛔ 只有這顆 ckpt 沒存到")
++# hsweep: recheck just before saving; fresh training must also refuse existing targets.
++if os.path.exists(ck):
++    raise SystemExit(f"⛔ {ck} already exists — refusing checkpoint overwrite")
+ torch.save({"cond_enc": cond_enc.state_dict(), "cond_head": cond_head.state_dict(),
+             "flow": flow.state_dict(), "refine": refine.state_dict(),
+             "ahead": ahead.state_dict(), "bc_head": bc_head.state_dict(),

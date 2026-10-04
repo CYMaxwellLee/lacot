@@ -1,0 +1,180 @@
+M9=/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py
+sha256=276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc
+Python=3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]
+numpy=2.4.6 torch=2.6.0+cu124 device=cpu
+data=/home/cymaxwelllee/.ogbench/data/pointmaze-large-stitch-v0.npz
+temporary artifacts retained at /tmp/hsweep-selftest-vr00_p4z
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+M9/hsweep teacher pools: np.array_equal for every route
+T1: PASS H unset; 32 batches, all five fields + real-mask np.array_equal
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 369, in <module>
+    main()
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 348, in main
+    killer("T1 RNG killer", lambda: t1(ref, mutant))
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 110, in killer
+    raise AssertionError(f"{label}: killer survived; test did not detect defect")
+AssertionError: T1 RNG killer: killer survived; test did not detect defect
+M9=/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py
+sha256=276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc
+Python=3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]
+numpy=2.4.6 torch=2.6.0+cu124 device=cpu
+data=/home/cymaxwelllee/.ogbench/data/pointmaze-large-stitch-v0.npz
+temporary artifacts retained at /tmp/hsweep-selftest-_lzd1obx
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+M9/hsweep teacher pools: np.array_equal for every route
+T1: PASS H unset; 32 batches, all five fields + real-mask np.array_equal
+T1 RNG killer: FAIL (expected; killer detected)
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 114, in killer
+    check()
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 357, in <lambda>
+    killer("T1 RNG killer", lambda: t1(ref, mutant))
+                                    ^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 104, in t1
+    equal_fields(arrays(ref, ra, mix), arrays(candidate, rb, mix),
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 94, in equal_fields
+    assert np.array_equal(a, b), f"{context}: {name} is not np.array_equal"
+           ^^^^^^^^^^^^^^^^^^^^
+AssertionError: T1 seed=33 mix=0.5 batch=0: traj is not np.array_equal
+T2 H=3: PASS samples=256 truncated=221 max_raw_error=3.553e-15 max_T_CAP_relative_error=0.761159%
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 378, in <module>
+    main()
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 358, in main
+    t2(ns)
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 166, in t2
+    assert rel < 0.01, f"T2 H={h} i={i} T_CAP length relative error={rel}"
+           ^^^^^^^^^^
+AssertionError: T2 H=4 i=142 T_CAP length relative error=0.01029941013596869
+276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc  experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py
+f748e2cb844dd9af2d3d93a624ca2545635953c4ffdbd684cf69fe8b2ceb377e  experiments/_workorders/hsweep/train_hsweep.py
+
+=== REWORK hsweep-trainer-v1-r1 2026-10-04; prior output above retained verbatim ===
+COMMAND: PYTHONDONTWRITEBYTECODE=1 CUDA_VISIBLE_DEVICES='' /home/cymaxwelllee/Projects/lacot/.venv/bin/python -u experiments/_workorders/hsweep/selftest_hsweep.py --start-at T2
+M9=/home/cymaxwelllee/Projects/lacot/experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py
+sha256=276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc
+Python=3.11.15 (main, Jul 18 2026, 17:02:49) [Clang 22.1.3 ]
+numpy=2.4.6 torch=2.6.0+cu124 device=cpu
+data=/home/cymaxwelllee/.ogbench/data/pointmaze-large-stitch-v0.npz
+temporary artifacts retained at /tmp/hsweep-selftest-f9o48f9q
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+M9/hsweep teacher pools: np.array_equal for every route
+T1: prior PASS and RNG killer FAIL retained from selftest-output.txt; trainer SHA256 unchanged; not rerun
+T2 baseline: H unset; all 4096 routes; actual M9 interpolation; B=0.0218364525264 median=0.00549410800779 p99=0.0162034385522
+T2 H=3: PASS samples=256 truncated=221 max_raw_error=3.553e-15 max_T_CAP_relative_shortage=0.00761158702835 B=0.0218364525264
+T2 H=4: PASS samples=256 truncated=200 max_raw_error=5.329e-15 max_T_CAP_relative_shortage=0.010299410136 B=0.0218364525264
+T2 H=8: PASS samples=512 truncated=229 max_raw_error=1.066e-14 max_T_CAP_relative_shortage=0.0140237971888 B=0.0218364525264
+T2 comparison: H samples truncated max_raw_error max_relative_shortage B
+3 256 221 3.553e-15 0.00761158702835 0.0218364525264
+4 256 200 5.329e-15 0.010299410136 0.0218364525264
+8 512 229 1.066e-14 0.0140237971888 0.0218364525264
+T2 4H+2 killer: FAIL (expected; killer detected)
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 115, in killer
+    check()
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 444, in <lambda>
+    killer("T2 4H+2 killer", lambda: t2(mutant, baseline), expected_error="raw length error=")
+                                     ^^^^^^^^^^^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 206, in t2
+    assert error < 1e-6, f"T2 H={h} i={i} raw length error={error}"
+           ^^^^^^^^^^^^
+AssertionError: T2 H=3 i=0 raw length error=2.0
+T3: PASS full translated g preserved; max raw g-to-prefix-end distance=30.628622 >4
+T3 near-goal killer: FAIL (expected; killer detected)
+Traceback (most recent call last):
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 115, in killer
+    check()
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 453, in <lambda>
+    killer("T3 near-goal killer", lambda: t3(mutant))
+                                          ^^^^^^^^^^
+  File "/home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/selftest_hsweep.py", line 250, in t3
+    assert np.array_equal(g[n_r:], full_goals), "T3: g differs from full translated endpoint"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: T3: g differs from full translated endpoint
+T4: PASS H=3 vs unset; 8 batches, 32 real rows/batch; RNG states and all 1029 calls/order/arguments identical
+T5 H=None: existing fresh target rejected: ⛔ /tmp/hsweep-selftest-f9o48f9q/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt already exists — refusing checkpoint overwrite
+T5 H=None: PASS filename=ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt
+T5 H=4: existing fresh target rejected: ⛔ /tmp/hsweep-selftest-f9o48f9q/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_th4_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt already exists — refusing checkpoint overwrite
+T5 H=4: PASS filename=ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_th4_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt
+T5 save-time recheck: PASS ⛔ /tmp/hsweep-selftest-f9o48f9q/ckpt_large-stitch_self_K8_c256_ch4_st8000_T128_ep2_gu_eorecon_ictr_tch0.5_th4_emw0.999_wu500_dssoft_norf_cd0.1_bci_s33.pt already exists — refusing checkpoint overwrite
+T6 subprocess: /home/cymaxwelllee/Projects/lacot/.venv/bin/python -u /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/train_hsweep.py
+T6 environment: {"CUBLAS_WORKSPACE_CONFIG": ":4096:8", "CUDA_VISIBLE_DEVICES": "", "HIP_VISIBLE_DEVICES": "", "LACOT_BC_INDEP": "1", "LACOT_COND_DROP": "0.1", "LACOT_DEC_START": "soft", "LACOT_DEV_EVAL": "0", "LACOT_DIAG_TRAIN": "1", "LACOT_EMA_W": "0.999", "LACOT_ENC_OBJ": "recon_ictr", "LACOT_ENV": "pointmaze-large-stitch-v0", "LACOT_EVAL_EPISODES": "1", "LACOT_EVAL_MAXH": "1", "LACOT_EVAL_RS": "0", "LACOT_K": "8", "LACOT_LEARNED_REFINE": "0", "LACOT_LOG_EVERY": "1", "LACOT_OUT_DIR": "/tmp/hsweep-cpu-smoke-8sni4ssk", "LACOT_PREREQ": "0", "LACOT_REV_ARM": "0", "LACOT_SEED": "33", "LACOT_STEPS1": "2", "LACOT_STEPS2": "2", "LACOT_TCAP": "128", "LACOT_TEACHER_H": "3", "LACOT_TEACHER_MIX": "0.5", "LACOT_WARMUP": "500", "MKL_NUM_THREADS": "2", "MUJOCO_GL": "osmesa", "OGBENCH_DATA_DIR": "/home/cymaxwelllee/.ogbench/data", "OMP_NUM_THREADS": "2", "OPENBLAS_NUM_THREADS": "2", "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": "/home/cymaxwelllee/Projects/lacot", "ROCR_VISIBLE_DEVICES": ""}
+T6 full subprocess output BEGIN
+device: cpu
+  teacher 題庫：4096 條（細格步數 p50 26 p90 42 max 62），mix=0.5
+設定：seed=33 cons=self ema_m=0.996 K=8 COND=256
+stage 1 e_target 目標=recon_ictr ...  w_var=0.0 w_cov=0.0 w_ictr=0.2 sigma=0.05  warmup=500
+  ⭐ DEC_START=soft：‖traj[:,0]−s‖ max 0.0000（應≈0）
+  DIAG stp 0  recon 1.3955  總 3.0258  grad 31.943  effdim 0.041
+  step 1  recon-mse 1.3955  總 3.0258  u 有效維度 0.041
+  step 2  recon-mse 1.3652  總 3.1520  u 有效維度 0.040
+  e_target match-acc(train batch) 0.953
+  ⇒ u 有效維度 起 0.041 → 末 0.040
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+  step 1  l_nf/dim 1.419 l_anchor 2.3543 l_refine 0.0000
+  step 2  l_nf/dim 1.418 l_anchor 2.6661 l_refine 0.0000
+  decoder 內部點 RMSE 1.5973   打亂 u 之後 1.6146   用到的 u 值 +0.0173   🚨 幾乎沒在讀 u ⇒ 這一輪的 recon 數字不能拿來談 u
+
+==== SUCCESS RATE (env=pointmaze-large-stitch-v0, 5 tasks x 1 seeds, MAXH 1) ====
+  誠實 BC 地板（獨立 head，只吃 cond）: success 0/5 = 0.000
+  u 歸零（⚠️ OOD 探針，不是地板）: success 0/5 = 0.000
+  別人的 u（分布對、內容錯）: success 0/5 = 0.000
+  LaCoT refine R=0: success 0/5 = 0.000
+=> want: LaCoT > floor (reasoning helps on success), rate rises with R (test-time scaling).
+寫入 /tmp/hsweep-cpu-smoke-8sni4ssk/rollout_large-stitch_self_K8_c256_ch4_st2_T128_ep1_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s12_dssoft_norf_cd0.1_bci_s33.json
+存 checkpoint /tmp/hsweep-cpu-smoke-8sni4ssk/ckpt_large-stitch_self_K8_c256_ch4_st2_T128_ep1_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s12_dssoft_norf_cd0.1_bci_s33.pt
+T6 full subprocess output END
+T6 last 20 lines BEGIN
+  step 1  recon-mse 1.3955  總 3.0258  u 有效維度 0.041
+  step 2  recon-mse 1.3652  總 3.1520  u 有效維度 0.040
+  e_target match-acc(train batch) 0.953
+  ⇒ u 有效維度 起 0.041 → 末 0.040
+/home/cymaxwelllee/Projects/lacot/.venv/lib/python3.11/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+stage 2 flow+refine+action ...
+  權重 EMA 開啟：m=0.999（影子五模組，訓練行為不變）
+  step 1  l_nf/dim 1.419 l_anchor 2.3543 l_refine 0.0000
+  step 2  l_nf/dim 1.418 l_anchor 2.6661 l_refine 0.0000
+  decoder 內部點 RMSE 1.5973   打亂 u 之後 1.6146   用到的 u 值 +0.0173   🚨 幾乎沒在讀 u ⇒ 這一輪的 recon 數字不能拿來談 u
+
+==== SUCCESS RATE (env=pointmaze-large-stitch-v0, 5 tasks x 1 seeds, MAXH 1) ====
+  誠實 BC 地板（獨立 head，只吃 cond）: success 0/5 = 0.000
+  u 歸零（⚠️ OOD 探針，不是地板）: success 0/5 = 0.000
+  別人的 u（分布對、內容錯）: success 0/5 = 0.000
+  LaCoT refine R=0: success 0/5 = 0.000
+=> want: LaCoT > floor (reasoning helps on success), rate rises with R (test-time scaling).
+寫入 /tmp/hsweep-cpu-smoke-8sni4ssk/rollout_large-stitch_self_K8_c256_ch4_st2_T128_ep1_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s12_dssoft_norf_cd0.1_bci_s33.json
+存 checkpoint /tmp/hsweep-cpu-smoke-8sni4ssk/ckpt_large-stitch_self_K8_c256_ch4_st2_T128_ep1_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s12_dssoft_norf_cd0.1_bci_s33.pt
+T6 last 20 lines END
+T6 torch.load keys: ['cond_enc', 'cond_head', 'flow', 'refine', 'ahead', 'bc_head', 'traj_enc', 'e_pooler', 'u_dec', 'ema', 'cfg']
+T6 s_embed construction /home/cymaxwelllee/Projects/lacot/experiments/_workorders/hsweep/train_hsweep.py:960: s_embed = nn.Linear(XY_DIM, D_MODEL).to(device) if DEC_START == "hard" else None   # ⭐ 起點 token（hard 綁定；進 opt1 與 ckpt）—— 計畫棧側 ⇒ xy
+T6 recipe DEC_START=soft required keys=['ahead', 'bc_head', 'cfg', 'cond_enc', 'cond_head', 'e_pooler', 'ema', 'flow', 'refine', 'traj_enc', 'u_dec']
+T6: PASS ckpt=/tmp/hsweep-cpu-smoke-8sni4ssk/ckpt_large-stitch_self_K8_c256_ch4_st2_T128_ep1_gu_eorecon_ictr_tch0.5_th3_emw0.999_wu500_s12_dssoft_norf_cd0.1_bci_s33.pt bytes=110527256
+T1-T6: ALL PASS; n_tests=6 n_killers=3; M9 SHA256 unchanged
+r1 executed: n_tests=5 n_killers=2; plus retained T1 and RNG killer evidence
+PROCESS EXIT CODE: 0
+REWORK read-only SHA256 verification BEGIN
+f748e2cb844dd9af2d3d93a624ca2545635953c4ffdbd684cf69fe8b2ceb377e  experiments/_workorders/hsweep/train_hsweep.py
+bc4281053cd41aa18a1f5f03798cf9917ee2205c4268d7bd43ed2062fa9580ae  experiments/_workorders/hsweep/eval_common.py
+READ-ONLY AUDIT: harness_sg.py changed during this run; this task did not write it.
+before harness_sg.py: d5c41e6931f328700d85ea62790231b09e02c3522cea3eba00fc09d0c3195f10
+8e3f91d9c620327ff091c01011e747177044c4583e1eaec58c3a8a648e8b1d18  experiments/_workorders/hsweep/harness_sg.py
+READ-ONLY AUDIT: selfsub_probe_ckpt.py also changed during this run; this task did not write it.
+before selfsub_probe_ckpt.py: d3046cba31e9526f986b854ebcffda25812c9030f83b409b4eb333ebea3415ab
+20c446c25ef7a7a8a7c613b6ef6f17a026b63aabc7638adc653a05a9cf56cc87  experiments/_workorders/hsweep/selfsub_probe_ckpt.py
+e0c80c8efd079e388f58a715be0a8256fb2d97834d3af5e0b3e859be1c981071  experiments/_workorders/hsweep/README-eval.md
+276c68fba6c41a05c1e3c2bd5bf4b25c39642d0dbac3ca7aa57cce381056ecfc  experiments/_workorders/ucontrast1/smoke/mutants/M9/scratch_lacot_rollout.py
+REWORK SHA256 verification END (trainer/M9 unchanged; eval audit recorded above)
